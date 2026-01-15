@@ -1,10 +1,28 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+/**
+ * Node modules
+ */
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+
+/**
+ * CSS
+ */
+import './index.css';
+
+/**
+ * App
+ */
+import App from './App.tsx';
+
+/**
+ * Providers
+ */
+import { AppProvider } from '@/providers/app-provider.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AppProvider>
+      <App />
+    </AppProvider>
   </StrictMode>,
-)
+);

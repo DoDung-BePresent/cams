@@ -1,5 +1,15 @@
+/**
+ * Node modules
+ */
+import { RouterProvider } from 'react-router';
+
+/**
+ * Routes
+ */
+import { router } from '@/routes';
+
 const App = () => {
-  return <div></div>;
+  return <RouterProvider router={router} />;
 };
 
 export default App;
