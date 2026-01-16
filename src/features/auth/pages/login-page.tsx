@@ -15,8 +15,8 @@ export const LoginPage = () => {
         <img
           src={loginImage}
           className=''
-          width={700}
-          height={700}
+          width={600}
+          height={600}
           alt='Login Image'
         />
       </figure>

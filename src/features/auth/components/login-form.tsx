@@ -1,3 +1,11 @@
+/**
+ * Node modules
+ */
+import { FcGoogle } from 'react-icons/fc';
+
+/**
+ * Components
+ */
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -57,6 +65,7 @@ const LoginForm = () => {
                 variant='outline'
                 type='button'
               >
+                <FcGoogle />
                 Login with Google
               </Button>
               <FieldDescription className='text-center'>
