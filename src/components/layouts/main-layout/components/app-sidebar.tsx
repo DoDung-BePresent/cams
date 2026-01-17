@@ -7,6 +7,7 @@ import { PinIcon, PinOffIcon } from 'lucide-react';
 /**
  * Components
  */
+import { NavUser } from './nav-user';
 import { NavMain } from './nav-main';
 import {
   Sidebar,
@@ -18,6 +19,11 @@ import {
 } from '@/components/ui/sidebar';
 import { Logo } from '@/components/common/logo';
 import { Button } from '@/components/ui/button';
+
+/**
+ * Libs
+ */
+import { cn } from '@/lib/utils';
 
 export const AppSidebar = () => {
   const { open, setOpen } = useSidebar();
@@ -61,7 +67,10 @@ export const AppSidebar = () => {
     >
       <SidebarHeader>
         <SidebarMenu className='flex flex-row! items-center justify-between p-3'>
-          <Logo className='size-10 shrink-0' />
+          <Logo
+            className='size-10 shrink-0'
+            showLabel={open}
+          />
           {/* Show Pin button if open (either pinned or hovering) */}
           {open && (
             <Button
@@ -69,14 +78,17 @@ export const AppSidebar = () => {
               data-sidebar='trigger'
               variant='ghost'
               size='icon'
-              className='size-7'
+              className={cn(
+                'size-7',
+                !isHoverOpen && 'bg-primary/10 text-primary [&>svg]:stroke-2',
+              )}
             >
               {isHoverOpen ? (
                 // If hovering, show "Pin" icon (click to pin)
-                <PinIcon className='!size-3.5 rotate-45' />
+                <PinIcon className='size-3.5! rotate-45' />
               ) : (
                 // If pinned, show "Unpin" icon (click to collapse)
-                <PinOffIcon className='!size-3.5' />
+                <PinOffIcon className='size-3.5!' />
               )}
               <span className='sr-only'>Toggle Sidebar</span>
             </Button>
@@ -86,7 +98,9 @@ export const AppSidebar = () => {
       <SidebarContent>
         <NavMain />
       </SidebarContent>
-      <SidebarFooter />
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
     </Sidebar>
   );
 };

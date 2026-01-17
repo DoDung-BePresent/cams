@@ -13,13 +13,19 @@ import { cn } from '@/lib/utils';
  */
 interface LogoProps extends React.SVGProps<SVGSVGElement> {
   className?: string;
+  showLabel?: boolean;
 }
 
-export const Logo = ({ className, ...props }: LogoProps) => {
+export const Logo = ({ className, showLabel = false, ...props }: LogoProps) => {
   return (
-    <LogoIcon
-      className={cn('h-10 w-10', className)}
-      {...props}
-    />
+    <div className='flex items-center gap-3'>
+      <LogoIcon
+        className={cn('h-10 w-10', className)}
+        {...props}
+      />
+      {showLabel && (
+        <span className='text-primary text-3xl font-semibold'>CAMS</span>
+      )}
+    </div>
   );
 };
