@@ -15,9 +15,9 @@ export const AuthLayout = () => {
       <div className='pt-5'>
         <Header />
       </div>
-      <div className='flex items-center justify-center'>
+      <main className='flex items-center justify-center'>
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 };

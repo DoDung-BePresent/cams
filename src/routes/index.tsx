@@ -12,12 +12,12 @@ import { ProtectedRoute } from './protected-route';
  * Layouts
  */
 import { AuthLayout } from '@/components/layouts/auth-layout';
-import { MainLayout } from '@/components/layouts/main-layout';
 
 /**
  * Pages
  */
 import { LoginPage } from '@/features/auth/pages/login-page';
+import { MainLayout } from '@/components/layouts/main-layout';
 
 // Dashboard Placeholder
 const Dashboard = () => (
@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
   // Protected Routes (Cần đăng nhập mới xem được)
   {
     path: '/',
-    element: <ProtectedRoute />, // 🛡️ Guard Layer
+    // element: <ProtectedRoute />, // 🛡️ Guard Layer
     children: [
       {
         element: <MainLayout />, // 🎨 Layout Layer (Sidebar, Header)
