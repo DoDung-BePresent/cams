@@ -17,7 +17,7 @@ export const NavUser = () => {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton>
-              <Avatar className='size-10 rounded-sm border'>
+              <Avatar className='size-10 rounded-lg border'>
                 <AvatarImage src='https://api.dicebear.com/7.x/miniavs/svg?seed=3' />
                 <AvatarFallback />
               </Avatar>

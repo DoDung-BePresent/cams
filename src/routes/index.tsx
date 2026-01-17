@@ -65,6 +65,10 @@ export const router = createBrowserRouter([
             path: 'stores',
             element: <div>Store Management</div>,
           },
+          {
+            path: 'playlist',
+            element: <div>Playlist</div>,
+          },
           // Thêm các feature routes khác ở đây
         ],
       },
