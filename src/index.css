@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: var(--ant-color-primary);
+  --color-primary-bg: var(--ant-color-primary-bg);
+
+  --animate-progress-indeterminate: progress-indeterminate 1.25s infinite linear;
+
+  @keyframes progress-indeterminate {
+    0% {
+      transform: translateX(-100%) scaleX(0.2);
+    }
+    50% {
+      transform: translateX(0%) scaleX(0.5);
+    }
+    100% {
+      transform: translateX(100%) scaleX(0.2);
+    }
+  }
+}
