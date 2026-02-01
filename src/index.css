@@ -3,6 +3,8 @@
 @theme {
   --color-primary: var(--ant-color-primary);
   --color-primary-bg: var(--ant-color-primary-bg);
+  --color-gray: #595959;
+  --shadow-1: 0px 1px 4px rgba(0, 0, 0, 0.08);
 
   --animate-progress-indeterminate: progress-indeterminate 1.25s infinite linear;
 
@@ -16,5 +18,23 @@
     100% {
       transform: translateX(100%) scaleX(0.2);
     }
+  }
+}
+
+@layer base {
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+  .ant-form-item-required {
+    flex-direction: row-reverse; 
+    display: inline-flex;
+    align-items: center;
+  }
+  .ant-form-item-required::after {
+    display: none;
+  }
+  .ant-form-item-required::before {
+    margin-right: 0; 
+    margin-left: 4px;
   }
 }
