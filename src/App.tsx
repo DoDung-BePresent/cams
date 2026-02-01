@@ -13,10 +13,17 @@ import { AppProvider } from '@/providers/AppProvider';
  */
 import { router } from '@/routes';
 
+/**
+ * Components
+ */
+import { ScrollTop } from '@/shared/components/common/ScrollTop';
+
 export const App = () => {
   return (
     <AppProvider>
-      <RouterProvider router={router} />
+      <ScrollTop>
+        <RouterProvider router={router} />
+      </ScrollTop>
     </AppProvider>
   );
 };

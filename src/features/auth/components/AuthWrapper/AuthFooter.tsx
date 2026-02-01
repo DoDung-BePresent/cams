@@ -14,12 +14,10 @@ export const AuthFooter = () => {
         wrap='wrap'
         gap={16}
       >
-        <Flex
-          align='center'
-          gap={8}
-        >
-          <Text className='text-gray'>© Made with love by Team</Text>
-          <Link href='https://codedthemes.com'>CodedThemes</Link>
+        <Flex align='center'>
+          <Text className='text-gray'>
+            CAMS ©{new Date().getFullYear()} Created by CAMS - FPT University
+          </Text>
         </Flex>
         <Flex
           align='center'

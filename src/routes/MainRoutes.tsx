@@ -8,7 +8,7 @@ export const MainRoutes = {
   element: <DashboardLayout />,
   children: [
     {
-      path: '/',
+      index: true,
       element: <p>Hello</p>,
     },
   ],

@@ -10,11 +10,11 @@ type LogoProps = {
   isIcon?: boolean;
 };
 
-export const Logo = ({ isIcon = false }: LogoProps) => {
+export const Logo = ({ isIcon = true }: LogoProps) => {
   return (
     <div className='flex items-center gap-3'>
       <LogoIcon className='size-10' />
-      {isIcon && <span className='text-3xl font-semibold'>CAMS</span>}
+      {!isIcon && <span className='text-3xl font-semibold'>CAMS</span>}
     </div>
   );
 };

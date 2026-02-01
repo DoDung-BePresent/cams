@@ -13,5 +13,10 @@ export const antTheme: ThemeConfig = {
     Form: {
       labelColor: 'var(--color-gray)',
     },
+    Menu: {
+      itemMarginInline: 0,
+      itemMarginBlock: 0,
+      itemBorderRadius: 0,
+    },
   },
 };

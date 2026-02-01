@@ -26,7 +26,7 @@
     font-family: 'Inter', sans-serif;
   }
   .ant-form-item-required {
-    flex-direction: row-reverse; 
+    flex-direction: row-reverse;
     display: inline-flex;
     align-items: center;
   }
@@ -34,7 +34,19 @@
     display: none;
   }
   .ant-form-item-required::before {
-    margin-right: 0; 
+    margin-right: 0;
     margin-left: 4px;
+  }
+}
+
+/* Custom Ant Design Menu styles */
+@layer components {
+  .ant-menu-item {
+    border-right: 2px solid transparent;
+    transition: border-color 0.3s;
+  }
+
+  .ant-menu-item-selected {
+    border-right: 2px solid var(--ant-color-primary) !important;
   }
 }
