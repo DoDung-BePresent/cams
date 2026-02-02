@@ -1,11 +1,14 @@
 import { Flex, Layout, Menu } from 'antd';
 import { useNavigate } from 'react-router';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { ROLES } from '@/shared/constants/roles';
 import { adminMenuItems } from '@/features/admin/components/AdminSidebar/adminMenuItems';
 import { managerMenuItems } from '@/features/manager/components/ManagerSidebar/managerMenuItems';
+import { NavCard } from './NavCard';
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -14,14 +17,13 @@ type AppSidebarProps = {
 const { Sider } = Layout;
 
 const siderStyle: React.CSSProperties = {
-  overflow: 'auto',
+  overflowY: 'hidden',
   height: '100vh',
   position: 'sticky',
   insetInlineStart: 0,
   top: 0,
   left: 0,
   bottom: 0,
-  scrollbarWidth: 'thin',
   borderRight: '1px solid #F0F0F0',
 };
 
@@ -84,14 +86,20 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       <Flex className={cn('p-4!', collapsed && 'px-2.5!')}>
         <Logo isIcon={collapsed} />
       </Flex>
-      <Menu
-        theme='light'
-        mode='inline'
-        className='border-none!'
-        defaultSelectedKeys={['dashboard']}
-        items={menuItems}
-        onClick={({ key }) => handleMenuClick(key)}
-      />
+      <SimpleBar
+        style={{ maxHeight: '100vh' }}
+        className='custom-sidebar-scrollbar'
+      >
+        <Menu
+          theme='light'
+          mode='inline'
+          className='border-none!'
+          defaultSelectedKeys={['dashboard']}
+          items={menuItems}
+          onClick={({ key }) => handleMenuClick(key)}
+        />
+        {!collapsed && <NavCard />}
+      </SimpleBar>
     </Sider>
   );
 };

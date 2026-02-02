@@ -60,4 +60,8 @@
   .ant-layout-sider-collapsed .ant-menu-item-group-title {
     display: none;
   }
+
+  .custom-sidebar-scrollbar .simplebar-scrollbar::before {
+    @apply bg-gray!;
+  }
 }
