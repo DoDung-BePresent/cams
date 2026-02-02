@@ -1,29 +1,18 @@
-/**
- * Node modules
- */
 import { RouterProvider } from 'react-router';
 
-/**
- * Providers
- */
 import { AppProvider } from '@/providers/AppProvider';
-
-/**
- * Routes
- */
 import { router } from '@/routes';
-
-/**
- * Components
- */
 import { ScrollTop } from '@/shared/components/common/ScrollTop';
+import { ErrorBoundary } from '@/shared/components/common/ErrorBoundary';
 
 export const App = () => {
   return (
-    <AppProvider>
-      <ScrollTop>
-        <RouterProvider router={router} />
-      </ScrollTop>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <ScrollTop>
+          <RouterProvider router={router} />
+        </ScrollTop>
+      </AppProvider>
+    </ErrorBoundary>
   );
 };
