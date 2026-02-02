@@ -29,22 +29,40 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Select menu items based on user role
   const menuItems =
     user?.role === ROLES.ADMIN ? adminMenuItems : managerMenuItems;
 
   const handleMenuClick = (key: string) => {
-    // Map menu keys to routes
     const routeMap: Record<string, string> = {
       // Admin routes
-      'system-overview': '/admin/dashboard',
+      'admin-dashboard': '/admin/dashboard',
       'store-list': '/admin/stores',
+      'store-configuration': '/admin/stores/config',
+      'device-iot-management': '/admin/devices',
       'music-library': '/admin/music',
+      'playlist-templates': '/admin/playlists',
+      'mood-genre-tags': '/admin/tags',
+      'rule-settings': '/admin/ai/rules',
+      'external-ai-music-api': '/admin/ai/api',
+      'data-mapping': '/admin/pos/mapping',
+      'sync-status': '/admin/pos/sync',
+      'admin-users': '/admin/users/admins',
+      'store-managers': '/admin/users/managers',
+      staff: '/admin/users/staff',
+      'music-decision-logs': '/admin/logs/music-decisions',
+      'api-call-logs': '/admin/logs/api-calls',
+      'error-logs': '/admin/logs/errors',
+
       // Manager routes
-      overview: '/manager/dashboard',
+      dashboard: '/manager/dashboard',
       'auto-manual-mode': '/manager/music-control/mode',
       'playback-control': '/manager/music-control/playback',
-      // Add more mappings...
+      'time-based-rules': '/manager/schedule/time-based',
+      'event-based-rules': '/manager/schedule/event-based',
+      'music-vs-sales': '/manager/reports/music-sales',
+      'customer-engagement': '/manager/reports/engagement',
+      'playback-history': '/manager/reports/history',
+      settings: '/manager/settings',
     };
 
     const route = routeMap[key];
@@ -70,7 +88,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
         theme='light'
         mode='inline'
         className='border-none!'
-        defaultSelectedKeys={['overview']}
+        defaultSelectedKeys={['dashboard']}
         items={menuItems}
         onClick={({ key }) => handleMenuClick(key)}
       />

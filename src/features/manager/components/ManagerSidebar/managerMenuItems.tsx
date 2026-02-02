@@ -11,72 +11,88 @@ type MenuItem = Required<MenuProps>['items'][number];
 
 export const managerMenuItems: MenuItem[] = [
   {
-    key: 'dashboard',
-    icon: <DashboardOutlined />,
+    key: 'dashboard-group',
     label: 'Dashboard',
+    type: 'group',
     children: [
       {
-        key: 'overview',
+        key: 'dashboard',
+        icon: <DashboardOutlined />,
         label: 'Overview',
       },
     ],
   },
   {
-    key: 'music-control',
-    icon: <ControlOutlined />,
-    label: 'Music Control',
+    key: 'operations-group',
+    label: 'Operations',
+    type: 'group',
     children: [
       {
-        key: 'auto-manual-mode',
-        label: 'Auto / Manual Mode',
+        key: 'music-control',
+        icon: <ControlOutlined />,
+        label: 'Music Control',
+        children: [
+          {
+            key: 'auto-manual-mode',
+            label: 'Auto / Manual Mode',
+          },
+          {
+            key: 'playback-control',
+            label: 'Playback Control',
+          },
+        ],
       },
       {
-        key: 'playback-control',
-        label: 'Playback Control',
+        key: 'schedule',
+        icon: <ScheduleOutlined />,
+        label: 'Schedule',
+        children: [
+          {
+            key: 'time-based-rules',
+            label: 'Time-based Rules',
+          },
+          {
+            key: 'event-based-rules',
+            label: 'Event-based Rules',
+          },
+        ],
       },
     ],
   },
   {
-    key: 'schedule',
-    icon: <ScheduleOutlined />,
-    label: 'Schedule',
+    key: 'analytics-group',
+    label: 'Analytics',
+    type: 'group',
     children: [
       {
-        key: 'time-based-rules',
-        label: 'Time-based Rules',
-      },
-      {
-        key: 'event-based-rules',
-        label: 'Event-based Rules',
+        key: 'reports',
+        icon: <BarChartOutlined />,
+        label: 'Reports',
+        children: [
+          {
+            key: 'music-vs-sales',
+            label: 'Music vs Sales',
+          },
+          {
+            key: 'customer-engagement',
+            label: 'Customer Engagement',
+          },
+          {
+            key: 'playback-history',
+            label: 'Playback History',
+          },
+        ],
       },
     ],
   },
   {
-    key: 'reports',
-    icon: <BarChartOutlined />,
-    label: 'Reports',
-    children: [
-      {
-        key: 'music-vs-sales',
-        label: 'Music vs Sales',
-      },
-      {
-        key: 'customer-engagement',
-        label: 'Customer Engagement',
-      },
-      {
-        key: 'playback-history',
-        label: 'Playback History',
-      },
-    ],
-  },
-  {
-    key: 'settings',
-    icon: <SettingOutlined />,
+    key: 'settings-group',
     label: 'Settings',
+    type: 'group',
     children: [
       {
-        key: 'store-preferences',
+        key: 'settings',
+        icon: <SettingOutlined />,
         label: 'Store Preferences',
       },
     ],

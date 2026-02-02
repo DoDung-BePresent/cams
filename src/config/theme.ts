@@ -17,6 +17,7 @@ export const antTheme: ThemeConfig = {
       itemMarginInline: 0,
       itemMarginBlock: 0,
       itemBorderRadius: 0,
+      itemHeight: 46,
     },
   },
 };

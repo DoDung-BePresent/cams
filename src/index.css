@@ -49,4 +49,15 @@
   .ant-menu-item-selected {
     border-right: 2px solid var(--ant-color-primary) !important;
   }
+
+  /* Menu icon size - Apply to all icons in Menu */
+  .ant-menu-item .anticon,
+  .ant-menu-submenu-title .anticon {
+    font-size: 16px !important;
+  }
+
+  /* Hide group titles when sidebar is collapsed */
+  .ant-layout-sider-collapsed .ant-menu-item-group-title {
+    display: none;
+  }
 }
