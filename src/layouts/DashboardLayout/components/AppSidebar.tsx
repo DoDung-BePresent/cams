@@ -1,18 +1,12 @@
-/**
- * Node modules
- */
+import { Flex, Layout, Menu } from 'antd';
+import { useNavigate } from 'react-router';
 import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
-import {
-  UploadOutlined,
-  UserOutlined,
-  VideoCameraOutlined,
-} from '@ant-design/icons';
-import { Flex, Layout, Menu } from 'antd';
+import { useAuth } from '@/providers/AuthProvider';
+import { ROLES } from '@/shared/constants/roles';
+import { adminMenuItems } from '@/features/admin/components/AdminSidebar/adminMenuItems';
+import { managerMenuItems } from '@/features/manager/components/ManagerSidebar/managerMenuItems';
 
-/**
- * Types
- */
 type AppSidebarProps = {
   collapsed: boolean;
 };
@@ -32,6 +26,33 @@ const siderStyle: React.CSSProperties = {
 };
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Select menu items based on user role
+  const menuItems =
+    user?.role === ROLES.ADMIN ? adminMenuItems : managerMenuItems;
+
+  const handleMenuClick = (key: string) => {
+    // Map menu keys to routes
+    const routeMap: Record<string, string> = {
+      // Admin routes
+      'system-overview': '/admin/dashboard',
+      'store-list': '/admin/stores',
+      'music-library': '/admin/music',
+      // Manager routes
+      overview: '/manager/dashboard',
+      'auto-manual-mode': '/manager/music-control/mode',
+      'playback-control': '/manager/music-control/playback',
+      // Add more mappings...
+    };
+
+    const route = routeMap[key];
+    if (route) {
+      navigate(route);
+    }
+  };
+
   return (
     <Sider
       trigger={null}
@@ -49,24 +70,9 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
         theme='light'
         mode='inline'
         className='border-none!'
-        defaultSelectedKeys={['1']}
-        items={[
-          {
-            key: '1',
-            icon: <UserOutlined />,
-            label: 'nav 1',
-          },
-          {
-            key: '2',
-            icon: <VideoCameraOutlined />,
-            label: 'nav 2',
-          },
-          {
-            key: '3',
-            icon: <UploadOutlined />,
-            label: 'nav 3',
-          },
-        ]}
+        defaultSelectedKeys={['overview']}
+        items={menuItems}
+        onClick={({ key }) => handleMenuClick(key)}
       />
     </Sider>
   );

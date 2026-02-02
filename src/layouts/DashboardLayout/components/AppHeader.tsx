@@ -1,30 +1,21 @@
-/**
- * Node modules
- */
-import { Avatar, Badge, Button, Flex, Layout } from 'antd';
+import { Avatar, Badge, Button, Dropdown, Flex, Layout } from 'antd';
 import {
   BellOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
+  LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MessageOutlined,
   SettingOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router';
 
-/**
- * Assets
- */
 import avatarImage from '@/assets/images/avatar-1.png';
+import { useFullscreen } from '@/shared/hooks/useFullScreen';
+import { useAuth } from '@/providers/AuthProvider';
 
-/**
- * Hooks
- */
-import { useFullscreen } from '@/shared/hooks/useFullscreen';
-
-/**
- * Types
- */
 type AppHeaderProps = {
   collapsed: boolean;
   onClick: () => void;
@@ -44,6 +35,36 @@ const headerStyle: React.CSSProperties = {
 
 export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Profile',
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Settings',
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: handleLogout,
+    },
+  ];
+
   return (
     <Header style={headerStyle}>
       <Flex
@@ -101,20 +122,15 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
               height: 36,
             }}
           />
-          <Button
-            type='text'
-            icon={
-              <SettingOutlined
-                spin
-                style={{ fontSize: '16px' }}
-              />
-            }
-            style={{
-              width: 36,
-              height: 36,
-            }}
-          />
-          <Avatar src={avatarImage} />
+          <Dropdown
+            menu={{ items: userMenuItems }}
+            placement='bottomRight'
+          >
+            <Avatar
+              src={avatarImage}
+              style={{ cursor: 'pointer' }}
+            />
+          </Dropdown>
         </Flex>
       </Flex>
     </Header>
