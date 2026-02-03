@@ -19,5 +19,11 @@ export const antTheme: ThemeConfig = {
       itemBorderRadius: 0,
       itemHeight: 46,
     },
+    Button: {
+      fontSizeLG: 14,
+    },
+    Input: {
+      fontSizeLG: 14,
+    },
   },
 };

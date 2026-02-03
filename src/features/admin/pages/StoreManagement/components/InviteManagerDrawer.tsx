@@ -61,6 +61,7 @@ export const InviteManagerDrawer = ({
 
   return (
     <Drawer
+      closeIcon={null}
       title='Invite Manager'
       placement='right'
       width={520}
@@ -68,8 +69,14 @@ export const InviteManagerDrawer = ({
       onClose={handleCancel}
       footer={
         <div className='flex justify-end gap-2'>
-          <Button onClick={handleCancel}>Cancel</Button>
           <Button
+            size='large'
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
             type='primary'
             onClick={() => form.submit()}
             loading={loading}

@@ -64,4 +64,9 @@
   .custom-sidebar-scrollbar .simplebar-scrollbar::before {
     @apply bg-gray!;
   }
+
+  .ant-btn.ant-btn-lg .anticon {
+    font-size: 16px !important;
+    margin-top: 3px !important;
+  }
 }

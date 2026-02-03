@@ -52,6 +52,7 @@ export const BranchList = () => {
         breadcrumbs={breadcrumbs}
         extra={
           <Button
+            size='large'
             type='primary'
             icon={<PlusOutlined />}
             onClick={() => setDrawerOpen(true)}

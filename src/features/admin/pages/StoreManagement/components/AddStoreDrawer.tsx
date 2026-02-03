@@ -47,6 +47,7 @@ export const AddStoreDrawer = ({
 
   return (
     <Drawer
+      closeIcon={null}
       title='Add New Store'
       placement='right'
       width={520}
@@ -54,8 +55,14 @@ export const AddStoreDrawer = ({
       onClose={handleCancel}
       footer={
         <div className='flex justify-end gap-2'>
-          <Button onClick={handleCancel}>Cancel</Button>
           <Button
+            size='large'
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
             type='primary'
             onClick={() => form.submit()}
             loading={loading}
@@ -66,13 +73,18 @@ export const AddStoreDrawer = ({
       }
     >
       <Form
-        // size='large'
+        size='large'
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
         initialValues={{
           status: 'active',
           manager_emails: [],
+        }}
+        styles={{
+          label: {
+            height: 22,
+          },
         }}
       >
         <Form.Item
@@ -104,6 +116,11 @@ export const AddStoreDrawer = ({
             placeholder='Short description of the store'
             maxLength={500}
             showCount
+            styles={{
+              count: {
+                fontSize: 14,
+              },
+            }}
           />
         </Form.Item>
 
@@ -128,10 +145,7 @@ export const AddStoreDrawer = ({
           getValueFromEvent={(checked) => (checked ? 'active' : 'inactive')}
           getValueProps={(value) => ({ checked: value === 'active' })}
         >
-          <Switch
-            checkedChildren='Active'
-            unCheckedChildren='Inactive'
-          />
+          <Switch />
         </Form.Item>
       </Form>
     </Drawer>
