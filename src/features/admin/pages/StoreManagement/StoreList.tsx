@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Button, Card, Flex, Table, Tag, Typography } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Card, Flex, Table, Tag, Typography, Space } from 'antd';
+import { PlusOutlined, EyeOutlined, TeamOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router';
 import type { ColumnsType } from 'antd/es/table';
 import type { Store } from '@/features/admin/types/storeTypes';
 import { AddStoreDrawer } from '@/features/admin/components/StoreManagement/AddStoreDrawer';
@@ -8,6 +9,7 @@ import { AddStoreDrawer } from '@/features/admin/components/StoreManagement/AddS
 const { Title } = Typography;
 
 export const StoreList = () => {
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [stores, setStores] = useState<Store[]>([
     {
@@ -59,6 +61,28 @@ export const StoreList = () => {
       dataIndex: 'created_at',
       key: 'created_at',
       render: (date: string) => new Date(date).toLocaleDateString(),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <Space size='small'>
+          <Button
+            type='link'
+            icon={<TeamOutlined />}
+            onClick={() => navigate(`/admin/stores/${record.id}/managers`)}
+          >
+            Managers
+          </Button>
+          <Button
+            type='link'
+            icon={<EyeOutlined />}
+            onClick={() => navigate(`/admin/stores/${record.id}/branches`)}
+          >
+            Branches
+          </Button>
+        </Space>
+      ),
     },
   ];
 

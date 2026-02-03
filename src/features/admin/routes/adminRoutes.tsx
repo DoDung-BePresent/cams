@@ -10,6 +10,16 @@ const StoreList = Loadable(
   'StoreList',
 );
 
+const StoreManagers = Loadable(
+  () => import('@/features/admin/pages/StoreManagement/StoreManagers'),
+  'StoreManagers',
+);
+
+const BranchList = Loadable(
+  () => import('@/features/admin/pages/BranchManagement/BranchList'),
+  'BranchList',
+);
+
 export const adminRoutes = [
   {
     path: 'dashboard',
@@ -18,5 +28,13 @@ export const adminRoutes = [
   {
     path: 'stores',
     element: <StoreList />,
+  },
+  {
+    path: 'stores/:storeId/managers',
+    element: <StoreManagers />,
+  },
+  {
+    path: 'stores/:storeId/branches',
+    element: <BranchList />,
   },
 ];
