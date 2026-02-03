@@ -5,19 +5,18 @@ const AdminDashboard = Loadable(
   'AdminDashboard',
 );
 
-// const StoreList = Loadable(
-//   () => import('@/features/admin/pages/StoreManagement/StoreList'),
-//   'StoreList',
-// );
+const StoreList = Loadable(
+  () => import('@/features/admin/pages/StoreManagement/StoreList'),
+  'StoreList',
+);
 
 export const adminRoutes = [
   {
     path: 'dashboard',
     element: <AdminDashboard />,
   },
-  // {
-  //   path: 'stores',
-  //   element: <StoreList />,
-  // },
-  // Add more admin routes...
+  {
+    path: 'stores',
+    element: <StoreList />,
+  },
 ];
