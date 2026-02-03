@@ -1,73 +1,47 @@
-# React + TypeScript + Vite
+# 3. Register Content of Capstone Project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 3.1. Capstone Project Name
 
-Currently, two official plugins are available:
+- **English:** Context-Aware AI Music Streaming System for Retail Stores based on POS Data and AI Music Generation.
+- **Vietnamese:** Hệ thống phát nhạc thông minh theo ngữ cảnh cho cửa hàng bán lẻ dựa trên dữ liệu POS và công nghệ tạo nhạc bằng AI.
+- **Abbreviation:** CAMS (Context-Aware Music System)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## 3.2. Context
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+In modern retail, background music greatly influences customer mood, shopping experience, and brand atmosphere. However, most stores still use static playlists that do not adapt to real-time factors such as customer flow, sales, or environment. With the rise of cloud and IoT technologies, stores can now deliver smarter, data-driven experiences.
 
-## Expanding the ESLint configuration
+This project proposes a system that uses POS data and external AI Music APIs to automatically select or generate background music that fits the store’s context. The goal is to enhance customer engagement and help retailers manage in-store music more efficiently and dynamically.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 3.3. Proposed Solutions
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1.  **Develop a context-aware music streaming system:** Adjusts background music based on real-time data such as POS transactions, customer density, and environment.
+2.  **Integrate third-party AI Music APIs:** Generate or recommend music that matches the detected store mood.
+3.  **Build a cloud-based platform:** Collect and process context data, request suitable tracks from APIs, and manage multi-store operations.
+4.  **Deploy edge playback devices:** Use ESP32 or an Android app in stores to receive and play music with low latency.
+5.  **Implement a scalable architecture:** Use cloud services and IoT protocols (MQTT/HTTP) to ensure reliability and synchronization across all stores.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 3.4. Requirements
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### A. Functional Requirements
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+| Category               | Requirement Description                                                                                    |
+| :--------------------- | :--------------------------------------------------------------------------------------------------------- |
+| **User Management**    | Secure login for Store Managers; role separation (Admin/Manager); view device status & current track.      |
+| **Data Collection**    | Collect simulated POS data; retrieve real-time weather via public API; allow manual mood override.         |
+| **Context Processing** | Combine POS & weather data to determine mood (e.g., High sales + Sunny = Energetic); dynamic updates.      |
+| **AI Generation**      | Integrate AI music services; fallback mechanism if API fails; switch tracks within 3–5s of context change. |
+| **Streaming & Edge**   | Distribute music to edge devices; support Play/Pause/Skip/Volume; offline playback via caching.            |
+| **Dashboard**          | Web UI for Admin to monitor active stores, context signals, and manual playback control for demos.         |
+
+### B. Non-functional Requirements
+
+- **High Availability:** Maintain reliability during business hours.
+- **Security:** Encrypted communication between cloud and edge devices.
+- **Scalability:** Support for multiple retail branches.
+- **Usability:** Intuitive and responsive UI for non-technical staff.

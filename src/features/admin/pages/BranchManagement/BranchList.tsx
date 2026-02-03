@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Button, Card, Flex, Table, Tag, Typography, Breadcrumb } from 'antd';
-import { PlusOutlined, HomeOutlined, ShopOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router';
-import type { ColumnsType } from 'antd/es/table';
 import type { Branch } from '@/features/admin/types/branchTypes';
-import { AddBranchDrawer } from '@/features/admin/components/BranchManagement/AddBranchDrawer';
-
-const { Title } = Typography;
+import { AddBranchDrawer } from './components/AddBranchDrawer';
+import { getBranchColumns } from './components/BranchTableColumns';
+import { PageHeader } from '@/shared/components/common/PageHeader';
+import { DataTable } from '@/shared/components/common/DataTable';
 
 export const BranchList = () => {
   const { storeId } = useParams<{ storeId: string }>();
@@ -25,114 +25,53 @@ export const BranchList = () => {
     },
   ]);
 
-  const columns: ColumnsType<Branch> = [
+  const breadcrumbs = [
     {
-      title: 'No.',
-      key: 'index',
-      width: 70,
-      render: (_text, _record, index) => index + 1,
+      title: 'Dashboard',
+      onClick: () => navigate('/admin/dashboard'),
+      className: 'cursor-pointer',
     },
     {
-      title: 'Branch Name',
-      dataIndex: 'branch_name',
-      key: 'branch_name',
-      sorter: (a, b) => a.branch_name.localeCompare(b.branch_name),
+      title: 'Store Management',
+      onClick: () => navigate('/admin/stores'),
+      className: 'cursor-pointer',
     },
     {
-      title: 'Branch Code',
-      dataIndex: 'branch_code',
-      key: 'branch_code',
-      render: (code: string) => <Tag color='geekblue'>{code}</Tag>,
-    },
-    {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-      ellipsis: true,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'success' : 'default'}>
-          {status.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Created At',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date: string) => new Date(date).toLocaleDateString(),
+      title: 'Branch Management',
     },
   ];
 
-  const handleAddBranch = (newBranch: any) => {
-    const branch: Branch = {
-      id: String(branches.length + 1),
-      ...newBranch,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    setBranches([...branches, branch]);
-  };
+  const columns = getBranchColumns({
+    onViewDetails: (branchId) => navigate(`/admin/branches/${branchId}`),
+  });
 
   return (
     <div>
-      <Breadcrumb
-        className='mb-3!'
-        items={[
-          {
-            title: 'Dashboard',
-            onClick: () => navigate('/admin/dashboard'),
-            className: 'cursor-pointer',
-          },
-          {
-            title: 'Store Management',
-            onClick: () => navigate('/admin/stores'),
-            className: 'cursor-pointer',
-          },
-          {
-            title: 'Branch Management',
-          },
-        ]}
+      <PageHeader
+        title='Branch Management'
+        breadcrumbs={breadcrumbs}
+        extra={
+          <Button
+            type='primary'
+            icon={<PlusOutlined />}
+            onClick={() => setDrawerOpen(true)}
+          >
+            Add Branch
+          </Button>
+        }
       />
 
-      <Flex
-        justify='space-between'
-        align='center'
-        className='mb-6!'
-      >
-        <Title level={2}>Branch Management</Title>
-        <Button
-          type='primary'
-          icon={<PlusOutlined />}
-          onClick={() => setDrawerOpen(true)}
-        >
-          Add Branch
-        </Button>
-      </Flex>
-
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={branches}
-          rowKey='id'
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} branches`,
-            className: 'mb-0!',
-          }}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        dataSource={branches}
+        rowKey='id'
+      />
 
       <AddBranchDrawer
         open={drawerOpen}
         storeId={storeId!}
         onClose={() => setDrawerOpen(false)}
-        onSuccess={handleAddBranch}
+        onSuccess={(branch) => setBranches([...branches, branch as any])}
       />
     </div>
   );

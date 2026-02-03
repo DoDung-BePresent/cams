@@ -6,8 +6,8 @@ import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
 import { useAuth } from '@/providers/AuthProvider';
 import { ROLES } from '@/shared/constants/roles';
-import { adminMenuItems } from '@/features/admin/components/AdminSidebar/adminMenuItems';
-import { managerMenuItems } from '@/features/manager/components/ManagerSidebar/managerMenuItems';
+import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
+import { managerMenuItems } from '@/features/manager/constants/managerMenuItems';
 import { NavCard } from './NavCard';
 
 type AppSidebarProps = {

@@ -1,26 +1,12 @@
 import { useState } from 'react';
-import {
-  Button,
-  Card,
-  Flex,
-  Table,
-  Tag,
-  Typography,
-  Dropdown,
-  type MenuProps,
-} from 'antd';
-import {
-  PlusOutlined,
-  EyeOutlined,
-  TeamOutlined,
-  MoreOutlined,
-} from '@ant-design/icons';
+import { Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
-import type { ColumnsType } from 'antd/es/table';
 import type { Store } from '@/features/admin/types/storeTypes';
-import { AddStoreDrawer } from '@/features/admin/components/StoreManagement/AddStoreDrawer';
-
-const { Title } = Typography;
+import { AddStoreDrawer } from './components/AddStoreDrawer';
+import { getStoreColumns } from './components/StoreTableColumns';
+import { PageHeader } from '@/shared/components/common/PageHeader';
+import { DataTable } from '@/shared/components/common/DataTable';
 
 export const StoreList = () => {
   const navigate = useNavigate();
@@ -41,82 +27,6 @@ export const StoreList = () => {
     },
   ]);
 
-  const getActionMenuItems = (record: Store): MenuProps['items'] => [
-    {
-      key: 'managers',
-      label: 'Managers',
-      icon: <TeamOutlined />,
-      onClick: () => navigate(`/admin/stores/${record.id}/managers`),
-    },
-    {
-      key: 'branches',
-      label: 'Branches',
-      icon: <EyeOutlined />,
-      onClick: () => navigate(`/admin/stores/${record.id}/branches`),
-    }
-  ];
-
-  const columns: ColumnsType<Store> = [
-    {
-      title: 'No.',
-      key: 'index',
-      width: 70,
-      render: (_text, _record, index) => index + 1,
-    },
-    {
-      title: 'Store Name',
-      dataIndex: 'store_name',
-      key: 'store_name',
-      sorter: (a, b) => a.store_name.localeCompare(b.store_name),
-    },
-    {
-      title: 'Business Type',
-      dataIndex: 'business_type',
-      key: 'business_type',
-      render: (type: string) => <Tag color='blue'>{type.toUpperCase()}</Tag>,
-    },
-    {
-      title: 'Managers',
-      dataIndex: 'manager_emails',
-      key: 'manager_emails',
-      render: (emails: string[]) => <span>{emails.length} manager(s)</span>,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'success' : 'default'}>
-          {status.toUpperCase()}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Created At',
-      dataIndex: 'created_at',
-      key: 'created_at',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      fixed: 'right',
-      width: 80,
-      render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionMenuItems(record) }}
-          placement='bottomRight'
-          trigger={['click']} 
-        >
-          <Button
-            type='text'
-            icon={<MoreOutlined />}
-          />
-        </Dropdown>
-      ),
-    },
-  ];
-
   const handleAddStore = (newStore: any) => {
     const store: Store = {
       id: String(stores.length + 1),
@@ -127,36 +37,43 @@ export const StoreList = () => {
     setStores([...stores, store]);
   };
 
+  const breadcrumbs = [
+    {
+      title: 'Dashboard',
+      onClick: () => navigate('/admin/dashboard'),
+      className: 'cursor-pointer',
+    },
+    {
+      title: 'Store Management',
+    },
+  ];
+
+  const columns = getStoreColumns({
+    onViewManagers: (storeId) => navigate(`/admin/stores/${storeId}/managers`),
+    onViewBranches: (storeId) => navigate(`/admin/stores/${storeId}/branches`),
+  });
+
   return (
     <div>
-      <Flex
-        justify='space-between'
-        align='center'
-        className='mb-6!'
-      >
-        <Title level={2}>Store Management</Title>
-        <Button
-          type='primary'
-          icon={<PlusOutlined />}
-          onClick={() => setDrawerOpen(true)}
-        >
-          Add Store
-        </Button>
-      </Flex>
+      <PageHeader
+        title='Store Management'
+        breadcrumbs={breadcrumbs}
+        extra={
+          <Button
+            type='primary'
+            icon={<PlusOutlined />}
+            onClick={() => setDrawerOpen(true)}
+          >
+            Add Store
+          </Button>
+        }
+      />
 
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={stores}
-          rowKey='id'
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} stores`,
-            className: 'mb-0!',
-          }}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        dataSource={stores}
+        rowKey='id'
+      />
 
       <AddStoreDrawer
         open={drawerOpen}

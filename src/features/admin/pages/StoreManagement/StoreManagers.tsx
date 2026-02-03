@@ -1,30 +1,12 @@
 import { useState } from 'react';
-import {
-  Button,
-  Card,
-  Flex,
-  Table,
-  Tag,
-  Typography,
-  Dropdown,
-  Breadcrumb,
-} from 'antd';
-import {
-  PlusOutlined,
-  MoreOutlined,
-  HomeOutlined,
-  ShopOutlined,
-} from '@ant-design/icons';
+import { Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router';
-import type { ColumnsType } from 'antd/es/table';
 import type { StoreUser } from '@/features/admin/types/userTypes';
-import {
-  USER_STATUS_COLORS,
-  USER_STATUS_LABELS,
-} from '@/features/admin/constants/userConstants';
-import { InviteManagerDrawer } from '@/features/admin/components/StoreManagement/InviteManagerDrawer';
-
-const { Title } = Typography;
+import { InviteManagerDrawer } from './components/InviteManagerDrawer';
+import { getStoreManagersColumns } from './components/StoreManagersTableColumns';
+import { PageHeader } from '@/shared/components/common/PageHeader';
+import { DataTable } from '@/shared/components/common/DataTable';
 
 export const StoreManagers = () => {
   const { storeId } = useParams<{ storeId: string }>();
@@ -55,43 +37,6 @@ export const StoreManagers = () => {
     },
   ]);
 
-  const getActionMenuItems = (record: StoreUser) => {
-    const baseItems = [
-      {
-        key: 'change-role',
-        label: 'Change Role',
-        onClick: () => handleChangeRole(record.id),
-      },
-    ];
-
-    if (record.status === 'INVITED') {
-      baseItems.unshift({
-        key: 'resend-invite',
-        label: 'Resend Invite',
-        onClick: () => handleResendInvite(record.id),
-      });
-    }
-
-    if (record.status === 'ACTIVE') {
-      baseItems.push({
-        key: 'suspend',
-        label: 'Suspend',
-        onClick: () => handleSuspend(record.id),
-        danger: true,
-      } as any);
-    }
-
-    if (record.status === 'SUSPENDED') {
-      baseItems.push({
-        key: 'reactivate',
-        label: 'Reactivate',
-        onClick: () => handleReactivate(record.id),
-      });
-    }
-
-    return baseItems;
-  };
-
   const handleResendInvite = (userId: string) => {
     console.log('Resend invite:', userId);
     // TODO: Implement resend invite logic
@@ -112,62 +57,6 @@ export const StoreManagers = () => {
     // TODO: Implement reactivate logic
   };
 
-  const columns: ColumnsType<StoreUser> = [
-    {
-      title: 'No.',
-      key: 'index',
-      width: 70,
-      render: (_text, _record, index) => index + 1,
-    },
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (name: string, record) => name || record.email.split('@')[0],
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
-    {
-      title: 'Role',
-      dataIndex: 'role',
-      key: 'role',
-      render: (role: string) => (
-        <Tag color='blue'>
-          {role === 'STORE_MANAGER' ? 'Store Manager' : 'Branch Manager'}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: keyof typeof USER_STATUS_COLORS) => (
-        <Tag color={USER_STATUS_COLORS[status]}>
-          {USER_STATUS_LABELS[status]}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      fixed: 'right',
-      render: (_, record) => (
-        <Dropdown
-          menu={{ items: getActionMenuItems(record) }}
-          placement='bottomRight'
-        >
-          <Button
-            type='text'
-            icon={<MoreOutlined />}
-          />
-        </Dropdown>
-      ),
-    },
-  ];
-
   const handleInviteManager = (newUser: any) => {
     const user: StoreUser = {
       id: String(managers.length + 1),
@@ -183,57 +72,52 @@ export const StoreManagers = () => {
     setManagers([...managers, user]);
   };
 
+  const breadcrumbs = [
+    {
+      title: 'Dashboard',
+      onClick: () => navigate('/admin/dashboard'),
+      className: 'cursor-pointer',
+    },
+    {
+      title: 'Store Management',
+      onClick: () => navigate('/admin/stores'),
+      className: 'cursor-pointer',
+    },
+    {
+      title: 'Managers',
+    },
+  ];
+
+  const columns = getStoreManagersColumns({
+    onResendInvite: handleResendInvite,
+    onChangeRole: handleChangeRole,
+    onSuspend: handleSuspend,
+    onReactivate: handleReactivate,
+  });
+
   const existingEmails = managers.map((m) => m.email.toLowerCase());
 
   return (
     <div>
-      <Breadcrumb
-        className='mb-3!'
-        items={[
-          {
-            title: 'Dashboard',
-            onClick: () => navigate('/admin/dashboard'),
-            className: 'cursor-pointer',
-          },
-          {
-            title: 'Store Management',
-            onClick: () => navigate('/admin/stores'),
-            className: 'cursor-pointer',
-          },
-          {
-            title: 'Managers',
-          },
-        ]}
+      <PageHeader
+        title='Store Managers'
+        breadcrumbs={breadcrumbs}
+        extra={
+          <Button
+            type='primary'
+            icon={<PlusOutlined />}
+            onClick={() => setDrawerOpen(true)}
+          >
+            Invite Manager
+          </Button>
+        }
       />
 
-      <Flex
-        justify='space-between'
-        align='center'
-        className='mb-6!'
-      >
-        <Title level={2}>Store Managers</Title>
-        <Button
-          type='primary'
-          icon={<PlusOutlined />}
-          onClick={() => setDrawerOpen(true)}
-        >
-          Invite Manager
-        </Button>
-      </Flex>
-
-      <Card>
-        <Table
-          columns={columns}
-          dataSource={managers}
-          rowKey='id'
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} managers`,
-            className: 'mb-0!',
-          }}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        dataSource={managers}
+        rowKey='id'
+      />
 
       <InviteManagerDrawer
         open={drawerOpen}
