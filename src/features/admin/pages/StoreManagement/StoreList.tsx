@@ -1,6 +1,20 @@
 import { useState } from 'react';
-import { Button, Card, Flex, Table, Tag, Typography, Space } from 'antd';
-import { PlusOutlined, EyeOutlined, TeamOutlined } from '@ant-design/icons';
+import {
+  Button,
+  Card,
+  Flex,
+  Table,
+  Tag,
+  Typography,
+  Dropdown,
+  type MenuProps,
+} from 'antd';
+import {
+  PlusOutlined,
+  EyeOutlined,
+  TeamOutlined,
+  MoreOutlined,
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import type { ColumnsType } from 'antd/es/table';
 import type { Store } from '@/features/admin/types/storeTypes';
@@ -27,7 +41,28 @@ export const StoreList = () => {
     },
   ]);
 
+  const getActionMenuItems = (record: Store): MenuProps['items'] => [
+    {
+      key: 'managers',
+      label: 'Managers',
+      icon: <TeamOutlined />,
+      onClick: () => navigate(`/admin/stores/${record.id}/managers`),
+    },
+    {
+      key: 'branches',
+      label: 'Branches',
+      icon: <EyeOutlined />,
+      onClick: () => navigate(`/admin/stores/${record.id}/branches`),
+    }
+  ];
+
   const columns: ColumnsType<Store> = [
+    {
+      title: 'No.',
+      key: 'index',
+      width: 70,
+      render: (_text, _record, index) => index + 1,
+    },
     {
       title: 'Store Name',
       dataIndex: 'store_name',
@@ -65,23 +100,19 @@ export const StoreList = () => {
     {
       title: 'Actions',
       key: 'actions',
+      fixed: 'right',
+      width: 80,
       render: (_, record) => (
-        <Space size='small'>
+        <Dropdown
+          menu={{ items: getActionMenuItems(record) }}
+          placement='bottomRight'
+          trigger={['click']} 
+        >
           <Button
-            type='link'
-            icon={<TeamOutlined />}
-            onClick={() => navigate(`/admin/stores/${record.id}/managers`)}
-          >
-            Managers
-          </Button>
-          <Button
-            type='link'
-            icon={<EyeOutlined />}
-            onClick={() => navigate(`/admin/stores/${record.id}/branches`)}
-          >
-            Branches
-          </Button>
-        </Space>
+            type='text'
+            icon={<MoreOutlined />}
+          />
+        </Dropdown>
       ),
     },
   ];
@@ -101,7 +132,7 @@ export const StoreList = () => {
       <Flex
         justify='space-between'
         align='center'
-        className='mb-6'
+        className='mb-6!'
       >
         <Title level={2}>Store Management</Title>
         <Button
@@ -122,6 +153,7 @@ export const StoreList = () => {
             pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} stores`,
+            className: 'mb-0!',
           }}
         />
       </Card>

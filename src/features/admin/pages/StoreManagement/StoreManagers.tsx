@@ -6,7 +6,6 @@ import {
   Table,
   Tag,
   Typography,
-  Space,
   Dropdown,
   Breadcrumb,
 } from 'antd';
@@ -115,6 +114,12 @@ export const StoreManagers = () => {
 
   const columns: ColumnsType<StoreUser> = [
     {
+      title: 'No.',
+      key: 'index',
+      width: 70,
+      render: (_text, _record, index) => index + 1,
+    },
+    {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
@@ -148,6 +153,7 @@ export const StoreManagers = () => {
     {
       title: 'Actions',
       key: 'actions',
+      fixed: 'right',
       render: (_, record) => (
         <Dropdown
           menu={{ items: getActionMenuItems(record) }}
@@ -182,25 +188,15 @@ export const StoreManagers = () => {
   return (
     <div>
       <Breadcrumb
-        className='mb-4'
+        className='mb-3!'
         items={[
           {
-            title: (
-              <>
-                <HomeOutlined />
-                <span>Dashboard</span>
-              </>
-            ),
+            title: 'Dashboard',
             onClick: () => navigate('/admin/dashboard'),
             className: 'cursor-pointer',
           },
           {
-            title: (
-              <>
-                <ShopOutlined />
-                <span>Store Management</span>
-              </>
-            ),
+            title: 'Store Management',
             onClick: () => navigate('/admin/stores'),
             className: 'cursor-pointer',
           },
@@ -213,7 +209,7 @@ export const StoreManagers = () => {
       <Flex
         justify='space-between'
         align='center'
-        className='mb-6'
+        className='mb-6!'
       >
         <Title level={2}>Store Managers</Title>
         <Button
@@ -234,6 +230,7 @@ export const StoreManagers = () => {
             pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} managers`,
+            className: 'mb-0!',
           }}
         />
       </Card>

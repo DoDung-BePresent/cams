@@ -27,6 +27,12 @@ export const BranchList = () => {
 
   const columns: ColumnsType<Branch> = [
     {
+      title: 'No.',
+      key: 'index',
+      width: 70,
+      render: (_text, _record, index) => index + 1,
+    },
+    {
       title: 'Branch Name',
       dataIndex: 'branch_name',
       key: 'branch_name',
@@ -75,25 +81,15 @@ export const BranchList = () => {
   return (
     <div>
       <Breadcrumb
-        className='mb-4'
+        className='mb-3!'
         items={[
           {
-            title: (
-              <>
-                <HomeOutlined />
-                <span>Dashboard</span>
-              </>
-            ),
+            title: 'Dashboard',
             onClick: () => navigate('/admin/dashboard'),
             className: 'cursor-pointer',
           },
           {
-            title: (
-              <>
-                <ShopOutlined />
-                <span>Store Management</span>
-              </>
-            ),
+            title: 'Store Management',
             onClick: () => navigate('/admin/stores'),
             className: 'cursor-pointer',
           },
@@ -106,7 +102,7 @@ export const BranchList = () => {
       <Flex
         justify='space-between'
         align='center'
-        className='mb-6'
+        className='mb-6!'
       >
         <Title level={2}>Branch Management</Title>
         <Button
@@ -127,6 +123,7 @@ export const BranchList = () => {
             pageSize: 10,
             showSizeChanger: true,
             showTotal: (total) => `Total ${total} branches`,
+            className: 'mb-0!',
           }}
         />
       </Card>

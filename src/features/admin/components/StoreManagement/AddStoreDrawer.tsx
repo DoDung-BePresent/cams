@@ -1,13 +1,5 @@
 import { useState } from 'react';
-import {
-  Button,
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Switch,
-  message,
-} from 'antd';
+import { Button, Drawer, Form, Input, Select, Switch, message } from 'antd';
 import type { CreateStoreDto } from '@/features/admin/types/storeTypes';
 import { BUSINESS_TYPES } from '@/features/admin/constants/storeConstants';
 import { storeValidation } from '@/features/admin/validations/storeValidation';
@@ -74,6 +66,7 @@ export const AddStoreDrawer = ({
       }
     >
       <Form
+        // size='large'
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
