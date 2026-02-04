@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Modal, message } from 'antd';
-import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Button, message } from 'antd';
+import { PlusOutlined} from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import type { Space } from '@/features/manager/types/spaceTypes';
 import { AddSpaceDrawer } from './components/AddSpaceDrawer';
@@ -8,6 +8,7 @@ import { getSpaceColumns } from './components/SpaceTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
 import { useBranchStore } from '@/features/manager/stores/useBranchStore';
+import { AppModal } from '@/shared/components/ui/AppModal';
 
 export const SpaceList = () => {
   const navigate = useNavigate();
@@ -47,18 +48,17 @@ export const SpaceList = () => {
   };
 
   const handleDelete = (spaceId: string) => {
-    Modal.confirm({
+    const space = spaces.find((s) => s.id === spaceId);
+
+    AppModal.confirm({
       title: 'Are you sure you want to delete this space?',
-      icon: <ExclamationCircleOutlined />,
-      content: 'This action cannot be undone.',
-      okText: 'Yes, Delete',
-      okType: 'danger',
+      content: `By deleting "${space?.space_name}", all devices assigned to this space will be unlinked.`,
+      okText: 'Delete',
       cancelText: 'Cancel',
-      centered: true,
-      mask: {
-        blur: false,
+      okButtonProps: {
+        danger: true,
       },
-      onOk() {
+      onOk: async () => {
         setSpaces(spaces.filter((s) => s.id !== spaceId));
         message.success('Space deleted successfully!');
         // TODO: Call API to delete space
@@ -107,7 +107,7 @@ export const SpaceList = () => {
   return (
     <div>
       <PageHeader
-        title='Space Management'
+        title={`Space Management - ${currentBranch.branch_name}`}
         breadcrumbs={breadcrumbs}
         extra={
           <Button

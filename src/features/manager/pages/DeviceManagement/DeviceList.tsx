@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button, Modal, message } from 'antd';
-import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Button, message } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import type { Device } from '@/features/manager/types/deviceTypes';
 import { PairDeviceModal } from './components/PairDeviceModal';
@@ -8,6 +8,8 @@ import { getDeviceColumns } from './components/DeviceTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
 import { useBranchStore } from '@/features/manager/stores/useBranchStore';
+import { showDeleteConfirm } from '@/shared/components/ui/DeleteConfirmModal'; // ✅ Import
+import { CustomModal } from '@/shared/utils/customModal'; // ✅ Import
 
 export const DeviceList = () => {
   const navigate = useNavigate();
@@ -56,14 +58,16 @@ export const DeviceList = () => {
   ]);
 
   const handleUnpair = (deviceId: string) => {
-    Modal.confirm({
+    const device = devices.find((d) => d.id === deviceId);
+
+    CustomModal.confirm({
       title: 'Are you sure you want to unpair this device?',
-      icon: <ExclamationCircleOutlined />,
-      content: 'The device will no longer be associated with any space.',
+      content: `Device "${device?.device_id}" will no longer be associated with any space.`,
       okText: 'Yes, Unpair',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      onOk() {
+      okButtonProps: {
+        danger: true,
+      },
+      onOk: async () => {
         setDevices(
           devices.map((d) =>
             d.id === deviceId
@@ -83,14 +87,13 @@ export const DeviceList = () => {
   };
 
   const handleDelete = (deviceId: string) => {
-    Modal.confirm({
+    const device = devices.find((d) => d.id === deviceId);
+
+    showDeleteConfirm({
       title: 'Are you sure you want to delete this device?',
-      icon: <ExclamationCircleOutlined />,
+      itemName: device?.device_id,
       content: 'This action cannot be undone.',
-      okText: 'Yes, Delete',
-      okType: 'danger',
-      cancelText: 'Cancel',
-      onOk() {
+      onConfirm: async () => {
         setDevices(devices.filter((d) => d.id !== deviceId));
         message.success('Device deleted successfully!');
         // TODO: Call API to delete device
