@@ -206,6 +206,15 @@ export const UserDetail = () => {
                   Add Store
                 </Button>
               }
+              styles={{
+                header: {
+                  padding: 16,
+                },
+                body: {
+                  padding: 0,
+                  paddingTop: 1,
+                },
+              }}
             >
               <Table
                 dataSource={storeAssignments}
@@ -255,6 +264,12 @@ export const UserDetail = () => {
                   Add Branch
                 </Button>
               }
+              styles={{
+                body: {
+                  padding: 0,
+                  paddingTop: 1,
+                },
+              }}
             >
               <Table
                 dataSource={branchAssignments}
