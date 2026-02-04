@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Drawer, Form, Select, message } from 'antd';
-import type { AssignBranchDto } from '@/features/admin/types/userTypes';
+import type { AssignBranchPayload } from '@/features/admin/types/userTypes';
 import { assignBranchValidation } from '@/features/admin/validations/userValidation';
 
 type AssignBranchDrawerProps = {
@@ -16,7 +16,7 @@ export const AssignBranchDrawer = ({
   onClose,
   onSuccess,
 }: AssignBranchDrawerProps) => {
-  const [form] = Form.useForm<AssignBranchDto>();
+  const [form] = Form.useForm<AssignBranchPayload>();
   const [loading, setLoading] = useState(false);
 
   // TODO: Fetch branches from API (grouped by store)
@@ -26,7 +26,7 @@ export const AssignBranchDrawer = ({
     { label: 'Highlands Coffee - Tan Binh', value: '3', storeId: '2' },
   ];
 
-  const handleSubmit = async (values: AssignBranchDto) => {
+  const handleSubmit = async (values: AssignBranchPayload) => {
     try {
       setLoading(true);
 
@@ -83,6 +83,11 @@ export const AssignBranchDrawer = ({
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           label='Select Branch'

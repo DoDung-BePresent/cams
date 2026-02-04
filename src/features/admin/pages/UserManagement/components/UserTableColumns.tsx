@@ -1,5 +1,11 @@
 import { Button, Dropdown, Tag } from 'antd';
-import { EyeOutlined, MoreOutlined } from '@ant-design/icons';
+import {
+  EyeOutlined,
+  MailOutlined,
+  MoreOutlined,
+  StopOutlined,
+  UndoOutlined,
+} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import type { User } from '@/features/admin/types/userTypes';
@@ -35,6 +41,7 @@ export const getUserColumns = ({
       baseItems.push({
         key: 'resend-invite',
         label: 'Resend Invite',
+        icon: <MailOutlined />,
         onClick: () => onResendInvite(record.id),
       });
     }
@@ -43,6 +50,7 @@ export const getUserColumns = ({
       baseItems.push({
         key: 'suspend',
         label: 'Suspend',
+        icon: <StopOutlined />,
         onClick: () => onSuspend(record.id),
         danger: true,
       });
@@ -52,6 +60,7 @@ export const getUserColumns = ({
       baseItems.push({
         key: 'reactivate',
         label: 'Reactivate',
+        icon: <UndoOutlined />,
         onClick: () => onReactivate(record.id),
       });
     }

@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { Button, Drawer, Form, Input, Select, message } from 'antd';
-import type { CreateUserDto } from '@/features/admin/types/userTypes';
-import { USER_ROLES } from '@/features/admin/constants/userConstants';
+import { Button, Drawer, Form, Input, message } from 'antd';
+import type { CreateUserPayload } from '@/features/admin/types/userTypes';
 import { createUserValidation } from '@/features/admin/validations/userValidation';
 
 type AddUserDrawerProps = {
   open: boolean;
   onClose: () => void;
-  onSuccess: (user: CreateUserDto) => void;
+  onSuccess: (user: CreateUserPayload) => void;
 };
 
 export const AddUserDrawer = ({
@@ -15,10 +14,10 @@ export const AddUserDrawer = ({
   onClose,
   onSuccess,
 }: AddUserDrawerProps) => {
-  const [form] = Form.useForm<CreateUserDto>();
+  const [form] = Form.useForm<CreateUserPayload>();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (values: CreateUserDto) => {
+  const handleSubmit = async (values: CreateUserPayload) => {
     try {
       setLoading(true);
 
@@ -72,9 +71,15 @@ export const AddUserDrawer = ({
       }
     >
       <Form
+        size='large'
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           label='Email'
@@ -85,17 +90,6 @@ export const AddUserDrawer = ({
           <Input
             placeholder='user@example.com'
             type='email'
-          />
-        </Form.Item>
-
-        <Form.Item
-          label='Role'
-          name='role'
-          rules={createUserValidation.role}
-        >
-          <Select
-            placeholder='Select role'
-            options={USER_ROLES}
           />
         </Form.Item>
       </Form>

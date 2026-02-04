@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Drawer, Form, Select, message } from 'antd';
-import type { AssignStoreDto } from '@/features/admin/types/userTypes';
+import type { AssignStorePayload } from '@/features/admin/types/userTypes';
 import { assignStoreValidation } from '@/features/admin/validations/userValidation';
 
 type AssignStoreDrawerProps = {
@@ -16,7 +16,7 @@ export const AssignStoreDrawer = ({
   onClose,
   onSuccess,
 }: AssignStoreDrawerProps) => {
-  const [form] = Form.useForm<AssignStoreDto>();
+  const [form] = Form.useForm<AssignStorePayload>();
   const [loading, setLoading] = useState(false);
 
   // TODO: Fetch stores from API
@@ -25,7 +25,7 @@ export const AssignStoreDrawer = ({
     { label: 'Highlands Coffee', value: '2' },
   ];
 
-  const handleSubmit = async (values: AssignStoreDto) => {
+  const handleSubmit = async (values: AssignStorePayload) => {
     try {
       setLoading(true);
 
@@ -82,6 +82,11 @@ export const AssignStoreDrawer = ({
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           label='Select Store'

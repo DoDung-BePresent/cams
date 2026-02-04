@@ -17,8 +17,6 @@ export const StoreList = () => {
       store_name: 'Moonlight Coffee',
       business_type: 'cafe',
       description: 'A cozy coffee brand focusing on chill experience',
-      manager_emails: [],
-      status: 'active',
       created_at: '2024-01-15T10:00:00Z',
       updated_at: '2024-01-15T10:00:00Z',
     },

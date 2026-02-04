@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Button, Drawer, Form, Input, Select, message } from 'antd';
-import type { CreateBranchDto } from '@/features/admin/types/branchTypes';
-import { BRANCH_STATUS } from '@/features/admin/constants/branchConstants';
+import { Button, Drawer, Form, Input, message } from 'antd';
+import type { CreateBranchPayload } from '@/features/admin/types/branchTypes';
 import { branchValidation } from '@/features/admin/validations/branchValidation';
 
 const { TextArea } = Input;
@@ -10,7 +9,7 @@ type AddBranchDrawerProps = {
   open: boolean;
   storeId: string;
   onClose: () => void;
-  onSuccess: (branch: CreateBranchDto) => void;
+  onSuccess: (branch: CreateBranchPayload) => void;
 };
 
 export const AddBranchDrawer = ({
@@ -19,14 +18,16 @@ export const AddBranchDrawer = ({
   onClose,
   onSuccess,
 }: AddBranchDrawerProps) => {
-  const [form] = Form.useForm<CreateBranchDto>();
+  const [form] = Form.useForm<CreateBranchPayload>();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (values: Omit<CreateBranchDto, 'store_id'>) => {
+  const handleSubmit = async (
+    values: Omit<CreateBranchPayload, 'store_id'>,
+  ) => {
     try {
       setLoading(true);
 
-      const payload: CreateBranchDto = {
+      const payload: CreateBranchPayload = {
         ...values,
         store_id: storeId,
         branch_code: values.branch_code.toUpperCase(),
@@ -88,10 +89,16 @@ export const AddBranchDrawer = ({
     >
       <Form
         form={form}
+        size='large'
         layout='vertical'
         onFinish={handleSubmit}
         initialValues={{
           status: 'active',
+        }}
+        styles={{
+          label: {
+            height: 22,
+          },
         }}
       >
         <Form.Item
@@ -124,17 +131,11 @@ export const AddBranchDrawer = ({
             placeholder='Full physical address of the branch'
             maxLength={255}
             showCount
-          />
-        </Form.Item>
-
-        <Form.Item
-          label='Status'
-          name='status'
-          rules={branchValidation.status}
-        >
-          <Select
-            placeholder='Select branch status'
-            options={BRANCH_STATUS}
+            styles={{
+              count: {
+                fontSize: 14,
+              },
+            }}
           />
         </Form.Item>
       </Form>

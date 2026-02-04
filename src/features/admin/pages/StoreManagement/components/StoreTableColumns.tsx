@@ -1,5 +1,5 @@
 import { Button, Dropdown, Tag } from 'antd';
-import { EyeOutlined, MoreOutlined } from '@ant-design/icons';
+import { BranchesOutlined, MoreOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import type { Store } from '@/features/admin/types/storeTypes';
@@ -15,7 +15,7 @@ export const getStoreColumns = ({
     {
       key: 'branches',
       label: 'Branches',
-      icon: <EyeOutlined />,
+      icon: <BranchesOutlined />,
       onClick: () => onViewBranches(record.id),
     },
   ];
@@ -38,16 +38,6 @@ export const getStoreColumns = ({
       dataIndex: 'business_type',
       key: 'business_type',
       render: (type: string) => <Tag color='blue'>{type.toUpperCase()}</Tag>,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'success' : 'default'}>
-          {status.toUpperCase()}
-        </Tag>
-      ),
     },
     {
       title: 'Created At',

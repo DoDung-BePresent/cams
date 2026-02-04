@@ -2,13 +2,8 @@ import { Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Branch } from '@/features/admin/types/branchTypes';
 
-type GetColumnsProps = {
-  onViewDetails?: (branchId: string) => void;
-};
 
-export const getBranchColumns = ({
-  onViewDetails,
-}: GetColumnsProps): ColumnsType<Branch> => [
+export const getBranchColumns = (): ColumnsType<Branch> => [
   {
     title: 'No.',
     key: 'index',
@@ -32,16 +27,6 @@ export const getBranchColumns = ({
     dataIndex: 'address',
     key: 'address',
     ellipsis: true,
-  },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    key: 'status',
-    render: (status: string) => (
-      <Tag color={status === 'active' ? 'success' : 'default'}>
-        {status.toUpperCase()}
-      </Tag>
-    ),
   },
   {
     title: 'Created At',

@@ -19,7 +19,6 @@ export const BranchList = () => {
       branch_name: 'Highlands Coffee - District 1',
       branch_code: 'HLC_Q1',
       address: '123 Nguyen Hue, District 1, Ho Chi Minh City',
-      status: 'active',
       created_at: '2024-01-15T10:00:00Z',
       updated_at: '2024-01-15T10:00:00Z',
     },
@@ -41,9 +40,7 @@ export const BranchList = () => {
     },
   ];
 
-  const columns = getBranchColumns({
-    onViewDetails: (branchId) => navigate(`/admin/branches/${branchId}`),
-  });
+  const columns = getBranchColumns();
 
   return (
     <div>

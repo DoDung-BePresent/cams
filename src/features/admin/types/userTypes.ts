@@ -31,16 +31,15 @@ export type BranchUser = {
   assigned_at: string;
 };
 
-// DTOs
-export type CreateUserDto = {
+export type CreateUserPayload = {
   email: string;
   role: UserRole;
 };
 
-export type AssignStoreDto = {
+export type AssignStorePayload = {
   store_id: string;
 };
 
-export type AssignBranchDto = {
+export type AssignBranchPayload = {
   branch_id: string;
 };
