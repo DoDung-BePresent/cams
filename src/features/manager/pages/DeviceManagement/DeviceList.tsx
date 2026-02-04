@@ -8,8 +8,7 @@ import { getDeviceColumns } from './components/DeviceTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
 import { useBranchStore } from '@/features/manager/stores/useBranchStore';
-import { showDeleteConfirm } from '@/shared/components/ui/DeleteConfirmModal'; // ✅ Import
-import { CustomModal } from '@/shared/utils/customModal'; // ✅ Import
+import { AppModal } from '@/shared/components/ui/AppModal';
 
 export const DeviceList = () => {
   const navigate = useNavigate();
@@ -60,10 +59,11 @@ export const DeviceList = () => {
   const handleUnpair = (deviceId: string) => {
     const device = devices.find((d) => d.id === deviceId);
 
-    CustomModal.confirm({
+    AppModal.confirm({
       title: 'Are you sure you want to unpair this device?',
       content: `Device "${device?.device_id}" will no longer be associated with any space.`,
       okText: 'Yes, Unpair',
+      cancelText: 'Cancel',
       okButtonProps: {
         danger: true,
       },
@@ -89,11 +89,15 @@ export const DeviceList = () => {
   const handleDelete = (deviceId: string) => {
     const device = devices.find((d) => d.id === deviceId);
 
-    showDeleteConfirm({
+    AppModal.confirm({
       title: 'Are you sure you want to delete this device?',
-      itemName: device?.device_id,
-      content: 'This action cannot be undone.',
-      onConfirm: async () => {
+      content: `By deleting "${device?.device_id}", this action cannot be undone.`,
+      okText: 'Delete',
+      cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
+      onOk: async () => {
         setDevices(devices.filter((d) => d.id !== deviceId));
         message.success('Device deleted successfully!');
         // TODO: Call API to delete device
@@ -130,7 +134,7 @@ export const DeviceList = () => {
   return (
     <div>
       <PageHeader
-        title={`Device Management - ${currentBranch.branch_name}`}
+        title='Device Management'
         breadcrumbs={breadcrumbs}
         extra={
           <Button

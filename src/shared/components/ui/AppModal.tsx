@@ -1,4 +1,4 @@
-import { Modal } from 'antd';
+import { Modal, type ModalProps } from 'antd';
 import type { ModalFuncProps } from 'antd';
 import {
   ExclamationCircleOutlined,
@@ -7,7 +7,10 @@ import {
   InfoCircleOutlined,
   DeleteFilled,
 } from '@ant-design/icons';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 
+// ========== Static Modal Props ==========
 type AppModalProps = ModalFuncProps & {
   blur?: boolean;
 };
@@ -54,7 +57,7 @@ const baseModalConfig: ModalFuncProps = {
   },
 };
 
-// app Confirm Modal
+// ========== Static Methods ==========
 const appConfirm = (props: AppModalProps) => {
   return Modal.confirm({
     ...baseModalConfig,
@@ -77,7 +80,6 @@ const appConfirm = (props: AppModalProps) => {
   });
 };
 
-// app Success Modal
 const appSuccess = (props: AppModalProps) => {
   return Modal.success({
     ...baseModalConfig,
@@ -94,7 +96,6 @@ const appSuccess = (props: AppModalProps) => {
   });
 };
 
-// app Error Modal
 const appError = (props: AppModalProps) => {
   return Modal.error({
     ...baseModalConfig,
@@ -111,7 +112,6 @@ const appError = (props: AppModalProps) => {
   });
 };
 
-// app Warning Modal
 const appWarning = (props: AppModalProps) => {
   return Modal.warning({
     ...baseModalConfig,
@@ -127,7 +127,6 @@ const appWarning = (props: AppModalProps) => {
   });
 };
 
-// app Info Modal
 const appInfo = (props: AppModalProps) => {
   return Modal.info({
     ...baseModalConfig,
@@ -143,11 +142,48 @@ const appInfo = (props: AppModalProps) => {
   });
 };
 
-// Export all as a single object (similar to Modal.confirm, Modal.error, etc.)
-export const AppModal = {
+// ========== JSX Component Props ==========
+type AppModalComponentProps = ModalProps & {
+  maxHeight?: number | string;
+  scrollable?: boolean;
+};
+
+// ========== JSX Component ==========
+const AppModalComponent = ({
+  children,
+  maxHeight = '70vh',
+  scrollable = true,
+  ...props
+}: AppModalComponentProps) => {
+  return (
+    <Modal
+      {...props}
+      centered
+      styles={{
+        body: {
+          padding: scrollable ? '24px 0' : '24px',
+          maxHeight: scrollable ? maxHeight : undefined,
+          overflow: scrollable ? 'hidden' : undefined,
+        },
+        ...props.styles,
+      }}
+    >
+      {scrollable ? (
+        <SimpleBar style={{ maxHeight, padding: '0 24px' }}>
+          {children}
+        </SimpleBar>
+      ) : (
+        children
+      )}
+    </Modal>
+  );
+};
+
+// ========== Export Combined ==========
+export const AppModal = Object.assign(AppModalComponent, {
   confirm: appConfirm,
   success: appSuccess,
   error: appError,
   warning: appWarning,
   info: appInfo,
-};
+});

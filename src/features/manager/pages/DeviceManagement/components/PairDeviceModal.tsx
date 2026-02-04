@@ -4,8 +4,6 @@ import {
   Divider,
   Flex,
   Form,
-  Input,
-  Modal,
   Radio,
   Select,
   Space,
@@ -25,6 +23,7 @@ import {
   PAIRING_CODE_EXPIRY_MINUTES,
   QR_CODE_EXPIRY_MINUTES,
 } from '@/features/manager/constants/deviceConstants';
+import { AppModal } from '@/shared/components/ui/AppModal';
 
 const { Text, Title } = Typography;
 
@@ -73,7 +72,7 @@ export const PairDeviceModal = ({
   const generateQRCode = () => {
     const payload: QRCodePayload = {
       space_id: form.getFieldValue('space_id') || '',
-      device_token: `TOKEN_${Date.now()}`, // TODO: Generate real JWT token
+      device_token: `TOKEN_${Date.now()}`,
       api_endpoint: 'https://api.cams.com/device/register',
       expires_at: new Date(
         Date.now() + QR_CODE_EXPIRY_MINUTES * 60 * 1000,
@@ -108,9 +107,7 @@ export const PairDeviceModal = ({
           pairingMethod === 'pairing_code' ? generatedCode : undefined,
       };
 
-      // TODO: Call API to pair device
       console.log('Pair device:', payload);
-
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       message.success('Device paired successfully!');
@@ -143,11 +140,13 @@ export const PairDeviceModal = ({
     : 0;
 
   return (
-    <Modal
+    <AppModal
       title='Pair Device'
       open={open}
       onCancel={handleCancel}
       width={600}
+      maxHeight='70vh'
+      scrollable={true}
       footer={
         <Flex
           justify='end'
@@ -177,6 +176,11 @@ export const PairDeviceModal = ({
         onFinish={handleSubmit}
         initialValues={{
           pairing_method: 'pairing_code',
+        }}
+        styles={{
+          label: {
+            height: 22,
+          },
         }}
       >
         <Form.Item
@@ -292,6 +296,6 @@ export const PairDeviceModal = ({
           </Flex>
         )}
       </Form>
-    </Modal>
+    </AppModal>
   );
 };

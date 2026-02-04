@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, message } from 'antd';
-import { PlusOutlined} from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import type { Space } from '@/features/manager/types/spaceTypes';
 import { AddSpaceDrawer } from './components/AddSpaceDrawer';
@@ -107,7 +107,7 @@ export const SpaceList = () => {
   return (
     <div>
       <PageHeader
-        title={`Space Management - ${currentBranch.branch_name}`}
+        title='Space Management'
         breadcrumbs={breadcrumbs}
         extra={
           <Button
