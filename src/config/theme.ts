@@ -25,5 +25,8 @@ export const antTheme: ThemeConfig = {
     Input: {
       fontSizeLG: 14,
     },
+    Card: {
+      colorBorderSecondary: '#E6EBF1',
+    },
   },
 };
