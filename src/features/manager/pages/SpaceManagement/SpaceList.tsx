@@ -54,6 +54,10 @@ export const SpaceList = () => {
       okText: 'Yes, Delete',
       okType: 'danger',
       cancelText: 'Cancel',
+      centered: true,
+      mask: {
+        blur: false,
+      },
       onOk() {
         setSpaces(spaces.filter((s) => s.id !== spaceId));
         message.success('Space deleted successfully!');
@@ -103,7 +107,7 @@ export const SpaceList = () => {
   return (
     <div>
       <PageHeader
-        title={`Space Management - ${currentBranch.branch_name}`}
+        title='Space Management'
         breadcrumbs={breadcrumbs}
         extra={
           <Button

@@ -69,4 +69,8 @@
     font-size: 16px !important;
     margin-top: 3px !important;
   }
+
+  .custom-breadcrumb ol li:last-child {
+    font-weight: 500;
+  }
 }

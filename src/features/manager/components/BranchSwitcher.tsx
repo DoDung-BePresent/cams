@@ -20,9 +20,23 @@ export const BranchSwitcher = () => {
       value={currentBranch?.id}
       onChange={switchBranch}
       options={options}
-      style={{ minWidth: 200 }}
+      style={{ minWidth: 150, maxWidth: 200 }}
       placeholder='Select Branch'
-      suffixIcon={<ShopOutlined />}
+      prefix={
+        <ShopOutlined
+          style={{
+            fontSize: 16,
+            marginRight: 4,
+          }}
+        />
+      }
+      styles={{
+        popup: {
+          root: {
+            width: 'fit-width',
+          },
+        },
+      }}
     />
   );
 };

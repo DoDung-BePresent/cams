@@ -1,4 +1,12 @@
+/**
+ * Node modules
+ */
 import { Avatar, Badge, Button, Dropdown, Flex, Layout } from 'antd';
+import { useNavigate } from 'react-router';
+
+/**
+ * Icons
+ */
 import {
   BellOutlined,
   FullscreenExitOutlined,
@@ -10,14 +18,31 @@ import {
   SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router';
 
+/**
+ * Assets
+ */
 import avatarImage from '@/assets/images/avatar-1.png';
-import { useFullscreen } from '@/shared/hooks/useFullScreen';
+
+/**
+ * Providers
+ */
 import { useAuth } from '@/providers/AuthProvider';
+
+/**
+ * Shared
+ */
 import { ROLES } from '@/shared/constants/roles';
+import { useFullscreen } from '@/shared/hooks/useFullScreen';
+
+/**
+ * Features
+ */
 import { BranchSwitcher } from '@/features/manager/components/BranchSwitcher';
 
+/**
+ * Types
+ */
 type AppHeaderProps = {
   collapsed: boolean;
   onClick: () => void;
@@ -76,18 +101,20 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
         justify='space-between'
         className='w-full'
       >
-        <Button
-          type='text'
-          icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          onClick={onClick}
-          style={{
-            fontSize: '16px',
-            width: 36,
-            height: 36,
-          }}
-        />
         <Flex gap='small'>
+          <Button
+            type='text'
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={onClick}
+            style={{
+              fontSize: '16px',
+              width: 36,
+              height: 36,
+            }}
+          />
           {isManager && <BranchSwitcher />}
+        </Flex>
+        <Flex gap='small'>
           <Button
             type='text'
             icon={
