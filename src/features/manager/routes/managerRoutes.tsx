@@ -5,19 +5,18 @@ const ManagerDashboard = Loadable(
   'ManagerDashboard',
 );
 
-// const MusicControl = Loadable(
-//   () => import('@/features/manager/pages/MusicControl'),
-//   'MusicControl',
-// );
+const SpaceList = Loadable(
+  () => import('@/features/manager/pages/SpaceManagement/SpaceList'),
+  'SpaceList',
+);
 
 export const managerRoutes = [
   {
     path: 'dashboard',
     element: <ManagerDashboard />,
   },
-  // {
-  //   path: 'music-control/mode',
-  //   element: <MusicControl />,
-  // },
-  // Add more manager routes...
+  {
+    path: 'spaces',
+    element: <SpaceList />,
+  },
 ];

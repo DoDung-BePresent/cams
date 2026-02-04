@@ -54,6 +54,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
 
       // Manager routes
       dashboard: '/manager/dashboard',
+      spaces: '/manager/spaces', // NEW
+      devices: '/manager/devices', // NEW
       'auto-manual-mode': '/manager/music-control/mode',
       'playback-control': '/manager/music-control/playback',
       'time-based-rules': '/manager/schedule/time-based',

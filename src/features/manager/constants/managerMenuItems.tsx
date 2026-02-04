@@ -5,6 +5,8 @@ import {
   ScheduleOutlined,
   BarChartOutlined,
   SettingOutlined,
+  EnvironmentOutlined,
+  MobileOutlined,
 } from '@ant-design/icons';
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -19,6 +21,23 @@ export const managerMenuItems: MenuItem[] = [
         key: 'dashboard',
         icon: <DashboardOutlined />,
         label: 'Overview',
+      },
+    ],
+  },
+  {
+    key: 'configuration-group',
+    label: 'Configuration',
+    type: 'group',
+    children: [
+      {
+        key: 'spaces',
+        icon: <EnvironmentOutlined />,
+        label: 'Space Management',
+      },
+      {
+        key: 'devices',
+        icon: <MobileOutlined />,
+        label: 'Devices',
       },
     ],
   },

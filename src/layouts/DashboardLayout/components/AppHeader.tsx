@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router';
 import avatarImage from '@/assets/images/avatar-1.png';
 import { useFullscreen } from '@/shared/hooks/useFullScreen';
 import { useAuth } from '@/providers/AuthProvider';
+import { ROLES } from '@/shared/constants/roles';
+import { BranchSwitcher } from '@/features/manager/components/BranchSwitcher';
 
 type AppHeaderProps = {
   collapsed: boolean;
@@ -37,6 +39,8 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const isManager = user?.role === ROLES.MANAGER;
 
   const handleLogout = () => {
     logout();
@@ -83,6 +87,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
           }}
         />
         <Flex gap='small'>
+          {isManager && <BranchSwitcher />}
           <Button
             type='text'
             icon={
