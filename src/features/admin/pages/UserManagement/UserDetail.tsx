@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import {
+  Avatar,
   Button,
   Card,
+  Col,
   Descriptions,
   Flex,
+  Row,
   Table,
   Tag,
   Typography,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router';
 import type {
   BranchUser,
@@ -20,16 +23,16 @@ import {
   USER_STATUS_LABELS,
 } from '@/features/admin/constants/userConstants';
 import { PageHeader } from '@/shared/components/common/PageHeader';
-import { AssignStoreModal } from './components/AssignStoreModal';
-import { AssignBranchModal } from './components/AssignBranchModal';
+import { AssignStoreDrawer } from './components/AssignStoreDrawer';
+import { AssignBranchDrawer } from './components/AssignBranchDrawer';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 export const UserDetail = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
-  const [assignBranchModalOpen, setAssignBranchModalOpen] = useState(false);
+  const [assignStoreDrawerOpen, setAssignStoreDrawerOpen] = useState(false);
+  const [assignBranchDrawerOpen, setAssignBranchDrawerOpen] = useState(false);
 
   // TODO: Fetch user data from API
   const user: User = {
@@ -127,148 +130,193 @@ export const UserDetail = () => {
         breadcrumbs={breadcrumbs}
       />
 
-      <Flex
-        vertical
-        gap={16}
-      >
-        {/* User Information */}
-        <Card title='User Information'>
-          <Descriptions column={2}>
-            <Descriptions.Item label='Email'>{user.email}</Descriptions.Item>
-            <Descriptions.Item label='Name'>
-              {user.name || 'Not set'}
-            </Descriptions.Item>
-            <Descriptions.Item label='Role'>
-              <Tag color='blue'>{roleMap[user.role]}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label='Status'>
-              <Tag color={USER_STATUS_COLORS[user.status]}>
-                {USER_STATUS_LABELS[user.status]}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label='Created At'>
-              {new Date(user.created_at).toLocaleString()}
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        {/* Store Assignments */}
-        <Card
-          title={<Title level={5}>Store Assignments</Title>}
-          extra={
-            <Button
-              type='primary'
-              icon={<PlusOutlined />}
-              onClick={() => setAssignStoreModalOpen(true)}
-            >
-              Add Store
-            </Button>
-          }
+      <Row gutter={16}>
+        {/* Left Column - User Profile Card */}
+        <Col
+          xs={24}
+          lg={8}
         >
-          <Table
-            dataSource={storeAssignments}
-            rowKey='id'
-            pagination={false}
-            columns={[
-              {
-                title: 'Store Name',
-                dataIndex: 'store_name',
-                key: 'store_name',
-              },
-              {
-                title: 'Assigned At',
-                dataIndex: 'assigned_at',
-                key: 'assigned_at',
-                render: (date: string) => new Date(date).toLocaleDateString(),
-              },
-              {
-                title: 'Actions',
-                key: 'actions',
-                render: (_, record) => (
-                  <Button
-                    danger
-                    type='link'
-                    icon={<DeleteOutlined />}
-                    onClick={() => handleRemoveStore(record.id)}
-                  >
-                    Remove
-                  </Button>
-                ),
-              },
-            ]}
-          />
-        </Card>
-
-        {/* Branch Assignments */}
-        <Card
-          title={<Title level={5}>Branch Assignments</Title>}
-          extra={
-            <Button
-              type='primary'
-              icon={<PlusOutlined />}
-              onClick={() => setAssignBranchModalOpen(true)}
+          <Card>
+            <Flex
+              vertical
+              align='center'
+              gap={16}
             >
-              Add Branch
-            </Button>
-          }
-        >
-          <Table
-            dataSource={branchAssignments}
-            rowKey='id'
-            pagination={false}
-            columns={[
-              {
-                title: 'Store',
-                dataIndex: 'store_name',
-                key: 'store_name',
-              },
-              {
-                title: 'Branch',
-                dataIndex: 'branch_name',
-                key: 'branch_name',
-              },
-              {
-                title: 'Assigned At',
-                dataIndex: 'assigned_at',
-                key: 'assigned_at',
-                render: (date: string) => new Date(date).toLocaleDateString(),
-              },
-              {
-                title: 'Actions',
-                key: 'actions',
-                render: (_, record) => (
-                  <Button
-                    danger
-                    type='link'
-                    icon={<DeleteOutlined />}
-                    onClick={() => handleRemoveBranch(record.id)}
-                  >
-                    Remove
-                  </Button>
-                ),
-              },
-            ]}
-          />
-        </Card>
-      </Flex>
+              <Avatar
+                size={120}
+                icon={<UserOutlined />}
+                className='bg-primary!'
+              />
+              <Flex
+                vertical
+                align='center'
+                gap={8}
+              >
+                <Title
+                  level={4}
+                  className='mb-0!'
+                >
+                  {user.name || 'Not set'}
+                </Title>
+                <Text type='secondary'>{user.email}</Text>
+                <Tag color='blue'>{roleMap[user.role]}</Tag>
+                <Tag color={USER_STATUS_COLORS[user.status]}>
+                  {USER_STATUS_LABELS[user.status]}
+                </Tag>
+              </Flex>
 
-      <AssignStoreModal
-        open={assignStoreModalOpen}
+              <Descriptions
+                column={1}
+                className='w-full'
+                bordered
+                size='small'
+              >
+                <Descriptions.Item label='Stores Assigned'>
+                  <Text strong>{storeAssignments.length}</Text>
+                </Descriptions.Item>
+                <Descriptions.Item label='Branches Assigned'>
+                  <Text strong>{branchAssignments.length}</Text>
+                </Descriptions.Item>
+                <Descriptions.Item label='Joined Date'>
+                  {new Date(user.created_at).toLocaleDateString()}
+                </Descriptions.Item>
+              </Descriptions>
+            </Flex>
+          </Card>
+        </Col>
+
+        {/* Right Column - Assignments */}
+        <Col
+          xs={24}
+          lg={16}
+        >
+          <Flex
+            vertical
+            gap={16}
+          >
+            {/* Store Assignments */}
+            <Card
+              title={<Title level={5}>Store Assignments</Title>}
+              extra={
+                <Button
+                  type='primary'
+                  icon={<PlusOutlined />}
+                  onClick={() => setAssignStoreDrawerOpen(true)}
+                >
+                  Add Store
+                </Button>
+              }
+            >
+              <Table
+                dataSource={storeAssignments}
+                rowKey='id'
+                pagination={false}
+                columns={[
+                  {
+                    title: 'Store Name',
+                    dataIndex: 'store_name',
+                    key: 'store_name',
+                  },
+                  {
+                    title: 'Assigned At',
+                    dataIndex: 'assigned_at',
+                    key: 'assigned_at',
+                    render: (date: string) =>
+                      new Date(date).toLocaleDateString(),
+                  },
+                  {
+                    title: 'Actions',
+                    key: 'actions',
+                    width: 120,
+                    render: (_, record) => (
+                      <Button
+                        danger
+                        type='link'
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleRemoveStore(record.id)}
+                      >
+                        Remove
+                      </Button>
+                    ),
+                  },
+                ]}
+              />
+            </Card>
+
+            {/* Branch Assignments */}
+            <Card
+              title={<Title level={5}>Branch Assignments</Title>}
+              extra={
+                <Button
+                  type='primary'
+                  icon={<PlusOutlined />}
+                  onClick={() => setAssignBranchDrawerOpen(true)}
+                >
+                  Add Branch
+                </Button>
+              }
+            >
+              <Table
+                dataSource={branchAssignments}
+                rowKey='id'
+                pagination={false}
+                columns={[
+                  {
+                    title: 'Store',
+                    dataIndex: 'store_name',
+                    key: 'store_name',
+                  },
+                  {
+                    title: 'Branch',
+                    dataIndex: 'branch_name',
+                    key: 'branch_name',
+                  },
+                  {
+                    title: 'Assigned At',
+                    dataIndex: 'assigned_at',
+                    key: 'assigned_at',
+                    render: (date: string) =>
+                      new Date(date).toLocaleDateString(),
+                  },
+                  {
+                    title: 'Actions',
+                    key: 'actions',
+                    width: 120,
+                    render: (_, record) => (
+                      <Button
+                        danger
+                        type='link'
+                        icon={<DeleteOutlined />}
+                        onClick={() => handleRemoveBranch(record.id)}
+                      >
+                        Remove
+                      </Button>
+                    ),
+                  },
+                ]}
+              />
+            </Card>
+          </Flex>
+        </Col>
+      </Row>
+
+      <AssignStoreDrawer
+        open={assignStoreDrawerOpen}
         userId={userId!}
-        onClose={() => setAssignStoreModalOpen(false)}
+        onClose={() => setAssignStoreDrawerOpen(false)}
         onSuccess={() => {
           // TODO: Refresh store assignments
-          setAssignStoreModalOpen(false);
+          setAssignStoreDrawerOpen(false);
         }}
       />
 
-      <AssignBranchModal
-        open={assignBranchModalOpen}
+      <AssignBranchDrawer
+        open={assignBranchDrawerOpen}
         userId={userId!}
-        onClose={() => setAssignBranchModalOpen(false)}
+        onClose={() => setAssignBranchDrawerOpen(false)}
         onSuccess={() => {
           // TODO: Refresh branch assignments
-          setAssignBranchModalOpen(false);
+          setAssignBranchDrawerOpen(false);
         }}
       />
     </div>

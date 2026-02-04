@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import { Button, Form, Modal, Select, message } from 'antd';
+import { Button, Drawer, Form, Select, message } from 'antd';
 import type { AssignStoreDto } from '@/features/admin/types/userTypes';
 import { assignStoreValidation } from '@/features/admin/validations/userValidation';
 
-type AssignStoreModalProps = {
+type AssignStoreDrawerProps = {
   open: boolean;
   userId: string;
   onClose: () => void;
   onSuccess: () => void;
 };
 
-export const AssignStoreModal = ({
+export const AssignStoreDrawer = ({
   open,
   userId,
   onClose,
   onSuccess,
-}: AssignStoreModalProps) => {
+}: AssignStoreDrawerProps) => {
   const [form] = Form.useForm<AssignStoreDto>();
   const [loading, setLoading] = useState(false);
 
@@ -45,15 +45,29 @@ export const AssignStoreModal = ({
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
-    <Modal
+    <Drawer
+      closeIcon={null}
       title='Assign Store'
+      placement='right'
+      width={520}
       open={open}
-      onCancel={onClose}
+      onClose={handleCancel}
       footer={
         <div className='flex justify-end gap-2'>
-          <Button onClick={onClose}>Cancel</Button>
           <Button
+            size='large'
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
             type='primary'
             onClick={() => form.submit()}
             loading={loading}
@@ -64,6 +78,7 @@ export const AssignStoreModal = ({
       }
     >
       <Form
+        size='large'
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
@@ -83,6 +98,6 @@ export const AssignStoreModal = ({
           />
         </Form.Item>
       </Form>
-    </Modal>
+    </Drawer>
   );
 };

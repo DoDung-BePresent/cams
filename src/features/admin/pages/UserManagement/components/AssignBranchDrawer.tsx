@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import { Button, Form, Modal, Select, message } from 'antd';
+import { Button, Drawer, Form, Select, message } from 'antd';
 import type { AssignBranchDto } from '@/features/admin/types/userTypes';
 import { assignBranchValidation } from '@/features/admin/validations/userValidation';
 
-type AssignBranchModalProps = {
+type AssignBranchDrawerProps = {
   open: boolean;
   userId: string;
   onClose: () => void;
   onSuccess: () => void;
 };
 
-export const AssignBranchModal = ({
+export const AssignBranchDrawer = ({
   open,
   userId,
   onClose,
   onSuccess,
-}: AssignBranchModalProps) => {
+}: AssignBranchDrawerProps) => {
   const [form] = Form.useForm<AssignBranchDto>();
   const [loading, setLoading] = useState(false);
 
@@ -46,15 +46,29 @@ export const AssignBranchModal = ({
     }
   };
 
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
-    <Modal
+    <Drawer
+      closeIcon={null}
       title='Assign Branch'
+      placement='right'
+      width={520}
       open={open}
-      onCancel={onClose}
+      onClose={handleCancel}
       footer={
         <div className='flex justify-end gap-2'>
-          <Button onClick={onClose}>Cancel</Button>
           <Button
+            size='large'
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
             type='primary'
             onClick={() => form.submit()}
             loading={loading}
@@ -65,6 +79,7 @@ export const AssignBranchModal = ({
       }
     >
       <Form
+        size='large'
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
@@ -84,6 +99,6 @@ export const AssignBranchModal = ({
           />
         </Form.Item>
       </Form>
-    </Modal>
+    </Drawer>
   );
 };
