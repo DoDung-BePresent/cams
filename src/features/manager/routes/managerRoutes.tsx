@@ -10,6 +10,11 @@ const SpaceList = Loadable(
   'SpaceList',
 );
 
+const DeviceList = Loadable(
+  () => import('@/features/manager/pages/DeviceManagement/DeviceList'),
+  'DeviceList',
+);
+
 export const managerRoutes = [
   {
     path: 'dashboard',
@@ -18,5 +23,9 @@ export const managerRoutes = [
   {
     path: 'spaces',
     element: <SpaceList />,
+  },
+  {
+    path: 'devices',
+    element: <DeviceList />,
   },
 ];
