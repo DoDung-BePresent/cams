@@ -33,20 +33,11 @@ export const adminMenuItems: MenuItem[] = [
         key: 'store-management',
         icon: <ShopOutlined />,
         label: 'Store Management',
-        children: [
-          {
-            key: 'store-list',
-            label: 'Store List',
-          },
-          {
-            key: 'store-configuration',
-            label: 'Store Configuration',
-          },
-          {
-            key: 'device-iot-management',
-            label: 'Device / IoT Management',
-          },
-        ],
+      },
+      {
+        key: 'user-management',
+        icon: <TeamOutlined />,
+        label: 'User Management',
       },
       {
         key: 'music-management',
@@ -64,25 +55,6 @@ export const adminMenuItems: MenuItem[] = [
           {
             key: 'mood-genre-tags',
             label: 'Mood / Genre Tags',
-          },
-        ],
-      },
-      {
-        key: 'user-role-management',
-        icon: <TeamOutlined />,
-        label: 'User & Role Management',
-        children: [
-          {
-            key: 'admin-users',
-            label: 'Admin',
-          },
-          {
-            key: 'store-managers',
-            label: 'Store Manager',
-          },
-          {
-            key: 'staff',
-            label: 'Staff',
           },
         ],
       },

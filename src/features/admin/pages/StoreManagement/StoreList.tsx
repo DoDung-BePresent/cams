@@ -17,10 +17,7 @@ export const StoreList = () => {
       store_name: 'Moonlight Coffee',
       business_type: 'cafe',
       description: 'A cozy coffee brand focusing on chill experience',
-      manager_emails: [
-        'manager1@moonlightcoffee.com',
-        'manager2@moonlightcoffee.com',
-      ],
+      manager_emails: [],
       status: 'active',
       created_at: '2024-01-15T10:00:00Z',
       updated_at: '2024-01-15T10:00:00Z',
@@ -49,7 +46,6 @@ export const StoreList = () => {
   ];
 
   const columns = getStoreColumns({
-    onViewManagers: (storeId) => navigate(`/admin/stores/${storeId}/managers`),
     onViewBranches: (storeId) => navigate(`/admin/stores/${storeId}/branches`),
   });
 

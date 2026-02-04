@@ -34,13 +34,13 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const menuItems =
     user?.role === ROLES.ADMIN ? adminMenuItems : managerMenuItems;
 
+  // Update handleMenuClick function
   const handleMenuClick = (key: string) => {
     const routeMap: Record<string, string> = {
       // Admin routes
       'admin-dashboard': '/admin/dashboard',
-      'store-list': '/admin/stores',
-      'store-configuration': '/admin/stores/config',
-      'device-iot-management': '/admin/devices',
+      'store-management': '/admin/stores',
+      'user-management': '/admin/users',
       'music-library': '/admin/music',
       'playlist-templates': '/admin/playlists',
       'mood-genre-tags': '/admin/tags',
@@ -48,9 +48,6 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       'external-ai-music-api': '/admin/ai/api',
       'data-mapping': '/admin/pos/mapping',
       'sync-status': '/admin/pos/sync',
-      'admin-users': '/admin/users/admins',
-      'store-managers': '/admin/users/managers',
-      staff: '/admin/users/staff',
       'music-decision-logs': '/admin/logs/music-decisions',
       'api-call-logs': '/admin/logs/api-calls',
       'error-logs': '/admin/logs/errors',

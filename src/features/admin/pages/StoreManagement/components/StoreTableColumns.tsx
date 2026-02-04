@@ -1,25 +1,17 @@
 import { Button, Dropdown, Tag } from 'antd';
-import { EyeOutlined, MoreOutlined, TeamOutlined } from '@ant-design/icons';
+import { EyeOutlined, MoreOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import type { Store } from '@/features/admin/types/storeTypes';
 
 type GetColumnsProps = {
-  onViewManagers: (storeId: string) => void;
   onViewBranches: (storeId: string) => void;
 };
 
 export const getStoreColumns = ({
-  onViewManagers,
   onViewBranches,
 }: GetColumnsProps): ColumnsType<Store> => {
   const getActionMenuItems = (record: Store): MenuProps['items'] => [
-    {
-      key: 'managers',
-      label: 'Managers',
-      icon: <TeamOutlined />,
-      onClick: () => onViewManagers(record.id),
-    },
     {
       key: 'branches',
       label: 'Branches',
@@ -46,12 +38,6 @@ export const getStoreColumns = ({
       dataIndex: 'business_type',
       key: 'business_type',
       render: (type: string) => <Tag color='blue'>{type.toUpperCase()}</Tag>,
-    },
-    {
-      title: 'Managers',
-      dataIndex: 'manager_emails',
-      key: 'manager_emails',
-      render: (emails: string[]) => <span>{emails.length} manager(s)</span>,
     },
     {
       title: 'Status',

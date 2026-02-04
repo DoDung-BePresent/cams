@@ -10,14 +10,19 @@ const StoreList = Loadable(
   'StoreList',
 );
 
-const StoreManagers = Loadable(
-  () => import('@/features/admin/pages/StoreManagement/StoreManagers'),
-  'StoreManagers',
-);
-
 const BranchList = Loadable(
   () => import('@/features/admin/pages/BranchManagement/BranchList'),
   'BranchList',
+);
+
+const UserList = Loadable(
+  () => import('@/features/admin/pages/UserManagement/UserList'),
+  'UserList',
+);
+
+const UserDetail = Loadable(
+  () => import('@/features/admin/pages/UserManagement/UserDetail'),
+  'UserDetail',
 );
 
 export const adminRoutes = [
@@ -30,11 +35,15 @@ export const adminRoutes = [
     element: <StoreList />,
   },
   {
-    path: 'stores/:storeId/managers',
-    element: <StoreManagers />,
-  },
-  {
     path: 'stores/:storeId/branches',
     element: <BranchList />,
+  },
+  {
+    path: 'users',
+    element: <UserList />,
+  },
+  {
+    path: 'users/:userId',
+    element: <UserDetail />,
   },
 ];
