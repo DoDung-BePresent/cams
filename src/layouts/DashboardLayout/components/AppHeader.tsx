@@ -58,6 +58,9 @@ const headerStyle: React.CSSProperties = {
   alignItems: 'center',
   paddingInline: 10,
   paddingInlineEnd: 20,
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
 };
 
 export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {

@@ -158,18 +158,35 @@ const AppModalComponent = ({
   return (
     <Modal
       {...props}
+      closeIcon={null}
       centered
       styles={{
         body: {
-          padding: scrollable ? '24px 0' : '24px',
-          maxHeight: scrollable ? maxHeight : undefined,
-          overflow: scrollable ? 'hidden' : undefined,
+          // padding: scrollable ? '24px 0' : '24px',
+          // maxHeight: scrollable ? maxHeight : undefined,
+          // overflow: scrollable ? 'hidden' : undefined,
+        },
+        container: {
+          padding: 0,
+        },
+        header: {
+          padding: 20,
+          paddingBottom: 15,
+          borderBottom: '1px solid var(--color-border)',
+        },
+        footer: {
+          padding: 20,
+          paddingTop: 20,
+          borderTop: '1px solid var(--color-border)',
+        },
+        mask: {
+          backdropFilter: 'none',
         },
         ...props.styles,
       }}
     >
       {scrollable ? (
-        <SimpleBar style={{ maxHeight, padding: '0 24px' }}>
+        <SimpleBar style={{ maxHeight, padding: '15px 24px' }}>
           {children}
         </SimpleBar>
       ) : (

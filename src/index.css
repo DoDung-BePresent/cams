@@ -3,6 +3,7 @@
 @theme {
   --color-primary: var(--ant-color-primary);
   --color-primary-bg: var(--ant-color-primary-bg);
+  --color-border: var(--ant-color-border-secondary);
   --color-gray: #595959;
   --shadow-1: 0px 1px 4px rgba(0, 0, 0, 0.08);
 
