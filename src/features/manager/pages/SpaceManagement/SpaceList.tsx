@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Button, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Tabs, message } from 'antd';
+import {
+  PlusOutlined,
+  TableOutlined,
+  PieChartOutlined,
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 import type { Space } from '@/features/manager/types/spaceTypes';
 import { AddSpaceDrawer } from './components/AddSpaceDrawer';
-import { getSpaceColumns } from './components/SpaceTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
 import { useBranchStore } from '@/features/manager/stores/useBranchStore';
 import { AppModal } from '@/shared/components/ui/AppModal';
+import { SpaceTableView } from './components/SpaceTableView';
+import { SpaceVoronoiView } from './components/SpaceVoronoiView';
 
 export const SpaceList = () => {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'table' | 'voronoi'>('table');
   const currentBranch = useBranchStore((state) => state.currentBranch);
 
   const [spaces, setSpaces] = useState<Space[]>([
@@ -89,11 +94,6 @@ export const SpaceList = () => {
     },
   ];
 
-  const columns = getSpaceColumns({
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-  });
-
   // Redirect if no branch selected
   useEffect(() => {
     if (!currentBranch) {
@@ -103,6 +103,33 @@ export const SpaceList = () => {
   }, [currentBranch, navigate]);
 
   if (!currentBranch) return null;
+
+  const tabItems = [
+    {
+      key: 'table',
+      label: (
+        <span>
+          <TableOutlined /> Table View
+        </span>
+      ),
+      children: (
+        <SpaceTableView
+          spaces={spaces}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      ),
+    },
+    {
+      key: 'voronoi',
+      label: (
+        <span>
+          <PieChartOutlined /> Coverage Map
+        </span>
+      ),
+      children: <SpaceVoronoiView spaces={spaces} />,
+    },
+  ];
 
   return (
     <div>
@@ -121,10 +148,11 @@ export const SpaceList = () => {
         }
       />
 
-      <DataTable
-        columns={columns}
-        dataSource={spaces}
-        rowKey='id'
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as 'table' | 'voronoi')}
+        items={tabItems}
+        size='large'
       />
 
       <AddSpaceDrawer

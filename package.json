@@ -11,12 +11,15 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
+    "@antv/g2": "^5.4.8",
+    "@antv/g2plot": "^2.4.35",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.3",
     "antd": "^6.2.2",
     "axios": "^1.13.4",
     "clsx": "^2.1.1",
+    "d3-voronoi": "^1.1.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-helmet-async": "^2.0.5",
@@ -28,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@types/d3-voronoi": "^1.1.12",
     "@types/node": "^24.10.9",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
