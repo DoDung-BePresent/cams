@@ -28,5 +28,8 @@ export const antTheme: ThemeConfig = {
     Card: {
       colorBorderSecondary: '#E6EBF1',
     },
+    Tabs: {
+      horizontalItemPadding: '0px 0px 12px 0px',
+    },
   },
 };

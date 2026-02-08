@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Card, Select, Empty, Flex, Typography, Tag } from 'antd';
+import { Card, Empty, Flex, Typography, Tag } from 'antd';
 import type { Space } from '@/features/manager/types/spaceTypes';
 import { VoronoiChart } from '@/shared/components/charts/VoronoiChart';
 import type { DeviceCoordinate } from '@/features/manager/types/visualizationTypes';
@@ -11,10 +10,6 @@ type SpaceVoronoiViewProps = {
 };
 
 export const SpaceVoronoiView = ({ spaces }: SpaceVoronoiViewProps) => {
-  const [selectedSpaceId, setSelectedSpaceId] = useState<string>(
-    spaces[0]?.id || '',
-  );
-
   // Mock device coordinates - TODO: Fetch from API
   const mockDeviceData: Record<string, DeviceCoordinate[]> = {
     '1': [
@@ -22,7 +17,7 @@ export const SpaceVoronoiView = ({ spaces }: SpaceVoronoiViewProps) => {
         device_id: 'ESP32_001',
         device_name: 'Main Floor Speaker 1',
         device_type: 'esp32',
-        x: 200, // Position in pixels
+        x: 200,
         y: 180,
         status: 'active',
         space_id: '1',
@@ -105,93 +100,72 @@ export const SpaceVoronoiView = ({ spaces }: SpaceVoronoiViewProps) => {
         value: 88,
       },
     ],
+    // Add more mock data for other spaces if needed
   };
 
-  const selectedSpace = spaces.find((s) => s.id === selectedSpaceId);
-  const deviceData = mockDeviceData[selectedSpaceId] || [];
-
-  const spaceOptions = spaces.map((space) => ({
-    label: `${space.space_name} (${mockDeviceData[space.id]?.length || 0} devices)`,
-    value: space.id,
-  }));
-
   return (
-    <Card>
-      <Flex
-        vertical
-        gap={16}
-      >
-        {/* Space Selector */}
-        <Flex
-          justify='space-between'
-          align='center'
-        >
-          <Title
-            level={4}
-            className='mb-0!'
+    <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+      {spaces.map((space) => {
+        const deviceData = mockDeviceData[space.id] || [];
+        return (
+          <Card
+            key={space.id}
+            title={
+              <Title
+                level={5}
+                className='mb-0!'
+              >
+                {space.space_name}
+              </Title>
+            }
+            extra={
+              <Flex gap={8}>
+                <Tag color='green'>Devices: {deviceData.length}</Tag>
+                <Tag color='cyan'>Code: {space.space_code}</Tag>
+              </Flex>
+            }
+            style={{ minWidth: 400 }}
           >
-            Device Coverage Map
-          </Title>
-          <Select
-            style={{ width: 300 }}
-            placeholder='Select space'
-            value={selectedSpaceId}
-            onChange={setSelectedSpaceId}
-            options={spaceOptions}
-          />
-        </Flex>
+            {deviceData.length > 0 ? (
+              <VoronoiChart devices={deviceData} />
+            ) : (
+              <Empty
+                description='No devices in this space'
+                style={{ padding: '40px 0' }}
+              />
+            )}
 
-        {/* Space Info */}
-        {selectedSpace && (
-          <Flex gap={16}>
-            <Tag color='blue'>Space: {selectedSpace.space_name}</Tag>
-            <Tag color='green'>Devices: {deviceData.length}</Tag>
-            <Tag color='cyan'>Code: {selectedSpace.space_code}</Tag>
-          </Flex>
-        )}
-
-        {/* Voronoi Chart */}
-        {deviceData.length > 0 ? (
-          <VoronoiChart
-            devices={deviceData}
-            width={800}
-            height={600}
-          />
-        ) : (
-          <Empty
-            description='No devices in this space'
-            style={{ padding: '60px 0' }}
-          />
-        )}
-
-        {/* Legend */}
-        <Flex
-          gap={16}
-          justify='center'
-        >
-          <Flex
-            gap={8}
-            align='center'
-          >
-            <div className='h-4 w-4 rounded-full bg-green-500' />
-            <Text>ESP32 Device</Text>
-          </Flex>
-          <Flex
-            gap={8}
-            align='center'
-          >
-            <div className='h-4 w-4 rounded-full bg-blue-500' />
-            <Text>Android Device</Text>
-          </Flex>
-          <Flex
-            gap={8}
-            align='center'
-          >
-            <div className='h-4 w-4 rounded-full bg-gray-400' />
-            <Text>Offline</Text>
-          </Flex>
-        </Flex>
-      </Flex>
-    </Card>
+            {/* Legend */}
+            <Flex
+              gap={16}
+              justify='center'
+              className='mt-4'
+            >
+              <Flex
+                gap={8}
+                align='center'
+              >
+                <div className='h-4 w-4 rounded-full bg-green-500' />
+                <Text>ESP32 Device</Text>
+              </Flex>
+              <Flex
+                gap={8}
+                align='center'
+              >
+                <div className='h-4 w-4 rounded-full bg-blue-500' />
+                <Text>Android Device</Text>
+              </Flex>
+              <Flex
+                gap={8}
+                align='center'
+              >
+                <div className='h-4 w-4 rounded-full bg-gray-400' />
+                <Text>Offline</Text>
+              </Flex>
+            </Flex>
+          </Card>
+        );
+      })}
+    </div>
   );
 };

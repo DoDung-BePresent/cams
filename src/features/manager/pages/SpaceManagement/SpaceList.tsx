@@ -107,11 +107,7 @@ export const SpaceList = () => {
   const tabItems = [
     {
       key: 'table',
-      label: (
-        <span>
-          <TableOutlined /> Table View
-        </span>
-      ),
+      label: 'Table View',
       children: (
         <SpaceTableView
           spaces={spaces}
@@ -122,11 +118,7 @@ export const SpaceList = () => {
     },
     {
       key: 'voronoi',
-      label: (
-        <span>
-          <PieChartOutlined /> Coverage Map
-        </span>
-      ),
+      label: 'Coverage Map',
       children: <SpaceVoronoiView spaces={spaces} />,
     },
   ];
@@ -152,7 +144,6 @@ export const SpaceList = () => {
         activeKey={activeTab}
         onChange={(key) => setActiveTab(key as 'table' | 'voronoi')}
         items={tabItems}
-        size='large'
       />
 
       <AddSpaceDrawer
