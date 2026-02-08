@@ -3,6 +3,11 @@ import type { Space } from '@/features/manager/types/spaceTypes';
 import { VoronoiChart } from '@/shared/components/charts/VoronoiChart';
 import type { DeviceCoordinate } from '@/features/manager/types/visualizationTypes';
 
+/**
+ * Assets
+ */
+import spaceBackgroundUrl from '../../../assets/space-background.png';
+
 const { Title, Text } = Typography;
 
 type SpaceVoronoiViewProps = {
@@ -124,10 +129,25 @@ export const SpaceVoronoiView = ({ spaces }: SpaceVoronoiViewProps) => {
                 <Tag color='cyan'>Code: {space.space_code}</Tag>
               </Flex>
             }
+            styles={{
+              body: {
+                padding: 7,
+                paddingBottom: 25,
+              },
+            }}
             style={{ minWidth: 400 }}
           >
             {deviceData.length > 0 ? (
-              <VoronoiChart devices={deviceData} />
+              <div className='relative'>
+                <img
+                  src={spaceBackgroundUrl}
+                  className='p-4.5 opacity-90'
+                />
+                <VoronoiChart
+                  devices={deviceData}
+                  className='absolute! top-0'
+                />
+              </div>
             ) : (
               <Empty
                 description='No devices in this space'
