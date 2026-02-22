@@ -32,7 +32,7 @@ export const PlayerControls = ({
       : undefined;
 
   const playBtnSize = size === 'large' ? 52 : 36;
-  const playIconSize = size === 'large' ? 22 : 14;
+  const playIconSize = size === 'large' ? 24 : 14;
 
   return (
     <Flex

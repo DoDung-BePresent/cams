@@ -38,7 +38,7 @@ export const ExpandedPlayer = () => {
           backgroundImage: `url(${currentTrack.albumArt})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          filter: 'blur(60px) brightness(0.4)',
+          filter: 'blur(20px) brightness(0.4)',
           transform: 'scale(1.1)',
         }}
       />

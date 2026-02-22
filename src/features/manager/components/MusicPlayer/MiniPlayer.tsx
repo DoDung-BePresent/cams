@@ -26,8 +26,8 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
         bottom: 0,
         left: sidebarWidth,
         right: 0,
-        height: 72,
-        backgroundColor: '#1a1a2e',
+        height: 92,
+        backgroundColor: '#062544',
         borderTop: '1px solid rgba(255,255,255,0.1)',
         zIndex: 1000,
         padding: '0 24px',
@@ -44,14 +44,14 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
       >
         <Avatar
           src={currentTrack.albumArt}
-          size={44}
+          size={62}
           shape='square'
           style={{ borderRadius: 4, flexShrink: 0 }}
         />
         <Flex vertical>
           <Text
             strong
-            style={{ color: '#fff', fontSize: 13, lineHeight: '18px' }}
+            style={{ color: '#fff', fontSize: 16, lineHeight: '22px' }}
             ellipsis
           >
             {currentTrack.title}
@@ -76,7 +76,10 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
         gap={4}
         style={{ flex: 1 }}
       >
-        <PlayerControls dark />
+        <PlayerControls
+          dark
+          size='large'
+        />
         <PlayerProgress dark />
       </Flex>
 
