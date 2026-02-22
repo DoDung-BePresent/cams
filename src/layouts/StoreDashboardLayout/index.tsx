@@ -6,6 +6,11 @@ import { Outlet } from 'react-router';
 import { useState } from 'react';
 
 /**
+ * Features
+ */
+import { MusicPlayer } from '@/features/manager/components/MusicPlayer';
+
+/**
  * Components
  */
 import { AppSidebar } from './components/AppSidebar';
@@ -31,6 +36,7 @@ export const StoreDashboardLayout = () => {
           <Outlet />
         </AppContent>
         <AppFooter />
+        <MusicPlayer />
       </Layout>
     </Layout>
   );
