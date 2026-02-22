@@ -1,7 +1,20 @@
 import { Navigate } from 'react-router';
-import { DashboardLayout } from '@/layouts/DashboardLayout';
+
+/**
+ * Layouts
+ */
+import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
+import { StoreDashboardLayout } from '@/layouts/StoreDashboardLayout';
+
+/**
+ * Shared
+ */
 import { ROLES } from '@/shared/constants/roles';
 import { ProtectedRoute } from '@/shared/components/common/ProtectedRoute';
+
+/**
+ * Features
+ */
 import { adminRoutes } from '@/features/admin/routes/adminRoutes';
 import { managerRoutes } from '@/features/manager/routes/managerRoutes';
 
@@ -10,7 +23,7 @@ export const MainRoutes = [
     path: '/admin',
     element: (
       <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-        <DashboardLayout />
+        <AdminDashboardLayout />
       </ProtectedRoute>
     ),
     children: [
@@ -30,7 +43,7 @@ export const MainRoutes = [
     path: '/manager',
     element: (
       <ProtectedRoute allowedRoles={[ROLES.MANAGER]}>
-        <DashboardLayout />
+        <StoreDashboardLayout />
       </ProtectedRoute>
     ),
     children: [

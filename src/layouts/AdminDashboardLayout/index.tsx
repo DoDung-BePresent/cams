@@ -13,7 +13,7 @@ import { AppHeader } from './components/AppHeader';
 import { AppFooter } from './components/AppFooter';
 import { AppContent } from './components/AppContent';
 
-export const DashboardLayout = () => {
+export const AdminDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   const handleCollapsed = () => {
