@@ -1,10 +1,14 @@
 import { MiniPlayer } from './MiniPlayer';
 import { ExpandedPlayer } from './ExpandedPlayer';
 
-export const MusicPlayer = () => {
+type MusicPlayerProps = {
+  sidebarCollapsed?: boolean;
+};
+
+export const MusicPlayer = ({ sidebarCollapsed }: MusicPlayerProps) => {
   return (
     <>
-      <MiniPlayer />
+      <MiniPlayer sidebarCollapsed={sidebarCollapsed} />
       <ExpandedPlayer />
     </>
   );

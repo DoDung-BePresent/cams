@@ -7,18 +7,24 @@ import { PlayerVolume } from './PlayerVolume';
 
 const { Text } = Typography;
 
-export const MiniPlayer = () => {
+type MiniPlayerProps = {
+  sidebarCollapsed?: boolean;
+};
+
+export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
   const currentTrack = usePlayerStore((s) => s.currentTrack);
   const toggleExpanded = usePlayerStore((s) => s.toggleExpanded);
 
   if (!currentTrack) return null;
+
+  const sidebarWidth = sidebarCollapsed ? 60 : 260;
 
   return (
     <div
       style={{
         position: 'fixed',
         bottom: 0,
-        left: 260,
+        left: sidebarWidth,
         right: 0,
         height: 72,
         backgroundColor: '#1a1a2e',

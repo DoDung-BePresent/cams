@@ -8,6 +8,7 @@ const { Footer } = Layout;
 
 const footerStyle: React.CSSProperties = {
   background: '#FAFAFB',
+  marginBottom: 72,
 };
 
 export const AppFooter = () => {

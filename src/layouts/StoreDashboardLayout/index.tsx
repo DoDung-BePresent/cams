@@ -36,7 +36,7 @@ export const StoreDashboardLayout = () => {
           <Outlet />
         </AppContent>
         <AppFooter />
-        <MusicPlayer />
+        <MusicPlayer sidebarCollapsed={collapsed} />
       </Layout>
     </Layout>
   );
