@@ -20,11 +20,10 @@ export const LoginPage = () => {
         gap={24}
       >
         <Flex
-          justify='space-between'
+          justify='start'
           align='center'
         >
           <Title level={3}>Login</Title>
-          <Link to='/register'>Don't have an account?</Link>
         </Flex>
         <LoginForm />
       </Flex>
