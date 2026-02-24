@@ -2,12 +2,28 @@ import { Flex, Layout, Menu } from 'antd';
 import { useNavigate } from 'react-router';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
+
+/**
+ * Shared
+ */
+import { ROLES } from '@/shared/constants/rolesConstants';
 import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
+
+/**
+ * Providers
+ */
 import { useAuth } from '@/providers/AuthProvider';
-import { ROLES } from '@/shared/constants/roles';
+
+/**
+ * Features
+ */
 import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
 import { managerMenuItems } from '@/features/manager/constants/managerMenuItems';
+
+/**
+ * Components
+ */
 import { NavCard } from './NavCard';
 
 type AppSidebarProps = {
@@ -32,7 +48,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const navigate = useNavigate();
 
   const menuItems =
-    user?.role === ROLES.ADMIN ? adminMenuItems : managerMenuItems;
+    user?.role === ROLES.SYSTEM_ADMIN ? adminMenuItems : managerMenuItems;
 
   // Update handleMenuClick function
   const handleMenuClick = (key: string) => {

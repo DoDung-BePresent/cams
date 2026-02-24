@@ -1,34 +1,87 @@
-import { createContext, useContext, useState } from 'react';
-import type { AuthContextType, User } from '@/shared/types/authTypes';
+import { createContext, useContext, useState, useEffect } from 'react';
+
+/**
+ * Configs
+ */
+import { saveTokens, clearTokens, getAccessToken } from '@/config/api';
+
+/**
+ * Shared
+ */
+import { decodeJwt, mapRoleFromEnum, isTokenExpired, getRoleFromJwt } from '@/shared/utils/jwt';
+
+/**
+ * Features
+ */
+import { authService } from '@/features/auth/services/authService';
+import type {
+  AuthContextType,
+  LoginPayload,
+  User,
+} from '@/features/auth/types/authTypes';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // ✅ Check token on mount
 
-  const login = async (email: string, password: string) => {
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  // ✅ Restore session từ storage khi app load
+  useEffect(() => {
+    const token = getAccessToken();
+    if (token && !isTokenExpired(token)) {
+      const payload = decodeJwt(token);
+      if (payload) {
+        setUser({
+          id: payload.sub,
+          email: payload.email,
+          name: payload.email.split('@')[0],
+          role: getRoleFromJwt(token),
+        });
+        setAccessToken(token);
+      }
+    } else if (token) {
+      // Token hết hạn → clear
+      clearTokens();
+    }
+    setIsLoading(false);
+  }, []);
 
-    // Mock user based on email
-    const mockUser: User = {
-      id: '1',
-      email,
-      name: email.split('@')[0],
-      role: email.includes('admin') ? 'admin' : 'manager',
-    };
+  const login = async (payload: LoginPayload) => {
+    const response = await authService.login(payload);
+    const { accessToken: token, refreshToken, roles } = response.data.data;
 
-    setUser(mockUser);
+    // Lưu token theo rememberMe
+    saveTokens(token, refreshToken ?? null, payload.rememberMe);
+    setAccessToken(token);
+
+    // Decode JWT để lấy user info
+    const jwtPayload = decodeJwt(token);
+    if (jwtPayload) {
+      const role = mapRoleFromEnum(roles);
+      setUser({
+        id: jwtPayload.sub,
+        email: jwtPayload.email,
+        name: jwtPayload.email.split('@')[0],
+        role,
+      });
+    }
   };
 
   const logout = () => {
+    clearTokens();
     setUser(null);
+    setAccessToken(null);
   };
+
+  if (isLoading) return null; // Hoặc <Spin /> toàn màn hình
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        accessToken,
         isAuthenticated: !!user,
         login,
         logout,
@@ -41,8 +94,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

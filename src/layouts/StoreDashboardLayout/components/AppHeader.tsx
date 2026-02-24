@@ -32,7 +32,7 @@ import { useAuth } from '@/providers/AuthProvider';
 /**
  * Shared
  */
-import { ROLES } from '@/shared/constants/roles';
+import { ROLES } from '@/shared/constants/rolesConstants';
 import { useFullscreen } from '@/shared/hooks/useFullScreen';
 
 /**
@@ -68,7 +68,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const isManager = user?.role === ROLES.MANAGER;
+  const isManager = user?.role === ROLES.STORE_MANAGER;
 
   const handleLogout = () => {
     logout();

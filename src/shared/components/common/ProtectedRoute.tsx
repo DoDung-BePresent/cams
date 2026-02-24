@@ -1,4 +1,8 @@
 import { Navigate } from 'react-router';
+
+/**
+ * Providers
+ */
 import { useAuth } from '@/providers/AuthProvider';
 
 type ProtectedRouteProps = {
@@ -12,6 +16,10 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, isAuthenticated } = useAuth();
 
+  console.log('user.role:', user?.role);
+  console.log('allowedRoles:', allowedRoles);
+  console.log('includes check:', allowedRoles.includes(user?.role ?? ''));
+
   if (!isAuthenticated) {
     return (
       <Navigate
@@ -21,7 +29,7 @@ export const ProtectedRoute = ({
     );
   }
 
-  if (!allowedRoles.includes(user!.role)) {
+  if (user && !allowedRoles.includes(user.role)) {
     return (
       <Navigate
         to='/unauthorized'

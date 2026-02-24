@@ -2,6 +2,7 @@
  * Components
  */
 import { Loadable } from '@/shared/components/common/Loadable';
+import { RedirectIfAuthenticated } from '@/shared/components/common/RedirectIfAuthenticated';
 
 /**
  * Pages
@@ -20,11 +21,19 @@ export const AuthRoutes = {
   children: [
     {
       path: 'login',
-      element: <LoginPage />,
+      element: (
+        <RedirectIfAuthenticated>
+          <LoginPage />
+        </RedirectIfAuthenticated>
+      ),
     },
     {
       path: 'register',
-      element: <RegisterPage />,
+      element: (
+        <RedirectIfAuthenticated>
+          <RegisterPage />
+        </RedirectIfAuthenticated>
+      ),
     },
   ],
 };

@@ -9,7 +9,7 @@ import { StoreDashboardLayout } from '@/layouts/StoreDashboardLayout';
 /**
  * Shared
  */
-import { ROLES } from '@/shared/constants/roles';
+import { ROLES } from '@/shared/constants/rolesConstants';
 import { ProtectedRoute } from '@/shared/components/common/ProtectedRoute';
 
 /**
@@ -22,7 +22,7 @@ export const MainRoutes = [
   {
     path: '/admin',
     element: (
-      <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+      <ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}>
         <AdminDashboardLayout />
       </ProtectedRoute>
     ),
@@ -42,7 +42,9 @@ export const MainRoutes = [
   {
     path: '/manager',
     element: (
-      <ProtectedRoute allowedRoles={[ROLES.MANAGER]}>
+      <ProtectedRoute
+        allowedRoles={[ROLES.STORE_MANAGER, ROLES.BRANCH_MANAGER]}
+      >
         <StoreDashboardLayout />
       </ProtectedRoute>
     ),

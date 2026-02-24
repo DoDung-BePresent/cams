@@ -8,7 +8,7 @@ const { Link: AntLink } = Typography;
 type LoginFormType = {
   email: string;
   password: string;
-  remember: boolean;
+  rememberMe: boolean; // ✅ Đúng tên với API
 };
 
 export const LoginForm = () => {
@@ -18,17 +18,19 @@ export const LoginForm = () => {
 
   const handleSubmit = async (values: LoginFormType) => {
     try {
-      await login(values.email, values.password);
+      await login({
+        email: values.email,
+        password: values.password,
+        rememberMe: values.rememberMe ?? false,
+      });
+
       message.success('Login successful!');
 
-      // Navigate based on email (temporary for demo)
-      if (values.email.includes('admin')) {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/manager/dashboard');
-      }
-    } catch (error) {
-      message.error('Login failed!');
+      // TODO: Navigate dựa vào role từ JWT
+      navigate('/manager/dashboard');
+    } catch (error: any) {
+      const msg = error?.response?.data?.message || 'Login failed!';
+      message.error(msg);
     }
   };
 
@@ -39,28 +41,24 @@ export const LoginForm = () => {
       layout='vertical'
       requiredMark={false}
       onFinish={handleSubmit}
-      styles={{
-        label: {
-          height: 20,
-        },
-      }}
+      styles={{ label: { height: 20 } }}
     >
-      <Form.Item<LoginFormType>
+      <Form.Item
         label='Email Address'
         name='email'
         rules={loginValidation.email}
       >
         <Input placeholder='Enter email address' />
       </Form.Item>
-      <Form.Item<LoginFormType>
+      <Form.Item
         label='Password'
         name='password'
         rules={loginValidation.password}
       >
         <Input.Password placeholder='Enter password' />
       </Form.Item>
-      <Form.Item<LoginFormType>
-        name='remember'
+      <Form.Item
+        name='rememberMe'
         valuePropName='checked'
         label={null}
       >
