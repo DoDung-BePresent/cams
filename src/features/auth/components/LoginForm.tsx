@@ -1,15 +1,26 @@
 import { Link, useNavigate } from 'react-router';
 import { Button, Checkbox, Flex, Form, Input, Typography, message } from 'antd';
+
+/**
+ * Hooks
+ */
 import { useAuth } from '@/providers/AuthProvider';
+
+/**
+ * Validations
+ */
 import { loginValidation } from '../validations/authValidation';
 
-const { Link: AntLink } = Typography;
-
+/**
+ * Types
+ */
 type LoginFormType = {
   email: string;
   password: string;
-  rememberMe: boolean; // ✅ Đúng tên với API
+  rememberMe: boolean;
 };
+
+const { Link: AntLink } = Typography;
 
 export const LoginForm = () => {
   const navigate = useNavigate();
@@ -25,9 +36,7 @@ export const LoginForm = () => {
       });
 
       message.success('Login successful!');
-
-      // TODO: Navigate dựa vào role từ JWT
-      navigate('/manager/dashboard');
+      
     } catch (error: any) {
       const msg = error?.response?.data?.message || 'Login failed!';
       message.error(msg);

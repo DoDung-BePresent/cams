@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * Configs
@@ -37,6 +38,7 @@ import type {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = useQueryClient();
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
@@ -58,6 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     saveTokens(token, refreshToken ?? null, payload.rememberMe);
     setAccessToken(token);
+    await queryClient.invalidateQueries({ queryKey: ['profile'] });
   };
 
   const logout = async () => {
@@ -68,6 +71,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       clearTokens();
       setAccessToken(null);
+      
+      queryClient.setQueryData(['profile'], null);
+      queryClient.removeQueries({ queryKey: ['profile'] });
     }
   };
 

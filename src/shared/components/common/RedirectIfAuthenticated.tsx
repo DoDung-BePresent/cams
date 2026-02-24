@@ -15,6 +15,9 @@ export const RedirectIfAuthenticated = ({
 }) => {
   const { isAuthenticated, user } = useAuth();
 
+  console.log('IS AUTHENTICATION:', isAuthenticated);
+  console.log('USER:', user);
+
   if (isAuthenticated && user) {
     const redirectTo = ROLE_HOME_MAP[user.role] ?? '/unauthorized';
     return (

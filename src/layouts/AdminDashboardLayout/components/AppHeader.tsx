@@ -81,10 +81,10 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
-      navigate('/login');
+    } finally {
+      navigate('/login', { replace: true });
     }
   };
 
