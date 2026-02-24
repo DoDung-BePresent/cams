@@ -8,7 +8,12 @@ import { saveTokens, clearTokens, getAccessToken } from '@/config/api';
 /**
  * Shared
  */
-import { decodeJwt, mapRoleFromEnum, isTokenExpired, getRoleFromJwt } from '@/shared/utils/jwt';
+import {
+  decodeJwt,
+  mapRoleFromEnum,
+  isTokenExpired,
+  getRoleFromJwt,
+} from '@/shared/utils/jwt';
 
 /**
  * Features
@@ -25,9 +30,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // ✅ Check token on mount
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Restore session từ storage khi app load
   useEffect(() => {
     const token = getAccessToken();
     if (token && !isTokenExpired(token)) {
@@ -42,7 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setAccessToken(token);
       }
     } else if (token) {
-      // Token hết hạn → clear
       clearTokens();
     }
     setIsLoading(false);
@@ -52,11 +55,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const response = await authService.login(payload);
     const { accessToken: token, refreshToken, roles } = response.data.data;
 
-    // Lưu token theo rememberMe
     saveTokens(token, refreshToken ?? null, payload.rememberMe);
     setAccessToken(token);
 
-    // Decode JWT để lấy user info
     const jwtPayload = decodeJwt(token);
     if (jwtPayload) {
       const role = mapRoleFromEnum(roles);
@@ -75,7 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setAccessToken(null);
   };
 
-  if (isLoading) return null; // Hoặc <Spin /> toàn màn hình
+  if (isLoading) return null;
 
   return (
     <AuthContext.Provider

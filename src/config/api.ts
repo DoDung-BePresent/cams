@@ -10,10 +10,8 @@ export const api = axios.create({
 });
 
 // ========== Request Interceptor ==========
-// Tự động đính kèm accessToken vào mỗi request
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Lấy token từ cả 2 storage (tùy rememberMe)
     const token =
       localStorage.getItem('accessToken') ||
       sessionStorage.getItem('accessToken');
@@ -27,13 +25,11 @@ api.interceptors.request.use(
 );
 
 // ========== Response Interceptor ==========
-// Xử lý refresh token khi accessToken hết hạn
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Nếu 401 và chưa retry
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -43,13 +39,11 @@ api.interceptors.response.use(
           sessionStorage.getItem('refreshToken');
 
         if (!refreshToken) {
-          // Không có refresh token → logout
           clearTokens();
           window.location.href = '/login';
           return Promise.reject(error);
         }
 
-        // ✅ Gọi refresh token API (chuẩn bị sẵn)
         const response = await axios.post(`${env.baseUrl}/api/auth/refresh`, {
           refreshToken,
         });
@@ -57,15 +51,12 @@ api.interceptors.response.use(
         const { accessToken, refreshToken: newRefreshToken } =
           response.data.data;
 
-        // Lưu token mới, giữ nguyên storage type
         const isRemembered = !!localStorage.getItem('accessToken');
         saveTokens(accessToken, newRefreshToken, isRemembered);
 
-        // Retry request gốc với token mới
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // Refresh thất bại → logout
         clearTokens();
         window.location.href = '/login';
         return Promise.reject(refreshError);
@@ -76,7 +67,6 @@ api.interceptors.response.use(
   },
 );
 
-// ========== Token Helpers ==========
 export const saveTokens = (
   accessToken: string,
   refreshToken: string | null,
