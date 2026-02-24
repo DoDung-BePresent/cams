@@ -1,13 +1,17 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios';
 import { env } from './env';
 
-export const api = axios.create({
+const options: CreateAxiosDefaults = {
   baseURL: env.baseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 10000,
-});
+  withCredentials: true,
+};
+
+export const api = axios.create(options);
+const apiRefresh = axios.create(options);
 
 // ========== Request Interceptor ==========
 api.interceptors.request.use(
@@ -34,7 +38,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const response = await api.post('/api/auth/refresh-token');
+        const response = await apiRefresh.post('/api/auth/refresh-token');
 
         const { accessToken, refreshToken: newRefreshToken } =
           response.data.data;

@@ -1,7 +1,15 @@
 /**
  * Node modules
  */
-import { Avatar, Badge, Button, Dropdown, Flex, Layout } from 'antd';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Dropdown,
+  Flex,
+  Layout,
+  Typography,
+} from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -15,7 +23,6 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MessageOutlined,
-  SettingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 
@@ -49,6 +56,7 @@ type AppHeaderProps = {
 };
 
 const { Header } = Layout;
+const { Text } = Typography;
 
 const headerStyle: React.CSSProperties = {
   background: 'white',
@@ -83,21 +91,18 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const userMenuItems = [
     {
       key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
+      label: (
+        <Flex vertical>
+          <Text strong>{`${user?.firstName} ${user?.lastName}`}</Text>
+          <Text type='secondary'>{user?.email}</Text>
+        </Flex>
+      ),
     },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Settings',
-    },
-    {
-      type: 'divider' as const,
-    },
+    { type: 'divider' },
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
       label: 'Logout',
+      icon: <LogoutOutlined />,
       onClick: handleLogout,
     },
   ];
@@ -167,8 +172,8 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             placement='bottomRight'
           >
             <Avatar
-              src={avatarImage}
-              style={{ cursor: 'pointer' }}
+              src={user?.avatarUrl}
+              icon={<UserOutlined />}
             />
           </Dropdown>
         </Flex>

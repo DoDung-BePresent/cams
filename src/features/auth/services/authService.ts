@@ -1,5 +1,9 @@
 import { api } from '@/config/api';
-import type { LoginPayload, LoginResponse } from '../types/authTypes';
+import type {
+  LoginPayload,
+  LoginResponse,
+  ProfileResponse,
+} from '../types/authTypes';
 
 export const authService = {
   login: (payload: LoginPayload) =>
@@ -9,5 +13,5 @@ export const authService = {
 
   refreshToken: () => api.post('/api/auth/refresh-token'),
 
-  getProfile: () => api.get('/api/auth/profile'),
+  getProfile: () => api.get<ProfileResponse>('/api/auth/profile'),
 };

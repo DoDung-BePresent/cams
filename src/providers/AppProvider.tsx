@@ -7,10 +7,10 @@ import { ThemeProvider } from './ThemeProvider';
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   return (
-    <AuthProvider>
-      <QueryProvider>
+    <QueryProvider>
+      <AuthProvider>
         <ThemeProvider>{children}</ThemeProvider>
-      </QueryProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryProvider>
   );
 };

@@ -6,7 +6,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { saveTokens, clearTokens, getAccessToken } from '@/config/api';
 
 /**
- * Shared
+ * Utils
  */
 import {
   decodeJwt,
@@ -16,9 +16,18 @@ import {
 } from '@/shared/utils/jwt';
 
 /**
- * Features
+ * Hooks
+ */
+import { useProfile } from '@/features/auth/hooks/useProfile';
+
+/**
+ * Services
  */
 import { authService } from '@/features/auth/services/authService';
+
+/**
+ * Types
+ */
 import type {
   AuthContextType,
   LoginPayload,
@@ -28,28 +37,20 @@ import type {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const token = getAccessToken();
     if (token && !isTokenExpired(token)) {
-      const payload = decodeJwt(token);
-      if (payload) {
-        setUser({
-          id: payload.sub,
-          email: payload.email,
-          name: payload.email.split('@')[0],
-          role: getRoleFromJwt(token),
-        });
-        setAccessToken(token);
-      }
+      setAccessToken(token);
     } else if (token) {
       clearTokens();
     }
-    setIsLoading(false);
+    setIsInitializing(false);
   }, []);
+
+  const { data: user, isLoading: isLoadingProfile } = useProfile(!!accessToken);
 
   const login = async (payload: LoginPayload) => {
     const response = await authService.login(payload);
@@ -57,17 +58,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     saveTokens(token, refreshToken ?? null, payload.rememberMe);
     setAccessToken(token);
-
-    const jwtPayload = decodeJwt(token);
-    if (jwtPayload) {
-      const role = mapRoleFromEnum(roles);
-      setUser({
-        id: jwtPayload.sub,
-        email: jwtPayload.email,
-        name: jwtPayload.email.split('@')[0],
-        role,
-      });
-    }
   };
 
   const logout = async () => {
@@ -77,17 +67,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Logout API failed:', error);
     } finally {
       clearTokens();
-      setUser(null);
       setAccessToken(null);
     }
   };
 
-  if (isLoading) return null;
+  if (isInitializing || (accessToken && isLoadingProfile)) {
+    return null; // Hoặc <Spin fullscreen />
+  }
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user ?? null,
         accessToken,
         isAuthenticated: !!user,
         login,
