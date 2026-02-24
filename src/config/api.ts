@@ -34,25 +34,13 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken =
-          localStorage.getItem('refreshToken') ||
-          sessionStorage.getItem('refreshToken');
-
-        if (!refreshToken) {
-          clearTokens();
-          window.location.href = '/login';
-          return Promise.reject(error);
-        }
-
-        const response = await axios.post(`${env.baseUrl}/api/auth/refresh`, {
-          refreshToken,
-        });
+        const response = await api.post('/api/auth/refresh-token');
 
         const { accessToken, refreshToken: newRefreshToken } =
           response.data.data;
 
         const isRemembered = !!localStorage.getItem('accessToken');
-        saveTokens(accessToken, newRefreshToken, isRemembered);
+        saveTokens(accessToken, newRefreshToken ?? null, isRemembered);
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);

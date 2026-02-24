@@ -70,9 +70,14 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
 
   const isManager = user?.role === ROLES.STORE_MANAGER;
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      navigate('/login');
+    }
   };
 
   const userMenuItems = [

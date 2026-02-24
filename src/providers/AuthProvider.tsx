@@ -70,10 +70,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    clearTokens();
-    setUser(null);
-    setAccessToken(null);
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout API failed:', error);
+    } finally {
+      clearTokens();
+      setUser(null);
+      setAccessToken(null);
+    }
   };
 
   if (isLoading) return null;

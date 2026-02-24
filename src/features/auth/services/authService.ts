@@ -5,11 +5,9 @@ export const authService = {
   login: (payload: LoginPayload) =>
     api.post<LoginResponse>('/api/auth/login', payload),
 
-  // ✅ Chuẩn bị sẵn cho tương lai
   logout: () => api.post('/api/auth/logout'),
 
-  refreshToken: (refreshToken: string) =>
-    api.post('/api/auth/refresh', { refreshToken }),
+  refreshToken: () => api.post('/api/auth/refresh-token'),
 
-  getProfile: () => api.get('/api/auth/me'), // Nếu có
+  getProfile: () => api.get('/api/auth/profile'),
 };
