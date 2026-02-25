@@ -146,10 +146,6 @@ export const MusicScheduleCalendar = () => {
             hour12: true,
           }}
           nowIndicator={true}
-          validRange={{
-            start: new Date().toISOString().split('T')[0],
-          }}
-          // ✅ Dynamic slot height
           slotMinHeight={slotHeight}
           eventContent={(eventInfo) => {
             const { event } = eventInfo;
