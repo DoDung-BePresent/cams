@@ -1,37 +1,54 @@
 /* Custom FullCalendar styles */
-.fc-theme-standard .fc-scrollgrid {
-  border: 1px solid #f0f0f0;
-}
 
-.fc-theme-standard td,
-.fc-theme-standard th {
-  border-color: #f0f0f0;
-}
+.fc {
+  .fc-theme-standard .fc-scrollgrid {
+    border: 1px solid #f0f0f0;
+  }
 
-.fc-col-header-cell {
-  background-color: #fafafa;
-  font-weight: 600;
-  padding: 12px 0;
-}
+  .fc-theme-standard td,
+  .fc-theme-standard th {
+    border-color: #f0f0f0;
+  }
 
-.fc-timegrid-slot {
-  height: 3em;
-}
+  .fc-col-header-cell {
+    background-color: #fafafa;
+    font-weight: 600;
+    padding: 12px 0;
+  }
 
-.fc-event {
-  cursor: pointer;
-  border-radius: 4px;
-}
+  .fc-timegrid-slot {
+    height: 3em; /* Will be overridden by inline style */
+  }
 
-.fc-event:hover {
-  opacity: 0.9;
-}
+  .fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+  }
 
-.fc-timegrid-now-indicator-line {
-  border-color: #ff4d4f;
-  border-width: 2px;
-}
+  .fc-event:hover {
+    opacity: 0.9;
+  }
 
-.fc-timegrid-now-indicator-arrow {
-  border-color: #ff4d4f;
+  .fc-timegrid-now-indicator-line {
+    border-color: #ff4d4f;
+    border-width: 2px;
+  }
+
+  .fc-timegrid-now-indicator-arrow {
+    border-color: #ff4d4f;
+  }
+
+  .fc-day-past {
+    background-color: rgba(0, 0, 0, 0.02) !important; /* Very light gray */
+    opacity: 0.6;
+  }
+
+  .fc-day-past .fc-timegrid-col-bg {
+    background-color: rgba(0, 0, 0, 0.01) !important;
+  }
+
+  .fc-day-past .fc-timegrid-col-frame {
+    pointer-events: none;
+    cursor: not-allowed;
+  }
 }
