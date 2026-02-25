@@ -28,12 +28,14 @@ export const CalendarHeader = ({
         Music Schedule
       </Title>
       <Space>
+        <Button onClick={onToday}>Today</Button>
         <Button
+          type='text'
           icon={<LeftOutlined />}
           onClick={onPrevious}
         />
-        <Button onClick={onToday}>Today</Button>
         <Button
+          type='text'
           icon={<RightOutlined />}
           onClick={onNext}
         />

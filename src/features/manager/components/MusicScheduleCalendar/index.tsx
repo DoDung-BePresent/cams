@@ -4,11 +4,27 @@ import { CalendarOutlined } from '@ant-design/icons';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+
+/**
+ * Types
+ */
 import type { EventClickArg, DateSelectArg } from '@fullcalendar/core';
+
+/**
+ * Components
+ */
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarToolbar } from './CalendarToolbar';
 import { CalendarLegend } from './CalendarLegend';
+
+/**
+ * Mock Data
+ */
 import { mockEvents } from './mockData';
+
+/**
+ * CSS
+ */
 import './styles.css';
 
 export const MusicScheduleCalendar = () => {
@@ -16,7 +32,6 @@ export const MusicScheduleCalendar = () => {
   const [currentView, setCurrentView] = useState<
     'timeGridWeek' | 'timeGridDay'
   >('timeGridWeek');
-  const [slotHeight, setSlotHeight] = useState(60); // ✅ Adjustable cell height
 
   const handlePrevious = () => {
     calendarRef.current?.getApi().prev();
@@ -33,14 +48,6 @@ export const MusicScheduleCalendar = () => {
   const handleViewChange = (view: 'timeGridWeek' | 'timeGridDay') => {
     calendarRef.current?.getApi().changeView(view);
     setCurrentView(view);
-  };
-
-  const handleZoomIn = () => {
-    setSlotHeight((prev) => Math.min(prev + 10, 100));
-  };
-
-  const handleZoomOut = () => {
-    setSlotHeight((prev) => Math.max(prev - 10, 40));
   };
 
   const handleEventClick = (info: EventClickArg) => {
@@ -105,10 +112,7 @@ export const MusicScheduleCalendar = () => {
 
         <CalendarToolbar
           currentView={currentView}
-          slotHeight={slotHeight}
           onViewChange={handleViewChange}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
         />
       </Flex>
 
@@ -148,7 +152,7 @@ export const MusicScheduleCalendar = () => {
           nowIndicator={true}
           nowIndicatorContent={
             <div className='relative'>
-              <span className='absolute bottom-0 translate-y-1/2 bg-gray-800 text-xs text-white p-2 py-1 rounded-sm left-1/2 -translate-x-1/2'>
+              <span className='absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rounded-sm bg-gray-800 p-2 py-1 text-xs text-white'>
                 {new Date().toLocaleTimeString('EN-US', {
                   hour: '2-digit',
                   minute: '2-digit',
