@@ -1,0 +1,37 @@
+/* Custom FullCalendar styles */
+.fc-theme-standard .fc-scrollgrid {
+  border: 1px solid #f0f0f0;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: #f0f0f0;
+}
+
+.fc-col-header-cell {
+  background-color: #fafafa;
+  font-weight: 600;
+  padding: 12px 0;
+}
+
+.fc-timegrid-slot {
+  height: 3em;
+}
+
+.fc-event {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.fc-event:hover {
+  opacity: 0.9;
+}
+
+.fc-timegrid-now-indicator-line {
+  border-color: #ff4d4f;
+  border-width: 2px;
+}
+
+.fc-timegrid-now-indicator-arrow {
+  border-color: #ff4d4f;
+}
