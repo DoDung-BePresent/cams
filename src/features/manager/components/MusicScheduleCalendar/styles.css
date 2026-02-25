@@ -21,7 +21,7 @@
   }
 
   .fc-timegrid-slot {
-    height: 3em;
+    height: 6em;
   }
 
   .fc-event {
@@ -35,11 +35,37 @@
 
   .fc-timegrid-now-indicator-line {
     border-color: var(--ant-color-highlight);
-    border-width: 2px;
+    border-width: 1px;
+    position: relative;
+
+    &::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      flex-shrink: 0;
+      position: absolute;
+      border-radius: 100%;
+      background-color: var(--ant-color-highlight);
+      left: -1px;
+      bottom: 0;
+      transform: translateY(50%);
+    }
+    &::after {
+      content: '';
+      width: 7px;
+      height: 7px;
+      flex-shrink: 0;
+      position: absolute;
+      border-radius: 100%;
+      background-color: var(--ant-color-highlight);
+      right: -0.5px;
+      bottom: 0;
+      transform: translateY(50%);
+    }
   }
 
-  .fc-timegrid-now-indicator-arrow {
-    border-color: var(--ant-color-highlight);
+  .fc-timegrid-now-indicator-arrow > div {
+    display: none;
   }
 
   .fc-timegrid-col,

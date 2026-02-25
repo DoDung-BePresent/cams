@@ -126,10 +126,10 @@ export const MusicScheduleCalendar = () => {
           editable={true}
           selectable={true}
           selectMirror={true}
-          selectAllow={(selectInfo) => selectInfo.start >= new Date()} // ✅ Prevent past selection
+          selectAllow={(selectInfo) => selectInfo.start >= new Date()}
           dayMaxEvents={true}
           weekends={true}
-          slotMinTime='06:00:00'
+          slotMinTime='07:00:00'
           slotMaxTime='22:00:00'
           slotDuration='01:00:00'
           height='auto'
@@ -146,7 +146,17 @@ export const MusicScheduleCalendar = () => {
             hour12: true,
           }}
           nowIndicator={true}
-          slotMinHeight={slotHeight}
+          nowIndicatorContent={
+            <div className='relative'>
+              <span className='absolute bottom-0 translate-y-1/2 bg-gray-800 text-xs text-white p-2 py-1 rounded-sm left-1/2 -translate-x-1/2'>
+                {new Date().toLocaleTimeString('EN-US', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
+          }
+          // slotMinHeight={slotHeight}
           eventContent={(eventInfo) => {
             const { event } = eventInfo;
             const props = event.extendedProps;
