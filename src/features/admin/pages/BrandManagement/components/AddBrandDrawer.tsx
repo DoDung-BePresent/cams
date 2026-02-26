@@ -19,6 +19,11 @@ import {
 import filesImage from '@/assets/images/files.png';
 
 /**
+ * Hooks
+ */
+import { useCreateBrand } from '@/features/admin/hooks/useCreateBrand';
+
+/**
  * Types
  */
 import type { UploadFile, UploadProps } from 'antd';
@@ -44,7 +49,7 @@ const { Text, Title } = Typography;
 type AddBrandDrawerProps = {
   open: boolean;
   onClose: () => void;
-  onSuccess: (formData: FormData) => void;
+  onSuccess: () => void;
 };
 
 export const AddBrandDrawer = ({
@@ -53,51 +58,43 @@ export const AddBrandDrawer = ({
   onSuccess,
 }: AddBrandDrawerProps) => {
   const [form] = Form.useForm<BrandRequest>();
-  const [loading, setLoading] = useState(false);
   const [logoFile, setLogoFile] = useState<UploadFile | null>(null);
 
+  const createBrand = useCreateBrand();
+
   const handleSubmit = async (values: BrandRequest) => {
-    try {
-      setLoading(true);
+    const formData = new FormData();
 
-      const formData = new FormData();
-
-      if (values.name) formData.append('name', values.name);
-      if (logoFile?.originFileObj) {
-        formData.append('logo', logoFile.originFileObj);
-      }
-      if (values.description)
-        formData.append('description', values.description);
-      if (values.website) formData.append('website', values.website);
-      if (values.industry) formData.append('industry', values.industry);
-      if (values.contactEmail)
-        formData.append('contactEmail', values.contactEmail);
-      if (values.contactPhone)
-        formData.append('contactPhone', values.contactPhone);
-      if (values.primaryContactName)
-        formData.append('primaryContactName', values.primaryContactName);
-      if (values.technicalContactEmail)
-        formData.append('technicalContactEmail', values.technicalContactEmail);
-      if (values.legalName) formData.append('legalName', values.legalName);
-      if (values.taxCode) formData.append('taxCode', values.taxCode);
-      if (values.billingAddress)
-        formData.append('billingAddress', values.billingAddress);
-      if (values.defaultTimeZone)
-        formData.append('defaultTimeZone', values.defaultTimeZone);
-
-      console.log('Create brand:', Object.fromEntries(formData));
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      message.success('Brand created successfully!');
-      onSuccess(formData);
-      form.resetFields();
-      setLogoFile(null);
-      onClose();
-    } catch (error) {
-      message.error('Failed to create brand!');
-    } finally {
-      setLoading(false);
+    if (values.name) formData.append('name', values.name);
+    if (logoFile?.originFileObj) {
+      formData.append('logo', logoFile.originFileObj);
     }
+    if (values.description) formData.append('description', values.description);
+    if (values.website) formData.append('website', values.website);
+    if (values.industry) formData.append('industry', values.industry);
+    if (values.contactEmail)
+      formData.append('contactEmail', values.contactEmail);
+    if (values.contactPhone)
+      formData.append('contactPhone', values.contactPhone);
+    if (values.primaryContactName)
+      formData.append('primaryContactName', values.primaryContactName);
+    if (values.technicalContactEmail)
+      formData.append('technicalContactEmail', values.technicalContactEmail);
+    if (values.legalName) formData.append('legalName', values.legalName);
+    if (values.taxCode) formData.append('taxCode', values.taxCode);
+    if (values.billingAddress)
+      formData.append('billingAddress', values.billingAddress);
+    if (values.defaultTimeZone)
+      formData.append('defaultTimeZone', values.defaultTimeZone);
+
+    createBrand.mutate(formData, {
+      onSuccess: () => {
+        form.resetFields();
+        setLogoFile(null);
+        onSuccess();
+        onClose();
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -141,7 +138,7 @@ export const AddBrandDrawer = ({
             size='large'
             type='primary'
             onClick={() => form.submit()}
-            loading={loading}
+            loading={createBrand.isPending}
           >
             Create Brand
           </Button>

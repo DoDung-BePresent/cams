@@ -1,35 +1,43 @@
 import { useState } from 'react';
-import { Button, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
 import { useNavigate } from 'react-router';
+
+/**
+ * Icons
+ */
+import { PlusOutlined } from '@ant-design/icons';
+
+/**
+ * Types
+ */
 import type { BrandListItem } from '@/features/admin/types/brandTypes';
+
+/**
+ * Components
+ */
 import { AddBrandDrawer } from './components/AddBrandDrawer';
 import { getBrandColumns } from './components/BrandTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+
+/**
+ * Hooks
+ */
+import { useBrands } from '@/features/admin/hooks/useBrands';
+import { useDeleteBrand } from '@/features/admin/hooks/useDeleteBrand';
 
 export const BrandList = () => {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  // Mock data - TODO: Replace with API call
-  const [brands, setBrands] = useState<BrandListItem[]>([
-    {
-      id: '1',
-      name: 'Moonlight Coffee',
-      logoUrl: null,
-      industry: 'F&B',
-      primaryContactName: 'John Doe',
-      contactEmail: 'contact@moonlight.com',
-      contactPhone: '+84901234567',
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-      createdBy: null,
-      updatedBy: null,
-      status: EntityStatusEnum.Active,
-    },
-  ]);
+  const { data, isLoading, isError } = useBrands({
+    page: currentPage,
+    pageSize,
+  });
+
+  const deleteBrand = useDeleteBrand();
 
   const handleEdit = (brand: BrandListItem) => {
     console.log('Edit brand:', brand);
@@ -37,16 +45,7 @@ export const BrandList = () => {
   };
 
   const handleDelete = (brandId: string) => {
-    message.success('Brand deleted successfully!');
-    setBrands(brands.filter((b) => b.id !== brandId));
-    // TODO: Call API to delete brand
-  };
-
-  const handleAddBrand = async (formData: FormData) => {
-    // TODO: Call API to create brand
-    console.log('Create brand:', Object.fromEntries(formData));
-    message.success('Brand created successfully!');
-    setDrawerOpen(false);
+    deleteBrand.mutate(brandId);
   };
 
   const breadcrumbs = [
@@ -84,14 +83,25 @@ export const BrandList = () => {
 
       <DataTable
         columns={columns}
-        dataSource={brands}
+        dataSource={data?.items || []}
         rowKey='id'
+        loading={isLoading}
+        pagination={{
+          current: currentPage,
+          pageSize,
+          total: data?.totalItems || 0,
+          showTotal: (total) => `Total ${total} brands`,
+          onChange: (page, size) => {
+            setCurrentPage(page);
+            setPageSize(size || 10);
+          },
+        }}
       />
 
       <AddBrandDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        onSuccess={handleAddBrand}
+        onSuccess={() => setDrawerOpen(false)}
       />
     </div>
   );
