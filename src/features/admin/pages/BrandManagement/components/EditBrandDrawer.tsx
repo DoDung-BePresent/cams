@@ -12,6 +12,7 @@ import {
   Typography,
   Flex,
   Spin,
+  Skeleton,
 } from 'antd';
 
 /**
@@ -43,6 +44,7 @@ import {
  * Validations
  */
 import { brandValidation } from '@/features/admin/validations/brandValidation';
+import { nullToUndefined } from '@/shared/utils/formHelpers';
 
 const { TextArea } = Input;
 const { Dragger } = Upload;
@@ -79,16 +81,16 @@ export const EditBrandDrawer = ({
     if (brand && open) {
       form.setFieldsValue({
         name: brand.name,
-        industry: brand.industry,
-        description: brand.description,
-        website: brand.website,
-        contactEmail: brand.contactEmail,
-        contactPhone: brand.contactPhone,
-        primaryContactName: brand.primaryContactName,
-        technicalContactEmail: brand.technicalContactEmail,
-        legalName: brand.legalName,
-        taxCode: brand.taxCode,
-        billingAddress: brand.billingAddress,
+        industry: nullToUndefined(brand.industry),
+        description: nullToUndefined(brand.description),
+        website: nullToUndefined(brand.website),
+        contactEmail: nullToUndefined(brand.contactEmail),
+        contactPhone: nullToUndefined(brand.contactPhone),
+        primaryContactName: nullToUndefined(brand.primaryContactName),
+        technicalContactEmail: nullToUndefined(brand.technicalContactEmail),
+        legalName: nullToUndefined(brand.legalName),
+        taxCode: nullToUndefined(brand.taxCode),
+        billingAddress: nullToUndefined(brand.billingAddress),
         defaultTimeZone: brand.defaultTimeZone,
       });
       setExistingLogoUrl(brand.logoUrl);
@@ -132,6 +134,10 @@ export const EditBrandDrawer = ({
         },
       },
     );
+  };
+
+  const handleSubmitFailed = () => {
+    message.error('Please fill in all required fields correctly!');
   };
 
   const handleCancel = () => {
@@ -181,6 +187,14 @@ export const EditBrandDrawer = ({
     },
     accept:
       'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml',
+    listType: 'picture',
+  };
+
+  const getLogoPreview = () => {
+    if (logoFile?.originFileObj) {
+      return URL.createObjectURL(logoFile.originFileObj);
+    }
+    return existingLogoUrl;
   };
 
   return (
@@ -214,19 +228,42 @@ export const EditBrandDrawer = ({
       }
     >
       {isFetching ? (
-        <Flex
-          justify='center'
-          align='center'
-          style={{ minHeight: 400 }}
-        >
-          <Spin size='large' />
-        </Flex>
+        <div style={{ padding: '24px 0' }}>
+          <Skeleton.Input
+            active
+            block
+            style={{ marginBottom: 24, height: 32 }}
+          />
+          <Skeleton.Input
+            active
+            block
+            style={{ marginBottom: 24, height: 32 }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 3 }}
+            style={{ marginBottom: 24 }}
+          />
+          <Skeleton.Image
+            active
+            style={{
+              width: '100%',
+              height: 200,
+              marginBottom: 24,
+            }}
+          />
+          <Skeleton
+            active
+            paragraph={{ rows: 6 }}
+          />
+        </div>
       ) : (
         <Form
           size='large'
           form={form}
           layout='vertical'
           onFinish={handleSubmit}
+          onFinishFailed={handleSubmitFailed}
           styles={{
             label: {
               height: 22,
@@ -281,11 +318,11 @@ export const EditBrandDrawer = ({
             >
               <Dragger {...uploadProps}>
                 <Flex justify='center'>
-                  {existingLogoUrl && !logoFile ? (
+                  {getLogoPreview() ? (
                     <img
-                      src={existingLogoUrl}
+                      src={getLogoPreview() || undefined}
                       height={60}
-                      alt='Current Logo'
+                      alt='Logo Preview'
                       style={{ objectFit: 'contain' }}
                     />
                   ) : (
@@ -298,7 +335,7 @@ export const EditBrandDrawer = ({
                 </Flex>
                 <Flex vertical>
                   <Text>
-                    {existingLogoUrl && !logoFile
+                    {getLogoPreview()
                       ? 'Click or drag file to replace logo'
                       : 'Click or drag file to this area to upload'}
                   </Text>
@@ -421,6 +458,27 @@ export const EditBrandDrawer = ({
                 placeholder='Full billing address'
                 maxLength={500}
                 showCount
+              />
+            </Form.Item>
+          </div>
+
+          {/* Configuration Section */}
+          <div>
+            <Title
+              level={5}
+              style={{ marginBottom: 16 }}
+            >
+              Configuration
+            </Title>
+
+            <Form.Item
+              label='Default Timezone'
+              name='defaultTimeZone'
+              rules={brandValidation.defaultTimeZone}
+            >
+              <Select
+                placeholder='Select timezone'
+                options={TIMEZONE_OPTIONS}
               />
             </Form.Item>
           </div>
