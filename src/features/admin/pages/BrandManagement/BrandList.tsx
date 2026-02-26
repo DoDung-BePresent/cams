@@ -66,9 +66,6 @@ export const BrandList = () => {
             By deleting "<strong>{brand?.name}</strong>", all associated data
             will be permanently removed.
           </p>
-          <p style={{ color: '#ff4d4f', marginTop: 8 }}>
-            This action cannot be undone.
-          </p>
         </div>
       ),
       okText: 'Delete',
