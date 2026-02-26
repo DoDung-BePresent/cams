@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -16,9 +16,11 @@ import type { BrandListItem } from '@/features/admin/types/brandTypes';
  * Components
  */
 import { AddBrandDrawer } from './components/AddBrandDrawer';
+import { EditBrandDrawer } from './components/EditBrandDrawer';
 import { getBrandColumns } from './components/BrandTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
+import { AppModal } from '@/shared/components/ui/AppModal';
 
 /**
  * Hooks
@@ -28,24 +30,56 @@ import { useDeleteBrand } from '@/features/admin/hooks/useDeleteBrand';
 
 export const BrandList = () => {
   const navigate = useNavigate();
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [addDrawerOpen, setAddDrawerOpen] = useState(false);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const { data, isLoading, isError } = useBrands({
+  const { data, isLoading } = useBrands({
     page: currentPage,
     pageSize,
   });
 
   const deleteBrand = useDeleteBrand();
 
+  const handleView = (brandId: string) => {
+    console.log('View brand:', brandId);
+    // TODO: Navigate to brand detail page
+    // navigate(`/admin/brands/${brandId}`);
+    message.info('Brand detail page will be implemented soon');
+  };
+
   const handleEdit = (brand: BrandListItem) => {
-    console.log('Edit brand:', brand);
-    // TODO: Open edit drawer or navigate to detail page
+    setSelectedBrandId(brand.id);
+    setEditDrawerOpen(true);
   };
 
   const handleDelete = (brandId: string) => {
-    deleteBrand.mutate(brandId);
+    const brand = data?.items.find((b) => b.id === brandId);
+
+    AppModal.confirm({
+      title: 'Are you sure you want to delete this brand?',
+      content: (
+        <div>
+          <p>
+            By deleting "<strong>{brand?.name}</strong>", all associated data
+            will be permanently removed.
+          </p>
+          <p style={{ color: '#ff4d4f', marginTop: 8 }}>
+            This action cannot be undone.
+          </p>
+        </div>
+      ),
+      okText: 'Delete',
+      cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
+      onOk: () => {
+        deleteBrand.mutate(brandId);
+      },
+    });
   };
 
   const breadcrumbs = [
@@ -60,6 +94,7 @@ export const BrandList = () => {
   ];
 
   const columns = getBrandColumns({
+    onView: handleView,
     onEdit: handleEdit,
     onDelete: handleDelete,
   });
@@ -74,7 +109,7 @@ export const BrandList = () => {
             size='large'
             type='primary'
             icon={<PlusOutlined />}
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => setAddDrawerOpen(true)}
           >
             Add Brand
           </Button>
@@ -99,9 +134,22 @@ export const BrandList = () => {
       />
 
       <AddBrandDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onSuccess={() => setDrawerOpen(false)}
+        open={addDrawerOpen}
+        onClose={() => setAddDrawerOpen(false)}
+        onSuccess={() => setAddDrawerOpen(false)}
+      />
+
+      <EditBrandDrawer
+        open={editDrawerOpen}
+        brandId={selectedBrandId}
+        onClose={() => {
+          setEditDrawerOpen(false);
+          setSelectedBrandId(null);
+        }}
+        onSuccess={() => {
+          setEditDrawerOpen(false);
+          setSelectedBrandId(null);
+        }}
       />
     </div>
   );

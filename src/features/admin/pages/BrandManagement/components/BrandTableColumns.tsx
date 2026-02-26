@@ -1,23 +1,51 @@
 import { Button, Dropdown, Tag, Avatar } from 'antd';
-import { EditOutlined, DeleteOutlined, MoreOutlined } from '@ant-design/icons';
+
+/**
+ * Icons
+ */
+import {
+  EditOutlined,
+  DeleteOutlined,
+  MoreOutlined,
+  EyeOutlined,
+} from '@ant-design/icons';
+
+/**
+ * Types
+ */
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import type { BrandListItem } from '@/features/admin/types/brandTypes';
+
+/**
+ * Constants
+ */
 import {
   BRAND_STATUS_COLORS,
   BRAND_STATUS_LABELS,
 } from '@/features/admin/constants/brandConstants';
 
 type GetColumnsProps = {
+  onView: (brandId: string) => void;
   onEdit: (brand: BrandListItem) => void;
   onDelete: (brandId: string) => void;
 };
 
 export const getBrandColumns = ({
+  onView,
   onEdit,
   onDelete,
 }: GetColumnsProps): ColumnsType<BrandListItem> => {
   const getActionMenuItems = (record: BrandListItem): MenuProps['items'] => [
+    {
+      key: 'view',
+      label: 'View Details',
+      icon: <EyeOutlined />,
+      onClick: () => onView(record.id),
+    },
+    {
+      type: 'divider',
+    },
     {
       key: 'edit',
       label: 'Edit',
