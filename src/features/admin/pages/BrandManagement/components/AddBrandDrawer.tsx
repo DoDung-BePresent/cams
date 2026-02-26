@@ -97,6 +97,10 @@ export const AddBrandDrawer = ({
     });
   };
 
+  const handleSubmitFailed = () => {
+    message.error('Please fill in all required fields correctly!');
+  };
+
   const handleCancel = () => {
     form.resetFields();
     setLogoFile(null);
@@ -106,15 +110,44 @@ export const AddBrandDrawer = ({
   const uploadProps: UploadProps = {
     maxCount: 1,
     beforeUpload: (file) => {
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/bmp',
+        'image/svg+xml',
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        message.error(
+          'File must be an image (jpg, jpeg, png, gif, webp, bmp, svg)',
+        );
+        return Upload.LIST_IGNORE;
+      }
+
+      // Validate file size
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        message.error('File size must not exceed 5MB');
+        return Upload.LIST_IGNORE;
+      }
+
       setLogoFile({
         uid: file.uid,
         name: file.name,
         originFileObj: file,
       } as UploadFile);
+
       return false;
     },
-    onRemove: () => setLogoFile(null),
-    accept: 'image/*',
+    onRemove: () => {
+      setLogoFile(null);
+      form.setFieldValue('logo', undefined);
+    },
+    accept:
+      'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml',
     listType: 'picture',
   };
 
@@ -150,6 +183,7 @@ export const AddBrandDrawer = ({
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        onFinishFailed={handleSubmitFailed}
         initialValues={{
           defaultTimeZone: 'SE Asia Standard Time',
         }}
@@ -200,10 +234,10 @@ export const AddBrandDrawer = ({
             </Col>
           </Row>
 
+          {/* ✅ Removed rules from Form.Item, validation in beforeUpload */}
           <Form.Item
             label='Logo'
             name='logo'
-            rules={brandValidation.logo}
             valuePropName='file'
           >
             <Dragger {...uploadProps}>
@@ -211,13 +245,14 @@ export const AddBrandDrawer = ({
                 <img
                   src={filesImage}
                   height={30}
+                  alt='Upload'
                 />
               </Flex>
               <Flex vertical>
                 <Text>Click or drag file to this area to upload</Text>
                 <Text type='secondary'>
-                  Support for image files (JPG, PNG, GIF, etc.). Maximum size:
-                  5MB
+                  Support for image files (JPG, PNG, GIF, WEBP, BMP, SVG).
+                  Maximum size: 5MB
                 </Text>
               </Flex>
             </Dragger>
