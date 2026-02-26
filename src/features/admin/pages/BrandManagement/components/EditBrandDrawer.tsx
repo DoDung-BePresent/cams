@@ -5,20 +5,12 @@ import {
   Form,
   Input,
   Select,
-  Upload,
   message,
   Row,
   Col,
   Typography,
   Flex,
-  Spin,
-  Skeleton,
 } from 'antd';
-
-/**
- * Assets
- */
-import filesImage from '@/assets/images/files.png';
 
 /**
  * Hooks
@@ -44,11 +36,21 @@ import {
  * Validations
  */
 import { brandValidation } from '@/features/admin/validations/brandValidation';
+
+/**
+ * Utils
+ */
 import { nullToUndefined } from '@/shared/utils/formHelpers';
+import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+
+/**
+ * Components
+ */
+import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { FormSkeleton } from '@/shared/components/common/FormSkeleton';
 
 const { TextArea } = Input;
-const { Dragger } = Upload;
-const { Text, Title } = Typography;
+const { Title } = Typography;
 
 type EditBrandDrawerProps = {
   open: boolean;
@@ -67,16 +69,13 @@ export const EditBrandDrawer = ({
   const [logoFile, setLogoFile] = useState<UploadFile | null>(null);
   const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
 
-  // Fetch brand data
   const { data: brand, isLoading: isFetching } = useBrand(
     brandId || undefined,
     open && !!brandId,
   );
 
-  // Update mutation
   const updateBrand = useUpdateBrand();
 
-  // Populate form when brand data is loaded
   useEffect(() => {
     if (brand && open) {
       form.setFieldsValue({
@@ -102,7 +101,6 @@ export const EditBrandDrawer = ({
 
     const formData = new FormData();
 
-    // Only append fields that have values
     if (values.name) formData.append('name', values.name);
     if (logoFile?.originFileObj) {
       formData.append('logo', logoFile.originFileObj);
@@ -147,50 +145,12 @@ export const EditBrandDrawer = ({
     onClose();
   };
 
-  const uploadProps = {
-    maxCount: 1,
-    beforeUpload: (file: File) => {
-      const allowedTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/svg+xml',
-      ];
+  const uploadProps = createImageUploadProps<BrandRequest>(
+    setLogoFile,
+    (field, value) => form.setFieldValue(field, value),
+  );
 
-      if (!allowedTypes.includes(file.type)) {
-        message.error(
-          'File must be an image (jpg, jpeg, png, gif, webp, bmp, svg)',
-        );
-        return Upload.LIST_IGNORE;
-      }
-
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        message.error('File size must not exceed 5MB');
-        return Upload.LIST_IGNORE;
-      }
-
-      setLogoFile({
-        uid: file.uid,
-        name: file.name,
-        originFileObj: file,
-      } as UploadFile);
-
-      return false;
-    },
-    onRemove: () => {
-      setLogoFile(null);
-      form.setFieldValue('logo', undefined);
-    },
-    accept:
-      'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml',
-    listType: 'picture',
-  };
-
-  const getLogoPreview = () => {
+  const getPreviewUrl = () => {
     if (logoFile?.originFileObj) {
       return URL.createObjectURL(logoFile.originFileObj);
     }
@@ -227,36 +187,13 @@ export const EditBrandDrawer = ({
         </Flex>
       }
     >
+      {/* ✅ Use shared FormSkeleton */}
       {isFetching ? (
-        <div style={{ padding: '24px 0' }}>
-          <Skeleton.Input
-            active
-            block
-            style={{ marginBottom: 24, height: 32 }}
-          />
-          <Skeleton.Input
-            active
-            block
-            style={{ marginBottom: 24, height: 32 }}
-          />
-          <Skeleton
-            active
-            paragraph={{ rows: 3 }}
-            style={{ marginBottom: 24 }}
-          />
-          <Skeleton.Image
-            active
-            style={{
-              width: '100%',
-              height: 200,
-              marginBottom: 24,
-            }}
-          />
-          <Skeleton
-            active
-            paragraph={{ rows: 6 }}
-          />
-        </div>
+        <FormSkeleton
+          inputCount={2}
+          showImage
+          textAreaRows={3}
+        />
       ) : (
         <Form
           size='large'
@@ -311,40 +248,16 @@ export const EditBrandDrawer = ({
               </Col>
             </Row>
 
+            {/* ✅ Use shared ImageDragger */}
             <Form.Item
               label='Logo'
               name='logo'
               valuePropName='file'
             >
-              <Dragger {...uploadProps}>
-                <Flex justify='center'>
-                  {getLogoPreview() ? (
-                    <img
-                      src={getLogoPreview() || undefined}
-                      height={60}
-                      alt='Logo Preview'
-                      style={{ objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <img
-                      src={filesImage}
-                      height={30}
-                      alt='Upload'
-                    />
-                  )}
-                </Flex>
-                <Flex vertical>
-                  <Text>
-                    {getLogoPreview()
-                      ? 'Click or drag file to replace logo'
-                      : 'Click or drag file to this area to upload'}
-                  </Text>
-                  <Text type='secondary'>
-                    Support for image files (JPG, PNG, GIF, WEBP, BMP, SVG).
-                    Maximum size: 5MB
-                  </Text>
-                </Flex>
-              </Dragger>
+              <ImageDragger
+                previewUrl={getPreviewUrl()}
+                uploadProps={uploadProps}
+              />
             </Form.Item>
 
             <Form.Item
@@ -361,6 +274,7 @@ export const EditBrandDrawer = ({
             </Form.Item>
           </div>
 
+          {/* ... rest of the form sections (same as AddBrandDrawer) ... */}
           {/* Contact Information Section */}
           <div style={{ marginBottom: 24 }}>
             <Title
@@ -394,7 +308,7 @@ export const EditBrandDrawer = ({
                   name='contactPhone'
                   rules={brandValidation.contactPhone}
                 >
-                  <Input placeholder='+84901234567' />
+                  <Input placeholder='+84 901 234 567' />
                 </Form.Item>
               </Col>
             </Row>
@@ -414,18 +328,19 @@ export const EditBrandDrawer = ({
               level={5}
               style={{ marginBottom: 16 }}
             >
-              Legal & Billing
+              Legal & Billing Information
             </Title>
 
-            <Form.Item
-              label='Legal Name'
-              name='legalName'
-              rules={brandValidation.legalName}
-            >
-              <Input placeholder='Official company name for invoicing' />
-            </Form.Item>
-
             <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label='Legal Name'
+                  name='legalName'
+                  rules={brandValidation.legalName}
+                >
+                  <Input placeholder='Official company name' />
+                </Form.Item>
+              </Col>
               <Col span={12}>
                 <Form.Item
                   label='Tax Code'
@@ -433,17 +348,6 @@ export const EditBrandDrawer = ({
                   rules={brandValidation.taxCode}
                 >
                   <Input placeholder='e.g., 0123456789' />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label='Default Timezone'
-                  name='defaultTimeZone'
-                >
-                  <Select
-                    placeholder='Select timezone'
-                    options={TIMEZONE_OPTIONS}
-                  />
                 </Form.Item>
               </Col>
             </Row>

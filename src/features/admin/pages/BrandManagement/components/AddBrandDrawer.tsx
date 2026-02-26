@@ -5,18 +5,12 @@ import {
   Form,
   Input,
   Select,
-  Upload,
   message,
   Row,
   Col,
   Typography,
   Flex,
 } from 'antd';
-
-/**
- * Assets
- */
-import filesImage from '@/assets/images/files.png';
 
 /**
  * Hooks
@@ -26,7 +20,7 @@ import { useCreateBrand } from '@/features/admin/hooks/useCreateBrand';
 /**
  * Types
  */
-import type { UploadFile, UploadProps } from 'antd';
+import type { UploadFile } from 'antd';
 import type { BrandRequest } from '@/features/admin/types/brandTypes';
 
 /**
@@ -42,9 +36,18 @@ import {
  */
 import { brandValidation } from '@/features/admin/validations/brandValidation';
 
+/**
+ * Utils
+ */
+import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+
+/**
+ * Components
+ */
+import { ImageDragger } from '@/shared/components/common/ImageDragger';
+
 const { TextArea } = Input;
-const { Dragger } = Upload;
-const { Text, Title } = Typography;
+const { Title } = Typography;
 
 type AddBrandDrawerProps = {
   open: boolean;
@@ -107,48 +110,18 @@ export const AddBrandDrawer = ({
     onClose();
   };
 
-  const uploadProps: UploadProps = {
-    maxCount: 1,
-    beforeUpload: (file) => {
-      const allowedTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/svg+xml',
-      ];
+  // ✅ Use shared upload config
+  const uploadProps = createImageUploadProps<BrandRequest>(
+    setLogoFile,
+    (field, value) => form.setFieldValue(field, value),
+  );
 
-      if (!allowedTypes.includes(file.type)) {
-        message.error(
-          'File must be an image (jpg, jpeg, png, gif, webp, bmp, svg)',
-        );
-        return Upload.LIST_IGNORE;
-      }
-
-      // Validate file size
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (file.size > maxSize) {
-        message.error('File size must not exceed 5MB');
-        return Upload.LIST_IGNORE;
-      }
-
-      setLogoFile({
-        uid: file.uid,
-        name: file.name,
-        originFileObj: file,
-      } as UploadFile);
-
-      return false;
-    },
-    onRemove: () => {
-      setLogoFile(null);
-      form.setFieldValue('logo', undefined);
-    },
-    accept:
-      'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml',
-    listType: 'picture',
+  // ✅ Get preview URL
+  const getPreviewUrl = () => {
+    if (logoFile?.originFileObj) {
+      return URL.createObjectURL(logoFile.originFileObj);
+    }
+    return null;
   };
 
   return (
@@ -160,7 +133,10 @@ export const AddBrandDrawer = ({
       open={open}
       onClose={handleCancel}
       footer={
-        <div className='flex justify-end gap-2'>
+        <Flex
+          justify='end'
+          gap='small'
+        >
           <Button
             size='large'
             onClick={handleCancel}
@@ -175,7 +151,7 @@ export const AddBrandDrawer = ({
           >
             Create Brand
           </Button>
-        </div>
+        </Flex>
       }
     >
       <Form
@@ -234,28 +210,16 @@ export const AddBrandDrawer = ({
             </Col>
           </Row>
 
-          {/* ✅ Removed rules from Form.Item, validation in beforeUpload */}
+          {/* ✅ Use shared ImageDragger */}
           <Form.Item
             label='Logo'
             name='logo'
             valuePropName='file'
           >
-            <Dragger {...uploadProps}>
-              <Flex justify='center'>
-                <img
-                  src={filesImage}
-                  height={30}
-                  alt='Upload'
-                />
-              </Flex>
-              <Flex vertical>
-                <Text>Click or drag file to this area to upload</Text>
-                <Text type='secondary'>
-                  Support for image files (JPG, PNG, GIF, WEBP, BMP, SVG).
-                  Maximum size: 5MB
-                </Text>
-              </Flex>
-            </Dragger>
+            <ImageDragger
+              previewUrl={getPreviewUrl()}
+              uploadProps={uploadProps}
+            />
           </Form.Item>
 
           <Form.Item
