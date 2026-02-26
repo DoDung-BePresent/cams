@@ -85,4 +85,8 @@ export const brandValidation = {
   billingAddress: [
     { max: 500, message: 'Billing address must not exceed 500 characters!' },
   ] as Rule[],
+
+  defaultTimeZone: [
+    { required: true, message: 'Please select a timezone!' },
+  ] as Rule[],
 };

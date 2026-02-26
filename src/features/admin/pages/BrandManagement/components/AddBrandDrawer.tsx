@@ -9,18 +9,37 @@ import {
   message,
   Row,
   Col,
+  Typography,
+  Flex,
 } from 'antd';
-import { InboxOutlined } from '@ant-design/icons';
+
+/**
+ * Assets
+ */
+import filesImage from '@/assets/images/files.png';
+
+/**
+ * Types
+ */
 import type { UploadFile, UploadProps } from 'antd';
 import type { BrandRequest } from '@/features/admin/types/brandTypes';
+
+/**
+ * Constants
+ */
 import {
   INDUSTRY_OPTIONS,
   TIMEZONE_OPTIONS,
 } from '@/features/admin/constants/brandConstants';
+
+/**
+ * Validations
+ */
 import { brandValidation } from '@/features/admin/validations/brandValidation';
 
 const { TextArea } = Input;
 const { Dragger } = Upload;
+const { Text, Title } = Typography;
 
 type AddBrandDrawerProps = {
   open: boolean;
@@ -145,9 +164,12 @@ export const AddBrandDrawer = ({
       >
         {/* Basic Information Section */}
         <div style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
             Basic Information
-          </h3>
+          </Title>
 
           <Form.Item
             label='Brand Name'
@@ -188,15 +210,19 @@ export const AddBrandDrawer = ({
             valuePropName='file'
           >
             <Dragger {...uploadProps}>
-              <p className='ant-upload-drag-icon'>
-                <InboxOutlined />
-              </p>
-              <p className='ant-upload-text'>
-                Click or drag file to this area to upload
-              </p>
-              <p className='ant-upload-hint'>
-                Support for image files (JPG, PNG, GIF, etc.). Maximum size: 5MB
-              </p>
+              <Flex justify='center'>
+                <img
+                  src={filesImage}
+                  height={30}
+                />
+              </Flex>
+              <Flex vertical>
+                <Text>Click or drag file to this area to upload</Text>
+                <Text type='secondary'>
+                  Support for image files (JPG, PNG, GIF, etc.). Maximum size:
+                  5MB
+                </Text>
+              </Flex>
             </Dragger>
           </Form.Item>
 
@@ -216,9 +242,12 @@ export const AddBrandDrawer = ({
 
         {/* Contact Information Section */}
         <div style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
             Contact Information
-          </h3>
+          </Title>
 
           <Form.Item
             label='Primary Contact Name'
@@ -260,9 +289,12 @@ export const AddBrandDrawer = ({
 
         {/* Legal & Billing Section */}
         <div style={{ marginBottom: 24 }}>
-          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
             Legal & Billing Information
-          </h3>
+          </Title>
 
           <Row gutter={16}>
             <Col span={12}>
@@ -301,9 +333,12 @@ export const AddBrandDrawer = ({
 
         {/* Configuration Section */}
         <div>
-          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
             Configuration
-          </h3>
+          </Title>
 
           <Form.Item
             label='Default Timezone'
