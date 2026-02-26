@@ -1,7 +1,17 @@
 import { useState } from 'react';
-import { Button, Drawer, Form, Input, Select, Upload, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
-import type { UploadFile } from 'antd';
+import {
+  Button,
+  Drawer,
+  Form,
+  Input,
+  Select,
+  Upload,
+  message,
+  Row,
+  Col,
+} from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import type { UploadFile, UploadProps } from 'antd';
 import type { BrandRequest } from '@/features/admin/types/brandTypes';
 import {
   INDUSTRY_OPTIONS,
@@ -10,6 +20,7 @@ import {
 import { brandValidation } from '@/features/admin/validations/brandValidation';
 
 const { TextArea } = Input;
+const { Dragger } = Upload;
 
 type AddBrandDrawerProps = {
   open: boolean;
@@ -30,13 +41,9 @@ export const AddBrandDrawer = ({
     try {
       setLoading(true);
 
-      // Build FormData for multipart/form-data
       const formData = new FormData();
 
-      // Required fields
       if (values.name) formData.append('name', values.name);
-
-      // Optional fields
       if (logoFile?.originFileObj) {
         formData.append('logo', logoFile.originFileObj);
       }
@@ -59,9 +66,7 @@ export const AddBrandDrawer = ({
       if (values.defaultTimeZone)
         formData.append('defaultTimeZone', values.defaultTimeZone);
 
-      // TODO: Call API to create brand
       console.log('Create brand:', Object.fromEntries(formData));
-
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       message.success('Brand created successfully!');
@@ -82,12 +87,27 @@ export const AddBrandDrawer = ({
     onClose();
   };
 
+  const uploadProps: UploadProps = {
+    maxCount: 1,
+    beforeUpload: (file) => {
+      setLogoFile({
+        uid: file.uid,
+        name: file.name,
+        originFileObj: file,
+      } as UploadFile);
+      return false;
+    },
+    onRemove: () => setLogoFile(null),
+    accept: 'image/*',
+    listType: 'picture',
+  };
+
   return (
     <Drawer
       closeIcon={null}
       title='Add New Brand'
       placement='right'
-      width={620}
+      width={720}
       open={open}
       onClose={handleCancel}
       footer={
@@ -123,144 +143,179 @@ export const AddBrandDrawer = ({
           },
         }}
       >
-        {/* Basic Information */}
-        <Form.Item
-          label='Brand Name'
-          name='name'
-          rules={brandValidation.name}
-        >
-          <Input placeholder='e.g., Moonlight Coffee' />
-        </Form.Item>
+        {/* Basic Information Section */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+            Basic Information
+          </h3>
 
-        <Form.Item
-          label='Logo'
-          name='logo'
-          rules={brandValidation.logo}
-          valuePropName='file'
-        >
-          <Upload
-            maxCount={1}
-            beforeUpload={(file) => {
-              setLogoFile({
-                uid: file.uid,
-                name: file.name,
-                originFileObj: file,
-              } as UploadFile);
-              return false; // Prevent auto upload
-            }}
-            onRemove={() => setLogoFile(null)}
-            accept='image/*'
+          <Form.Item
+            label='Brand Name'
+            name='name'
+            rules={brandValidation.name}
           >
-            <Button icon={<UploadOutlined />}>Upload Logo (Max 5MB)</Button>
-          </Upload>
-        </Form.Item>
+            <Input placeholder='e.g., Moonlight Coffee' />
+          </Form.Item>
 
-        <Form.Item
-          label='Industry'
-          name='industry'
-          rules={brandValidation.industry}
-        >
-          <Select
-            placeholder='Select industry'
-            options={INDUSTRY_OPTIONS}
-          />
-        </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label='Industry'
+                name='industry'
+                rules={brandValidation.industry}
+              >
+                <Select
+                  placeholder='Select industry'
+                  options={INDUSTRY_OPTIONS}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='Website'
+                name='website'
+                rules={brandValidation.website}
+              >
+                <Input placeholder='https://example.com' />
+              </Form.Item>
+            </Col>
+          </Row>
 
-        <Form.Item
-          label='Description'
-          name='description'
-          rules={brandValidation.description}
-        >
-          <TextArea
-            rows={3}
-            placeholder='Brief description of the brand'
-            maxLength={2000}
-            showCount
-          />
-        </Form.Item>
+          <Form.Item
+            label='Logo'
+            name='logo'
+            rules={brandValidation.logo}
+            valuePropName='file'
+          >
+            <Dragger {...uploadProps}>
+              <p className='ant-upload-drag-icon'>
+                <InboxOutlined />
+              </p>
+              <p className='ant-upload-text'>
+                Click or drag file to this area to upload
+              </p>
+              <p className='ant-upload-hint'>
+                Support for image files (JPG, PNG, GIF, etc.). Maximum size: 5MB
+              </p>
+            </Dragger>
+          </Form.Item>
 
-        <Form.Item
-          label='Website'
-          name='website'
-          rules={brandValidation.website}
-        >
-          <Input placeholder='https://example.com' />
-        </Form.Item>
+          <Form.Item
+            label='Description'
+            name='description'
+            rules={brandValidation.description}
+          >
+            <TextArea
+              rows={3}
+              placeholder='Brief description of the brand'
+              maxLength={2000}
+              showCount
+            />
+          </Form.Item>
+        </div>
 
-        {/* Contact Information */}
-        <Form.Item
-          label='Primary Contact Name'
-          name='primaryContactName'
-          rules={brandValidation.primaryContactName}
-        >
-          <Input placeholder='e.g., John Doe' />
-        </Form.Item>
+        {/* Contact Information Section */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+            Contact Information
+          </h3>
 
-        <Form.Item
-          label='Contact Email'
-          name='contactEmail'
-          rules={brandValidation.contactEmail}
-        >
-          <Input placeholder='contact@example.com' />
-        </Form.Item>
+          <Form.Item
+            label='Primary Contact Name'
+            name='primaryContactName'
+            rules={brandValidation.primaryContactName}
+          >
+            <Input placeholder='e.g., John Doe' />
+          </Form.Item>
 
-        <Form.Item
-          label='Contact Phone'
-          name='contactPhone'
-          rules={brandValidation.contactPhone}
-        >
-          <Input placeholder='+84901234567 or 0901234567' />
-        </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label='Contact Email'
+                name='contactEmail'
+                rules={brandValidation.contactEmail}
+              >
+                <Input placeholder='contact@example.com' />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='Contact Phone'
+                name='contactPhone'
+                rules={brandValidation.contactPhone}
+              >
+                <Input placeholder='+84 901 234 567' />
+              </Form.Item>
+            </Col>
+          </Row>
 
-        <Form.Item
-          label='Technical Contact Email'
-          name='technicalContactEmail'
-          rules={brandValidation.technicalContactEmail}
-        >
-          <Input placeholder='tech@example.com' />
-        </Form.Item>
+          <Form.Item
+            label='Technical Contact Email'
+            name='technicalContactEmail'
+            rules={brandValidation.technicalContactEmail}
+          >
+            <Input placeholder='tech@example.com' />
+          </Form.Item>
+        </div>
 
-        {/* Legal & Billing */}
-        <Form.Item
-          label='Legal Name'
-          name='legalName'
-          rules={brandValidation.legalName}
-        >
-          <Input placeholder='Official company name for invoicing' />
-        </Form.Item>
+        {/* Legal & Billing Section */}
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+            Legal & Billing Information
+          </h3>
 
-        <Form.Item
-          label='Tax Code'
-          name='taxCode'
-          rules={brandValidation.taxCode}
-        >
-          <Input placeholder='e.g., 0123456789' />
-        </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label='Legal Name'
+                name='legalName'
+                rules={brandValidation.legalName}
+              >
+                <Input placeholder='Official company name' />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='Tax Code'
+                name='taxCode'
+                rules={brandValidation.taxCode}
+              >
+                <Input placeholder='e.g., 0123456789' />
+              </Form.Item>
+            </Col>
+          </Row>
 
-        <Form.Item
-          label='Billing Address'
-          name='billingAddress'
-          rules={brandValidation.billingAddress}
-        >
-          <TextArea
-            rows={2}
-            placeholder='Full billing address'
-            maxLength={500}
-            showCount
-          />
-        </Form.Item>
+          <Form.Item
+            label='Billing Address'
+            name='billingAddress'
+            rules={brandValidation.billingAddress}
+          >
+            <TextArea
+              rows={2}
+              placeholder='Full billing address'
+              maxLength={500}
+              showCount
+            />
+          </Form.Item>
+        </div>
 
-        {/* Configuration */}
-        <Form.Item
-          label='Default Timezone'
-          name='defaultTimeZone'
-          rules={brandValidation.defaultTimeZone}
-        >
-          <Select
-            placeholder='Select timezone'
-            options={TIMEZONE_OPTIONS}
-          />
-        </Form.Item>
+        {/* Configuration Section */}
+        <div>
+          <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600 }}>
+            Configuration
+          </h3>
+
+          <Form.Item
+            label='Default Timezone'
+            name='defaultTimeZone'
+            rules={brandValidation.defaultTimeZone}
+          >
+            <Select
+              placeholder='Select timezone'
+              options={TIMEZONE_OPTIONS}
+            />
+          </Form.Item>
+        </div>
       </Form>
     </Drawer>
   );
