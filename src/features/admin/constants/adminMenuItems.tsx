@@ -30,9 +30,9 @@ export const adminMenuItems: MenuItem[] = [
     type: 'group',
     children: [
       {
-        key: 'store-management',
+        key: 'brand-management', 
         icon: <ShopOutlined />,
-        label: 'Store Management',
+        label: 'Brand Management',
       },
       {
         key: 'user-management',

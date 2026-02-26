@@ -55,7 +55,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
     const routeMap: Record<string, string> = {
       // Admin routes
       'admin-dashboard': '/admin/dashboard',
-      'store-management': '/admin/stores',
+      'brand-management': '/admin/brands',
       'user-management': '/admin/users',
       'music-library': '/admin/music',
       'playlist-templates': '/admin/playlists',

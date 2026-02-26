@@ -5,14 +5,9 @@ const AdminDashboard = Loadable(
   'AdminDashboard',
 );
 
-const StoreList = Loadable(
-  () => import('@/features/admin/pages/StoreManagement/StoreList'),
-  'StoreList',
-);
-
-const BranchList = Loadable(
-  () => import('@/features/admin/pages/BranchManagement/BranchList'),
-  'BranchList',
+const BrandList = Loadable(
+  () => import('@/features/admin/pages/BrandManagement/BrandList'),
+  'BrandList',
 );
 
 const UserList = Loadable(
@@ -31,12 +26,8 @@ export const adminRoutes = [
     element: <AdminDashboard />,
   },
   {
-    path: 'stores',
-    element: <StoreList />,
-  },
-  {
-    path: 'stores/:storeId/branches',
-    element: <BranchList />,
+    path: 'brands',
+    element: <BrandList />,
   },
   {
     path: 'users',
