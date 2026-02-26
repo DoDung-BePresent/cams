@@ -47,9 +47,9 @@ export const getBrandColumns = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar
             src={record.logoUrl}
-            size={40}
+            size={60}
             shape='square'
-            style={{ borderRadius: 4 }}
+            style={{ borderRadius: 5 }}
           >
             {record.name.charAt(0).toUpperCase()}
           </Avatar>
