@@ -2,10 +2,10 @@ import type { MenuProps } from 'antd';
 import {
   DashboardOutlined,
   ShopOutlined,
+  TeamOutlined,
   CustomerServiceOutlined,
   RobotOutlined,
   ApiOutlined,
-  TeamOutlined,
   FileTextOutlined,
 } from '@ant-design/icons';
 
@@ -30,14 +30,14 @@ export const adminMenuItems: MenuItem[] = [
     type: 'group',
     children: [
       {
-        key: 'brand-management', 
+        key: 'brand-management',
         icon: <ShopOutlined />,
         label: 'Brand Management',
       },
       {
-        key: 'user-management',
+        key: 'account-management',
         icon: <TeamOutlined />,
-        label: 'User Management',
+        label: 'Account Management',
       },
       {
         key: 'music-management',

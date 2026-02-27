@@ -56,7 +56,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       // Admin routes
       'admin-dashboard': '/admin/dashboard',
       'brand-management': '/admin/brands',
-      'user-management': '/admin/users',
+      'account-management': '/admin/accounts',
       'music-library': '/admin/music',
       'playlist-templates': '/admin/playlists',
       'mood-genre-tags': '/admin/tags',
