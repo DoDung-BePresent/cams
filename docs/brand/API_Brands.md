@@ -10,13 +10,14 @@ Tài liệu API Brand Management cho CMS (React TypeScript & Flutter). Base path
 
 ## 1. Authorization Matrix
 
-| Endpoint                  | SystemAdmin | BrandManager (own brand) | StoreManager (own brand) |
-|---------------------------|:-----------:|:------------------------:|:------------------------:|
-| `GET /api/brands`         | ✅          | ❌                       | ❌                       |
-| `GET /api/brands/{id}`    | ✅          | ✅                       | ✅                       |
-| `POST /api/brands`        | ✅          | ❌                       | ❌                       |
-| `PATCH /api/brands/{id}`  | ✅          | ✅                       | ❌                       |
-| `DELETE /api/brands/{id}` | ✅          | ❌                       | ❌                       |
+| Endpoint                                   | SystemAdmin | BrandManager (own brand) | StoreManager (own brand) |
+|-------------------------------------------|:-----------:|:------------------------:|:------------------------:|
+| `GET /api/brands`                          | ✅          | ❌                       | ❌                       |
+| `GET /api/brands/{id}`                     | ✅          | ✅                       | ✅                       |
+| `POST /api/brands`                         | ✅          | ❌                       | ❌                       |
+| `PATCH /api/brands/{id}`                   | ✅          | ✅                       | ❌                       |
+| `DELETE /api/brands/{id}`                  | ✅          | ❌                       | ❌                       |
+| `PUT /api/brands/{id}/transfer-ownership`  | ✅          | ❌                       | ❌                       |
 
 **"own brand"** = `user.BrandId == targetBrandId`.
 
@@ -88,7 +89,7 @@ public abstract class BaseResponse
     public DateTime? UpdatedAt { get; set; }              // Thời điểm cập nhật cuối (UTC, null nếu chưa sửa)
     public Guid? CreatedBy { get; set; }                  // User ID tạo resource
     public Guid? UpdatedBy { get; set; }                  // User ID sửa lần cuối (null nếu chưa sửa)
-    public EntityStatusEnum Status { get; set; }          // Trạng thái: Inactive | Active | Pending | Rejected
+    public EntityStatusEnum Status { get; set; }          // Trạng thái (int): 0=Inactive | 1=Active | 2=Pending | 3=Rejected
 }
 ```
 
@@ -181,9 +182,10 @@ public class BrandFilter : BasePaginationFilter
 | `search`      | string?           | —       | Tìm theo `name`, `website`, `industry`, `primaryContactName`, `legalName`, `email`, `phone`. Dùng search thay vì filter riêng theo industry |
 | `sortBy`      | string?           | —       | `"name"` \| `"industry"` \| `"createdat"` \| `"updatedat"` |
 | `isAscending` | boolean?          | true    | Chiều sắp xếp (default: true tăng dần)            |
-| `status`      | EntityStatusEnum? | —       | Lọc theo trạng thái (xem mục 4.5)                  |
-| `createdFrom` | datetime? (ISO 8601) | —    | (Optional) Lọc brands tạo từ ngày này              |
-| `createdTo`   | datetime? (ISO 8601) | —    | (Optional) Lọc brands tạo đến ngày này             |
+| `status`      | EntityStatusEnum? (int?) | —       | Lọc theo trạng thái (int: 0=Inactive, 1=Active, 2=Pending, 3=Rejected)  |
+| `createdFrom`    | datetime? (ISO 8601) | —    | (Optional) Lọc brands tạo từ ngày này              |
+| `createdTo`      | datetime? (ISO 8601) | —    | (Optional) Lọc brands tạo đến ngày này             |
+| `primaryOwnerId` | Guid?                | —    | (Optional) Lọc theo ID Primary Owner của brand     |
 
 ### 4.3 `BrandListItem` (trong `PaginationResult<BrandListItem>`)
 
@@ -196,8 +198,9 @@ public class BrandFilter : BasePaginationFilter
 | `logoUrl`   | string?    | Full URL ảnh logo (null nếu chưa có logo) |
 | `industry`  | string?    | Ngành (e.g., "F&B", "Retail")            |
 | `primaryContactName` | string? | Người liên hệ chính              |
-| `contactEmail` | string? | Email liên hệ                             |
-| `contactPhone` | string? | SĐT liên hệ                               |
+| `contactEmail`   | string? | Email liên hệ                                                                                      |
+| `contactPhone`   | string? | SĐT liên hệ                                                                                        |
+| `primaryOwnerId` | string? (Guid) | ID User của Primary Owner (người nắm quyền sở hữu brand). `null` nếu chưa được gán. |
 
 ### 4.4 `BrandDetailResponse` (trong `Result<BrandDetailResponse>`)
 
@@ -347,13 +350,16 @@ Backend dùng **Windows timezone IDs** (không phải IANA). Một số ID phổ
       "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       "name": "Tech Brand",
       "logoUrl": "https://localhost:7001/uploads/brands/tech-brand-abc123.png",
+      "industry": "Retail",
+      "primaryContactName": "John Doe",
       "contactEmail": "contact@techbrand.com",
       "contactPhone": "0123456789",
+      "primaryOwnerId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "createdAt": "2025-01-15T08:00:00Z",
       "updatedAt": "2025-02-01T10:30:00Z",
       "createdBy": "00000000-0000-0000-0000-000000000001",
       "updatedBy": null,
-      "status": "Active"
+      "status": 1
     }
   ],
   "isSuccess": true,
@@ -399,7 +405,7 @@ Backend dùng **Windows timezone IDs** (không phải IANA). Một số ID phổ
     "updatedAt": "2025-02-01T10:30:00Z",
     "createdBy": "00000000-0000-0000-0000-000000000001",
     "updatedBy": null,
-    "status": "Active"
+    "status": 1
   },
   "errors": null,
   "errorCode": null
@@ -439,7 +445,7 @@ Backend dùng **Windows timezone IDs** (không phải IANA). Một số ID phổ
   - `logo` > 5 MB → `"File size must not exceed 5MB"`
   - `logo` có tên file chứa ký tự không hợp lệ → `"File name contains invalid characters"`
 
-- **Response 201 (`Result`):**
+- **Response 200 (`Result`):**
 
 ```json
 {
@@ -542,15 +548,63 @@ Backend dùng **Windows timezone IDs** (không phải IANA). Một số ID phổ
 
 ---
 
+### 5.6 `PUT /api/brands/{id}/transfer-ownership` — Chuyển Primary Owner
+
+- **Auth:** SystemAdmin
+- **Content-Type:** `application/json`
+- **Path param:** `id` (Guid) — Brand ID
+- **Body:**
+
+| Field        | Type   | Required | Mô tả |
+|-------------|--------|----------|-------|
+| `newOwnerId` | Guid | ✅ | ID của BrandManager sẽ trở thành Primary Owner mới |
+
+```json
+{
+  "newOwnerId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+
+**Điều kiện hợp lệ:**
+- `newOwnerId` phải là user tồn tại, thuộc cùng brand, có role `BrandManager`
+- `newOwnerId` không được là PrimaryOwner hiện tại (bảo vệ no-op)
+
+- **Response 200 (`Result`):**
+
+```json
+{
+  "isSuccess": true,
+  "message": "Brand ownership transferred successfully",
+  "errors": null,
+  "errorCode": null
+}
+```
+
+- **Response 401:** Chưa đăng nhập → `errorCode: "Unauthorized"`
+- **Response 403:** Không phải SystemAdmin → `errorCode: "Forbidden"`
+- **Response 404:** Brand không tồn tại → `errorCode: "NotFound"`
+- **Response 422:** Vi phạm business rule (new owner không thuộc brand, không có role BrandManager, hoặc đã là PrimaryOwner) → `errorCode: "BusinessRuleViolation"`
+
+```json
+{
+  "isSuccess": false,
+  "message": "New owner must be an active BrandManager in the same brand",
+  "errors": null,
+  "errorCode": "BusinessRuleViolation"
+}
+```
+
+---
+
 ## 4. TypeScript Types (React)
 
 ```ts
 // ---- Enums ----
 export enum EntityStatusEnum {
-  Inactive = 'Inactive',
-  Active = 'Active',
-  Pending = 'Pending',
-  Rejected = 'Rejected',
+  Inactive = 0,
+  Active = 1,
+  Pending = 2,
+  Rejected = 3,
 }
 
 // ---- Base Types (inherited by all response models) ----
@@ -560,7 +614,7 @@ export interface BaseResponse {
   updatedAt: string | null;    // ISO 8601, null if never updated
   createdBy: string | null;    // User ID
   updatedBy: string | null;    // User ID
-  status: EntityStatusEnum;
+  status: EntityStatusEnum;           // int: 0=Inactive, 1=Active, 2=Pending, 3=Rejected
 }
 
 // ---- Request ----Log.AI-CAMS-v2/docs/brands/API_Brands.md
@@ -613,11 +667,12 @@ export interface BrandFilter {
   search?: string;                  // Search across: name, website, industry, primaryContactName, legalName, email, phone
   sortBy?: 'name' | 'industry' | 'createdat' | 'updatedat';
   isAscending?: boolean;
-  status?: EntityStatusEnum;
+  status?: EntityStatusEnum;        // int: 0=Inactive, 1=Active, 2=Pending, 3=Rejected
 
   // Domain-specific filters (BrandFilter extends BasePaginationFilter)
   createdFrom?: Date;               // Filter by creation date start
   createdTo?: Date;                 // Filter by creation date end
+  primaryOwnerId?: string;          // Filter by primary owner user ID (Guid)
 }
 
 // ---- Responses ----
@@ -629,6 +684,8 @@ export interface BrandListItem extends BaseResponse {
   primaryContactName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  /** User ID of the Primary Owner (contract holder). Null if not yet assigned. */
+  primaryOwnerId: string | null;
 }
 
 export interface BrandDetailResponse extends BrandListItem {
@@ -641,6 +698,12 @@ export interface BrandDetailResponse extends BrandListItem {
   technicalContactEmail: string | null;
   defaultTimeZone: string;
   currentSubscriptionId: string | null;
+}
+
+// ---- Transfer Ownership Request ----
+export interface TransferOwnershipRequest {
+  /** The user ID of the BrandManager who will become the new Primary Owner. */
+  newOwnerId: string; // Guid
 }
 
 // ---- Usage example: create brand ----
@@ -676,18 +739,12 @@ const createBrand = async (data: BrandRequest): Promise<Result> => {
 ```dart
 // ---- Enums ----
 enum EntityStatusEnum {
-  inactive,   // "Inactive"
-  active,     // "Active"
-  pending,    // "Pending"
-  rejected,   // "Rejected"
-
-  static EntityStatusEnum fromJson(String value) {
-    return EntityStatusEnum.values.firstWhere(
-      (e) => e.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => EntityStatusEnum.inactive,
-    );
-  }
+  inactive,   // JSON: 0
+  active,     // JSON: 1
+  pending,    // JSON: 2
+  rejected,   // JSON: 3
 }
+// Parse: EntityStatusEnum.values[json['status'] as int]
 
 // ---- Base Response Model ----
 // All response models inherit these fields for audit trail & status tracking
@@ -715,6 +772,8 @@ class BrandListItem implements BaseResponse {
   final String? primaryContactName;
   final String? contactEmail;
   final String? contactPhone;
+  /// User ID of the Primary Owner (contract holder). Null if not yet assigned.
+  final String? primaryOwnerId;
   @override
   final DateTime createdAt;
   @override
@@ -734,6 +793,7 @@ class BrandListItem implements BaseResponse {
     this.primaryContactName,
     this.contactEmail,
     this.contactPhone,
+    this.primaryOwnerId,
     required this.createdAt,
     this.updatedAt,
     this.createdBy,
@@ -749,11 +809,12 @@ class BrandListItem implements BaseResponse {
       primaryContactName = json['primaryContactName'],
       contactEmail = json['contactEmail'],
       contactPhone = json['contactPhone'],
+      primaryOwnerId = json['primaryOwnerId'],
       createdAt = DateTime.parse(json['createdAt']),
       updatedAt = json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
       createdBy = json['createdBy'],
       updatedBy = json['updatedBy'],
-      status = EntityStatusEnum.fromJson(json['status']);
+      status = EntityStatusEnum.values[json['status'] as int];
 }
 
 class BrandDetailResponse extends BrandListItem {

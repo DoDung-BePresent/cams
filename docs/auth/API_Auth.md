@@ -2,6 +2,8 @@
 
 Tài liệu API Authentication cho CMS (React TypeScript & Flutter). Base path: **`/api/auth`**.
 
+> **Postman Collection:** Import [Postman_Collection_LogAI_CAMS_API.json](../Postman_Collection_LogAI_CAMS_API.json) → Các endpoint Auth nằm trong folder **Auth**.
+
 ---
 
 ## 1. API Result Pattern (Backend wrapper)
@@ -90,19 +92,20 @@ Dùng cho các API trả về danh sách có phân trang (Auth không dùng; ghi
 
 Dùng trong `AuthResponse.roles`, `ProfileResponse.roles`. Giá trị JSON là **tên enum** (string).
 
-| Value         | Mô tả |
-|---------------|--------|
-| `SystemAdmin` | Quản trị hệ thống |
-| `BrandManager`| Quản lý thương hiệu |
-| `StoreManager`| Quản lý cửa hàng |
+| Giá trị JSON (int) | Tên             | Mô tả |
+|:-----------------:|-----------------|--------|
+| `0`               | `SystemAdmin`   | Quản trị hệ thống |
+| `1`               | `BrandManager`  | Quản lý thương hiệu |
+| `2`               | `StoreManager`  | Quản lý cửa hàng |
 
 **TypeScript (React):**
 
 ```ts
 export enum RoleEnum {
-  SystemAdmin = 'SystemAdmin',
+  SystemAdmin = 0,
   BrandManager = 'BrandManager',
-  StoreManager = 'StoreManager',
+  BrandManager = 1,
+  StoreManager = 2,
 }
 ```
 
@@ -110,15 +113,16 @@ export enum RoleEnum {
 
 ```dart
 enum RoleEnum {
-  systemAdmin,   // JSON: "SystemAdmin"
+  systemAdmin,   // JSON: 0
   brandManager,  // JSON: "BrandManager"
-  storeManager,  // JSON: "StoreManager"
+  brandManager,  // JSON: 1
+  storeManager,   // JSON: 2
 }
-// Parse: RoleEnum.values.byName(json['roles'][i].toString().toLowerCase().replaceFirst('', '')) 
-// Hoặc map string từ API -> enum theo tên chính xác "SystemAdmin", "BrandManager", "StoreManager"
+// Parse: RoleEnum.values[json['roles'][i] as int]
+// Hoặc: json['roles'].map<RoleEnum>((e) => RoleEnum.values[e as int]).toList()
 ```
 
-**Lưu ý:** Backend trả `"SystemAdmin"` (PascalCase). Flutter thường dùng camelCase; cần map `"SystemAdmin"` → `RoleEnum.systemAdmin` (ví dụ bằng switch hoặc map).
+**Lưu ý:** Backend trả giá trị **int** cho `roles` (0 = SystemAdmin, 1 = BrandManager, 2 = StoreManager). Dart dùng `RoleEnum.values[intValue]` để parse.
 
 ### 2.2 `ErrorCodeEnum` (Application – cho API response)
 
@@ -195,7 +199,7 @@ export enum ErrorCodeEnum {
 |---------------|----------|--------|
 | `accessToken` | string   | JWT access token |
 | `expiresAt`   | string   | ISO 8601 (UTC) thời điểm hết hạn access token |
-| `roles`       | RoleEnum[] | Danh sách role (string: "SystemAdmin", "BrandManager", "StoreManager") |
+| `roles`       | RoleEnum[] (`number[]`) | Danh sách role (int: `0` = SystemAdmin, `1` = BrandManager, `2` = StoreManager) |
 
 #### `ProfileResponse` (GetProfile)
 
@@ -207,7 +211,7 @@ export enum ErrorCodeEnum {
 | `lastName`  | string     | Họ |
 | `phoneNumber` | string?  | SĐT (optional) |
 | `avatarPath`  | string?  | Đường dẫn avatar (optional) |
-| `roles`     | RoleEnum[] | Danh sách role |
+| `roles`     | RoleEnum[] (`number[]`) | Danh sách role (int: `0` = SystemAdmin, `1` = BrandManager, `2` = StoreManager) |
 
 ---
 
@@ -237,7 +241,7 @@ export enum ErrorCodeEnum {
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiIs...",
     "expiresAt": "2025-02-21T10:00:00Z",
-    "roles": ["SystemAdmin"]
+    "roles": [0]
   }
 }
 ```
@@ -287,7 +291,7 @@ export enum ErrorCodeEnum {
     "lastName": "User",
     "phoneNumber": null,
     "avatarUrl": null,
-    "roles": ["SystemAdmin"]
+    "roles": [0]
   }
 }
 ```
@@ -314,7 +318,7 @@ Backend cho phép **access token hết hạn** khi gọi refresh (để client r
   "data": {
     "accessToken": "eyJhbGciOiJIUzI1NiIs...",
     "expiresAt": "2025-02-21T11:00:00Z",
-    "roles": ["SystemAdmin"]
+    "roles": [0]
   }
 }
 ```
@@ -371,5 +375,5 @@ Sau khi Login (script trong collection tự lưu `accessToken` vào biến), ch�
 ## 6. Tóm tắt cho Frontend
 
 - Luôn kiểm tra `isSuccess` và **HTTP status**; khi fail dùng `message` + `errorCode` (+ `errors`) để hiển thị hoặc xử lý (vd: 401 → gọi refresh token rồi retry).
-- Enum **RoleEnum** và **ErrorCodeEnum** giữ đúng tên/value với backend; TypeScript/Flutter chỉ cần map string từ API sang enum (PascalCase từ API).
+- Enum **RoleEnum** backend trả **int** (`0`=SystemAdmin, `1`=BrandManager, `2`=StoreManager); **ErrorCodeEnum** vẫn là string (đã `.ToString()`). TypeScript dùng numeric enum, Dart dùng `RoleEnum.values[intValue]`.
 - **Result&lt;T&gt** / **Result** / **PaginationResult&lt;T&gt;** là chuẩn chung; các API khác (không auth) cũng dùng chung pattern này.
