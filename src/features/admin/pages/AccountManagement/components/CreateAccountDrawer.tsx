@@ -21,6 +21,7 @@ import { useBrands } from '@/features/admin/hooks/useBrands';
  * Components
  */
 import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
 
 /**
  * Types
@@ -59,10 +60,10 @@ export const CreateAccountDrawer = ({
 }: CreateAccountDrawerProps) => {
   const [form] = Form.useForm<CreateAccountRequest>();
   const [avatarFile, setAvatarFile] = useState<UploadFile | null>(null);
+  const [password, setPassword] = useState('');
 
   const createAccount = useCreateAccount();
 
-  // Fetch brands for dropdown
   const { data: brandsData } = useBrands({ pageSize: 100 });
 
   const brandOptions =
@@ -99,16 +100,20 @@ export const CreateAccountDrawer = ({
   const handleCancel = () => {
     form.resetFields();
     setAvatarFile(null);
+    setPassword('');
     onClose();
   };
 
-  // ✅ Use shared upload helper
+  const handlePasswordChange = (newPassword: string) => {
+    setPassword(newPassword);
+    form.setFieldValue('password', newPassword);
+  };
+
   const uploadProps = createImageUploadProps<CreateAccountRequest>(
     setAvatarFile,
     (field, value) => form.setFieldValue(field, value),
   );
 
-  // ✅ Get preview URL
   const getPreviewUrl = () => {
     if (avatarFile?.originFileObj) {
       return URL.createObjectURL(avatarFile.originFileObj);
@@ -205,15 +210,26 @@ export const CreateAccountDrawer = ({
             label='Password'
             name='password'
             rules={createAccountValidation.password}
-            extra='Minimum 6 characters'
           >
-            <Input.Password placeholder='Enter password' />
+            <Input.Password
+              placeholder='Enter password'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </Form.Item>
+
+          <PasswordStrength
+            password={password}
+            onPasswordChange={handlePasswordChange}
+            showGenerator
+            description='This is the password to your account, so it must be strong and hard to guess.'
+          />
 
           <Form.Item
             label='Phone Number'
             name='phoneNumber'
             rules={createAccountValidation.phoneNumber}
+            style={{ marginTop: 16 }}
           >
             <Input placeholder='+84901234567 or 0901234567' />
           </Form.Item>

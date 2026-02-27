@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Form, Input } from 'antd';
 
 /**
@@ -9,6 +10,7 @@ import { useResetAccountPassword } from '@/features/admin/hooks/useResetAccountP
  * Components
  */
 import { AppModal } from '@/shared/components/ui/AppModal';
+import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
 
 /**
  * Types
@@ -35,6 +37,7 @@ export const ResetPasswordModal = ({
 }: ResetPasswordModalProps) => {
   const [form] = Form.useForm<ResetPasswordRequest>();
   const resetPassword = useResetAccountPassword();
+  const [password, setPassword] = useState('');
 
   const handleSubmit = async (values: ResetPasswordRequest) => {
     if (!accountId) return;
@@ -44,6 +47,7 @@ export const ResetPasswordModal = ({
       {
         onSuccess: () => {
           form.resetFields();
+          setPassword('');
           onSuccess();
           onClose();
         },
@@ -53,7 +57,13 @@ export const ResetPasswordModal = ({
 
   const handleCancel = () => {
     form.resetFields();
+    setPassword('');
     onClose();
+  };
+
+  const handlePasswordChange = (newPassword: string) => {
+    setPassword(newPassword);
+    form.setFieldValue('newPassword', newPassword);
   };
 
   return (
@@ -67,7 +77,7 @@ export const ResetPasswordModal = ({
         loading: resetPassword.isPending,
         danger: true,
       }}
-      width={500}
+      width={550}
     >
       <Form
         form={form}
@@ -80,10 +90,21 @@ export const ResetPasswordModal = ({
           label='New Password'
           name='newPassword'
           rules={resetPasswordValidation.newPassword}
-          extra='Minimum 6 characters. User will be logged out after password reset.'
+          extra='User will be logged out after password reset.'
         >
-          <Input.Password placeholder='Enter new password' />
+          <Input.Password
+            placeholder='Enter new password'
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
         </Form.Item>
+
+        <PasswordStrength
+          password={password}
+          onPasswordChange={handlePasswordChange}
+          showGenerator
+          description='This is the password to your account, so it must be strong and hard to guess.'
+        />
       </Form>
     </AppModal>
   );
