@@ -1,8 +1,8 @@
 export enum EntityStatusEnum {
-  Inactive = 'Inactive',
-  Active = 'Active',
-  Pending = 'Pending',
-  Rejected = 'Rejected',
+  Inactive = 0,
+  Active = 1,
+  Pending = 2,
+  Rejected = 3,
 }
 
 export type BaseResponse = {
