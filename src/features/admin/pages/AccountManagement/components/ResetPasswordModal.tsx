@@ -1,7 +1,23 @@
 import { Form, Input } from 'antd';
+
+/**
+ * Hooks
+ */
 import { useResetAccountPassword } from '@/features/admin/hooks/useResetAccountPassword';
+
+/**
+ * Components
+ */
 import { AppModal } from '@/shared/components/ui/AppModal';
+
+/**
+ * Types
+ */
 import type { ResetPasswordRequest } from '@/features/admin/types/accountTypes';
+
+/**
+ * Validations
+ */
 import { resetPasswordValidation } from '@/features/admin/validations/accountValidation';
 
 type ResetPasswordModalProps = {
@@ -58,6 +74,7 @@ export const ResetPasswordModal = ({
         layout='vertical'
         onFinish={handleSubmit}
         autoComplete='off'
+        size='large'
       >
         <Form.Item
           label='New Password'

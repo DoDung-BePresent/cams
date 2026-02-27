@@ -1,4 +1,8 @@
 import { Button, Dropdown, Tag, Avatar, Space } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   EditOutlined,
   EyeOutlined,
@@ -8,17 +12,25 @@ import {
   PoweroffOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Types
+ */
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
+import { RoleEnum } from '@/features/admin/types/accountTypes';
+import { EntityStatusEnum } from '@/shared/types/commonTypes';
 import type { AccountListItem } from '@/features/admin/types/accountTypes';
+
+/**
+ * Constants
+ */
 import {
   ROLE_LABELS,
   ROLE_COLORS,
   ACCOUNT_STATUS_COLORS,
   ACCOUNT_STATUS_LABELS,
 } from '@/features/admin/constants/accountConstants';
-import { RoleEnum } from '@/features/admin/types/accountTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
 
 type GetColumnsProps = {
   onView: (accountId: string) => void;
@@ -151,14 +163,6 @@ export const getAccountColumns = ({
       title: 'Brand',
       dataIndex: 'brandName',
       key: 'brandName',
-      width: 180,
-      render: (name: string | null) =>
-        name || <span style={{ color: '#8c8c8c' }}>—</span>,
-    },
-    {
-      title: 'Store',
-      dataIndex: 'storeName',
-      key: 'storeName',
       width: 180,
       render: (name: string | null) =>
         name || <span style={{ color: '#8c8c8c' }}>—</span>,

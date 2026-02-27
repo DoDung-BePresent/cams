@@ -1,11 +1,23 @@
 import { Form, Select, message, Drawer, Button, Flex, Typography } from 'antd';
+
+/**
+ * Hooks
+ */
 import { useAssignAccountBrand } from '@/features/admin/hooks/useAssignAccountBrand';
 import { useBrands } from '@/features/admin/hooks/useBrands';
 import { useAccount } from '@/features/admin/hooks/useAccount';
+
+/**
+ * Types
+ */
 import type { AssignBrandRequest } from '@/features/admin/types/accountTypes';
+
+/**
+ * Validations
+ */
 import { assignBrandValidation } from '@/features/admin/validations/accountValidation';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 type AssignBrandDrawerProps = {
   open: boolean;

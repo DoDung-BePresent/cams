@@ -10,12 +10,34 @@ import {
   Flex,
   Spin,
 } from 'antd';
+
+/**
+ * Hooks
+ */
 import { useUpdateAccount } from '@/features/admin/hooks/useUpdateAccount';
 import { useAccount } from '@/features/admin/hooks/useAccount';
+
+/**
+ * Components
+ */
 import { ImageDragger } from '@/shared/components/common/ImageDragger';
+
+/**
+ * Types
+ */
 import type { UploadFile } from 'antd';
 import type { UpdateAccountRequest } from '@/features/admin/types/accountTypes';
+
+/**
+ * Validations
+ */
 import { updateAccountValidation } from '@/features/admin/validations/accountValidation';
+
+/**
+ * Utils
+ */
+import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { nullToUndefined } from '@/shared/utils/formHelpers';
 
 const { Title } = Typography;
 
@@ -51,7 +73,7 @@ export const EditAccountDrawer = ({
         firstName: account.firstName,
         lastName: account.lastName,
         email: account.email,
-        phoneNumber: account.phoneNumber,
+        phoneNumber: nullToUndefined(account.phoneNumber), // ✅ Handle null
       });
       setExistingAvatarUrl(account.avatarUrl);
     }
@@ -88,49 +110,18 @@ export const EditAccountDrawer = ({
     onClose();
   };
 
+  // ✅ Use shared upload helper
+  const uploadProps = createImageUploadProps<UpdateAccountRequest>(
+    setAvatarFile,
+    (field, value) => form.setFieldValue(field, value),
+  );
+
+  // ✅ Get preview URL
   const getPreviewUrl = () => {
     if (avatarFile?.originFileObj) {
       return URL.createObjectURL(avatarFile.originFileObj);
     }
     return existingAvatarUrl;
-  };
-
-  const uploadProps = {
-    maxCount: 1,
-    beforeUpload: (file: File) => {
-      const allowedTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/svg+xml',
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        return false;
-      }
-
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        return false;
-      }
-
-      setAvatarFile({
-        uid: file.uid,
-        name: file.name,
-        originFileObj: file,
-      } as UploadFile);
-
-      return false;
-    },
-    onRemove: () => {
-      setAvatarFile(null);
-      form.setFieldValue('avatar', undefined);
-    },
-    accept:
-      'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml',
   };
 
   return (
@@ -231,6 +222,7 @@ export const EditAccountDrawer = ({
               <Input placeholder='+84901234567 or 0901234567' />
             </Form.Item>
 
+            {/* ✅ Use shared ImageDragger */}
             <Form.Item
               label='Avatar'
               name='avatar'

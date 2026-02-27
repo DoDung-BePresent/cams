@@ -10,14 +10,39 @@ import {
   Typography,
   Flex,
 } from 'antd';
+
+/**
+ * Hooks
+ */
 import { useCreateAccount } from '@/features/admin/hooks/useCreateAccount';
 import { useBrands } from '@/features/admin/hooks/useBrands';
+
+/**
+ * Components
+ */
 import { ImageDragger } from '@/shared/components/common/ImageDragger';
+
+/**
+ * Types
+ */
 import type { UploadFile } from 'antd';
 import type { CreateAccountRequest } from '@/features/admin/types/accountTypes';
 import { RoleEnum } from '@/features/admin/types/accountTypes';
+
+/**
+ * Constants
+ */
 import { ROLE_OPTIONS_FOR_ADMIN } from '@/features/admin/constants/accountConstants';
+
+/**
+ * Validations
+ */
 import { createAccountValidation } from '@/features/admin/validations/accountValidation';
+
+/**
+ * Utils
+ */
+import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
 
 const { Title } = Typography;
 
@@ -77,49 +102,18 @@ export const CreateAccountDrawer = ({
     onClose();
   };
 
+  // ✅ Use shared upload helper
+  const uploadProps = createImageUploadProps<CreateAccountRequest>(
+    setAvatarFile,
+    (field, value) => form.setFieldValue(field, value),
+  );
+
+  // ✅ Get preview URL
   const getPreviewUrl = () => {
     if (avatarFile?.originFileObj) {
       return URL.createObjectURL(avatarFile.originFileObj);
     }
     return null;
-  };
-
-  const uploadProps = {
-    maxCount: 1,
-    beforeUpload: (file: File) => {
-      const allowedTypes = [
-        'image/jpeg',
-        'image/jpg',
-        'image/png',
-        'image/gif',
-        'image/webp',
-        'image/bmp',
-        'image/svg+xml',
-      ];
-
-      if (!allowedTypes.includes(file.type)) {
-        return false;
-      }
-
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        return false;
-      }
-
-      setAvatarFile({
-        uid: file.uid,
-        name: file.name,
-        originFileObj: file,
-      } as UploadFile);
-
-      return false;
-    },
-    onRemove: () => {
-      setAvatarFile(null);
-      form.setFieldValue('avatar', undefined);
-    },
-    accept:
-      'image/jpeg,image/jpg,image/png,image/gif,image/webp,image/bmp,image/svg+xml',
   };
 
   return (
@@ -224,6 +218,7 @@ export const CreateAccountDrawer = ({
             <Input placeholder='+84901234567 or 0901234567' />
           </Form.Item>
 
+          {/* ✅ Use shared ImageDragger */}
           <Form.Item
             label='Avatar'
             name='avatar'

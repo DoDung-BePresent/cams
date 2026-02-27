@@ -1,8 +1,23 @@
 import { useState } from 'react';
 import { Button, message } from 'antd';
 import { useNavigate } from 'react-router';
+
+/**
+ * Icons
+ */
 import { PlusOutlined } from '@ant-design/icons';
-import type { AccountListItem } from '@/features/admin/types/accountTypes';
+
+/**
+ * Types
+ */
+import {
+  RoleEnum,
+  type AccountListItem,
+} from '@/features/admin/types/accountTypes';
+
+/**
+ * Components
+ */
 import { CreateAccountDrawer } from './components/CreateAccountDrawer';
 import { EditAccountDrawer } from './components/EditAccountDrawer';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
@@ -11,6 +26,10 @@ import { getAccountColumns } from './components/AccountTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
 import { AppModal } from '@/shared/components/ui/AppModal';
+
+/**
+ * Hooks
+ */
 import { useAccounts } from '@/features/admin/hooks/useAccounts';
 import { useToggleAccountStatus } from '@/features/admin/hooks/useToggleAccountStatus';
 
@@ -29,6 +48,7 @@ export const AccountList = () => {
   const { data, isLoading } = useAccounts({
     page: currentPage,
     pageSize,
+    role: RoleEnum.BrandManager,
   });
 
   const toggleStatus = useToggleAccountStatus();
