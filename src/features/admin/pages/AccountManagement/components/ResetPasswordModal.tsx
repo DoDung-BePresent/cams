@@ -68,6 +68,7 @@ export const ResetPasswordModal = ({
 
   return (
     <AppModal
+      size='large'
       title='Reset Password'
       open={open}
       onCancel={handleCancel}
