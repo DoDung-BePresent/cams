@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Flex, Typography, message } from 'antd';
+import zxcvbn from 'zxcvbn';
 
 const { Text } = Typography;
 
@@ -18,36 +19,32 @@ export const PasswordStrength = ({
 }: PasswordStrengthProps) => {
   const [generatedPassword, setGeneratedPassword] = useState<string>('');
 
+  /**
+   * Get password strength using zxcvbn
+   * Score: 0-4 (0 = too guessable, 4 = very unguessable)
+   */
   const getStrength = (pwd: string) => {
     if (!pwd) return { level: 0, label: '', color: '' };
 
-    let level = 0;
-    const checks = {
-      length: pwd.length >= 8,
-      uppercase: /[A-Z]/.test(pwd),
-      lowercase: /[a-z]/.test(pwd),
-      number: /[0-9]/.test(pwd),
-      special: /[^A-Za-z0-9]/.test(pwd),
-    };
-
-    // Calculate strength level
-    if (checks.length) level++;
-    if (checks.uppercase && checks.lowercase) level++;
-    if (checks.number) level++;
-    if (checks.special) level++;
+    const result = zxcvbn(pwd);
+    const score = result.score; // 0-4
 
     const strengthMap = [
-      { level: 0, label: '', color: '' },
+      { level: 0, label: 'Too weak', color: '#ff4d4f' },
       { level: 1, label: 'Weak', color: '#ff4d4f' },
       { level: 2, label: 'Fair', color: '#faad14' },
       { level: 3, label: 'Good', color: '#52c41a' },
       { level: 4, label: 'Strong', color: '#52c41a' },
     ];
 
-    return strengthMap[level] || strengthMap[0];
+    return strengthMap[score];
   };
 
-  const generatePassword = (length: number = 16): string => {
+  /**
+   * Generate a cryptographically strong password
+   * Using crypto.getRandomValues for better randomness
+   */
+  const generatePassword = (length: number = 20): string => {
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const lowercase = 'abcdefghijklmnopqrstuvwxyz';
     const numbers = '0123456789';
@@ -57,21 +54,34 @@ export const PasswordStrength = ({
     let password = '';
 
     // Ensure at least one character from each category
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += special[Math.floor(Math.random() * special.length)];
+    const getRandomChar = (chars: string) => {
+      const randomIndex =
+        crypto.getRandomValues(new Uint32Array(1))[0] % chars.length;
+      return chars[randomIndex];
+    };
 
-    // Fill the rest randomly
+    // Add required characters
+    password += getRandomChar(uppercase);
+    password += getRandomChar(lowercase);
+    password += getRandomChar(numbers);
+    password += getRandomChar(special);
+
+    // Fill the rest with random characters
     for (let i = password.length; i < length; i++) {
-      password += allChars[Math.floor(Math.random() * allChars.length)];
+      password += getRandomChar(allChars);
     }
 
-    // Shuffle the password
-    return password
-      .split('')
-      .sort(() => Math.random() - 0.5)
-      .join('');
+    // Shuffle using Fisher-Yates algorithm
+    const passwordArray = password.split('');
+    for (let i = passwordArray.length - 1; i > 0; i--) {
+      const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+      [passwordArray[i], passwordArray[j]] = [
+        passwordArray[j],
+        passwordArray[i],
+      ];
+    }
+
+    return passwordArray.join('');
   };
 
   const handleGenerate = () => {
@@ -136,6 +146,7 @@ export const PasswordStrength = ({
               onClick={handleGenerate}
               underline
               className='font-medium transition-opacity duration-150 ease-in-out hover:opacity-65'
+              style={{ cursor: 'pointer' }}
             >
               Generate Password
             </Text>
