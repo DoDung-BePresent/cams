@@ -8,6 +8,7 @@ import {
   Dropdown,
   Flex,
   Layout,
+  Tag,
   Typography,
 } from 'antd';
 import { useNavigate } from 'react-router';
@@ -24,6 +25,7 @@ import {
   MenuUnfoldOutlined,
   MessageOutlined,
   UserOutlined,
+  DisconnectOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -32,18 +34,19 @@ import {
 import avatarImage from '@/assets/images/avatar-1.png';
 
 /**
- * Providers
- */
-import { useAuth } from '@/providers/AuthProvider';
-
-/**
- * Shared
+ * Constants
  */
 import { ROLES } from '@/shared/constants/rolesConstants';
-import { useFullscreen } from '@/shared/hooks/useFullScreen';
 
 /**
- * Features
+ * Hooks
+ */
+import { useAuth } from '@/providers/AuthProvider';
+import { useFullscreen } from '@/shared/hooks/useFullScreen';
+import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
+
+/**
+ * Components
  */
 import { BranchSwitcher } from '@/features/manager/components/BranchSwitcher';
 
@@ -75,6 +78,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isOnline } = useNetworkStatus();
 
   const isManager = user?.role === ROLES.SYSTEM_ADMIN;
 
@@ -112,7 +116,10 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
         justify='space-between'
         className='w-full'
       >
-        <Flex gap='small'>
+        <Flex
+          gap='small'
+          align='center'
+        >
           <Button
             type='text'
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -124,6 +131,14 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             }}
           />
           {isManager && <BranchSwitcher />}
+          {!isOnline && (
+            <Tag
+              icon={<DisconnectOutlined />}
+              color='error'
+            >
+              Offline Mode
+            </Tag>
+          )}
         </Flex>
         <Flex gap='small'>
           <Button

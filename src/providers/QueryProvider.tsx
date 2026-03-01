@@ -1,20 +1,46 @@
-/**
- * Node modules
- */
+import { message } from 'antd';
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
+/**
+ * Hooks
+ */
+import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
+
 export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
+  const { isOnline } = useNetworkStatus();
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // Dữ liệu được coi là "tươi" trong 1 phút
-            gcTime: 1000 * 60 * 60 * 24, // Giữ trong cache 24h (Garbage Collection)
-            retry: 1, // Thử lại 1 lần nếu request lỗi
-            refetchOnWindowFocus: false, // Không tự động tải lại khi quay lại tab
+            staleTime: 60 * 1000,
+            gcTime: 1000 * 60 * 60 * 24,
+            retry: (failureCount, error: any) => {
+              // Don't retry if offline
+              if (!navigator.onLine) return false;
+              // Retry up to 2 times for other errors
+              return failureCount < 2;
+            },
+            refetchOnWindowFocus: isOnline, // Only refetch if online
+            refetchOnReconnect: true, // Auto-refetch when reconnected
+          },
+          mutations: {
+            // Block mutations when offline
+            retry: (failureCount, error: any) => {
+              if (!navigator.onLine) {
+                message.error('Cannot perform action while offline!');
+                return false;
+              }
+              return failureCount < 1;
+            },
+            onError: (error: any) => {
+              if (!navigator.onLine) {
+                message.error('Cannot perform action while offline!');
+              }
+            },
           },
         },
       }),
@@ -23,7 +49,7 @@ export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 };
