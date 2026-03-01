@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router';
-import { Button, Checkbox, Flex, Form, Input, Typography, message } from 'antd';
+import { Link } from 'react-router';
+import { Button, Checkbox, Flex, Form, Input, Typography } from 'antd';
 
 /**
  * Hooks
@@ -23,23 +23,15 @@ type LoginFormType = {
 const { Link: AntLink } = Typography;
 
 export const LoginForm = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [form] = Form.useForm<LoginFormType>();
 
-  const handleSubmit = async (values: LoginFormType) => {
-    try {
-      await login({
-        email: values.email,
-        password: values.password,
-        rememberMe: values.rememberMe ?? false,
-      });
-
-      message.success('Login successful!');
-    } catch (error: any) {
-      const msg = error?.response?.data?.message || 'Login failed!';
-      message.error(msg);
-    }
+  const handleSubmit = (values: LoginFormType) => {
+    login.mutate({
+      email: values.email,
+      password: values.password,
+      rememberMe: values.rememberMe ?? false,
+    });
   };
 
   return (
@@ -58,6 +50,7 @@ export const LoginForm = () => {
       >
         <Input placeholder='Enter email address' />
       </Form.Item>
+
       <Form.Item
         label='Password'
         name='password'
@@ -65,6 +58,7 @@ export const LoginForm = () => {
       >
         <Input.Password placeholder='Enter password' />
       </Form.Item>
+
       <Form.Item
         name='rememberMe'
         valuePropName='checked'
@@ -77,10 +71,12 @@ export const LoginForm = () => {
           </Link>
         </Flex>
       </Form.Item>
+
       <Button
         type='primary'
         htmlType='submit'
         className='w-full'
+        loading={login.isPending}
       >
         Login
       </Button>

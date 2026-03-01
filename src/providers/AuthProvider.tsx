@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { message } from 'antd';
 
 /**
  * Configs
@@ -9,12 +10,9 @@ import { saveTokens, clearTokens, getAccessToken } from '@/config/api';
 /**
  * Utils
  */
-import {
-  decodeJwt,
-  mapRoleFromEnum,
-  isTokenExpired,
-  getRoleFromJwt,
-} from '@/shared/utils/jwt';
+import { isTokenExpired } from '@/shared/utils/jwt';
+import { handleApiError } from '@/shared/utils/errorHandler';
+import { ERROR_MESSAGES, ErrorCodeEnum } from '@/shared/types/errorTypes';
 
 /**
  * Hooks
@@ -34,8 +32,19 @@ import type {
   LoginPayload,
   User,
 } from '@/features/auth/types/authTypes';
+import type { UseMutationResult } from '@tanstack/react-query';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+type EnhancedAuthContextType = {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  login: UseMutationResult<void, Error, LoginPayload>;
+  logout: UseMutationResult<void, Error, void>;
+};
+
+const AuthContext = createContext<EnhancedAuthContextType | undefined>(
+  undefined,
+);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
@@ -54,31 +63,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const { data: user, isLoading: isLoadingProfile } = useProfile(!!accessToken);
 
-  const login = async (payload: LoginPayload) => {
-    const response = await authService.login(payload);
-    const { accessToken: token, refreshToken, roles } = response.data.data;
+  const loginMutation = useMutation({
+    mutationFn: async (payload: LoginPayload) => {
+      const response = await authService.login(payload);
+      const { accessToken: token, refreshToken } = response.data.data;
 
-    saveTokens(token, refreshToken ?? null, payload.rememberMe);
-    setAccessToken(token);
-    await queryClient.invalidateQueries({ queryKey: ['profile'] });
-  };
+      saveTokens(token, refreshToken ?? null, payload.rememberMe);
+      setAccessToken(token);
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+    onSuccess: () => {
+      message.success('Login successful!');
+    },
+    onError: (error) => {
+      handleApiError(
+        error,
+        {
+          [ErrorCodeEnum.InvalidCredentials]: () => {
+            message.error(ERROR_MESSAGES[ErrorCodeEnum.InvalidCredentials]);
+          },
+          [ErrorCodeEnum.Forbidden]: () => {
+            message.error('You do not have permission to access CMS!');
+          },
+        },
+        'Login failed! Please try again.',
+      );
+    },
+  });
 
-  const logout = async () => {
-    try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Logout API failed:', error);
-    } finally {
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        await authService.logout();
+      } catch (error) {
+        console.error('Logout API failed:', error);
+      }
+    },
+    onSuccess: () => {
       clearTokens();
       setAccessToken(null);
-      
       queryClient.setQueryData(['profile'], null);
       queryClient.removeQueries({ queryKey: ['profile'] });
-    }
-  };
+    },
+  });
 
   if (isInitializing || (accessToken && isLoadingProfile)) {
-    return null; // Hoặc <Spin fullscreen />
+    return null; // Or <Spin fullscreen />
   }
 
   return (
@@ -87,8 +117,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user: user ?? null,
         accessToken,
         isAuthenticated: !!user,
-        login,
-        logout,
+        login: loginMutation,
+        logout: logoutMutation,
       }}
     >
       {children}

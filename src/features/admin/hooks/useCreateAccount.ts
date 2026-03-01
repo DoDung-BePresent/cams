@@ -1,6 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+
+/**
+ * Services
+ */
 import { accountService } from '../services/accountService';
+
+/**
+ * Utils
+ */
+import { showErrorMessage } from '@/shared/utils/errorHandler';
 
 export const useCreateAccount = () => {
   const queryClient = useQueryClient();
@@ -12,9 +21,7 @@ export const useCreateAccount = () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
     onError: (error: any) => {
-      const errorMessage =
-        error?.response?.data?.message || 'Failed to create account!';
-      message.error(errorMessage);
+      showErrorMessage(error, 'Failed to create account!');
     },
   });
 };

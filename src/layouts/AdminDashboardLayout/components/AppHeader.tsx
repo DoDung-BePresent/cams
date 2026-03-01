@@ -78,14 +78,12 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
 
   const isManager = user?.role === ROLES.SYSTEM_ADMIN;
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
-      navigate('/login', { replace: true });
-    }
+  const handleLogout = () => {
+    logout.mutate(undefined, {
+      onSuccess: () => {
+        navigate('/login', { replace: true });
+      },
+    });
   };
 
   const userMenuItems = [
