@@ -1,26 +1,28 @@
+// src/layouts/StoreDashboardLayout/components/AppSidebar.tsx
 import { Flex, Layout, Menu } from 'antd';
-import { useNavigate, useLocation } from 'react-router';
-import { useMemo } from 'react';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
 /**
  * Shared
  */
-import { Logo } from '@/shared/components/common/Logo';
 import { ROLES } from '@/shared/constants/rolesConstants';
+import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
 
 /**
- * Providers
+ * Hooks
  */
 import { useAuth } from '@/providers/AuthProvider';
+import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
 
 /**
  * Features
  */
 import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
+import { ADMIN_ROUTE_MAP } from '@/features/admin/constants/adminRouteMap';
 import { managerMenuItems } from '@/features/manager/constants/managerMenuItems';
+import { MANAGER_ROUTE_MAP } from '@/features/manager/constants/managerRouteMap';
 
 /**
  * Components
@@ -46,94 +48,16 @@ const siderStyle: React.CSSProperties = {
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  const menuItems =
-    user?.role === ROLES.STORE_MANAGER ? adminMenuItems : managerMenuItems;
+  const isStoreManager = user?.role === ROLES.STORE_MANAGER;
+  const menuItems = isStoreManager ? adminMenuItems : managerMenuItems;
+  const routeMap = isStoreManager ? ADMIN_ROUTE_MAP : MANAGER_ROUTE_MAP;
 
-  const routeMap: Record<string, string> = {
-    // Admin routes
-    'admin-dashboard': '/admin/dashboard',
-    'store-management': '/admin/stores',
-    'user-management': '/admin/users',
-    'music-library': '/admin/music',
-    'playlist-templates': '/admin/playlists',
-    'mood-genre-tags': '/admin/tags',
-    'rule-settings': '/admin/ai/rules',
-    'external-ai-music-api': '/admin/ai/api',
-    'data-mapping': '/admin/pos/mapping',
-    'sync-status': '/admin/pos/sync',
-    'music-decision-logs': '/admin/logs/music-decisions',
-    'api-call-logs': '/admin/logs/api-calls',
-    'error-logs': '/admin/logs/errors',
-
-    // Manager routes
-    dashboard: '/manager/dashboard',
-    spaces: '/manager/spaces',
-    devices: '/manager/devices',
-    'auto-manual-mode': '/manager/music-control/mode',
-    'playback-control': '/manager/music-control/playback',
-    'time-based-rules': '/manager/schedule/time-based',
-    'event-based-rules': '/manager/schedule/event-based',
-    'music-vs-sales': '/manager/reports/music-sales',
-    'customer-engagement': '/manager/reports/engagement',
-    'playback-history': '/manager/reports/history',
-    settings: '/manager/settings',
-  };
-
-  const pathToKeyMap = useMemo(() => {
-    const map: Record<string, string> = {};
-    Object.entries(routeMap).forEach(([key, path]) => {
-      map[path] = key;
-    });
-    return map;
-  }, []);
-
-  const selectedKeys = useMemo(() => {
-    const currentPath = location.pathname;
-
-    if (pathToKeyMap[currentPath]) {
-      return [pathToKeyMap[currentPath]];
-    }
-
-    const matchedKey = Object.entries(routeMap).find(([_, path]) =>
-      currentPath.startsWith(path),
-    )?.[0];
-
-    return matchedKey ? [matchedKey] : [];
-  }, [location.pathname, pathToKeyMap, routeMap]);
-
-  const openKeys = useMemo(() => {
-    const keys: string[] = [];
-
-    const findParentKey = (items: any[], targetKey: string): string | null => {
-      for (const item of items) {
-        if (item.children) {
-          const child = item.children.find((c: any) => c.key === targetKey);
-          if (child) return item.key;
-
-          const nested = findParentKey(item.children, targetKey);
-          if (nested) return item.key;
-        }
-      }
-      return null;
-    };
-
-    if (selectedKeys.length > 0) {
-      const parentKey = findParentKey(menuItems, selectedKeys[0]);
-      if (parentKey) keys.push(parentKey);
-    }
-
-    return keys;
-  }, [selectedKeys, menuItems]);
-
-  const handleMenuClick = (key: string) => {
-    const route = routeMap[key];
-    if (route) {
-      navigate(route);
-    }
-  };
+  // ✅ Use shared hook
+  const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
+    menuItems,
+    routeMap,
+  });
 
   return (
     <Sider
