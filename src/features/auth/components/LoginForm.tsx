@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Button, Checkbox, Flex, Form, Input, Typography } from 'antd';
+import { Button, Checkbox, Flex, Form, Input, message, Typography } from 'antd';
 
 /**
  * Hooks
@@ -10,6 +10,16 @@ import { useAuth } from '@/providers/AuthProvider';
  * Validations
  */
 import { loginValidation } from '../validations/authValidation';
+
+/**
+ * Utils
+ */
+import { handleApiError } from '@/shared/utils/errorHandler';
+
+/**
+ * Types
+ */
+import { ErrorCodeEnum } from '@/shared/types/errorTypes';
 
 /**
  * Types
@@ -27,11 +37,29 @@ export const LoginForm = () => {
   const [form] = Form.useForm<LoginFormType>();
 
   const handleSubmit = (values: LoginFormType) => {
-    login.mutate({
-      email: values.email,
-      password: values.password,
-      rememberMe: values.rememberMe ?? false,
-    });
+    login.mutate(
+      {
+        email: values.email,
+        password: values.password,
+        rememberMe: values.rememberMe ?? false,
+      },
+      {
+        onError: (error) => {
+          handleApiError(
+            error,
+            {
+              [ErrorCodeEnum.InvalidCredentials]: () => {
+                message.error('Invalid credentials! Please try again!');
+              },
+              [ErrorCodeEnum.Unauthorized]: () => {
+                message.error('Invalid credentials! Please try again!');
+              },
+            },
+            'Login failed! Please try again.',
+          );
+        },
+      },
+    );
   };
 
   return (

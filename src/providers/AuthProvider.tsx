@@ -75,20 +75,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     onSuccess: () => {
       message.success('Login successful!');
     },
-    onError: (error) => {
-      handleApiError(
-        error,
-        {
-          [ErrorCodeEnum.InvalidCredentials]: () => {
-            message.error(ERROR_MESSAGES[ErrorCodeEnum.InvalidCredentials]);
-          },
-          [ErrorCodeEnum.Forbidden]: () => {
-            message.error('You do not have permission to access CMS!');
-          },
-        },
-        'Login failed! Please try again.',
-      );
-    },
+    // onError: (error) => {
+    //   handleApiError(
+    //     error,
+    //     {
+    //       [ErrorCodeEnum.InvalidCredentials]: () => {
+    //         message.error(ERROR_MESSAGES[ErrorCodeEnum.InvalidCredentials]);
+    //       },
+    //       [ErrorCodeEnum.Forbidden]: () => {
+    //         message.error('You do not have permission to access CMS!');
+    //       },
+    //     },
+    //     'Login failed! Please try again.',
+    //   );
+    // },
   });
 
   const logoutMutation = useMutation({
