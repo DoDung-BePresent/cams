@@ -121,7 +121,11 @@ export const getAccountColumns = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar
             src={record.avatarUrl}
-            size={50}
+            size={60}
+            shape='square'
+            style={{
+              borderRadius: 5,
+            }}
           >
             {record.firstName?.charAt(0).toUpperCase()}
           </Avatar>
