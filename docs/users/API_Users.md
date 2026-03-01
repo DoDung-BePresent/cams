@@ -161,7 +161,12 @@ Accept-Language: vi-VN
 
 - **Auth:** SystemAdmin, BrandManager
 - **Query params:** `UserFilter` (§3.1)
-- **BM behavior:** `brandId` filter bị override về brand của BM; BM không thể xem users của brand khác.
+- **BM behavior:**
+  - `brandId` trong query params **luôn bị override** về brand của chính BM, bất kể giá trị client truyền vào.
+  - Nếu BrandManager không có `brandId` (broken session state) → **403 Forbidden** (không trả về dữ liệu của toàn bộ brand).
+  - BM chỉ thấy: chính mình, các BrandManager khác, và StoreManager trong cùng brand.
+
+> **Security note:** Việc override `brandId` được thực hiện ở handler trước khi gọi DB, nên client không thể bypass bằng cách truyền `brandId` của brand khác.
 
 **Response 200 (`PaginationResult<UserListItem>`):**
 

@@ -583,6 +583,58 @@
           "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Brand not found\",\n  \"errors\": null,\n  \"errorCode\": \"NotFound\"\n}"
         }
       ]
+    },
+    {
+      "name": "Toggle Brand Status",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }],
+        "body": { "mode": "none" },
+        "url": {
+          "raw": "{{baseUrl}}/api/brands/:id/toggle-status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "brands", ":id", "toggle-status"],
+          "variable": [{ "key": "id", "value": "3fa85f64-5717-4562-b3fc-2c963f66afa6", "description": "Brand ID (Guid)" }]
+        },
+        "description": "**Auth:** SystemAdmin only.\n\nToggles brand status: Active <-> Inactive.\n\n**No request body required.**\n\n**404:** Brand not found. **403:** Not SystemAdmin."
+      },
+      "response": [
+        {
+          "name": "200 OK - Active to Inactive",
+          "originalRequest": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "none" }, "url": { "raw": "{{baseUrl}}/api/brands/3fa85f64-5717-4562-b3fc-2c963f66afa6/toggle-status", "host": ["{{baseUrl}}"], "path": ["api", "brands", "3fa85f64-5717-4562-b3fc-2c963f66afa6", "toggle-status"] } },
+          "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"isSuccess\": true, \"message\": \"Brand status has been updated successfully\", \"errors\": null, \"errorCode\": null}"
+        },
+        {
+          "name": "200 OK - Inactive to Active",
+          "originalRequest": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "none" }, "url": { "raw": "{{baseUrl}}/api/brands/3fa85f64-5717-4562-b3fc-2c963f66afa6/toggle-status", "host": ["{{baseUrl}}"], "path": ["api", "brands", "3fa85f64-5717-4562-b3fc-2c963f66afa6", "toggle-status"] } },
+          "status": "OK", "code": 200, "_postman_previewlanguage": "json",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"isSuccess\": true, \"message\": \"Brand status has been updated successfully\", \"errors\": null, \"errorCode\": null}"
+        },
+        {
+          "name": "401 Unauthorized",
+          "originalRequest": { "method": "PUT", "header": [], "body": { "mode": "none" }, "url": { "raw": "{{baseUrl}}/api/brands/3fa85f64-5717-4562-b3fc-2c963f66afa6/toggle-status", "host": ["{{baseUrl}}"], "path": ["api", "brands", "3fa85f64-5717-4562-b3fc-2c963f66afa6", "toggle-status"] } },
+          "status": "Unauthorized", "code": 401, "_postman_previewlanguage": "json",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"isSuccess\": false, \"message\": \"Unauthorized\", \"errors\": null, \"errorCode\": \"Unauthorized\"}"
+        },
+        {
+          "name": "403 Forbidden",
+          "originalRequest": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "none" }, "url": { "raw": "{{baseUrl}}/api/brands/3fa85f64-5717-4562-b3fc-2c963f66afa6/toggle-status", "host": ["{{baseUrl}}"], "path": ["api", "brands", "3fa85f64-5717-4562-b3fc-2c963f66afa6", "toggle-status"] } },
+          "status": "Forbidden", "code": 403, "_postman_previewlanguage": "json",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"isSuccess\": false, \"message\": \"You do not have permission to access this resource\", \"errors\": null, \"errorCode\": \"Forbidden\"}"
+        },
+        {
+          "name": "404 Not Found",
+          "originalRequest": { "method": "PUT", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "none" }, "url": { "raw": "{{baseUrl}}/api/brands/00000000-0000-0000-0000-000000000000/toggle-status", "host": ["{{baseUrl}}"], "path": ["api", "brands", "00000000-0000-0000-0000-000000000000", "toggle-status"] } },
+          "status": "Not Found", "code": 404, "_postman_previewlanguage": "json",
+          "header": [{ "key": "Content-Type", "value": "application/json" }],
+          "body": "{\"isSuccess\": false, \"message\": \"Brand not found\", \"errors\": null, \"errorCode\": \"NotFound\"}"
+        }
+      ]
     }
   ]
 }

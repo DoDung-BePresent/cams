@@ -18,6 +18,7 @@ Tài liệu API Brand Management cho CMS (React TypeScript & Flutter). Base path
 | `PATCH /api/brands/{id}`                   | ✅          | ✅                       | ❌                       |
 | `DELETE /api/brands/{id}`                  | ✅          | ❌                       | ❌                       |
 | `PUT /api/brands/{id}/transfer-ownership`  | ✅          | ❌                       | ❌                       |
+| `PUT /api/brands/{id}/toggle-status`       | ✅          | ❌                       | ❌                       |
 
 **"own brand"** = `user.BrandId == targetBrandId`.
 
@@ -591,6 +592,40 @@ Backend dùng **Windows timezone IDs** (không phải IANA). Một số ID phổ
   "message": "New owner must be an active BrandManager in the same brand",
   "errors": null,
   "errorCode": "BusinessRuleViolation"
+}
+```
+
+---
+
+### 5.7 `PUT /api/brands/{id}/toggle-status` — Toggle trạng thái brand
+
+- **Auth:** SystemAdmin
+- **Content-Type:** không yêu cầu (no request body)
+- **Path param:** `id` (Guid) — Brand ID
+
+**Toggle logic:** Active ↔ Inactive
+
+**Response 200 (`Result`):**
+
+```json
+{
+  "isSuccess": true,
+  "message": "Brand status has been updated successfully",
+  "errors": null,
+  "errorCode": null
+}
+```
+
+- **Response 401:** Chưa đăng nhập → `errorCode: "Unauthorized"`
+- **Response 403:** Không phải SystemAdmin → `errorCode: "Forbidden"`
+- **Response 404:** Brand không tồn tại → `errorCode: "NotFound"`
+
+```json
+{
+  "isSuccess": false,
+  "message": "Brand not found",
+  "errors": null,
+  "errorCode": "NotFound"
 }
 ```
 
