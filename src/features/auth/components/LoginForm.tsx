@@ -36,7 +36,6 @@ export const LoginForm = () => {
       });
 
       message.success('Login successful!');
-      
     } catch (error: any) {
       const msg = error?.response?.data?.message || 'Login failed!';
       message.error(msg);
