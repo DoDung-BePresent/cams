@@ -17,7 +17,7 @@ const STAFF_ENDPOINTS = {
   update: (id: string) => `/api/users/${id}`,
   resetPassword: (id: string) => `/api/users/${id}/reset-password`,
   assignStore: (id: string) => `/api/users/${id}/store`,
-  toggleStatus: (id: string) => `/api/users/${id}/toggle-status`,
+  toggleStatus: (id: string) => `/api/users/${id}/status`,
 } as const;
 
 export const staffService = {
