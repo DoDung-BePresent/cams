@@ -23,14 +23,14 @@ import { getStaffColumns } from './components/StaffTableColumns';
 import { CreateStaffDrawer } from './components/CreateStaffDrawer';
 import { EditStaffDrawer } from './components/EditStaffDrawer';
 import { AssignStaffStoreDrawer } from './components/AssignStaffStoreDrawer';
-import { ResetPasswordDrawer } from './components/ResetPasswordDrawer';
+import { ResetPasswordModal } from './components/ResetPasswordModal';
 
 export const StaffList = () => {
   const navigate = useNavigate();
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [assignStoreDrawerOpen, setAssignStoreDrawerOpen] = useState(false);
-  const [resetPasswordDrawerOpen, setResetPasswordDrawerOpen] = useState(false);
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -60,7 +60,7 @@ export const StaffList = () => {
 
   const handleResetPassword = (staffId: string) => {
     setSelectedStaffId(staffId);
-    setResetPasswordDrawerOpen(true);
+    setResetPasswordModalOpen(true);
   };
 
   const handleToggleStatus = (staffId: string) => {
@@ -69,6 +69,9 @@ export const StaffList = () => {
       content: 'Are you sure you want to change this staff member status?',
       okText: 'Yes',
       cancelText: 'No',
+      okButtonProps: {
+        danger: true,
+      },
       onOk: () => {
         toggleStatus.mutate(staffId);
       },
@@ -163,15 +166,15 @@ export const StaffList = () => {
         }}
       />
 
-      <ResetPasswordDrawer
-        open={resetPasswordDrawerOpen}
+      <ResetPasswordModal
+        open={resetPasswordModalOpen}
         staffId={selectedStaffId}
         onClose={() => {
-          setResetPasswordDrawerOpen(false);
+          setResetPasswordModalOpen(false);
           setSelectedStaffId(null);
         }}
         onSuccess={() => {
-          setResetPasswordDrawerOpen(false);
+          setResetPasswordModalOpen(false);
           setSelectedStaffId(null);
         }}
       />

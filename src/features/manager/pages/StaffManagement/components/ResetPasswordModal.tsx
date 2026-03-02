@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Drawer, Form, Input, Flex, Typography } from 'antd';
+import { Form, Input, Typography } from 'antd';
 
 /**
  * Hooks
@@ -10,7 +10,8 @@ import { useResetStaffPassword } from '@/features/manager/hooks/useResetStaffPas
 /**
  * Components
  */
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength'; // ✅ Correct component name
+import { AppModal } from '@/shared/components/ui/AppModal';
+import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
 
 /**
  * Types
@@ -24,24 +25,20 @@ import { resetPasswordValidation } from '@/features/manager/validations/staffVal
 
 const { Text } = Typography;
 
-type ResetPasswordDrawerProps = {
+type ResetPasswordModalProps = {
   open: boolean;
   staffId: string | null;
   onClose: () => void;
   onSuccess: () => void;
 };
 
-export const ResetPasswordDrawer = ({
+export const ResetPasswordModal = ({
   open,
   staffId,
   onClose,
   onSuccess,
-}: ResetPasswordDrawerProps) => {
+}: ResetPasswordModalProps) => {
   const [form] = Form.useForm<ResetStaffPasswordRequest>();
-  const { data: staff } = useStaffDetail(
-    staffId || undefined,
-    open && !!staffId,
-  );
   const resetPassword = useResetStaffPassword();
   const [password, setPassword] = useState('');
 
@@ -52,8 +49,10 @@ export const ResetPasswordDrawer = ({
       { id: staffId, data: values },
       {
         onSuccess: () => {
-          handleCancel();
+          form.resetFields();
+          setPassword('');
           onSuccess();
+          onClose();
         },
       },
     );
@@ -71,48 +70,25 @@ export const ResetPasswordDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <AppModal
+      size='large'
       title='Reset Password'
-      placement='right'
-      width={520}
       open={open}
-      onClose={handleCancel}
-      footer={
-        <Flex
-          justify='end'
-          gap='small'
-        >
-          <Button
-            size='large'
-            onClick={handleCancel}
-          >
-            Cancel
-          </Button>
-          <Button
-            size='large'
-            type='primary'
-            onClick={() => form.submit()}
-            loading={resetPassword.isPending}
-          >
-            Reset Password
-          </Button>
-        </Flex>
-      }
+      onCancel={handleCancel}
+      onOk={() => form.submit()}
+      okText='Reset Password'
+      okButtonProps={{
+        loading: resetPassword.isPending,
+        danger: true,
+      }}
+      width={550}
     >
-      <div style={{ marginBottom: 24 }}>
-        <Text strong>Staff Member: </Text>
-        <Text>{staff?.fullName}</Text>
-        <br />
-        <Text strong>Email: </Text>
-        <Text>{staff?.email}</Text>
-      </div>
-
       <Form
-        size='large'
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        autoComplete='off'
+        size='large'
       >
         <Form.Item
           label='New Password'
@@ -127,7 +103,6 @@ export const ResetPasswordDrawer = ({
           />
         </Form.Item>
 
-        {/* ✅ Use shared PasswordStrength with generator */}
         <PasswordStrength
           password={password}
           onPasswordChange={handlePasswordChange}
@@ -135,6 +110,6 @@ export const ResetPasswordDrawer = ({
           description='This is the password to your account, so it must be strong and hard to guess.'
         />
       </Form>
-    </Drawer>
+    </AppModal>
   );
 };
