@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import { Button, Table, Tag, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, message } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
- * Shared
+ * Icons
  */
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { PlusOutlined } from '@ant-design/icons';
 
 /**
  * Hooks
@@ -19,6 +16,9 @@ import { useToggleStaffStatus } from '@/features/manager/hooks/useToggleStaffSta
 /**
  * Components
  */
+import { DataTable } from '@/shared/components/common/DataTable';
+import { PageHeader } from '@/shared/components/common/PageHeader';
+import { AppModal } from '@/shared/components/ui/AppModal';
 import { getStaffColumns } from './components/StaffTableColumns';
 import { CreateStaffDrawer } from './components/CreateStaffDrawer';
 import { EditStaffDrawer } from './components/EditStaffDrawer';
@@ -118,7 +118,7 @@ export const StaffList = () => {
         }
       />
 
-      <Table
+      <DataTable
         columns={columns}
         dataSource={data?.items || []}
         rowKey='id'

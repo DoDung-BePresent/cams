@@ -40,6 +40,7 @@ export type ResetStaffPasswordRequest = {
 // Filter
 export type StaffFilter = {
   page?: number;
+  role?: RoleEnum;
   pageSize?: number;
   search?: string; // Search by name, email, phone
   sortBy?: string; // 'firstname' | 'lastname' | 'email' | 'createdat'

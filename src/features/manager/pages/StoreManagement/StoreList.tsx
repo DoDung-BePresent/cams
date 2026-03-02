@@ -1,14 +1,11 @@
 import { useState } from 'react';
-import { Button, Table, Tag, Space, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
+import { Button, message } from 'antd';
 
 /**
- * Shared
+ * Icons
  */
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { PlusOutlined } from '@ant-design/icons';
 
 /**
  * Hooks
@@ -19,6 +16,9 @@ import { useToggleStoreStatus } from '@/features/manager/hooks/useToggleStoreSta
 /**
  * Components
  */
+import { PageHeader } from '@/shared/components/common/PageHeader';
+import { AppModal } from '@/shared/components/ui/AppModal';
+import { DataTable } from '@/shared/components/common/DataTable';
 import { getStoreColumns } from './components/StoreTableColumns';
 import { CreateStoreDrawer } from './components/CreateStoreDrawer';
 import { EditStoreDrawer } from './components/EditStoreDrawer';
@@ -63,6 +63,9 @@ export const StoreList = () => {
       content: 'Are you sure you want to change this store status?',
       okText: 'Yes',
       cancelText: 'No',
+      okButtonProps: {
+        danger: true,
+      },
       onOk: () => {
         toggleStatus.mutate(storeId);
       },
@@ -103,7 +106,7 @@ export const StoreList = () => {
         }
       />
 
-      <Table
+      <DataTable
         columns={columns}
         dataSource={data?.items || []}
         rowKey='id'
