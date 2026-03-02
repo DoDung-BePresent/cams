@@ -89,6 +89,11 @@ export const ResetPasswordModal = ({
         onFinish={handleSubmit}
         autoComplete='off'
         size='large'
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           label='New Password'

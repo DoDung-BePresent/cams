@@ -22,14 +22,14 @@ import { AppModal } from '@/shared/components/ui/AppModal';
 import { getStaffColumns } from './components/StaffTableColumns';
 import { CreateStaffDrawer } from './components/CreateStaffDrawer';
 import { EditStaffDrawer } from './components/EditStaffDrawer';
-import { AssignStaffStoreDrawer } from './components/AssignStaffStoreDrawer';
+import { AssignStaffStoreModal } from './components/AssignStaffStoreModal';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
 
 export const StaffList = () => {
   const navigate = useNavigate();
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
-  const [assignStoreDrawerOpen, setAssignStoreDrawerOpen] = useState(false);
+  const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,7 +55,7 @@ export const StaffList = () => {
 
   const handleAssignStore = (staffId: string) => {
     setSelectedStaffId(staffId);
-    setAssignStoreDrawerOpen(true);
+    setAssignStoreModalOpen(true);
   };
 
   const handleResetPassword = (staffId: string) => {
@@ -153,15 +153,15 @@ export const StaffList = () => {
         }}
       />
 
-      <AssignStaffStoreDrawer
-        open={assignStoreDrawerOpen}
+      <AssignStaffStoreModal
+        open={assignStoreModalOpen}
         staffId={selectedStaffId}
         onClose={() => {
-          setAssignStoreDrawerOpen(false);
+          setAssignStoreModalOpen(false);
           setSelectedStaffId(null);
         }}
         onSuccess={() => {
-          setAssignStoreDrawerOpen(false);
+          setAssignStoreModalOpen(false);
           setSelectedStaffId(null);
         }}
       />

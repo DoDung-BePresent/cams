@@ -18,7 +18,7 @@ import { type AccountListItem } from '@/features/admin/types/accountTypes';
 import { CreateAccountDrawer } from './components/CreateAccountDrawer';
 import { EditAccountDrawer } from './components/EditAccountDrawer';
 import { ResetPasswordModal } from './components/ResetPasswordModal';
-import { AssignBrandDrawer } from './components/AssignBrandDrawer';
+import { AssignBrandModal } from './components/AssignBrandModal';
 import { getAccountColumns } from './components/AccountTableColumns';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
@@ -35,7 +35,7 @@ export const AccountList = () => {
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
-  const [assignBrandDrawerOpen, setAssignBrandDrawerOpen] = useState(false);
+  const [assignBrandModalOpen, setAssignBrandModalOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
     null,
   );
@@ -51,8 +51,6 @@ export const AccountList = () => {
 
   const handleView = (accountId: string) => {
     console.log('View account:', accountId);
-    // TODO: Navigate to account detail page
-    // navigate(`/admin/accounts/${accountId}`);
     message.info('Account detail page will be implemented soon');
   };
 
@@ -62,26 +60,13 @@ export const AccountList = () => {
   };
 
   const handleToggleStatus = (accountId: string) => {
-    const account = data?.items.find((a) => a.id === accountId);
-
     AppModal.confirm({
-      title: `Are you sure you want to ${account?.status === 1 ? 'deactivate' : 'activate'} this account?`,
-      content: (
-        <div>
-          <p>
-            Account: <strong>{account?.fullName}</strong> ({account?.email})
-          </p>
-          <p>
-            {account?.status === 1
-              ? 'This user will no longer be able to access the system.'
-              : 'This user will regain access to the system.'}
-          </p>
-        </div>
-      ),
-      okText: account?.status === 1 ? 'Deactivate' : 'Activate',
-      cancelText: 'Cancel',
+      title: 'Toggle Account Status',
+      content: 'Are you sure you want to change this account status?',
+      okText: 'Yes',
+      cancelText: 'No',
       okButtonProps: {
-        danger: account?.status === 1,
+        danger: true,
       },
       onOk: () => {
         toggleStatus.mutate(accountId);
@@ -96,7 +81,7 @@ export const AccountList = () => {
 
   const handleAssignBrand = (accountId: string) => {
     setSelectedAccountId(accountId);
-    setAssignBrandDrawerOpen(true);
+    setAssignBrandModalOpen(true);
   };
 
   const breadcrumbs = [
@@ -184,15 +169,15 @@ export const AccountList = () => {
         }}
       />
 
-      <AssignBrandDrawer
-        open={assignBrandDrawerOpen}
+      <AssignBrandModal
+        open={assignBrandModalOpen}
         accountId={selectedAccountId}
         onClose={() => {
-          setAssignBrandDrawerOpen(false);
+          setAssignBrandModalOpen(false);
           setSelectedAccountId(null);
         }}
         onSuccess={() => {
-          setAssignBrandDrawerOpen(false);
+          setAssignBrandModalOpen(false);
           setSelectedAccountId(null);
         }}
       />
