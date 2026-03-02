@@ -9,10 +9,7 @@ import {
   Col,
   Typography,
   Flex,
-  Upload,
 } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import type { UploadFile } from 'antd';
 
 /**
  * Hooks
@@ -23,11 +20,13 @@ import { useStores } from '@/features/manager/hooks/useStores';
 /**
  * Components
  */
-import { PasswordStrengthGenerator } from '@/shared/components//PasswordStrengthGenerator';
+import { ImageDragger } from '@/shared/components/common/ImageDragger'; // ✅ Use shared component
+import { PasswordStrength } from '@/shared/components/ui/PasswordStrength'; // ✅ Correct component name
 
 /**
  * Types
  */
+import type { UploadFile } from 'antd';
 import type { CreateStaffRequest } from '@/features/manager/types/staffTypes';
 import { EntityStatusEnum } from '@/shared/types/commonTypes';
 
@@ -107,11 +106,19 @@ export const CreateStaffDrawer = ({
     form.setFieldValue('password', newPassword);
   };
 
+  // ✅ Use shared upload helper
   const uploadProps = createImageUploadProps<CreateStaffRequest>(
     setAvatarFile,
-    form,
-    'avatar',
+    (field, value) => form.setFieldValue(field, value),
   );
+
+  // ✅ Get preview URL for avatar
+  const getPreviewUrl = () => {
+    if (avatarFile?.originFileObj) {
+      return URL.createObjectURL(avatarFile.originFileObj);
+    }
+    return null;
+  };
 
   return (
     <Drawer
@@ -154,37 +161,6 @@ export const CreateStaffDrawer = ({
           },
         }}
       >
-        {/* Profile Picture */}
-        <div style={{ marginBottom: 24 }}>
-          <Title
-            level={5}
-            style={{ marginBottom: 16 }}
-          >
-            Profile Picture
-          </Title>
-
-          <Form.Item
-            name='avatar'
-            rules={createStaffValidation.avatar}
-            valuePropName='fileList'
-            getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-          >
-            <Upload
-              {...uploadProps}
-              listType='picture-card'
-              maxCount={1}
-              accept='image/*'
-            >
-              {!avatarFile && (
-                <div>
-                  <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>Upload Avatar</div>
-                </div>
-              )}
-            </Upload>
-          </Form.Item>
-        </div>
-
         {/* Basic Information */}
         <div style={{ marginBottom: 24 }}>
           <Title
@@ -246,17 +222,27 @@ export const CreateStaffDrawer = ({
             name='password'
             rules={createStaffValidation.password}
           >
-            <PasswordStrengthGenerator
+            <Input.Password
+              placeholder='Enter password'
               value={password}
-              onChange={handlePasswordChange}
+              onChange={(e) => setPassword(e.target.value)}
             />
           </Form.Item>
+
+          {/* ✅ Use shared PasswordStrength with generator */}
+          <PasswordStrength
+            password={password}
+            onPasswordChange={handlePasswordChange}
+            showGenerator
+            description='This is the password to your account, so it must be strong and hard to guess.'
+          />
 
           <Form.Item
             label='Assign Store'
             name='storeId'
             rules={createStaffValidation.storeId}
             extra='This staff member will manage the selected store'
+            style={{ marginTop: 16 }}
           >
             <Select
               placeholder='Select a store'
@@ -267,6 +253,18 @@ export const CreateStaffDrawer = ({
                   .toLowerCase()
                   .includes(input.toLowerCase())
               }
+            />
+          </Form.Item>
+
+          {/* ✅ Use shared ImageDragger */}
+          <Form.Item
+            label='Avatar'
+            name='avatar'
+            valuePropName='file'
+          >
+            <ImageDragger
+              previewUrl={getPreviewUrl()}
+              uploadProps={uploadProps}
             />
           </Form.Item>
         </div>

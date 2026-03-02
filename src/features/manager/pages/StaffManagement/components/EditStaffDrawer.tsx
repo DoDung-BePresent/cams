@@ -8,12 +8,8 @@ import {
   Col,
   Typography,
   Flex,
-  Upload,
   Spin,
-  Avatar,
 } from 'antd';
-import { PlusOutlined, UserOutlined } from '@ant-design/icons';
-import type { UploadFile } from 'antd';
 
 /**
  * Hooks
@@ -22,8 +18,14 @@ import { useStaffDetail } from '@/features/manager/hooks/useStaffDetail';
 import { useUpdateStaff } from '@/features/manager/hooks/useUpdateStaff';
 
 /**
+ * Components
+ */
+import { ImageDragger } from '@/shared/components/common/ImageDragger'; // ✅ Use shared component
+
+/**
  * Types
  */
+import type { UploadFile } from 'antd';
 import type { UpdateStaffRequest } from '@/features/manager/types/staffTypes';
 
 /**
@@ -35,6 +37,7 @@ import { updateStaffValidation } from '@/features/manager/validations/staffValid
  * Utils
  */
 import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { nullToUndefined } from '@/shared/utils/formHelpers';
 
 const { Title } = Typography;
 
@@ -55,6 +58,9 @@ export const EditStaffDrawer = ({
   const { data: staff, isLoading } = useStaffDetail(staffId || undefined, open);
   const updateStaff = useUpdateStaff();
   const [avatarFile, setAvatarFile] = useState<UploadFile | null>(null);
+  const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(
+    null,
+  );
 
   // Populate form when staff data is loaded
   useEffect(() => {
@@ -63,8 +69,9 @@ export const EditStaffDrawer = ({
         firstName: staff.firstName,
         lastName: staff.lastName,
         email: staff.email,
-        phoneNumber: staff.phoneNumber || undefined,
+        phoneNumber: nullToUndefined(staff.phoneNumber),
       });
+      setExistingAvatarUrl(staff.avatarUrl);
     }
   }, [staff, open, form]);
 
@@ -98,14 +105,23 @@ export const EditStaffDrawer = ({
   const handleCancel = () => {
     form.resetFields();
     setAvatarFile(null);
+    setExistingAvatarUrl(null);
     onClose();
   };
 
+  // ✅ Use shared upload helper
   const uploadProps = createImageUploadProps<UpdateStaffRequest>(
     setAvatarFile,
-    form,
-    'avatar',
+    (field, value) => form.setFieldValue(field, value),
   );
+
+  // ✅ Get preview URL for avatar
+  const getPreviewUrl = () => {
+    if (avatarFile?.originFileObj) {
+      return URL.createObjectURL(avatarFile.originFileObj);
+    }
+    return existingAvatarUrl;
+  };
 
   return (
     <Drawer
@@ -154,49 +170,6 @@ export const EditStaffDrawer = ({
             },
           }}
         >
-          {/* Profile Picture */}
-          <div style={{ marginBottom: 24 }}>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Profile Picture
-            </Title>
-
-            <Flex
-              align='center'
-              gap='middle'
-            >
-              <Avatar
-                size={80}
-                src={staff?.avatarUrl}
-                icon={<UserOutlined />}
-              />
-              <Form.Item
-                name='avatar'
-                rules={updateStaffValidation.avatar}
-                valuePropName='fileList'
-                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-                noStyle
-              >
-                <Upload
-                  {...uploadProps}
-                  listType='picture-card'
-                  maxCount={1}
-                  accept='image/*'
-                  showUploadList={false}
-                >
-                  {!avatarFile && (
-                    <div>
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>Change Avatar</div>
-                    </div>
-                  )}
-                </Upload>
-              </Form.Item>
-            </Flex>
-          </div>
-
           {/* Basic Information */}
           <div style={{ marginBottom: 24 }}>
             <Title
@@ -241,6 +214,18 @@ export const EditStaffDrawer = ({
               rules={updateStaffValidation.phoneNumber}
             >
               <Input placeholder='+84901234567 or 0901234567' />
+            </Form.Item>
+
+            {/* ✅ Use shared ImageDragger */}
+            <Form.Item
+              label='Avatar'
+              name='avatar'
+              valuePropName='file'
+            >
+              <ImageDragger
+                previewUrl={getPreviewUrl()}
+                uploadProps={uploadProps}
+              />
             </Form.Item>
           </div>
 

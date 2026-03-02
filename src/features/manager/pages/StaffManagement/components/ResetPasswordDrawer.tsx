@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Drawer, Form, Flex, Typography } from 'antd';
+import { Button, Drawer, Form, Input, Flex, Typography } from 'antd';
 
 /**
  * Hooks
@@ -10,7 +10,7 @@ import { useResetStaffPassword } from '@/features/manager/hooks/useResetStaffPas
 /**
  * Components
  */
-import { PasswordStrengthGenerator } from '@/shared/components/form/PasswordStrengthGenerator';
+import { PasswordStrength } from '@/shared/components/ui/PasswordStrength'; // ✅ Correct component name
 
 /**
  * Types
@@ -120,11 +120,20 @@ export const ResetPasswordDrawer = ({
           rules={resetPasswordValidation.newPassword}
           extra='The staff member will be able to login with this new password'
         >
-          <PasswordStrengthGenerator
+          <Input.Password
+            placeholder='Enter new password'
             value={password}
-            onChange={handlePasswordChange}
+            onChange={(e) => setPassword(e.target.value)}
           />
         </Form.Item>
+
+        {/* ✅ Use shared PasswordStrength with generator */}
+        <PasswordStrength
+          password={password}
+          onPasswordChange={handlePasswordChange}
+          showGenerator
+          description='This is the password to your account, so it must be strong and hard to guess.'
+        />
       </Form>
     </Drawer>
   );
