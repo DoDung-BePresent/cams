@@ -80,7 +80,7 @@ export const CreateAccountDrawer = ({
     if (values.lastName) formData.append('lastName', values.lastName);
     if (values.email) formData.append('email', values.email);
     if (values.password) formData.append('password', values.password);
-    formData.append('role', String(RoleEnum.BrandManager)); // Admin chỉ tạo BrandManager
+    formData.append('role', String(RoleEnum.BrandManager));
 
     // Optional fields
     if (avatarFile?.originFileObj) {

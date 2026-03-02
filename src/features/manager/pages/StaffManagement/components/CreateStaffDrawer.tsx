@@ -20,14 +20,17 @@ import { useStores } from '@/features/manager/hooks/useStores';
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger'; // ✅ Use shared component
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength'; // ✅ Correct component name
+import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { CreateStaffRequest } from '@/features/manager/types/staffTypes';
+import {
+  RoleEnum,
+  type CreateStaffRequest,
+} from '@/features/manager/types/staffTypes';
 import { EntityStatusEnum } from '@/shared/types/commonTypes';
 
 /**
@@ -79,6 +82,7 @@ export const CreateStaffDrawer = ({
     if (values.email) formData.append('email', values.email);
     if (values.password) formData.append('password', values.password);
     if (values.storeId) formData.append('storeId', values.storeId);
+    formData.append('role', String(RoleEnum.StoreManager));
 
     // Optional fields
     if (avatarFile?.originFileObj) {
@@ -106,13 +110,11 @@ export const CreateStaffDrawer = ({
     form.setFieldValue('password', newPassword);
   };
 
-  // ✅ Use shared upload helper
   const uploadProps = createImageUploadProps<CreateStaffRequest>(
     setAvatarFile,
     (field, value) => form.setFieldValue(field, value),
   );
 
-  // ✅ Get preview URL for avatar
   const getPreviewUrl = () => {
     if (avatarFile?.originFileObj) {
       return URL.createObjectURL(avatarFile.originFileObj);

@@ -25,11 +25,6 @@ import { EditStaffDrawer } from './components/EditStaffDrawer';
 import { AssignStaffStoreDrawer } from './components/AssignStaffStoreDrawer';
 import { ResetPasswordDrawer } from './components/ResetPasswordDrawer';
 
-/**
- * Types
- */
-import type { StaffFilter } from '@/features/manager/types/staffTypes';
-
 export const StaffList = () => {
   const navigate = useNavigate();
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
@@ -139,7 +134,6 @@ export const StaffList = () => {
         onClose={() => setCreateDrawerOpen(false)}
         onSuccess={() => {
           setCreateDrawerOpen(false);
-          message.success('Staff created successfully!');
         }}
       />
 
@@ -153,7 +147,6 @@ export const StaffList = () => {
         onSuccess={() => {
           setEditDrawerOpen(false);
           setSelectedStaffId(null);
-          message.success('Staff updated successfully!');
         }}
       />
 
@@ -167,7 +160,6 @@ export const StaffList = () => {
         onSuccess={() => {
           setAssignStoreDrawerOpen(false);
           setSelectedStaffId(null);
-          message.success('Store assignment updated successfully!');
         }}
       />
 
@@ -181,7 +173,6 @@ export const StaffList = () => {
         onSuccess={() => {
           setResetPasswordDrawerOpen(false);
           setSelectedStaffId(null);
-          message.success('Password reset successfully!');
         }}
       />
     </div>

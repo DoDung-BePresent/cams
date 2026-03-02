@@ -1,5 +1,8 @@
 import { Tag, Avatar, Dropdown, Button } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+
+/**
+ * Icons
+ */
 import {
   EyeOutlined,
   EditOutlined,
@@ -10,8 +13,17 @@ import {
   KeyOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Types
+ */
+import type { ColumnsType } from 'antd/es/table';
 import type { StaffListItem } from '@/features/manager/types/staffTypes';
 import { EntityStatusEnum } from '@/shared/types/commonTypes';
+
+/**
+ * Constants
+ */
 import {
   STAFF_STATUS_COLORS,
   STAFF_STATUS_LABELS,
@@ -99,7 +111,11 @@ export const getStaffColumns = ({
       render: (_, record) => (
         <div className='flex items-center gap-3'>
           <Avatar
-            size={40}
+            size={60}
+            shape='square'
+            style={{
+              borderRadius: 5,
+            }}
             src={record.avatarUrl}
             icon={<UserOutlined />}
           />
