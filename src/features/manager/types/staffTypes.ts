@@ -68,3 +68,5 @@ export type StaffDetailResponse = StaffListItem & {
   // Same as StaffListItem for now
   // Can add more fields later if needed
 };
+
+export type StaffListFilter = Omit<StaffFilter, 'role'>;

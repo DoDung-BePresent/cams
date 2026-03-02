@@ -84,3 +84,5 @@ export type AccountDetailResponse = AccountListItem & {
   phoneNumberConfirmed: boolean;
   twoFactorEnabled: boolean;
 };
+
+export type AccountListFilter = Omit<AccountFilter, 'role'>;

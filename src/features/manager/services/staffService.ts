@@ -33,6 +33,8 @@ export const staffService = {
     if (filter.status !== undefined)
       params.append('status', filter.status.toString());
     if (filter.storeId) params.append('storeId', filter.storeId);
+    if (filter.role !== undefined)
+      params.append('role', filter.role.toString());
 
     return api.get<PaginationResult<StaffListItem>>(
       `${STAFF_ENDPOINTS.list}?${params.toString()}`,

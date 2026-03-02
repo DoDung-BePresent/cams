@@ -10,10 +10,7 @@ import { PlusOutlined } from '@ant-design/icons';
 /**
  * Types
  */
-import {
-  RoleEnum,
-  type AccountListItem,
-} from '@/features/admin/types/accountTypes';
+import { type AccountListItem } from '@/features/admin/types/accountTypes';
 
 /**
  * Components
@@ -48,7 +45,6 @@ export const AccountList = () => {
   const { data, isLoading } = useAccounts({
     page: currentPage,
     pageSize,
-    role: RoleEnum.BrandManager,
   });
 
   const toggleStatus = useToggleAccountStatus();

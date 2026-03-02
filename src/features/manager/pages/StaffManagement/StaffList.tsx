@@ -39,12 +39,10 @@ export const StaffList = () => {
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState<StaffFilter>({});
 
   const { data, isLoading } = useStaff({
     page: currentPage,
     pageSize,
-    ...filters,
   });
 
   const toggleStatus = useToggleStaffStatus();
