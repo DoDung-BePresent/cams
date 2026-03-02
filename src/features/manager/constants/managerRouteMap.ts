@@ -1,9 +1,11 @@
 /**
  * Manager route mapping (menu key -> route path)
- * Used for menu navigation and active state detection
+ * Used for BrandManager dashboard navigation
  */
 export const MANAGER_ROUTE_MAP: Record<string, string> = {
   dashboard: '/manager/dashboard',
+  stores: '/manager/stores',
+  staff: '/manager/staff',
   spaces: '/manager/spaces',
   devices: '/manager/devices',
   'auto-manual-mode': '/manager/music-control/mode',

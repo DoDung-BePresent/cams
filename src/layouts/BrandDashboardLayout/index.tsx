@@ -18,12 +18,13 @@ import { AppHeader } from './components/AppHeader';
 import { AppFooter } from './components/AppFooter';
 import { AppContent } from './components/AppContent';
 
-export const StoreDashboardLayout = () => {
+export const BrandDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   const handleCollapsed = () => {
     setCollapsed(!collapsed);
   };
+
   return (
     <Layout hasSider>
       <AppSidebar collapsed={collapsed} />

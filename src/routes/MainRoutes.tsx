@@ -4,7 +4,7 @@ import { Navigate } from 'react-router';
  * Layouts
  */
 import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
-import { StoreDashboardLayout } from '@/layouts/StoreDashboardLayout';
+import { BrandDashboardLayout } from '@/layouts/BrandDashboardLayout';
 
 /**
  * Shared
@@ -42,10 +42,8 @@ export const MainRoutes = [
   {
     path: '/manager',
     element: (
-      <ProtectedRoute
-        allowedRoles={[ROLES.STORE_MANAGER, ROLES.BRANCH_MANAGER]}
-      >
-        <StoreDashboardLayout />
+      <ProtectedRoute allowedRoles={[ROLES.BRAND_MANAGER]}>
+        <BrandDashboardLayout />
       </ProtectedRoute>
     ),
     children: [

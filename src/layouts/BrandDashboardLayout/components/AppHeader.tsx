@@ -39,13 +39,12 @@ import { useAuth } from '@/providers/AuthProvider';
 /**
  * Shared
  */
-import { ROLES } from '@/shared/constants/rolesConstants';
 import { useFullscreen } from '@/shared/hooks/useFullScreen';
 
 /**
  * Features
  */
-import { BranchSwitcher } from '@/features/manager/components/BranchSwitcher';
+import { StoreSwitcher } from '@/features/manager/components/StoreSwitcher';
 
 /**
  * Types
@@ -75,8 +74,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  const isManager = user?.role === ROLES.SYSTEM_ADMIN;
 
   const handleLogout = () => {
     logout.mutate(undefined, {
@@ -112,7 +109,10 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
         justify='space-between'
         className='w-full'
       >
-        <Flex gap='small'>
+        <Flex
+          gap='small'
+          align='center'
+        >
           <Button
             type='text'
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -123,8 +123,9 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
               height: 36,
             }}
           />
-          {isManager && <BranchSwitcher />}
+          <StoreSwitcher />
         </Flex>
+
         <Flex gap='small'>
           <Button
             type='text'
@@ -134,33 +135,36 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
                 color='blue'
                 count={5}
               >
-                <BellOutlined style={{ fontSize: '16px' }} />
+                <BellOutlined style={{ fontSize: 16 }} />
               </Badge>
             }
             style={{
+              fontSize: '16px',
               width: 36,
               height: 36,
             }}
           />
           <Button
             type='text'
-            icon={<MessageOutlined style={{ fontSize: '16px' }} />}
+            icon={<MessageOutlined style={{ fontSize: 16 }} />}
             style={{
+              fontSize: '16px',
               width: 36,
               height: 36,
             }}
           />
           <Button
             type='text'
-            onClick={toggleFullscreen}
             icon={
               isFullscreen ? (
-                <FullscreenExitOutlined style={{ fontSize: '16px' }} />
+                <FullscreenExitOutlined style={{ fontSize: 16 }} />
               ) : (
-                <FullscreenOutlined style={{ fontSize: '16px' }} />
+                <FullscreenOutlined style={{ fontSize: 16 }} />
               )
             }
+            onClick={toggleFullscreen}
             style={{
+              fontSize: '16px',
               width: 36,
               height: 36,
             }}
@@ -168,10 +172,13 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
           <Dropdown
             menu={{ items: userMenuItems }}
             placement='bottomRight'
+            arrow
           >
             <Avatar
-              src={user?.avatarUrl}
+              size={36}
+              src={avatarImage}
               icon={<UserOutlined />}
+              style={{ cursor: 'pointer' }}
             />
           </Dropdown>
         </Flex>

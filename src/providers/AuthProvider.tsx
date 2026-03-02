@@ -28,7 +28,6 @@ import { authService } from '@/features/auth/services/authService';
  * Types
  */
 import type {
-  AuthContextType,
   LoginPayload,
   User,
 } from '@/features/auth/types/authTypes';

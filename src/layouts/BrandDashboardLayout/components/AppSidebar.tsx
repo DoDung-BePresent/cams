@@ -5,21 +5,17 @@ import 'simplebar-react/dist/simplebar.min.css';
 /**
  * Shared
  */
-import { ROLES } from '@/shared/constants/rolesConstants';
 import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
 
 /**
  * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
 import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
 
 /**
  * Features
  */
-import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
-import { ADMIN_ROUTE_MAP } from '@/features/admin/constants/adminRouteMap';
 import { managerMenuItems } from '@/features/manager/constants/managerMenuItems';
 import { MANAGER_ROUTE_MAP } from '@/features/manager/constants/managerRouteMap';
 
@@ -46,16 +42,9 @@ const siderStyle: React.CSSProperties = {
 };
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
-  const { user } = useAuth();
-
-  const isStoreManager = user?.role === ROLES.STORE_MANAGER;
-  // FIXME: It's a bit redundant because we know that only person with BranchManager role can access this layout!
-  const menuItems = isStoreManager ? adminMenuItems : managerMenuItems;
-  const routeMap = isStoreManager ? ADMIN_ROUTE_MAP : MANAGER_ROUTE_MAP;
-
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
-    menuItems,
-    routeMap,
+    menuItems: managerMenuItems,
+    routeMap: MANAGER_ROUTE_MAP,
   });
 
   return (
@@ -81,7 +70,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           className='border-none!'
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
-          items={menuItems}
+          items={managerMenuItems}
           onClick={({ key }) => handleMenuClick(key)}
         />
         {!collapsed && <NavCard />}
