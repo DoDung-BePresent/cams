@@ -325,7 +325,7 @@ export const EditStoreDrawer = ({
                   rules={updateStoreValidation.areaSquareMeters}
                 >
                   <InputNumber
-                    className='w-full'
+                    className='w-full!'
                     placeholder='e.g., 95.0'
                     min={0.01}
                     step={0.1}
@@ -339,7 +339,7 @@ export const EditStoreDrawer = ({
                   rules={updateStoreValidation.maxCapacity}
                 >
                   <InputNumber
-                    className='w-full'
+                    className='w-full!'
                     placeholder='e.g., 60'
                     min={1}
                   />
