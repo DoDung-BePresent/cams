@@ -20,7 +20,7 @@ import { useUpdateStaff } from '@/features/manager/hooks/useUpdateStaff';
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger'; // ✅ Use shared component
+import { ImageDragger } from '@/shared/components/common/ImageDragger';
 
 /**
  * Types
@@ -109,13 +109,11 @@ export const EditStaffDrawer = ({
     onClose();
   };
 
-  // ✅ Use shared upload helper
   const uploadProps = createImageUploadProps<UpdateStaffRequest>(
     setAvatarFile,
     (field, value) => form.setFieldValue(field, value),
   );
 
-  // ✅ Get preview URL for avatar
   const getPreviewUrl = () => {
     if (avatarFile?.originFileObj) {
       return URL.createObjectURL(avatarFile.originFileObj);

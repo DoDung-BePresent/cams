@@ -48,9 +48,9 @@ export const storeService = {
       data,
     ),
 
-  // PATCH /api/stores/{id} (JSON body, partial update)
+  // PUT /api/stores/{id} (JSON body)
   update: (id: string, data: StoreRequest) =>
-    api.patch<{ isSuccess: boolean; message: string }>(
+    api.put<{ isSuccess: boolean; message: string }>(
       STORE_ENDPOINTS.update(id),
       data,
     ),
