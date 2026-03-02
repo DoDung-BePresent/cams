@@ -38,6 +38,11 @@ import {
  */
 import { updateStoreValidation } from '@/features/manager/validations/storeValidation';
 
+/**
+ * Components
+ */
+import { MapPicker } from '@/shared/components/map/MapPicker';
+
 const { Title } = Typography;
 const { TextArea } = Input;
 
@@ -94,6 +99,22 @@ export const EditStoreDrawer = ({
   const handleCancel = () => {
     form.resetFields();
     onClose();
+  };
+
+  // ✅ Auto-update lat/lng/mapUrl when user picks on map
+  const handleMapLocationChange = (location: { lat: number; lng: number }) => {
+    form.setFieldsValue({
+      latitude: location.lat,
+      longitude: location.lng,
+      mapUrl: `https://maps.google.com/?q=${location.lat},${location.lng}`,
+    });
+  };
+
+  // ✅ Auto-fill address from reverse geocoding
+  const handleAddressChange = (address: string) => {
+    form.setFieldsValue({
+      address: address,
+    });
   };
 
   return (
@@ -169,7 +190,7 @@ export const EditStoreDrawer = ({
             </Form.Item>
           </div>
 
-          {/* Location Information */}
+          {/* ✅ Location Section - Simplified */}
           <div style={{ marginBottom: 24 }}>
             <Title
               level={5}
@@ -178,17 +199,20 @@ export const EditStoreDrawer = ({
               Location
             </Title>
 
+            {/* Address Field */}
             <Form.Item
               label='Address'
               name='address'
               rules={updateStoreValidation.address}
+              extra='You can search on the map below to auto-fill this field'
             >
               <TextArea
                 rows={2}
-                placeholder='e.g., 789 Điện Biên Phủ, Phường 25'
+                placeholder='e.g., 789 Điện Biên Phủ, Phường 25, Bình Thạnh'
               />
             </Form.Item>
 
+            {/* City & District */}
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
@@ -228,43 +252,48 @@ export const EditStoreDrawer = ({
               </Col>
             </Row>
 
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label='Latitude'
-                  name='latitude'
-                  rules={updateStoreValidation.latitude}
-                >
-                  <InputNumber
-                    className='w-full'
-                    placeholder='e.g., 10.8028'
-                    step={0.0001}
-                    precision={4}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label='Longitude'
-                  name='longitude'
-                  rules={updateStoreValidation.longitude}
-                >
-                  <InputNumber
-                    className='w-full'
-                    placeholder='e.g., 106.7154'
-                    step={0.0001}
-                    precision={4}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
+            {/* ✅ Map Picker */}
             <Form.Item
-              label='Map URL'
-              name='mapUrl'
-              rules={updateStoreValidation.mapUrl}
+              label='Pinpoint Store Location on Map'
+              extra='Click on the map or search for the address to update coordinates'
             >
-              <Input placeholder='https://maps.google.com/?q=10.8028,106.7154' />
+              <Form.Item
+                noStyle
+                shouldUpdate
+              >
+                {({ getFieldValue }) => {
+                  const lat = getFieldValue('latitude');
+                  const lng = getFieldValue('longitude');
+                  return (
+                    <MapPicker
+                      value={lat && lng ? { lat, lng } : null}
+                      onChange={handleMapLocationChange}
+                      onAddressChange={handleAddressChange}
+                      height={400}
+                    />
+                  );
+                }}
+              </Form.Item>
+            </Form.Item>
+
+            {/* ✅ Hidden fields for lat/lng/mapUrl */}
+            <Form.Item
+              name='latitude'
+              hidden
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name='longitude'
+              hidden
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name='mapUrl'
+              hidden
+            >
+              <Input />
             </Form.Item>
           </div>
 
