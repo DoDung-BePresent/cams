@@ -210,6 +210,14 @@ export const CreateAccountDrawer = ({
             label='Password'
             name='password'
             rules={createAccountValidation.password}
+            extra={
+              <PasswordStrength
+                password={password}
+                onPasswordChange={handlePasswordChange}
+                showGenerator
+                description='This is the password to your account, so it must be strong and hard to guess.'
+              />
+            }
           >
             <Input.Password
               placeholder='Enter password'
@@ -217,13 +225,6 @@ export const CreateAccountDrawer = ({
               onChange={(e) => setPassword(e.target.value)}
             />
           </Form.Item>
-
-          <PasswordStrength
-            password={password}
-            onPasswordChange={handlePasswordChange}
-            showGenerator
-            description='This is the password to your account, so it must be strong and hard to guess.'
-          />
 
           <Form.Item
             label='Phone Number'

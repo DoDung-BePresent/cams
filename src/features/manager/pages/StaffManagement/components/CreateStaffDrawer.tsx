@@ -223,6 +223,14 @@ export const CreateStaffDrawer = ({
             label='Password'
             name='password'
             rules={createStaffValidation.password}
+            extra={
+              <PasswordStrength
+                password={password}
+                onPasswordChange={handlePasswordChange}
+                showGenerator
+                description='This is the password to your account, so it must be strong and hard to guess.'
+              />
+            }
           >
             <Input.Password
               placeholder='Enter password'
@@ -230,14 +238,6 @@ export const CreateStaffDrawer = ({
               onChange={(e) => setPassword(e.target.value)}
             />
           </Form.Item>
-
-          {/* ✅ Use shared PasswordStrength with generator */}
-          <PasswordStrength
-            password={password}
-            onPasswordChange={handlePasswordChange}
-            showGenerator
-            description='This is the password to your account, so it must be strong and hard to guess.'
-          />
 
           <Form.Item
             label='Assign Store'

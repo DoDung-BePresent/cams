@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, Input } from 'antd';
+import { Alert, Form, Input } from 'antd';
 
 /**
  * Hooks
@@ -80,6 +80,16 @@ export const ResetPasswordModal = ({
       }}
       width={550}
     >
+      <Alert
+        type='warning'
+        showIcon
+        title={
+          <p className='text-xs'>
+            User will be logged out after password reset!
+          </p>
+        }
+        className='mb-5!'
+      />
       <Form
         form={form}
         layout='vertical'
@@ -96,7 +106,14 @@ export const ResetPasswordModal = ({
           label='New Password'
           name='newPassword'
           rules={resetPasswordValidation.newPassword}
-          extra='User will be logged out after password reset.'
+          extra={
+            <PasswordStrength
+              password={password}
+              onPasswordChange={handlePasswordChange}
+              showGenerator
+              description='This is the password to your account, so it must be strong and hard to guess.'
+            />
+          }
         >
           <Input.Password
             placeholder='Enter new password'
@@ -104,13 +121,6 @@ export const ResetPasswordModal = ({
             onChange={(e) => setPassword(e.target.value)}
           />
         </Form.Item>
-
-        <PasswordStrength
-          password={password}
-          onPasswordChange={handlePasswordChange}
-          showGenerator
-          description='This is the password to your account, so it must be strong and hard to guess.'
-        />
       </Form>
     </AppModal>
   );

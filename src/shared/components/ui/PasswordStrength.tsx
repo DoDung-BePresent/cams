@@ -99,13 +99,15 @@ export const PasswordStrength = ({
   return (
     <Flex
       vertical
-      gap={8}
+      gap={4}
+      className='mt-2!'
     >
       {/* Strength Indicator */}
       {displayPassword && (
         <Flex
           gap={8}
           align='center'
+          className='mx-1!'
         >
           <div
             className='h-1.25 flex-1 rounded'
