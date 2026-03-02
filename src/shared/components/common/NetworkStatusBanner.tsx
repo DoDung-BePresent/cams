@@ -20,11 +20,11 @@ export const NetworkStatusBanner = () => {
   return (
     <div
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 9999,
+        // position: 'fixed',
+        // top: 0,
+        // left: 0,
+        // right: 0,
+        // zIndex: 9999,
         animation: 'slideDown 0.3s ease-out',
       }}
     >
@@ -33,6 +33,15 @@ export const NetworkStatusBanner = () => {
           description='You are offline. Some features are unavailable. Changes will sync when connection is restored.'
           type='error'
           icon={<DisconnectOutlined />}
+          styles={{
+            root: {
+              padding: '8px 12px',
+            },
+            close: {
+              fontSize: 16,
+              marginTop: 4
+            },
+          }}
           banner
           showIcon
           className='border-b-2! border-[var(--ant-color-error)]!'
@@ -42,8 +51,18 @@ export const NetworkStatusBanner = () => {
           description='Your internet connection is slow. Some features may take longer to load.'
           type='warning'
           icon={<WifiOutlined />}
+          styles={{
+            root: {
+              padding: '8px 12px',
+            },
+            close: {
+              fontSize: 16,
+              marginTop: 4
+            },
+          }}
           banner
           showIcon
+          closable
           className='border-b-2! border-[var(--ant-color-warning)]!'
         />
       ) : null}
