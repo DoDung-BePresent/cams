@@ -49,6 +49,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const { user } = useAuth();
 
   const isAdmin = user?.role === ROLES.SYSTEM_ADMIN;
+  // FIXME: It's a bit redundant because we know that only person with SystemAdmin role can access this layout!
   const menuItems = isAdmin ? adminMenuItems : managerMenuItems;
   const routeMap = isAdmin ? ADMIN_ROUTE_MAP : MANAGER_ROUTE_MAP;
 

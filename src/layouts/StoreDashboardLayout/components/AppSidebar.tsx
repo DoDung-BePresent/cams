@@ -1,4 +1,3 @@
-// src/layouts/StoreDashboardLayout/components/AppSidebar.tsx
 import { Flex, Layout, Menu } from 'antd';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
@@ -50,10 +49,10 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const { user } = useAuth();
 
   const isStoreManager = user?.role === ROLES.STORE_MANAGER;
+  // FIXME: It's a bit redundant because we know that only person with BranchManager role can access this layout!
   const menuItems = isStoreManager ? adminMenuItems : managerMenuItems;
   const routeMap = isStoreManager ? ADMIN_ROUTE_MAP : MANAGER_ROUTE_MAP;
 
-  // ✅ Use shared hook
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
     menuItems,
     routeMap,
