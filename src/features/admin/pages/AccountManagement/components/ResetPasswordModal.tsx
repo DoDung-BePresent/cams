@@ -74,6 +74,7 @@ export const ResetPasswordModal = ({
       onCancel={handleCancel}
       onOk={() => form.submit()}
       okText='Reset Password'
+      confirmLoading={resetPassword.isPending}
       okButtonProps={{
         loading: resetPassword.isPending,
         danger: true,

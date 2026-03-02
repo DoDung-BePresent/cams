@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Alert, Form, Input, Typography } from 'antd';
+import { Alert, Form, Input } from 'antd';
 
 /**
  * Hooks
  */
-import { useStaffDetail } from '@/features/manager/hooks/useStaffDetail';
 import { useResetStaffPassword } from '@/features/manager/hooks/useResetStaffPassword';
 
 /**
@@ -22,8 +21,6 @@ import type { ResetStaffPasswordRequest } from '@/features/manager/types/staffTy
  * Validations
  */
 import { resetPasswordValidation } from '@/features/manager/validations/staffValidation';
-
-const { Text } = Typography;
 
 type ResetPasswordModalProps = {
   open: boolean;
@@ -76,6 +73,7 @@ export const ResetPasswordModal = ({
       open={open}
       onCancel={handleCancel}
       onOk={() => form.submit()}
+      confirmLoading={resetPassword.isPending}
       okText='Reset Password'
       okButtonProps={{
         loading: resetPassword.isPending,
