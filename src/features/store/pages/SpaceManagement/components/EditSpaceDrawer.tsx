@@ -129,6 +129,11 @@ export const EditSpaceDrawer = ({
           layout='vertical'
           onFinish={handleSubmit}
           autoComplete='off'
+          styles={{
+            label: {
+              height: 22,
+            },
+          }}
         >
           <Form.Item
             label='Space Name'
@@ -183,30 +188,6 @@ export const EditSpaceDrawer = ({
               style={{ width: '100%' }}
               placeholder='e.g., 10'
             />
-          </Form.Item>
-
-          <Form.Item
-            label='Camera ID'
-            name='cameraId'
-            extra='Optional: Link a camera device to monitor this space'
-          >
-            <Input placeholder='e.g., CAM-001' />
-          </Form.Item>
-
-          <Form.Item
-            label='ROI Coordinates'
-            name='roiCoordinates'
-            extra='Optional: Region of Interest for camera tracking'
-          >
-            <Input placeholder='e.g., 100,200,300,400' />
-          </Form.Item>
-
-          <Form.Item
-            label='WiFi Sensor ID'
-            name='wiFiSensorId'
-            extra='Optional: Link WiFi sensor for occupancy tracking'
-          >
-            <Input placeholder='e.g., WIFI-001' />
           </Form.Item>
 
           {/* Read-only info */}

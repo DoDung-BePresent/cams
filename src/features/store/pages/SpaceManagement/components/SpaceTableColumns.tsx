@@ -1,9 +1,11 @@
-import { Tag, Button, Space, Tooltip } from 'antd';
+import { Tag, Dropdown, Button } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
   PoweroffOutlined,
+  MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -42,7 +44,7 @@ export const getSpaceColumns = ({
     width: 200,
     fixed: 'left',
     sorter: true,
-    render: (name: string) => <strong>{name}</strong>,
+    // render: (name: string) => <p>{name}</p>,
   },
   {
     title: 'Type',
@@ -92,44 +94,58 @@ export const getSpaceColumns = ({
     title: 'Actions',
     key: 'actions',
     fixed: 'right',
-    width: 200,
-    render: (_, record) => (
-      <Space size='small'>
-        <Tooltip title='View Details'>
+    width: 80,
+    render: (_, record) => {
+      const items: MenuProps['items'] = [
+        {
+          key: 'view',
+          icon: <EyeOutlined />,
+          label: 'View Details',
+          onClick: () => onView(record.id),
+        },
+        {
+          key: 'edit',
+          icon: <EditOutlined />,
+          label: 'Edit Space',
+          onClick: () => onEdit(record.id),
+        },
+        {
+          type: 'divider',
+        },
+        {
+          key: 'toggle-status',
+          icon: <PoweroffOutlined />,
+          label:
+            record.status === EntityStatusEnum.Active
+              ? 'Deactivate'
+              : 'Activate',
+          onClick: () => onToggleStatus(record.id),
+          danger: record.status === EntityStatusEnum.Active,
+        },
+        {
+          type: 'divider',
+        },
+        {
+          key: 'delete',
+          icon: <DeleteOutlined />,
+          label: 'Delete Space',
+          onClick: () => onDelete(record.id),
+          danger: true,
+        },
+      ];
+
+      return (
+        <Dropdown
+          menu={{ items }}
+          trigger={['click']}
+          placement='bottomRight'
+        >
           <Button
             type='text'
-            size='small'
-            icon={<EyeOutlined />}
-            onClick={() => onView(record.id)}
+            icon={<MoreOutlined />}
           />
-        </Tooltip>
-        <Tooltip title='Edit Space'>
-          <Button
-            type='text'
-            size='small'
-            icon={<EditOutlined />}
-            onClick={() => onEdit(record.id)}
-          />
-        </Tooltip>
-        <Tooltip title='Toggle Status'>
-          <Button
-            type='text'
-            size='small'
-            icon={<PoweroffOutlined />}
-            onClick={() => onToggleStatus(record.id)}
-            danger={record.status === EntityStatusEnum.Active}
-          />
-        </Tooltip>
-        <Tooltip title='Delete Space'>
-          <Button
-            type='text'
-            size='small'
-            icon={<DeleteOutlined />}
-            onClick={() => onDelete(record.id)}
-            danger
-          />
-        </Tooltip>
-      </Space>
-    ),
+        </Dropdown>
+      );
+    },
   },
 ];

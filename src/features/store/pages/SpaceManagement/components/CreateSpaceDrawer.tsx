@@ -1,4 +1,14 @@
-import { Button, Drawer, Form, Input, Select, InputNumber, Flex } from 'antd';
+import {
+  Button,
+  Drawer,
+  Form,
+  Input,
+  Select,
+  InputNumber,
+  Flex,
+  Row,
+  Col,
+} from 'antd';
 
 /**
  * Hooks
@@ -84,6 +94,11 @@ export const CreateSpaceDrawer = ({
         layout='vertical'
         onFinish={handleSubmit}
         autoComplete='off'
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           label='Space Name'
@@ -115,55 +130,37 @@ export const CreateSpaceDrawer = ({
           />
         </Form.Item>
 
-        <Form.Item
-          label='Max Occupancy'
-          name='maxOccupancy'
-          rules={createSpaceValidation.maxOccupancy}
-          extra='Maximum number of people allowed in this space'
-        >
-          <InputNumber
-            min={1}
-            style={{ width: '100%' }}
-            placeholder='e.g., 50'
-          />
-        </Form.Item>
-
-        <Form.Item
-          label='Critical Queue Threshold'
-          name='criticalQueueThreshold'
-          rules={createSpaceValidation.criticalQueueThreshold}
-          extra='Trigger alert when queue exceeds this number'
-        >
-          <InputNumber
-            min={1}
-            style={{ width: '100%' }}
-            placeholder='e.g., 10'
-          />
-        </Form.Item>
-
-        <Form.Item
-          label='Camera ID'
-          name='cameraId'
-          extra='Optional: Link a camera device to monitor this space'
-        >
-          <Input placeholder='e.g., CAM-001' />
-        </Form.Item>
-
-        <Form.Item
-          label='ROI Coordinates'
-          name='roiCoordinates'
-          extra='Optional: Region of Interest for camera tracking'
-        >
-          <Input placeholder='e.g., 100,200,300,400' />
-        </Form.Item>
-
-        <Form.Item
-          label='WiFi Sensor ID'
-          name='wiFiSensorId'
-          extra='Optional: Link WiFi sensor for occupancy tracking'
-        >
-          <Input placeholder='e.g., WIFI-001' />
-        </Form.Item>
+        <Row gutter={16}>
+          <Col span={12}>
+            {' '}
+            <Form.Item
+              label='Max Occupancy'
+              name='maxOccupancy'
+              rules={createSpaceValidation.maxOccupancy}
+              // extra='Maximum number of people allowed in this space'
+            >
+              <InputNumber
+                min={1}
+                style={{ width: '100%' }}
+                placeholder='e.g., 50'
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label='Critical Queue Threshold'
+              name='criticalQueueThreshold'
+              rules={createSpaceValidation.criticalQueueThreshold}
+              // extra='Trigger alert when queue exceeds this number'
+            >
+              <InputNumber
+                min={1}
+                style={{ width: '100%' }}
+                placeholder='e.g., 10'
+              />
+            </Form.Item>
+          </Col>
+        </Row>
       </Form>
     </Drawer>
   );

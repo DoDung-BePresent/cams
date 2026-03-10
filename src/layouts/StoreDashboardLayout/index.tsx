@@ -5,6 +5,7 @@ import { Layout } from 'antd';
  * Components
  */
 import { AppHeader, AppSidebar, AppContent, AppFooter } from './components';
+import { Outlet } from 'react-router';
 
 export const StoreDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -19,9 +20,11 @@ export const StoreDashboardLayout = () => {
       <Layout>
         <AppHeader
           collapsed={collapsed}
-          onToggle={toggleCollapsed}
+          onClick={toggleCollapsed}
         />
-        <AppContent />
+        <AppContent>
+          <Outlet />
+        </AppContent>
         <AppFooter />
       </Layout>
     </Layout>

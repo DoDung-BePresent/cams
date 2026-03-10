@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { spaceService } from '../services';
 import type { CreateSpaceRequest } from '../types';
+import { showErrorMessage } from '@/shared/utils/errorHandler';
 
 /**
  * Hook to create new space
@@ -17,9 +18,7 @@ export const useCreateSpace = () => {
       message.success(response.data.message || 'Space created successfully');
     },
     onError: (error: any) => {
-      const errorMessage =
-        error?.response?.data?.message || 'Failed to create space';
-      message.error(errorMessage);
+      showErrorMessage(error, 'Failed to create space');
     },
   });
 };
