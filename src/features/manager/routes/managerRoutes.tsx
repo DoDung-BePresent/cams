@@ -5,6 +5,16 @@ const ManagerDashboard = Loadable(
   'ManagerDashboard',
 );
 
+const StoreList = Loadable(
+  () => import('@/features/manager/pages/StoreManagement/StoreList'),
+  'StoreList',
+);
+
+const StaffList = Loadable(
+  () => import('@/features/manager/pages/StaffManagement/StaffList'),
+  'StaffList',
+);
+
 const SpaceList = Loadable(
   () => import('@/features/manager/pages/SpaceManagement/SpaceList'),
   'SpaceList',
@@ -19,6 +29,14 @@ export const managerRoutes = [
   {
     path: 'dashboard',
     element: <ManagerDashboard />,
+  },
+  {
+    path: 'stores',
+    element: <StoreList />,
+  },
+  {
+    path: 'staff',
+    element: <StaffList />,
   },
   {
     path: 'spaces',

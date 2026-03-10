@@ -1,5 +1,4 @@
 import { Flex, Layout, Menu } from 'antd';
-import { useNavigate } from 'react-router';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
@@ -11,15 +10,18 @@ import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
 
 /**
- * Providers
+ * Hooks
  */
 import { useAuth } from '@/providers/AuthProvider';
+import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
 
 /**
  * Features
  */
 import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
+import { ADMIN_ROUTE_MAP } from '@/features/admin/constants/adminRouteMap';
 import { managerMenuItems } from '@/features/manager/constants/managerMenuItems';
+import { MANAGER_ROUTE_MAP } from '@/features/manager/constants/managerRouteMap';
 
 /**
  * Components
@@ -45,48 +47,16 @@ const siderStyle: React.CSSProperties = {
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
-  const menuItems =
-    user?.role === ROLES.SYSTEM_ADMIN ? adminMenuItems : managerMenuItems;
+  const isAdmin = user?.role === ROLES.SYSTEM_ADMIN;
+  // FIXME: It's a bit redundant because we know that only person with SystemAdmin role can access this layout!
+  const menuItems = isAdmin ? adminMenuItems : managerMenuItems;
+  const routeMap = isAdmin ? ADMIN_ROUTE_MAP : MANAGER_ROUTE_MAP;
 
-  // Update handleMenuClick function
-  const handleMenuClick = (key: string) => {
-    const routeMap: Record<string, string> = {
-      // Admin routes
-      'admin-dashboard': '/admin/dashboard',
-      'brand-management': '/admin/brands',
-      'user-management': '/admin/users',
-      'music-library': '/admin/music',
-      'playlist-templates': '/admin/playlists',
-      'mood-genre-tags': '/admin/tags',
-      'rule-settings': '/admin/ai/rules',
-      'external-ai-music-api': '/admin/ai/api',
-      'data-mapping': '/admin/pos/mapping',
-      'sync-status': '/admin/pos/sync',
-      'music-decision-logs': '/admin/logs/music-decisions',
-      'api-call-logs': '/admin/logs/api-calls',
-      'error-logs': '/admin/logs/errors',
-
-      // Manager routes
-      dashboard: '/manager/dashboard',
-      spaces: '/manager/spaces', // NEW
-      devices: '/manager/devices', // NEW
-      'auto-manual-mode': '/manager/music-control/mode',
-      'playback-control': '/manager/music-control/playback',
-      'time-based-rules': '/manager/schedule/time-based',
-      'event-based-rules': '/manager/schedule/event-based',
-      'music-vs-sales': '/manager/reports/music-sales',
-      'customer-engagement': '/manager/reports/engagement',
-      'playback-history': '/manager/reports/history',
-      settings: '/manager/settings',
-    };
-
-    const route = routeMap[key];
-    if (route) {
-      navigate(route);
-    }
-  };
+  const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
+    menuItems,
+    routeMap,
+  });
 
   return (
     <Sider
@@ -109,7 +79,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           theme='light'
           mode='inline'
           className='border-none!'
-          defaultSelectedKeys={['dashboard']}
+          selectedKeys={selectedKeys}
+          defaultOpenKeys={openKeys}
           items={menuItems}
           onClick={({ key }) => handleMenuClick(key)}
         />

@@ -1,6 +1,8 @@
 import type { MenuProps } from 'antd';
 import {
   DashboardOutlined,
+  ShopOutlined,
+  TeamOutlined,
   ControlOutlined,
   ScheduleOutlined,
   BarChartOutlined,
@@ -25,10 +27,20 @@ export const managerMenuItems: MenuItem[] = [
     ],
   },
   {
-    key: 'configuration-group',
-    label: 'Configuration',
+    key: 'management-group',
+    label: 'Management',
     type: 'group',
     children: [
+      {
+        key: 'stores',
+        icon: <ShopOutlined />,
+        label: 'Store Management',
+      },
+      {
+        key: 'staff',
+        icon: <TeamOutlined />,
+        label: 'Staff Management',
+      },
       {
         key: 'spaces',
         icon: <EnvironmentOutlined />,
@@ -53,7 +65,7 @@ export const managerMenuItems: MenuItem[] = [
         children: [
           {
             key: 'auto-manual-mode',
-            label: 'Auto / Manual Mode',
+            label: 'Auto/Manual Mode',
           },
           {
             key: 'playback-control',
@@ -79,14 +91,14 @@ export const managerMenuItems: MenuItem[] = [
     ],
   },
   {
-    key: 'analytics-group',
-    label: 'Analytics',
+    key: 'reports-group',
+    label: 'Reports',
     type: 'group',
     children: [
       {
         key: 'reports',
         icon: <BarChartOutlined />,
-        label: 'Reports',
+        label: 'Analytics',
         children: [
           {
             key: 'music-vs-sales',
@@ -112,7 +124,7 @@ export const managerMenuItems: MenuItem[] = [
       {
         key: 'settings',
         icon: <SettingOutlined />,
-        label: 'Store Preferences',
+        label: 'Settings',
       },
     ],
   },

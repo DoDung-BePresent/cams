@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
 
 @theme {
   --color-primary: var(--ant-color-primary);
@@ -23,6 +24,30 @@
   }
 }
 
+/* ===== KEY FRAMES ===== */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+/* ===== BASE CSS ===== */
 @layer base {
   body {
     font-family: 'Inter', sans-serif;
@@ -39,6 +64,11 @@
     margin-right: 0;
     margin-left: 4px;
   }
+}
+
+/* ===== LEAFLET ===== */
+.leaflet-default-icon-path {
+  background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
 }
 
 /* Custom Ant Design Menu styles */

@@ -10,14 +10,9 @@ const BrandList = Loadable(
   'BrandList',
 );
 
-const UserList = Loadable(
-  () => import('@/features/admin/pages/UserManagement/UserList'),
-  'UserList',
-);
-
-const UserDetail = Loadable(
-  () => import('@/features/admin/pages/UserManagement/UserDetail'),
-  'UserDetail',
+const AccountList = Loadable(
+  () => import('@/features/admin/pages/AccountManagement/AccountList'),
+  'AccountList',
 );
 
 export const adminRoutes = [
@@ -30,11 +25,7 @@ export const adminRoutes = [
     element: <BrandList />,
   },
   {
-    path: 'users',
-    element: <UserList />,
-  },
-  {
-    path: 'users/:userId',
-    element: <UserDetail />,
+    path: 'accounts',
+    element: <AccountList />,
   },
 ];
