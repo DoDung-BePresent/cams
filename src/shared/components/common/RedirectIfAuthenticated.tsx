@@ -12,7 +12,7 @@ import { ROLES } from '@/shared/constants/rolesConstants';
 
 const ROLE_HOME_MAP: Record<string, string> = {
   [ROLES.SYSTEM_ADMIN]: '/admin/dashboard',
-  [ROLES.BRAND_MANAGER]: '/manager/dashboard',
+  [ROLES.BRAND_MANAGER]: '/brand/dashboard',
   [ROLES.STORE_MANAGER]: '/staff/dashboard',
 };
 

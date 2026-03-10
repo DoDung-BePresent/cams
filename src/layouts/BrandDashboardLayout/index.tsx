@@ -8,7 +8,7 @@ import { useState } from 'react';
 /**
  * Features
  */
-import { MusicPlayer } from '@/features/manager/components/MusicPlayer';
+import { MusicPlayer } from '@/features/brand/components/MusicPlayer';
 
 /**
  * Components

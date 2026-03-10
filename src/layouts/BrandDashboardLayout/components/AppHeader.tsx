@@ -44,7 +44,7 @@ import { useFullscreen } from '@/shared/hooks/useFullScreen';
 /**
  * Features
  */
-import { StoreSwitcher } from '@/features/manager/components/StoreSwitcher';
+import { StoreSwitcher } from '@/features/brand/components/StoreSwitcher';
 
 /**
  * Types

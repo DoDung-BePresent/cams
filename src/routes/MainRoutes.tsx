@@ -16,7 +16,7 @@ import { ProtectedRoute } from '@/shared/components/common/ProtectedRoute';
  * Features
  */
 import { adminRoutes } from '@/features/admin/routes/adminRoutes';
-import { managerRoutes } from '@/features/manager/routes/managerRoutes';
+import { brandRoutes } from '@/features/brand/routes/brandRoutes';
 
 export const MainRoutes = [
   {
@@ -40,7 +40,7 @@ export const MainRoutes = [
     ],
   },
   {
-    path: '/manager',
+    path: '/brand',
     element: (
       <ProtectedRoute allowedRoles={[ROLES.BRAND_MANAGER]}>
         <BrandDashboardLayout />
@@ -51,12 +51,12 @@ export const MainRoutes = [
         index: true,
         element: (
           <Navigate
-            to='/manager/dashboard'
+            to='/brand/dashboard'
             replace
           />
         ),
       },
-      ...managerRoutes,
+      ...brandRoutes,
     ],
   },
 ];

@@ -48,7 +48,7 @@ import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 /**
  * Components
  */
-import { BranchSwitcher } from '@/features/manager/components/BranchSwitcher';
+import { BranchSwitcher } from '@/features/brand/components/BranchSwitcher';
 
 /**
  * Types
