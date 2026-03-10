@@ -38,6 +38,12 @@ export const getSpaceColumns = ({
   onToggleStatus,
 }: SpaceColumnActions): ColumnsType<SpaceListItem> => [
   {
+    title: 'No.',
+    key: 'index',
+    width: 70,
+    render: (_text, _record, index) => index + 1,
+  },
+  {
     title: 'Space Name',
     dataIndex: 'name',
     key: 'name',
