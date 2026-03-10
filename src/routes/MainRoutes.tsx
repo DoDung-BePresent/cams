@@ -5,6 +5,7 @@ import { Navigate } from 'react-router';
  */
 import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
 import { BrandDashboardLayout } from '@/layouts/BrandDashboardLayout';
+import { StoreDashboardLayout } from '@/layouts/StoreDashboardLayout';
 
 /**
  * Shared
@@ -17,6 +18,7 @@ import { ProtectedRoute } from '@/shared/components/common/ProtectedRoute';
  */
 import { adminRoutes } from '@/features/admin/routes/adminRoutes';
 import { brandRoutes } from '@/features/brand/routes/brandRoutes';
+import { storeRoutes } from '@/features/store/routes/storeRoutes';
 
 export const MainRoutes = [
   {
@@ -57,6 +59,26 @@ export const MainRoutes = [
         ),
       },
       ...brandRoutes,
+    ],
+  },
+  {
+    path: '/store',
+    element: (
+      <ProtectedRoute allowedRoles={[ROLES.STORE_MANAGER]}>
+        <StoreDashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <Navigate
+            to='/store/dashboard'
+            replace
+          />
+        ),
+      },
+      ...storeRoutes,
     ],
   },
 ];
