@@ -14,8 +14,7 @@ import {
 /**
  * Hooks
  */
-import { useCreateStaff } from '@/features/brand/hooks/useCreateStaff';
-import { useStores } from '@/features/brand/hooks/useStores';
+import { useCreateStaff, useStores } from '@/features/brand/hooks';
 
 /**
  * Components

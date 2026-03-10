@@ -29,7 +29,7 @@ import {
   STAFF_STATUS_LABELS,
   STAFF_ROLE_LABEL,
   STAFF_ROLE_COLOR,
-} from '@/features/brand/constants/staffStatusConstants';
+} from '@/shared/constants/staffConstants';
 
 type StaffColumnsProps = {
   onView: (id: string) => void;

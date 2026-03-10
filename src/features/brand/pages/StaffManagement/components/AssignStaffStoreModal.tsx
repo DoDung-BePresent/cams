@@ -4,9 +4,11 @@ import { Alert, Form, Select } from 'antd';
 /**
  * Hooks
  */
-import { useStaffDetail } from '@/features/brand/hooks/useStaffDetail';
-import { useAssignStaffStore } from '@/features/brand/hooks/useAssignStaffStore';
-import { useStores } from '@/features/brand/hooks/useStores';
+import {
+  useStaffDetail,
+  useAssignStaffStore,
+  useStores,
+} from '@/features/brand/hooks';
 
 /**
  * Components

@@ -42,11 +42,6 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useFullscreen } from '@/shared/hooks/useFullScreen';
 
 /**
- * Features
- */
-import { StoreSwitcher } from '@/features/brand/components/StoreSwitcher';
-
-/**
  * Types
  */
 type AppHeaderProps = {
@@ -123,7 +118,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
               height: 36,
             }}
           />
-          <StoreSwitcher />
         </Flex>
 
         <Flex gap='small'>

@@ -16,8 +16,7 @@ import {
 /**
  * Hooks
  */
-import { useStore } from '@/features/brand/hooks/useStore';
-import { useUpdateStore } from '@/features/brand/hooks/useUpdateStore';
+import { useStore, useUpdateStore } from '@/features/brand/hooks';
 
 /**
  * Types
@@ -28,10 +27,10 @@ import type { StoreRequest } from '@/features/brand/types/storeTypes';
  * Constants
  */
 import {
-  VIETNAM_CITIES,
   HCMC_DISTRICTS,
   TIMEZONE_OPTIONS,
-} from '@/features/brand/constants/storeConstants';
+  VIETNAM_CITIES,
+} from '@/shared/constants/storeConstants';
 
 /**
  * Validations

@@ -29,11 +29,6 @@ import {
 } from '@ant-design/icons';
 
 /**
- * Assets
- */
-import avatarImage from '@/assets/images/avatar-1.png';
-
-/**
  * Constants
  */
 import { ROLES } from '@/shared/constants/rolesConstants';
@@ -44,11 +39,6 @@ import { ROLES } from '@/shared/constants/rolesConstants';
 import { useAuth } from '@/providers/AuthProvider';
 import { useFullscreen } from '@/shared/hooks/useFullScreen';
 import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
-
-/**
- * Components
- */
-import { BranchSwitcher } from '@/features/brand/components/BranchSwitcher';
 
 /**
  * Types
@@ -130,7 +120,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
               height: 36,
             }}
           />
-          {isManager && <BranchSwitcher />}
           {!isOnline && (
             <Tag
               icon={<DisconnectOutlined />}

@@ -12,7 +12,7 @@ import { EntityStatusEnum } from '@/shared/types/commonTypes';
 import {
   STORE_STATUS_COLORS,
   STORE_STATUS_LABELS,
-} from '@/features/brand/constants/storeStatusConstants';
+} from '@/shared/constants/storeConstants';
 
 type StoreColumnsProps = {
   onView: (id: string) => void;

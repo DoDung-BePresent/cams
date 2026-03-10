@@ -14,8 +14,7 @@ import {
 /**
  * Hooks
  */
-import { useStaffDetail } from '@/features/brand/hooks/useStaffDetail';
-import { useUpdateStaff } from '@/features/brand/hooks/useUpdateStaff';
+import { useStaffDetail, useUpdateStaff } from '@/features/brand/hooks';
 
 /**
  * Components

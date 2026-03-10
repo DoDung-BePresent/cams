@@ -10,8 +10,7 @@ import { PlusOutlined } from '@ant-design/icons';
 /**
  * Hooks
  */
-import { useStores } from '@/features/brand/hooks/useStores';
-import { useToggleStoreStatus } from '@/features/brand/hooks/useToggleStoreStatus';
+import { useStores, useToggleStoreStatus } from '@/features/brand/hooks';
 
 /**
  * Components

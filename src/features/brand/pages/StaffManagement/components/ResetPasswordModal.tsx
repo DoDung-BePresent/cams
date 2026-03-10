@@ -4,7 +4,7 @@ import { Alert, Form, Input } from 'antd';
 /**
  * Hooks
  */
-import { useResetStaffPassword } from '@/features/brand/hooks/useResetStaffPassword';
+import { useResetStaffPassword } from '@/features/brand/hooks';
 
 /**
  * Components
