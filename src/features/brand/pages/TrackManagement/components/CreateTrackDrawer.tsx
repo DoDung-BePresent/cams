@@ -126,7 +126,7 @@ export const CreateTrackDrawer = ({
     <Drawer
       title='Upload New Track'
       placement='right'
-      width={720}
+      width={620}
       open={open}
       onClose={handleCancel}
       closeIcon={null}

@@ -31,6 +31,12 @@ export const getTrackColumns = ({
   onPreview,
 }: TrackColumnActions): ColumnsType<TrackListItem> => [
   {
+    title: 'No.',
+    key: 'index',
+    width: 70,
+    render: (_text, _record, index) => index + 1,
+  },
+  {
     title: 'Cover',
     dataIndex: 'coverImageUrl',
     key: 'coverImageUrl',
