@@ -166,17 +166,18 @@ export const TrackList = () => {
       />
 
       {/* Search & Filters Card */}
-      <Card style={{ marginBottom: 16 }}>
+      <Card className='rounded-b-none!'>
         <Space
           direction='vertical'
           size='middle'
           style={{ width: '100%' }}
         >
           <Flex
-            gap='middle'
+            justify='space-between'
             wrap='wrap'
           >
             <Input
+              size='large'
               placeholder='Search by title or artist...'
               prefix={<SearchOutlined />}
               value={filter.search}
@@ -185,81 +186,86 @@ export const TrackList = () => {
               allowClear
             />
 
-            <Button
-              icon={<FilterOutlined />}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? 'Hide' : 'Show'} Filters
-            </Button>
+            <Space>
+              <Button
+                size='large'
+                icon={<FilterOutlined />}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                {showFilters ? 'Hide' : 'Show'} Filters
+              </Button>
 
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => refetch()}
-            >
-              Refresh
-            </Button>
-
-            {(filter.search ||
-              filter.genre ||
-              filter.moodId ||
-              filter.provider !== undefined ||
-              filter.status !== undefined) && (
-              <Button onClick={handleReset}>Reset Filters</Button>
-            )}
+              <Button
+                size='large'
+                icon={<ReloadOutlined />}
+                onClick={() => refetch()}
+              >
+                Refresh
+              </Button>
+              {(filter.search ||
+                filter.genre ||
+                filter.moodId ||
+                filter.provider !== undefined ||
+                filter.status !== undefined) && (
+                <Button onClick={handleReset}>Reset Filters</Button>
+              )}
+            </Space>
           </Flex>
 
           {/* Advanced Filters */}
           {showFilters && (
-            <Card size='small'>
-              <Row gutter={[16, 16]}>
-                <Col span={6}>
-                  <Select
-                    placeholder='Filter by Genre'
-                    options={GENRE_OPTIONS}
-                    value={filter.genre}
-                    onChange={(value) => handleFilterChange('genre', value)}
-                    style={{ width: '100%' }}
-                    allowClear
-                  />
-                </Col>
-                <Col span={6}>
-                  <Select
-                    placeholder='Filter by Provider'
-                    options={MUSIC_PROVIDER_OPTIONS}
-                    value={filter.provider}
-                    onChange={(value) => handleFilterChange('provider', value)}
-                    style={{ width: '100%' }}
-                    allowClear
-                  />
-                </Col>
-                <Col span={6}>
-                  <Select
-                    placeholder='Filter by Status'
-                    options={ENTITY_STATUS_OPTIONS}
-                    value={filter.status}
-                    onChange={(value) => handleFilterChange('status', value)}
-                    style={{ width: '100%' }}
-                    allowClear
-                  />
-                </Col>
-                <Col span={6}>
-                  <Select
-                    placeholder='AI Generated'
-                    options={[
-                      { label: 'All', value: undefined },
-                      { label: 'AI Generated', value: true },
-                      { label: 'Custom Upload', value: false },
-                    ]}
-                    value={filter.isAiGenerated}
-                    onChange={(value) =>
-                      handleFilterChange('isAiGenerated', value)
-                    }
-                    style={{ width: '100%' }}
-                    allowClear
-                  />
-                </Col>
-              </Row>
-            </Card>
+            <Row gutter={[16, 16]}>
+              <Col span={6}>
+                <Select
+                  size='large'
+                  placeholder='Filter by Genre'
+                  options={GENRE_OPTIONS}
+                  value={filter.genre}
+                  onChange={(value) => handleFilterChange('genre', value)}
+                  style={{ width: '100%' }}
+                  allowClear
+                />
+              </Col>
+              <Col span={6}>
+                <Select
+                  size='large'
+                  placeholder='Filter by Provider'
+                  options={MUSIC_PROVIDER_OPTIONS}
+                  value={filter.provider}
+                  onChange={(value) => handleFilterChange('provider', value)}
+                  style={{ width: '100%' }}
+                  allowClear
+                />
+              </Col>
+              <Col span={6}>
+                <Select
+                  size='large'
+                  placeholder='Filter by Status'
+                  options={ENTITY_STATUS_OPTIONS}
+                  value={filter.status}
+                  onChange={(value) => handleFilterChange('status', value)}
+                  style={{ width: '100%' }}
+                  allowClear
+                />
+              </Col>
+              <Col span={6}>
+                <Select
+                  size='large'
+                  placeholder='AI Generated'
+                  options={[
+                    { label: 'All', value: undefined },
+                    { label: 'AI Generated', value: true },
+                    { label: 'Custom Upload', value: false },
+                  ]}
+                  value={filter.isAiGenerated}
+                  onChange={(value) =>
+                    handleFilterChange('isAiGenerated', value)
+                  }
+                  style={{ width: '100%' }}
+                  allowClear
+                />
+              </Col>
+            </Row>
           )}
 
           {/* Active Filters Display */}
@@ -324,6 +330,7 @@ export const TrackList = () => {
         }}
         onChange={handleTableChange}
         scroll={{ x: 1400 }}
+        className='rounded-t-none! border-t-0!'
       />
 
       {/* Drawers */}
