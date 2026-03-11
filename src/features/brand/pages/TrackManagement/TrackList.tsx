@@ -1,27 +1,15 @@
 import { useState } from 'react';
-import {
-  Card,
-  Button,
-  Input,
-  Space,
-  Flex,
-  Select,
-  Modal,
-  Tag,
-  Row,
-  Col,
-  Statistic,
-} from 'antd';
+import { useNavigate } from 'react-router';
+import { Button, Card, Input, Space, Flex, Select, Tag, Row, Col } from 'antd';
 import {
   PlusOutlined,
   SearchOutlined,
   ReloadOutlined,
   FilterOutlined,
-  SoundOutlined,
-  PlayCircleOutlined,
 } from '@ant-design/icons';
-import { MusicIcon } from 'lucide-react';
+import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
+import { AppModal } from '@/shared/components/ui/AppModal';
 import {
   useTracks,
   useDeleteTrack,
@@ -42,9 +30,8 @@ import {
   TrackDetailsDrawer,
 } from './components';
 
-const { confirm } = Modal;
-
 export const TrackList = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<TrackFilter>({
     page: 1,
     pageSize: 10,
@@ -97,13 +84,15 @@ export const TrackList = () => {
   };
 
   const handleDelete = (id: string) => {
-    confirm({
+    AppModal.confirm({
       title: 'Delete Track',
       content:
         'Are you sure you want to delete this track? This action cannot be undone.',
       okText: 'Delete',
-      okType: 'danger',
       cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
       onOk: () => {
         deleteTrack.mutate(id, {
           onSuccess: () => refetch(),
@@ -113,7 +102,7 @@ export const TrackList = () => {
   };
 
   const handleToggleStatus = (id: string) => {
-    confirm({
+    AppModal.confirm({
       title: 'Toggle Track Status',
       content: 'Are you sure you want to change this track status?',
       okText: 'Confirm',
@@ -140,6 +129,17 @@ export const TrackList = () => {
     });
   };
 
+  const breadcrumbs = [
+    {
+      title: 'Dashboard',
+      onClick: () => navigate('/brand/dashboard'),
+      className: 'cursor-pointer',
+    },
+    {
+      title: 'Track Management',
+    },
+  ];
+
   const columns = getTrackColumns({
     onView: handleView,
     onEdit: handleEdit,
@@ -149,237 +149,182 @@ export const TrackList = () => {
   });
 
   return (
-    <>
-      <Space
-        direction='vertical'
-        size='large'
-        style={{ width: '100%' }}
-      >
-        {/* Statistics Cards */}
-        <Row gutter={16}>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title='Total Tracks'
-                value={data?.totalItems || 0}
-                prefix={<MusicIcon />}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title='Active Tracks'
-                value={data?.items.filter((t) => t.status === 1).length || 0}
-                prefix={<SoundOutlined />}
-                valueStyle={{ color: '#52c41a' }}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title='Total Plays'
-                value={
-                  data?.items.reduce((sum, t) => sum + t.playCount, 0) || 0
-                }
-                prefix={<PlayCircleOutlined />}
-                valueStyle={{ color: '#1890ff' }}
-              />
-            </Card>
-          </Col>
-          <Col span={6}>
-            <Card>
-              <Statistic
-                title='AI Generated'
-                value={data?.items.filter((t) => t.isAiGenerated).length || 0}
-                prefix={<MusicIcon />}
-                valueStyle={{ color: '#722ed1' }}
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Main Content Card */}
-        <Card
-          title={
-            <Flex
-              justify='space-between'
-              align='center'
-            >
-              <span>Track Library</span>
-              <Space>
-                <Button
-                  type='primary'
-                  icon={<PlusOutlined />}
-                  onClick={() => setCreateDrawerOpen(true)}
-                >
-                  Upload Track
-                </Button>
-              </Space>
-            </Flex>
-          }
-        >
-          {/* Search & Filters */}
-          <Space
-            direction='vertical'
-            size='middle'
-            style={{ width: '100%' }}
+    <div>
+      <PageHeader
+        title='Track Library'
+        breadcrumbs={breadcrumbs}
+        extra={
+          <Button
+            size='large'
+            type='primary'
+            icon={<PlusOutlined />}
+            onClick={() => setCreateDrawerOpen(true)}
           >
-            <Flex
-              gap='middle'
-              wrap='wrap'
+            Upload Track
+          </Button>
+        }
+      />
+
+      {/* Search & Filters Card */}
+      <Card style={{ marginBottom: 16 }}>
+        <Space
+          direction='vertical'
+          size='middle'
+          style={{ width: '100%' }}
+        >
+          <Flex
+            gap='middle'
+            wrap='wrap'
+          >
+            <Input
+              placeholder='Search by title or artist...'
+              prefix={<SearchOutlined />}
+              value={filter.search}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: 300 }}
+              allowClear
+            />
+
+            <Button
+              icon={<FilterOutlined />}
+              onClick={() => setShowFilters(!showFilters)}
             >
-              <Input
-                placeholder='Search by title or artist...'
-                prefix={<SearchOutlined />}
-                value={filter.search}
-                onChange={(e) => handleSearch(e.target.value)}
-                style={{ width: 300 }}
-                allowClear
-              />
+              {showFilters ? 'Hide' : 'Show'} Filters
+            </Button>
 
-              <Button
-                icon={<FilterOutlined />}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? 'Hide' : 'Show'} Filters
-              </Button>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => refetch()}
+            >
+              Refresh
+            </Button>
 
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={() => refetch()}
-              >
-                Refresh
-              </Button>
-
-              {(filter.search ||
-                filter.genre ||
-                filter.moodId ||
-                filter.provider !== undefined ||
-                filter.status !== undefined) && (
-                <Button onClick={handleReset}>Reset Filters</Button>
-              )}
-            </Flex>
-
-            {/* Advanced Filters */}
-            {showFilters && (
-              <Card size='small'>
-                <Row gutter={[16, 16]}>
-                  <Col span={6}>
-                    <Select
-                      placeholder='Filter by Genre'
-                      options={GENRE_OPTIONS}
-                      value={filter.genre}
-                      onChange={(value) => handleFilterChange('genre', value)}
-                      style={{ width: '100%' }}
-                      allowClear
-                    />
-                  </Col>
-                  <Col span={6}>
-                    <Select
-                      placeholder='Filter by Provider'
-                      options={MUSIC_PROVIDER_OPTIONS}
-                      value={filter.provider}
-                      onChange={(value) =>
-                        handleFilterChange('provider', value)
-                      }
-                      style={{ width: '100%' }}
-                      allowClear
-                    />
-                  </Col>
-                  <Col span={6}>
-                    <Select
-                      placeholder='Filter by Status'
-                      options={ENTITY_STATUS_OPTIONS}
-                      value={filter.status}
-                      onChange={(value) => handleFilterChange('status', value)}
-                      style={{ width: '100%' }}
-                      allowClear
-                    />
-                  </Col>
-                  <Col span={6}>
-                    <Select
-                      placeholder='AI Generated'
-                      options={[
-                        { label: 'All', value: undefined },
-                        { label: 'AI Generated', value: true },
-                        { label: 'Custom Upload', value: false },
-                      ]}
-                      value={filter.isAiGenerated}
-                      onChange={(value) =>
-                        handleFilterChange('isAiGenerated', value)
-                      }
-                      style={{ width: '100%' }}
-                      allowClear
-                    />
-                  </Col>
-                </Row>
-              </Card>
-            )}
-
-            {/* Active Filters Display */}
-            {(filter.genre ||
+            {(filter.search ||
+              filter.genre ||
+              filter.moodId ||
               filter.provider !== undefined ||
               filter.status !== undefined) && (
-              <Space wrap>
-                {filter.genre && (
-                  <Tag
-                    closable
-                    onClose={() => handleFilterChange('genre', undefined)}
-                  >
-                    Genre: {filter.genre}
-                  </Tag>
-                )}
-                {filter.provider !== undefined && (
-                  <Tag
-                    closable
-                    onClose={() => handleFilterChange('provider', undefined)}
-                  >
-                    Provider:{' '}
-                    {
-                      MUSIC_PROVIDER_OPTIONS.find(
-                        (o) => o.value === filter.provider,
-                      )?.label
-                    }
-                  </Tag>
-                )}
-                {filter.status !== undefined && (
-                  <Tag
-                    closable
-                    onClose={() => handleFilterChange('status', undefined)}
-                  >
-                    Status:{' '}
-                    {
-                      ENTITY_STATUS_OPTIONS.find(
-                        (o) => o.value === filter.status,
-                      )?.label
-                    }
-                  </Tag>
-                )}
-              </Space>
+              <Button onClick={handleReset}>Reset Filters</Button>
             )}
-          </Space>
+          </Flex>
 
-          {/* Data Table */}
-          <DataTable<TrackListItem>
-            columns={columns}
-            dataSource={data?.items || []}
-            loading={isLoading}
-            rowKey='id'
-            pagination={{
-              current: filter.page,
-              pageSize: filter.pageSize,
-              total: data?.totalItems,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} tracks`,
-              pageSizeOptions: ['10', '20', '50', '100'],
-            }}
-            onChange={handleTableChange}
-            scroll={{ x: 1400 }}
-          />
-        </Card>
-      </Space>
+          {/* Advanced Filters */}
+          {showFilters && (
+            <Card size='small'>
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
+                  <Select
+                    placeholder='Filter by Genre'
+                    options={GENRE_OPTIONS}
+                    value={filter.genre}
+                    onChange={(value) => handleFilterChange('genre', value)}
+                    style={{ width: '100%' }}
+                    allowClear
+                  />
+                </Col>
+                <Col span={6}>
+                  <Select
+                    placeholder='Filter by Provider'
+                    options={MUSIC_PROVIDER_OPTIONS}
+                    value={filter.provider}
+                    onChange={(value) => handleFilterChange('provider', value)}
+                    style={{ width: '100%' }}
+                    allowClear
+                  />
+                </Col>
+                <Col span={6}>
+                  <Select
+                    placeholder='Filter by Status'
+                    options={ENTITY_STATUS_OPTIONS}
+                    value={filter.status}
+                    onChange={(value) => handleFilterChange('status', value)}
+                    style={{ width: '100%' }}
+                    allowClear
+                  />
+                </Col>
+                <Col span={6}>
+                  <Select
+                    placeholder='AI Generated'
+                    options={[
+                      { label: 'All', value: undefined },
+                      { label: 'AI Generated', value: true },
+                      { label: 'Custom Upload', value: false },
+                    ]}
+                    value={filter.isAiGenerated}
+                    onChange={(value) =>
+                      handleFilterChange('isAiGenerated', value)
+                    }
+                    style={{ width: '100%' }}
+                    allowClear
+                  />
+                </Col>
+              </Row>
+            </Card>
+          )}
+
+          {/* Active Filters Display */}
+          {(filter.genre ||
+            filter.provider !== undefined ||
+            filter.status !== undefined) && (
+            <Space wrap>
+              {filter.genre && (
+                <Tag
+                  closable
+                  onClose={() => handleFilterChange('genre', undefined)}
+                >
+                  Genre: {filter.genre}
+                </Tag>
+              )}
+              {filter.provider !== undefined && (
+                <Tag
+                  closable
+                  onClose={() => handleFilterChange('provider', undefined)}
+                >
+                  Provider:{' '}
+                  {
+                    MUSIC_PROVIDER_OPTIONS.find(
+                      (o) => o.value === filter.provider,
+                    )?.label
+                  }
+                </Tag>
+              )}
+              {filter.status !== undefined && (
+                <Tag
+                  closable
+                  onClose={() => handleFilterChange('status', undefined)}
+                >
+                  Status:{' '}
+                  {
+                    ENTITY_STATUS_OPTIONS.find((o) => o.value === filter.status)
+                      ?.label
+                  }
+                </Tag>
+              )}
+            </Space>
+          )}
+        </Space>
+      </Card>
+
+      {/* Data Table */}
+      <DataTable<TrackListItem>
+        columns={columns}
+        dataSource={data?.items || []}
+        loading={isLoading}
+        rowKey='id'
+        pagination={{
+          current: filter.page,
+          pageSize: filter.pageSize,
+          total: data?.totalItems || 0,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} tracks`,
+          pageSizeOptions: ['10', '20', '50', '100'],
+          onChange: (page, size) => {
+            setFilter((prev) => ({ ...prev, page, pageSize: size }));
+          },
+        }}
+        onChange={handleTableChange}
+        scroll={{ x: 1400 }}
+      />
 
       {/* Drawers */}
       <CreateTrackDrawer
@@ -406,6 +351,6 @@ export const TrackList = () => {
           setSelectedTrackId(undefined);
         }}
       />
-    </>
+    </div>
   );
 };

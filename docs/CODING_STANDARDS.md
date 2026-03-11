@@ -743,6 +743,202 @@ const handleCancel = () => {
 };
 ```
 
+### **6.11 Page Layout Pattern**
+
+**✅ CORRECT - Use PageHeader for all list pages:**
+
+```tsx
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { PageHeader } from '@/shared/components/common/PageHeader';
+import { DataTable } from '@/shared/components/common/DataTable';
+
+export const EntityList = () => {
+  const navigate = useNavigate();
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [filter, setFilter] = useState<EntityFilter>({
+    page: 1,
+    pageSize: 10,
+    sortBy: 'createdAt',
+    isAscending: false,
+  });
+
+  const { data, isLoading } = useEntities(filter);
+
+  const breadcrumbs = [
+    {
+      title: 'Dashboard',
+      onClick: () => navigate('/brand/dashboard'),
+      className: 'cursor-pointer',
+    },
+    {
+      title: 'Entity Management',
+    },
+  ];
+
+  const columns = getEntityColumns({
+    onView: handleView,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+  });
+
+  return (
+    <div>
+      <PageHeader
+        title='Entity Management'
+        breadcrumbs={breadcrumbs}
+        extra={
+          <Button
+            size='large'
+            type='primary'
+            icon={<PlusOutlined />}
+            onClick={() => setCreateDrawerOpen(true)}
+          >
+            Add Entity
+          </Button>
+        }
+      />
+
+      <DataTable
+        columns={columns}
+        dataSource={data?.items || []}
+        rowKey='id'
+        loading={isLoading}
+        pagination={{
+          current: filter.page,
+          pageSize: filter.pageSize,
+          total: data?.totalItems || 0,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} items`,
+          onChange: (page, size) => {
+            setFilter((prev) => ({ ...prev, page, pageSize: size }));
+          },
+        }}
+      />
+
+      {/* Drawers */}
+      <CreateEntityDrawer
+        open={createDrawerOpen}
+        onClose={() => setCreateDrawerOpen(false)}
+        onSuccess={() => refetch()}
+      />
+    </div>
+  );
+};
+```
+
+**❌ WRONG - Missing PageHeader:**
+
+```tsx
+// ❌ Don't use Card with title string directly
+<Card title="Entity Management">
+  <DataTable ... />
+</Card>
+```
+
+---
+
+### **6.12 Page Component Structure**
+
+**✅ CORRECT - Consistent order:**
+
+```tsx
+export const EntityList = () => {
+  // 1. Hooks (useState, useNavigate, etc.)
+  const navigate = useNavigate();
+  const [filter, setFilter] = useState<EntityFilter>({ ... });
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+
+  // 2. Data fetching hooks
+  const { data, isLoading, refetch } = useEntities(filter);
+  const deleteMutation = useDeleteEntity();
+
+  // 3. Handler functions
+  const handleView = (id: string) => { ... };
+  const handleEdit = (id: string) => { ... };
+  const handleDelete = (id: string) => { ... };
+
+  // 4. Breadcrumbs config
+  const breadcrumbs = [ ... ];
+
+  // 5. Table columns config
+  const columns = getEntityColumns({ ... });
+
+  // 6. Render
+  return (
+    <div>
+      <PageHeader ... />
+      <DataTable ... />
+      {/* Drawers/Modals */}
+    </div>
+  );
+};
+```
+
+---
+
+## 🎨 **7. Reusable Component Standards**
+
+### **7.1 Required Shared Components**
+
+| Component            | Import Path                               | Use Case                      |
+| -------------------- | ----------------------------------------- | ----------------------------- |
+| **PageHeader**       | `@/shared/components/common/PageHeader`   | ✅ **All list pages**         |
+| **DataTable**        | `@/shared/components/common/DataTable`    | All data tables               |
+| **ImageDragger**     | `@/shared/components/common/ImageDragger` | Image/avatar uploads          |
+| **PasswordStrength** | `@/shared/components/ui/PasswordStrength` | Password input with validator |
+| **AppModal**         | `@/shared/components/ui/AppModal`         | Confirm dialogs               |
+
+---
+
+### **7.2 PageHeader Usage**
+
+**Props:**
+
+```typescript
+interface PageHeaderProps {
+  title: string; // Page title
+  breadcrumbs?: BreadcrumbItem[]; // Breadcrumb navigation
+  extra?: React.ReactNode; // Action buttons (e.g., "Add" button)
+}
+
+interface BreadcrumbItem {
+  title: string;
+  onClick?: () => void;
+  className?: string;
+}
+```
+
+**Example:**
+
+```tsx
+<PageHeader
+  title='Track Library'
+  breadcrumbs={[
+    {
+      title: 'Dashboard',
+      onClick: () => navigate('/brand/dashboard'),
+      className: 'cursor-pointer',
+    },
+    {
+      title: 'Track Management',
+    },
+  ]}
+  extra={
+    <Button
+      size='large'
+      type='primary'
+      icon={<PlusOutlined />}
+      onClick={() => setCreateDrawerOpen(true)}
+    >
+      Upload Track
+    </Button>
+  }
+/>
+```
+
 ---
 
 ## 📊 **7. Error Handling**
@@ -940,15 +1136,15 @@ export const createSpaceValidation = {
 
 ## **10. Shared Utility Functions**
 
-| Utility | Import Path | Use Case |
-|---------|-------------|----------|
-| **formatDateTime** | `@/shared/utils/formHelpers` | Format ISO date to "MMM DD, YYYY HH:mm" |
-| **formatDate** | `@/shared/utils/formHelpers` | Format ISO date to "MMM DD, YYYY" |
-| **formatTime** | `@/shared/utils/formHelpers` | Format ISO date to "HH:mm:ss" |
-| **formatRelativeTime** | `@/shared/utils/formHelpers` | Format to "2 hours ago" |
-| **formatPhoneNumber** | `@/shared/utils/formHelpers` | Format phone numbers |
-| **formatCurrency** | `@/shared/utils/formHelpers` | Format VND currency |
-| **formatFileSize** | `@/shared/utils/formHelpers` | Format bytes to KB/MB/GB |
+| Utility                | Import Path                  | Use Case                                |
+| ---------------------- | ---------------------------- | --------------------------------------- |
+| **formatDateTime**     | `@/shared/utils/formHelpers` | Format ISO date to "MMM DD, YYYY HH:mm" |
+| **formatDate**         | `@/shared/utils/formHelpers` | Format ISO date to "MMM DD, YYYY"       |
+| **formatTime**         | `@/shared/utils/formHelpers` | Format ISO date to "HH:mm:ss"           |
+| **formatRelativeTime** | `@/shared/utils/formHelpers` | Format to "2 hours ago"                 |
+| **formatPhoneNumber**  | `@/shared/utils/formHelpers` | Format phone numbers                    |
+| **formatCurrency**     | `@/shared/utils/formHelpers` | Format VND currency                     |
+| **formatFileSize**     | `@/shared/utils/formHelpers` | Format bytes to KB/MB/GB                |
 
 **Example Usage:**
 
@@ -969,6 +1165,7 @@ import { formatDateTime, formatDate, formatRelativeTime } from '@/shared/utils/f
 **Day.js Configuration:**
 
 We use **Day.js** (Ant Design's built-in date library) with the following plugins:
+
 - `relativeTime` - for "2 hours ago" formatting
 - `utc` - for UTC conversion
 - `timezone` - for timezone support
@@ -989,6 +1186,7 @@ const handleDateChange = (date: dayjs.Dayjs | null) => {
   form.setFieldValue('startDate', isoString);
 };
 ```
+
 ---
 
 **Last Updated:** 2026-03-10

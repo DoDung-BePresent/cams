@@ -1,5 +1,6 @@
 import { Card, Table, type TableProps } from 'antd';
 import type { AnyObject } from 'antd/es/_util/type';
+import { cn } from '@/shared/lib/utils';
 
 type DataTableProps<T extends AnyObject = any> = TableProps<T>;
 
@@ -31,6 +32,10 @@ export const DataTable = <T extends AnyObject = any>({
               paddingInline: 16,
               paddingBottom: 16,
             },
+          },
+          content: {
+            scrollbarWidth: 'thin',
+            scrollbarColor: '#eaeaea transparent',
           },
         }}
         pagination={defaultPagination}
