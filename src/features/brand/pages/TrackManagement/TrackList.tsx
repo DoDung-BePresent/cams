@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, Card, Input, Space, Flex, Select, Tag, Row, Col } from 'antd';
-import {
-  PlusOutlined,
-  SearchOutlined,
-  ReloadOutlined,
-  FilterOutlined,
-} from '@ant-design/icons';
+import { Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
 import { AppModal } from '@/shared/components/ui/AppModal';
@@ -16,11 +11,6 @@ import {
   useToggleTrackStatus,
 } from '@/shared/modules/tracks/hooks';
 import { getTrackColumns } from '@/shared/modules/tracks/components';
-import {
-  GENRE_OPTIONS,
-  MUSIC_PROVIDER_OPTIONS,
-} from '@/shared/modules/tracks/constants';
-import { ENTITY_STATUS_OPTIONS } from '@/shared/constants';
 import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
@@ -28,6 +18,7 @@ import {
   CreateTrackDrawer,
   EditTrackDrawer,
   TrackDetailsDrawer,
+  TrackFilter as TrackFilterComponent,
 } from './components';
 
 export const TrackList = () => {
@@ -165,154 +156,18 @@ export const TrackList = () => {
         }
       />
 
-      {/* Search & Filters Card */}
-      <Card className='rounded-b-none!'>
-        <Space
-          direction='vertical'
-          size='middle'
-          style={{ width: '100%' }}
-        >
-          <Flex
-            justify='space-between'
-            wrap='wrap'
-          >
-            <Input
-              size='large'
-              placeholder='Search by title or artist...'
-              prefix={<SearchOutlined />}
-              value={filter.search}
-              onChange={(e) => handleSearch(e.target.value)}
-              style={{ width: 300 }}
-              allowClear
-            />
-
-            <Space>
-              <Button
-                size='large'
-                icon={<FilterOutlined />}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? 'Hide' : 'Show'} Filters
-              </Button>
-
-              <Button
-                size='large'
-                icon={<ReloadOutlined />}
-                onClick={() => refetch()}
-              >
-                Refresh
-              </Button>
-              {(filter.search ||
-                filter.genre ||
-                filter.moodId ||
-                filter.provider !== undefined ||
-                filter.status !== undefined) && (
-                <Button onClick={handleReset}>Reset Filters</Button>
-              )}
-            </Space>
-          </Flex>
-
-          {/* Advanced Filters */}
-          {showFilters && (
-            <Row gutter={[16, 16]}>
-              <Col span={6}>
-                <Select
-                  size='large'
-                  placeholder='Filter by Genre'
-                  options={GENRE_OPTIONS}
-                  value={filter.genre}
-                  onChange={(value) => handleFilterChange('genre', value)}
-                  style={{ width: '100%' }}
-                  allowClear
-                />
-              </Col>
-              <Col span={6}>
-                <Select
-                  size='large'
-                  placeholder='Filter by Provider'
-                  options={MUSIC_PROVIDER_OPTIONS}
-                  value={filter.provider}
-                  onChange={(value) => handleFilterChange('provider', value)}
-                  style={{ width: '100%' }}
-                  allowClear
-                />
-              </Col>
-              <Col span={6}>
-                <Select
-                  size='large'
-                  placeholder='Filter by Status'
-                  options={ENTITY_STATUS_OPTIONS}
-                  value={filter.status}
-                  onChange={(value) => handleFilterChange('status', value)}
-                  style={{ width: '100%' }}
-                  allowClear
-                />
-              </Col>
-              <Col span={6}>
-                <Select
-                  size='large'
-                  placeholder='AI Generated'
-                  options={[
-                    { label: 'All', value: undefined },
-                    { label: 'AI Generated', value: true },
-                    { label: 'Custom Upload', value: false },
-                  ]}
-                  value={filter.isAiGenerated}
-                  onChange={(value) =>
-                    handleFilterChange('isAiGenerated', value)
-                  }
-                  style={{ width: '100%' }}
-                  allowClear
-                />
-              </Col>
-            </Row>
-          )}
-
-          {/* Active Filters Display */}
-          {(filter.genre ||
-            filter.provider !== undefined ||
-            filter.status !== undefined) && (
-            <Space wrap>
-              {filter.genre && (
-                <Tag
-                  closable
-                  onClose={() => handleFilterChange('genre', undefined)}
-                >
-                  Genre: {filter.genre}
-                </Tag>
-              )}
-              {filter.provider !== undefined && (
-                <Tag
-                  closable
-                  onClose={() => handleFilterChange('provider', undefined)}
-                >
-                  Provider:{' '}
-                  {
-                    MUSIC_PROVIDER_OPTIONS.find(
-                      (o) => o.value === filter.provider,
-                    )?.label
-                  }
-                </Tag>
-              )}
-              {filter.status !== undefined && (
-                <Tag
-                  closable
-                  onClose={() => handleFilterChange('status', undefined)}
-                >
-                  Status:{' '}
-                  {
-                    ENTITY_STATUS_OPTIONS.find((o) => o.value === filter.status)
-                      ?.label
-                  }
-                </Tag>
-              )}
-            </Space>
-          )}
-        </Space>
-      </Card>
-
-      {/* Data Table */}
       <DataTable<TrackListItem>
+        filter={
+          <TrackFilterComponent
+            filter={filter}
+            showAdvanced={showFilters}
+            onSearch={handleSearch}
+            onFilterChange={handleFilterChange}
+            onToggleAdvanced={() => setShowFilters(!showFilters)}
+            onRefresh={() => refetch()}
+            onReset={handleReset}
+          />
+        }
         columns={columns}
         dataSource={data?.items || []}
         loading={isLoading}
@@ -330,7 +185,6 @@ export const TrackList = () => {
         }}
         onChange={handleTableChange}
         scroll={{ x: 1400 }}
-        className='rounded-t-none! border-t-0!'
       />
 
       {/* Drawers */}
