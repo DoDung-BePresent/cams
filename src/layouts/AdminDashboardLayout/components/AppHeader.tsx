@@ -1,7 +1,16 @@
 /**
  * Node modules
  */
-import { Avatar, Badge, Button, Dropdown, Flex, Layout } from 'antd';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Dropdown,
+  Flex,
+  Layout,
+  Tag,
+  Typography,
+} from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -15,30 +24,21 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MessageOutlined,
-  SettingOutlined,
   UserOutlined,
+  DisconnectOutlined,
 } from '@ant-design/icons';
 
 /**
- * Assets
- */
-import avatarImage from '@/assets/images/avatar-1.png';
-
-/**
- * Providers
- */
-import { useAuth } from '@/providers/AuthProvider';
-
-/**
- * Shared
+ * Constants
  */
 import { ROLES } from '@/shared/constants/rolesConstants';
-import { useFullscreen } from '@/shared/hooks/useFullScreen';
 
 /**
- * Features
+ * Hooks
  */
-import { BranchSwitcher } from '@/features/manager/components/BranchSwitcher';
+import { useAuth } from '@/providers/AuthProvider';
+import { useFullscreen } from '@/shared/hooks/useFullScreen';
+import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
 
 /**
  * Types
@@ -49,6 +49,7 @@ type AppHeaderProps = {
 };
 
 const { Header } = Layout;
+const { Text } = Typography;
 
 const headerStyle: React.CSSProperties = {
   background: 'white',
@@ -60,39 +61,40 @@ const headerStyle: React.CSSProperties = {
   paddingInlineEnd: 20,
   position: 'sticky',
   top: 0,
-  zIndex: 1,
+  zIndex: 100,
 };
 
 export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isOnline } = useNetworkStatus();
 
   const isManager = user?.role === ROLES.SYSTEM_ADMIN;
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    logout.mutate(undefined, {
+      onSuccess: () => {
+        navigate('/login', { replace: true });
+      },
+    });
   };
 
   const userMenuItems = [
     {
       key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
+      label: (
+        <Flex vertical>
+          <Text strong>{`${user?.firstName} ${user?.lastName}`}</Text>
+          <Text type='secondary'>{user?.email}</Text>
+        </Flex>
+      ),
     },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Settings',
-    },
-    {
-      type: 'divider' as const,
-    },
+    { type: 'divider' },
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
       label: 'Logout',
+      icon: <LogoutOutlined />,
       onClick: handleLogout,
     },
   ];
@@ -104,7 +106,10 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
         justify='space-between'
         className='w-full'
       >
-        <Flex gap='small'>
+        <Flex
+          gap='small'
+          align='center'
+        >
           <Button
             type='text'
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -115,7 +120,14 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
               height: 36,
             }}
           />
-          {isManager && <BranchSwitcher />}
+          {!isOnline && (
+            <Tag
+              icon={<DisconnectOutlined />}
+              color='error'
+            >
+              Offline Mode
+            </Tag>
+          )}
         </Flex>
         <Flex gap='small'>
           <Button
@@ -162,8 +174,8 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             placement='bottomRight'
           >
             <Avatar
-              src={avatarImage}
-              style={{ cursor: 'pointer' }}
+              src={user?.avatarUrl}
+              icon={<UserOutlined />}
             />
           </Dropdown>
         </Flex>

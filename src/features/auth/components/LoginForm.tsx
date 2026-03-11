@@ -1,37 +1,65 @@
-import { Link, useNavigate } from 'react-router';
-import { Button, Checkbox, Flex, Form, Input, Typography, message } from 'antd';
+import { Link } from 'react-router';
+import { Button, Checkbox, Flex, Form, Input, message, Typography } from 'antd';
+
+/**
+ * Hooks
+ */
 import { useAuth } from '@/providers/AuthProvider';
+
+/**
+ * Validations
+ */
 import { loginValidation } from '../validations/authValidation';
 
-const { Link: AntLink } = Typography;
+/**
+ * Utils
+ */
+import { handleApiError } from '@/shared/utils/errorHandler';
 
+/**
+ * Types
+ */
+import { ErrorCodeEnum } from '@/shared/types/errorTypes';
+
+/**
+ * Types
+ */
 type LoginFormType = {
   email: string;
   password: string;
-  rememberMe: boolean; // ✅ Đúng tên với API
+  rememberMe: boolean;
 };
 
+const { Link: AntLink } = Typography;
+
 export const LoginForm = () => {
-  const navigate = useNavigate();
   const { login } = useAuth();
   const [form] = Form.useForm<LoginFormType>();
 
-  const handleSubmit = async (values: LoginFormType) => {
-    try {
-      await login({
+  const handleSubmit = (values: LoginFormType) => {
+    login.mutate(
+      {
         email: values.email,
         password: values.password,
         rememberMe: values.rememberMe ?? false,
-      });
-
-      message.success('Login successful!');
-
-      // TODO: Navigate dựa vào role từ JWT
-      navigate('/manager/dashboard');
-    } catch (error: any) {
-      const msg = error?.response?.data?.message || 'Login failed!';
-      message.error(msg);
-    }
+      },
+      {
+        onError: (error) => {
+          handleApiError(
+            error,
+            {
+              [ErrorCodeEnum.InvalidCredentials]: () => {
+                message.error('Invalid credentials! Please try again!');
+              },
+              [ErrorCodeEnum.Unauthorized]: () => {
+                message.error('Invalid credentials! Please try again!');
+              },
+            },
+            'Login failed! Please try again.',
+          );
+        },
+      },
+    );
   };
 
   return (
@@ -50,6 +78,7 @@ export const LoginForm = () => {
       >
         <Input placeholder='Enter email address' />
       </Form.Item>
+
       <Form.Item
         label='Password'
         name='password'
@@ -57,6 +86,7 @@ export const LoginForm = () => {
       >
         <Input.Password placeholder='Enter password' />
       </Form.Item>
+
       <Form.Item
         name='rememberMe'
         valuePropName='checked'
@@ -69,10 +99,12 @@ export const LoginForm = () => {
           </Link>
         </Flex>
       </Form.Item>
+
       <Button
         type='primary'
         htmlType='submit'
         className='w-full'
+        loading={login.isPending}
       >
         Login
       </Button>

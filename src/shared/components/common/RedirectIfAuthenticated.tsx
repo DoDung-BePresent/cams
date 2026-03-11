@@ -1,11 +1,19 @@
 import { Navigate } from 'react-router';
+
+/**
+ * Hooks
+ */
 import { useAuth } from '@/providers/AuthProvider';
+
+/**
+ * Constants
+ */
 import { ROLES } from '@/shared/constants/rolesConstants';
 
 const ROLE_HOME_MAP: Record<string, string> = {
   [ROLES.SYSTEM_ADMIN]: '/admin/dashboard',
-  [ROLES.STORE_MANAGER]: '/manager/dashboard',
-  [ROLES.BRANCH_MANAGER]: '/manager/dashboard',
+  [ROLES.BRAND_MANAGER]: '/brand/dashboard',
+  [ROLES.STORE_MANAGER]: '/store/dashboard',
 };
 
 export const RedirectIfAuthenticated = ({

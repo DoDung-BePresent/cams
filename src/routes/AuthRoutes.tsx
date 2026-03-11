@@ -11,10 +11,6 @@ const LoginPage = Loadable(
   () => import('@/features/auth/pages/LoginPage'),
   'LoginPage',
 );
-const RegisterPage = Loadable(
-  () => import('@/features/auth/pages/RegisterPage'),
-  'RegisterPage',
-);
 
 export const AuthRoutes = {
   path: '/',
@@ -24,14 +20,6 @@ export const AuthRoutes = {
       element: (
         <RedirectIfAuthenticated>
           <LoginPage />
-        </RedirectIfAuthenticated>
-      ),
-    },
-    {
-      path: 'register',
-      element: (
-        <RedirectIfAuthenticated>
-          <RegisterPage />
         </RedirectIfAuthenticated>
       ),
     },

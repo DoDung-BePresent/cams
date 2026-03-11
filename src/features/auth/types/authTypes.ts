@@ -9,13 +9,26 @@ export type LoginResponse = {
   message: string;
   data: {
     accessToken: string;
-    refreshToken?: string; // ✅ Chuẩn bị sẵn cho tương lai
+    refreshToken?: string;
     expiresAt: string;
-    roles: number[]; // API trả về number[]
+    roles: number[];
   };
 };
 
-// ✅ RefreshToken response (chuẩn bị sẵn)
+export type ProfileResponse = {
+  isSuccess: boolean;
+  message: string;
+  data: {
+    email: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    avatarUrl?: string;
+    roles: number[];
+  };
+};
+
 export type RefreshTokenResponse = {
   isSuccess: boolean;
   message: string;
@@ -29,8 +42,11 @@ export type RefreshTokenResponse = {
 export type User = {
   id: string;
   email: string;
-  name: string;
-  role: string; // Mapped từ roles[0]
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+  role: string;
 };
 
 export type AuthContextType = {

@@ -1,5 +1,4 @@
 import { Flex, Layout, Menu } from 'antd';
-import { useNavigate } from 'react-router';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
@@ -7,19 +6,17 @@ import 'simplebar-react/dist/simplebar.min.css';
  * Shared
  */
 import { Logo } from '@/shared/components/common/Logo';
-import { ROLES } from '@/shared/constants/rolesConstants';
 import { cn } from '@/shared/lib/utils';
 
 /**
- * Providers
+ * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
 
 /**
  * Features
  */
-import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
-import { managerMenuItems } from '@/features/manager/constants/managerMenuItems';
+import { STORE_MENU_ITEMS, STORE_ROUTE_MAP } from '@/features/store/constants';
 
 /**
  * Components
@@ -44,49 +41,10 @@ const siderStyle: React.CSSProperties = {
 };
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const menuItems =
-    user?.role === ROLES.STORE_MANAGER ? adminMenuItems : managerMenuItems;
-
-  // Update handleMenuClick function
-  const handleMenuClick = (key: string) => {
-    const routeMap: Record<string, string> = {
-      // Admin routes
-      'admin-dashboard': '/admin/dashboard',
-      'store-management': '/admin/stores',
-      'user-management': '/admin/users',
-      'music-library': '/admin/music',
-      'playlist-templates': '/admin/playlists',
-      'mood-genre-tags': '/admin/tags',
-      'rule-settings': '/admin/ai/rules',
-      'external-ai-music-api': '/admin/ai/api',
-      'data-mapping': '/admin/pos/mapping',
-      'sync-status': '/admin/pos/sync',
-      'music-decision-logs': '/admin/logs/music-decisions',
-      'api-call-logs': '/admin/logs/api-calls',
-      'error-logs': '/admin/logs/errors',
-
-      // Manager routes
-      dashboard: '/manager/dashboard',
-      spaces: '/manager/spaces', // NEW
-      devices: '/manager/devices', // NEW
-      'auto-manual-mode': '/manager/music-control/mode',
-      'playback-control': '/manager/music-control/playback',
-      'time-based-rules': '/manager/schedule/time-based',
-      'event-based-rules': '/manager/schedule/event-based',
-      'music-vs-sales': '/manager/reports/music-sales',
-      'customer-engagement': '/manager/reports/engagement',
-      'playback-history': '/manager/reports/history',
-      settings: '/manager/settings',
-    };
-
-    const route = routeMap[key];
-    if (route) {
-      navigate(route);
-    }
-  };
+  const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
+    menuItems: STORE_MENU_ITEMS,
+    routeMap: STORE_ROUTE_MAP,
+  });
 
   return (
     <Sider
@@ -109,8 +67,9 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           theme='light'
           mode='inline'
           className='border-none!'
-          defaultSelectedKeys={['dashboard']}
-          items={menuItems}
+          selectedKeys={selectedKeys}
+          defaultOpenKeys={openKeys}
+          items={STORE_MENU_ITEMS}
           onClick={({ key }) => handleMenuClick(key)}
         />
         {!collapsed && <NavCard />}

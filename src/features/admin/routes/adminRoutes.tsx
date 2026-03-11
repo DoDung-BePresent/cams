@@ -5,24 +5,19 @@ const AdminDashboard = Loadable(
   'AdminDashboard',
 );
 
-const StoreList = Loadable(
-  () => import('@/features/admin/pages/StoreManagement/StoreList'),
-  'StoreList',
+const BrandList = Loadable(
+  () => import('@/features/admin/pages/BrandManagement/BrandList'),
+  'BrandList',
 );
 
-const BranchList = Loadable(
-  () => import('@/features/admin/pages/BranchManagement/BranchList'),
-  'BranchList',
+const AccountList = Loadable(
+  () => import('@/features/admin/pages/AccountManagement/AccountList'),
+  'AccountList',
 );
 
-const UserList = Loadable(
-  () => import('@/features/admin/pages/UserManagement/UserList'),
-  'UserList',
-);
-
-const UserDetail = Loadable(
-  () => import('@/features/admin/pages/UserManagement/UserDetail'),
-  'UserDetail',
+const TrackList = Loadable(
+  () => import('@/features/admin/pages/TrackManagement/TrackList'),
+  'TrackList',
 );
 
 export const adminRoutes = [
@@ -31,19 +26,15 @@ export const adminRoutes = [
     element: <AdminDashboard />,
   },
   {
-    path: 'stores',
-    element: <StoreList />,
+    path: 'brands',
+    element: <BrandList />,
   },
   {
-    path: 'stores/:storeId/branches',
-    element: <BranchList />,
+    path: 'accounts',
+    element: <AccountList />,
   },
   {
-    path: 'users',
-    element: <UserList />,
-  },
-  {
-    path: 'users/:userId',
-    element: <UserDetail />,
+    path: 'tracks',
+    element: <TrackList />,
   },
 ];

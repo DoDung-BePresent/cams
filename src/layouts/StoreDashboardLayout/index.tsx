@@ -1,42 +1,31 @@
-/**
- * Node modules
- */
-import { Layout } from 'antd';
-import { Outlet } from 'react-router';
 import { useState } from 'react';
-
-/**
- * Features
- */
-import { MusicPlayer } from '@/features/manager/components/MusicPlayer';
+import { Layout } from 'antd';
 
 /**
  * Components
  */
-import { AppSidebar } from './components/AppSidebar';
-import { AppHeader } from './components/AppHeader';
-import { AppFooter } from './components/AppFooter';
-import { AppContent } from './components/AppContent';
+import { AppHeader, AppSidebar, AppContent, AppFooter } from './components';
+import { Outlet } from 'react-router';
 
 export const StoreDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
 
-  const handleCollapsed = () => {
+  const toggleCollapsed = () => {
     setCollapsed(!collapsed);
   };
+
   return (
     <Layout hasSider>
       <AppSidebar collapsed={collapsed} />
       <Layout>
         <AppHeader
           collapsed={collapsed}
-          onClick={handleCollapsed}
+          onClick={toggleCollapsed}
         />
         <AppContent>
           <Outlet />
         </AppContent>
         <AppFooter />
-        <MusicPlayer sidebarCollapsed={collapsed} />
       </Layout>
     </Layout>
   );

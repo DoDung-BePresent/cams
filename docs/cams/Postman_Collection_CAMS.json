@@ -1,0 +1,546 @@
+{
+  "info": {
+    "_postman_id": "cams-manager-api-v1",
+    "name": "Log.AI-CAMS — CAMS Operations",
+    "description": "4 endpoints CAMS do Manager thực hiện:\n- POST /override (Override Space Music)\n- DELETE /override (Cancel Override)\n- POST /playback (Send Playback Command)\n- GET /state (Get Space Playback State)\n\nBase URL: {{baseUrl}}\nAuth: Bearer {{accessToken}}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7001",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT Bearer token (BrandManager hoặc StoreManager)"
+    },
+    {
+      "key": "spaceId",
+      "value": "00000000-0000-0000-0000-000000000001",
+      "type": "string",
+      "description": "ID của Space cần thao tác"
+    },
+    {
+      "key": "playlistId",
+      "value": "00000000-0000-0000-0000-000000000101",
+      "type": "string",
+      "description": "ID playlist dùng cho DirectPlaylist override"
+    },
+    {
+      "key": "moodId",
+      "value": "00000000-0000-0000-0000-000000000201",
+      "type": "string",
+      "description": "ID mood dùng cho MoodOverride"
+    },
+    {
+      "key": "trackId",
+      "value": "00000000-0000-0000-0000-000000000301",
+      "type": "string",
+      "description": "ID track dùng cho SkipToTrack command"
+    }
+  ],
+  "item": [
+    {
+      "name": "CAMS",
+      "description": "Context-Aware Music System — Manager Playback Control",
+      "item": [
+        {
+          "name": "Override Space Music (DirectPlaylist - 200)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "vi-VN"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/override",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "override"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playlistId\": \"{{playlistId}}\",\n  \"moodId\": null,\n  \"reason\": \"Sự kiện đặc biệt tối nay\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Override nhạc bằng playlist cụ thể (DirectPlaylist mode = 1).\nPlaylistId và MoodId là mutual exclusive — cung cấp đúng 1 trong 2.\n\nKhi playlist đã có HLS URL → 200 + stream ngay.\nKhi playlist chưa transcode → 202 + hệ thống queue transcode background."
+          },
+          "response": [
+            {
+              "name": "200 — Override thành công (HLS sẵn sàng)",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Override applied successfully.\",\n  \"data\": {\n    \"spaceId\": \"00000000-0000-0000-0000-000000000001\",\n    \"playlistId\": \"00000000-0000-0000-0000-000000000101\",\n    \"playlistName\": \"Evening Chill\",\n    \"hlsUrl\": \"https://d123.cloudfront.net/audio/playlists/abc/master.m3u8\",\n    \"moodName\": null,\n    \"overrideMode\": 1,\n    \"isManualOverride\": true,\n    \"startedAtUtc\": \"2026-03-08T10:00:00Z\",\n    \"expectedEndAtUtc\": \"2026-03-08T11:30:00Z\",\n    \"transitionType\": 1\n  }\n}"
+            },
+            {
+              "name": "202 — Playlist đang transcode (Pending)",
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Đang khởi tạo transcode. Streaming sẽ tự bắt đầu khi hoàn tất.\",\n  \"data\": {\n    \"spaceId\": \"00000000-0000-0000-0000-000000000001\",\n    \"playlistId\": \"00000000-0000-0000-0000-000000000101\",\n    \"playlistName\": \"Morning Beats\",\n    \"hlsUrl\": null,\n    \"moodName\": null,\n    \"overrideMode\": 1,\n    \"isManualOverride\": true,\n    \"startedAtUtc\": \"0001-01-01T00:00:00Z\",\n    \"expectedEndAtUtc\": null,\n    \"transitionType\": 3\n  }\n}"
+            },
+            {
+              "name": "400 — Cung cấp cả PlaylistId lẫn MoodId",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Validation failed.\",\n  \"errors\": [\"Phải cung cấp đúng một trong hai: PlaylistId hoặc MoodId, không được cung cấp cả hai hoặc thiếu cả hai.\"]\n}"
+            },
+            {
+              "name": "403 — Không có quyền trên Space này",
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Access denied.\",\n  \"errorCode\": \"Forbidden\"\n}"
+            },
+            {
+              "name": "404 — Space không tồn tại",
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Space not found.\",\n  \"errorCode\": \"NotFound\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Override Space Music (MoodOverride - Mode 2)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "vi-VN"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/override",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "override"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"playlistId\": null,\n  \"moodId\": \"{{moodId}}\",\n  \"reason\": \"Khách VIP cần không gian yên tĩnh\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Override nhạc theo Mood (MoodOverride mode = 2).\nServer sẽ dùng sliding-window algorithm chọn playlist phù hợp nhất với Mood đó.\nTransitionType sẽ là Crossfade (2) — tablet tự xử lý fade audio."
+          },
+          "response": [
+            {
+              "name": "200 — Mood override thành công",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Override applied successfully.\",\n  \"data\": {\n    \"spaceId\": \"00000000-0000-0000-0000-000000000001\",\n    \"playlistId\": \"00000000-0000-0000-0000-000000000102\",\n    \"playlistName\": \"Quiet Moments\",\n    \"hlsUrl\": \"https://d123.cloudfront.net/audio/playlists/xyz/master.m3u8\",\n    \"moodName\": \"Calm\",\n    \"overrideMode\": 2,\n    \"isManualOverride\": true,\n    \"startedAtUtc\": \"2026-03-08T14:22:00Z\",\n    \"expectedEndAtUtc\": null,\n    \"transitionType\": 2\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancel Space Override",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "vi-VN"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/override",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "override"]
+            },
+            "description": "Hủy override thủ công đang active.\nSau khi hủy, Hangfire AI scheduling tự tiếp quản trong vòng ~60 giây.\n\nKhông có request body."
+          },
+          "response": [
+            {
+              "name": "200 — Override đã hủy",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Override cancelled. AI scheduling resumed.\"\n}"
+            },
+            {
+              "name": "422 — Không có override active",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Không có override nào đang active cho Space này.\",\n  \"errorCode\": \"BusinessRuleViolation\"\n}"
+            },
+            {
+              "name": "403 — Không có quyền trên Space này",
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Access denied.\",\n  \"errorCode\": \"Forbidden\"\n}"
+            },
+            {
+              "name": "404 — Space không tồn tại",
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Space not found.\",\n  \"errorCode\": \"NotFound\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Playback Command (Pause)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/playback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "playback"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Dừng phát nhạc (Pause = 1).\nServer ghi nhận PausePositionSeconds và broadcast SignalR tới tablet + manager tabs."
+          },
+          "response": [
+            {
+              "name": "200 — Lệnh đã relay",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playback command 'Pause' relayed to Space.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Playback Command (Resume)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/playback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "playback"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Tiếp tục phát nhạc từ vị trí đã dừng (Resume = 2).\nServer recalculate StartedAtUtc dựa trên PausePositionSeconds."
+          },
+          "response": [
+            {
+              "name": "200 — Lệnh đã relay",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playback command 'Resume' relayed to Space.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Playback Command (SeekForward 15s)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/playback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "playback"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": 4,\n  \"seekPositionSeconds\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Tua tới 15 giây (SeekForward = 4).\nseekPositionSeconds là delta (+15s). Server tính absolute position và relay."
+          },
+          "response": [
+            {
+              "name": "200 — Lệnh đã relay",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playback command 'SeekForward' relayed to Space.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Playback Command (SkipNext)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/playback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "playback"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Chuyển sang track tiếp theo (SkipNext = 6).\nNếu đang ở track cuối, server loop về track đầu của playlist."
+          },
+          "response": [
+            {
+              "name": "200 — Lệnh đã relay",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playback command 'SkipNext' relayed to Space.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Playback Command (SkipToTrack)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/playback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "playback"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": 8,\n  \"targetTrackId\": \"{{trackId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Nhảy đến một track cụ thể trong playlist (SkipToTrack = 8).\ntargetTrackId là bắt buộc với command này.\n\nServer tính cumulative offset từ đầu playlist đến track đó → relay command=3 (Seek) với absolute seekPositionSeconds."
+          },
+          "response": [
+            {
+              "name": "200 — Lệnh đã relay",
+              "status": "OK",
+              "code": 200,
+              "header": [],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playback command 'SkipToTrack' relayed to Space.\"\n}"
+            },
+            {
+              "name": "400 — TargetTrackId không được cung cấp",
+              "status": "Bad Request",
+              "code": 400,
+              "header": [],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"TargetTrackId is required for SkipToTrack command.\",\n  \"errorCode\": \"InvalidInput\"\n}"
+            },
+            {
+              "name": "404 — Space chưa có playlist nào đang chạy",
+              "status": "Not Found",
+              "code": 404,
+              "header": [],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"No active playback state found for this Space.\",\n  \"errorCode\": \"NotFound\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Space Playback State",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cams/spaces/{{spaceId}}/state",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "cams", "spaces", "{{spaceId}}", "state"]
+            },
+            "description": "Lấy snapshot trạng thái phát nhạc hiện tại của một Space.\n\nDùng khi:\n- Tablet reconnect SignalR → seekTo(seekOffsetSeconds) để không restart từ đầu.\n- Manager dashboard load/reload trang.\n\nKhông cần quyền đặc biệt — mọi user đã xác thực.\nKhông có request body."
+          },
+          "response": [
+            {
+              "name": "200 — Đang streaming",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Success.\",\n  \"data\": {\n    \"spaceId\": \"00000000-0000-0000-0000-000000000001\",\n    \"currentPlaylistId\": \"00000000-0000-0000-0000-000000000101\",\n    \"currentPlaylistName\": \"Evening Chill\",\n    \"hlsUrl\": \"https://d123.cloudfront.net/audio/playlists/abc/master.m3u8\",\n    \"moodName\": \"Chill\",\n    \"isManualOverride\": true,\n    \"overrideMode\": 1,\n    \"startedAtUtc\": \"2026-03-08T10:00:00Z\",\n    \"expectedEndAtUtc\": \"2026-03-08T11:30:00Z\",\n    \"seekOffsetSeconds\": 342.5\n  }\n}"
+            },
+            {
+              "name": "200 — Chưa có playlist nào",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"No playback state found for this Space.\",\n  \"data\": {\n    \"spaceId\": \"00000000-0000-0000-0000-000000000001\",\n    \"currentPlaylistId\": null,\n    \"currentPlaylistName\": null,\n    \"hlsUrl\": null,\n    \"moodName\": null,\n    \"isManualOverride\": false,\n    \"overrideMode\": null,\n    \"startedAtUtc\": null,\n    \"expectedEndAtUtc\": null,\n    \"seekOffsetSeconds\": null\n  }\n}"
+            },
+            {
+              "name": "404 — Space không tồn tại",
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Space not found.\",\n  \"errorCode\": \"NotFound\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

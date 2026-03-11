@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import { message } from 'antd';
 
 /**
  * Configs
@@ -6,86 +8,116 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { saveTokens, clearTokens, getAccessToken } from '@/config/api';
 
 /**
- * Shared
+ * Utils
  */
-import {
-  decodeJwt,
-  mapRoleFromEnum,
-  isTokenExpired,
-  getRoleFromJwt,
-} from '@/shared/utils/jwt';
+import { isTokenExpired } from '@/shared/utils/jwt';
+import { handleApiError } from '@/shared/utils/errorHandler';
+import { ERROR_MESSAGES, ErrorCodeEnum } from '@/shared/types/errorTypes';
 
 /**
- * Features
+ * Hooks
+ */
+import { useProfile } from '@/features/auth/hooks/useProfile';
+
+/**
+ * Services
  */
 import { authService } from '@/features/auth/services/authService';
+
+/**
+ * Types
+ */
 import type {
-  AuthContextType,
   LoginPayload,
   User,
 } from '@/features/auth/types/authTypes';
+import type { UseMutationResult } from '@tanstack/react-query';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+type EnhancedAuthContextType = {
+  user: User | null;
+  accessToken: string | null;
+  isAuthenticated: boolean;
+  login: UseMutationResult<void, Error, LoginPayload>;
+  logout: UseMutationResult<void, Error, void>;
+};
+
+const AuthContext = createContext<EnhancedAuthContextType | undefined>(
+  undefined,
+);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const queryClient = useQueryClient();
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const token = getAccessToken();
     if (token && !isTokenExpired(token)) {
-      const payload = decodeJwt(token);
-      if (payload) {
-        setUser({
-          id: payload.sub,
-          email: payload.email,
-          name: payload.email.split('@')[0],
-          role: getRoleFromJwt(token),
-        });
-        setAccessToken(token);
-      }
+      setAccessToken(token);
     } else if (token) {
       clearTokens();
     }
-    setIsLoading(false);
+    setIsInitializing(false);
   }, []);
 
-  const login = async (payload: LoginPayload) => {
-    const response = await authService.login(payload);
-    const { accessToken: token, refreshToken, roles } = response.data.data;
+  const { data: user, isLoading: isLoadingProfile } = useProfile(!!accessToken);
 
-    saveTokens(token, refreshToken ?? null, payload.rememberMe);
-    setAccessToken(token);
+  const loginMutation = useMutation({
+    mutationFn: async (payload: LoginPayload) => {
+      const response = await authService.login(payload);
+      const { accessToken: token, refreshToken } = response.data.data;
 
-    const jwtPayload = decodeJwt(token);
-    if (jwtPayload) {
-      const role = mapRoleFromEnum(roles);
-      setUser({
-        id: jwtPayload.sub,
-        email: jwtPayload.email,
-        name: jwtPayload.email.split('@')[0],
-        role,
-      });
-    }
-  };
+      saveTokens(token, refreshToken ?? null, payload.rememberMe);
+      setAccessToken(token);
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+    onSuccess: () => {
+      message.success('Login successful!');
+    },
+    // onError: (error) => {
+    //   handleApiError(
+    //     error,
+    //     {
+    //       [ErrorCodeEnum.InvalidCredentials]: () => {
+    //         message.error(ERROR_MESSAGES[ErrorCodeEnum.InvalidCredentials]);
+    //       },
+    //       [ErrorCodeEnum.Forbidden]: () => {
+    //         message.error('You do not have permission to access CMS!');
+    //       },
+    //     },
+    //     'Login failed! Please try again.',
+    //   );
+    // },
+  });
 
-  const logout = () => {
-    clearTokens();
-    setUser(null);
-    setAccessToken(null);
-  };
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        await authService.logout();
+      } catch (error) {
+        console.error('Logout API failed:', error);
+      }
+    },
+    onSuccess: () => {
+      clearTokens();
+      setAccessToken(null);
+      queryClient.setQueryData(['profile'], null);
+      queryClient.removeQueries({ queryKey: ['profile'] });
+    },
+  });
 
-  if (isLoading) return null;
+  if (isInitializing || (accessToken && isLoadingProfile)) {
+    return null; // Or <Spin fullscreen />
+  }
 
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user ?? null,
         accessToken,
         isAuthenticated: !!user,
-        login,
-        logout,
+        login: loginMutation,
+        logout: logoutMutation,
       }}
     >
       {children}

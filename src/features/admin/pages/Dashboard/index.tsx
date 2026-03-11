@@ -1,4 +1,5 @@
 import { Typography } from 'antd';
+import { MusicScheduleCalendar } from '@/features/brand/components/MusicScheduleCalendar';
 
 const { Title } = Typography;
 
@@ -6,7 +7,7 @@ export const AdminDashboard = () => {
   return (
     <div>
       <Title level={2}>Admin Dashboard</Title>
-      <p>Welcome to Admin Dashboard</p>
+      <MusicScheduleCalendar />
     </div>
   );
 };

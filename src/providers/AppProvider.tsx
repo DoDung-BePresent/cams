@@ -5,12 +5,20 @@ import { AuthProvider } from './AuthProvider';
 import { QueryProvider } from './QueryProvider';
 import { ThemeProvider } from './ThemeProvider';
 
+/**
+ * Components
+ */
+import { NetworkStatusBanner } from '@/shared/components/common/NetworkStatusBanner';
+
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   return (
-    <AuthProvider>
-      <QueryProvider>
-        <ThemeProvider>{children}</ThemeProvider>
-      </QueryProvider>
-    </AuthProvider>
+    <QueryProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <NetworkStatusBanner />
+          {children}
+        </ThemeProvider>
+      </AuthProvider>
+    </QueryProvider>
   );
 };

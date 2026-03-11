@@ -153,13 +153,22 @@ const AppModalComponent = ({
   children,
   maxHeight = '70vh',
   scrollable = true,
+  size = 'middle',
   ...props
-}: AppModalComponentProps) => {
+}: AppModalComponentProps & {
+  size?: 'large' | 'middle' | 'small';
+}) => {
   return (
     <Modal
       {...props}
       closeIcon={null}
       centered
+      okButtonProps={{
+        size: size,
+      }}
+      cancelButtonProps={{
+        size: size,
+      }}
       styles={{
         body: {
           // padding: scrollable ? '24px 0' : '24px',
