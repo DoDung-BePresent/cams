@@ -57,39 +57,15 @@ export const TrackDetailsDrawer = ({
           style={{ width: '100%' }}
           size='large'
         >
-          {/* Cover Image */}
-          <div style={{ textAlign: 'center' }}>
-            {track.coverImageUrl ? (
-              <Image
-                src={track.coverImageUrl}
-                alt={track.title}
-                style={{ maxWidth: '100%', maxHeight: 300, borderRadius: 8 }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: '100%',
-                  height: 300,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  background: '#f0f0f0',
-                  borderRadius: 8,
-                }}
-              >
-                <MusicIcon style={{ fontSize: 80, color: '#999' }} />
-              </div>
-            )}
-          </div>
-
           {/* Audio Player */}
           {track.audioUrl && (
             <div>
-              <Title level={5}>Audio Player</Title>
+              <Title level={5} className='mb-4!'>Audio Player</Title>
               <TrackAudioPlayer
                 audioUrl={track.audioUrl}
                 title={track.title}
                 artist={track.artist}
+                coverImageUrl={track.coverImageUrl}
               />
             </div>
           )}

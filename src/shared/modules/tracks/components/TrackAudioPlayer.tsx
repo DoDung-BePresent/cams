@@ -1,10 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
-import { Slider, Button, Space, Typography } from 'antd';
+import { Button, Typography, Flex, Card, Avatar } from 'antd';
 import {
   PlayCircleOutlined,
   PauseCircleOutlined,
   SoundOutlined,
 } from '@ant-design/icons';
+import WaveSurfer from 'wavesurfer.js';
 import { formatDuration } from '@/shared/utils/uploadHelpers';
 
 const { Text } = Typography;
@@ -13,134 +14,187 @@ interface TrackAudioPlayerProps {
   audioUrl?: string;
   title?: string;
   artist?: string;
+  coverImageUrl?: string;
 }
 
 export const TrackAudioPlayer = ({
   audioUrl,
   title,
   artist,
+  coverImageUrl,
 }: TrackAudioPlayerProps) => {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const wavesurferRef = useRef<WaveSurfer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(70);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    if (!containerRef.current || !audioUrl) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleDurationChange = () => setDuration(audio.duration);
-    const handleEnded = () => setIsPlaying(false);
+    const wavesurfer = WaveSurfer.create({
+      container: containerRef.current,
+      waveColor: '#d9d9d9',
+      progressColor: '#1890ff',
+      cursorColor: 'transparent',
+      barWidth: 3,
+      barGap: 1,
+      barRadius: 2,
+      height: 50,
+      normalize: true,
+      backend: 'WebAudio',
+    });
 
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleDurationChange);
-    audio.addEventListener('ended', handleEnded);
+    wavesurfer.load(audioUrl);
+
+    wavesurfer.on('ready', () => {
+      setDuration(wavesurfer.getDuration());
+      setIsLoading(false);
+    });
+
+    wavesurfer.on('audioprocess', () => {
+      setCurrentTime(wavesurfer.getCurrentTime());
+    });
+
+    wavesurfer.on('finish', () => {
+      setIsPlaying(false);
+    });
+
+    wavesurfer.on('error', (error) => {
+      console.error('WaveSurfer error:', error);
+      setIsLoading(false);
+    });
+
+    wavesurferRef.current = wavesurfer;
 
     return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleDurationChange);
-      audio.removeEventListener('ended', handleEnded);
+      wavesurfer.destroy();
     };
-  }, []);
-
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
-    }
-  }, [volume]);
+  }, [audioUrl]);
 
   const togglePlayPause = () => {
-    if (!audioRef.current) return;
+    if (!wavesurferRef.current) return;
 
     if (isPlaying) {
-      audioRef.current.pause();
+      wavesurferRef.current.pause();
     } else {
-      audioRef.current.play();
+      wavesurferRef.current.play();
     }
     setIsPlaying(!isPlaying);
-  };
-
-  const handleSeek = (value: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value;
-      setCurrentTime(value);
-    }
   };
 
   if (!audioUrl) {
     return (
       <div style={{ padding: 16, textAlign: 'center', color: '#999' }}>
-        Audio file not available
+        <SoundOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+        <div>Audio file not available</div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <audio
-        ref={audioRef}
-        src={audioUrl}
-        preload='metadata'
-      />
-
-      <Space
-        direction='vertical'
-        style={{ width: '100%' }}
-        size='small'
+    <Card>
+      <Flex
+        align='start'
+        gap='middle'
       >
-        {(title || artist) && (
-          <div>
-            {title && <Text strong>{title}</Text>}
-            {artist && <Text type='secondary'> • {artist}</Text>}
-          </div>
+        {/* Cover Image */}
+        {coverImageUrl && (
+          <Avatar
+            shape='square'
+            size={120}
+            src={coverImageUrl}
+            alt={title}
+            className='rounded-lg!'
+          />
         )}
 
-        <Space style={{ width: '100%' }}>
-          <Button
-            type='text'
-            icon={isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-            onClick={togglePlayPause}
-            size='large'
-          />
+        {/* Track Info & Waveform */}
+        <Flex
+          vertical
+          gap={4}
+          style={{ flex: 1, minWidth: 0 }}
+        >
+          {/* Track Title & Artist */}
+          {(title || artist) && (
+            <Flex
+              gap={2}
+              align='start'
+              vertical
+            >
+              {title && (
+                <Text
+                  strong
+                  ellipsis
+                  style={{ fontSize: 14 }}
+                >
+                  {title}
+                </Text>
+              )}
+              {artist && (
+                <Text
+                  type='secondary'
+                  ellipsis
+                  style={{ fontSize: 13 }}
+                >
+                  {artist}
+                </Text>
+              )}
+            </Flex>
+          )}
 
-          <div style={{ flex: 1 }}>
-            <Slider
-              min={0}
-              max={duration || 100}
-              value={currentTime}
-              onChange={handleSeek}
-              tooltip={{ formatter: (value) => formatDuration(value) }}
-            />
-            <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-              <Text
-                type='secondary'
-                style={{ fontSize: 12 }}
+          {/* Waveform */}
+          <div
+            ref={containerRef}
+            style={{
+              cursor: 'pointer',
+              borderRadius: 4,
+              overflow: 'hidden',
+              backgroundColor: '#ffffff',
+              minHeight: 40,
+            }}
+          >
+            {isLoading && (
+              <div
+                style={{
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#999',
+                  fontSize: 12,
+                }}
               >
-                {formatDuration(currentTime)}
-              </Text>
-              <Text
-                type='secondary'
-                style={{ fontSize: 12 }}
-              >
-                {formatDuration(duration)}
-              </Text>
-            </Space>
+                Loading...
+              </div>
+            )}
           </div>
 
-          <Space size='small'>
-            <SoundOutlined />
-            <Slider
-              min={0}
-              max={100}
-              value={volume}
-              onChange={setVolume}
-              style={{ width: 80 }}
-            />
-          </Space>
-        </Space>
-      </Space>
-    </div>
+          {/* Time Display */}
+          <Text
+            type='secondary'
+            style={{ fontSize: 12 }}
+          >
+            {formatDuration(currentTime)} / {formatDuration(duration)}
+          </Text>
+        </Flex>
+
+        {/* Play/Pause Button */}
+        <Button
+          type='text'
+          icon={
+            isPlaying ? (
+              <PauseCircleOutlined style={{ fontSize: 24 }} />
+            ) : (
+              <PlayCircleOutlined style={{ fontSize: 24 }} />
+            )
+          }
+          onClick={togglePlayPause}
+          disabled={isLoading}
+          style={{ padding: 0, flexShrink: 0 }}
+        />
+      </Flex>
+    </Card>
   );
 };

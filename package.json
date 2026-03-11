@@ -36,6 +36,7 @@
     "simplebar-react": "^3.3.2",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
+    "wavesurfer.js": "^7.12.2",
     "zustand": "^5.0.11",
     "zxcvbn": "^4.4.2"
   },
@@ -46,6 +47,7 @@
     "@types/node": "^24.10.9",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@types/wavesurfer.js": "^6.0.12",
     "@types/zxcvbn": "^4.4.5",
     "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
