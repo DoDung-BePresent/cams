@@ -7,6 +7,7 @@ import {
 } from '@ant-design/icons';
 import WaveSurfer from 'wavesurfer.js';
 import { formatDuration } from '@/shared/utils/uploadHelpers';
+import { PauseIcon, PlayIcon } from 'lucide-react';
 
 const { Text } = Typography;
 
@@ -106,94 +107,96 @@ export const TrackAudioPlayer = ({
             size={120}
             src={coverImageUrl}
             alt={title}
-            className='rounded-lg!'
+            className='rounded-lg! shrink-0!'
           />
         )}
-
-        {/* Track Info & Waveform */}
-        <Flex
-          vertical
-          gap={4}
-          style={{ flex: 1, minWidth: 0 }}
-        >
-          {/* Track Title & Artist */}
-          {(title || artist) && (
-            <Flex
-              gap={2}
-              align='start'
-              vertical
-            >
-              {title && (
-                <Text
-                  strong
-                  ellipsis
-                  style={{ fontSize: 14 }}
-                >
-                  {title}
-                </Text>
-              )}
-              {artist && (
-                <Text
-                  type='secondary'
-                  ellipsis
-                  style={{ fontSize: 13 }}
-                >
-                  {artist}
-                </Text>
-              )}
-            </Flex>
-          )}
-
-          {/* Waveform */}
-          <div
-            ref={containerRef}
-            style={{
-              cursor: 'pointer',
-              borderRadius: 4,
-              overflow: 'hidden',
-              backgroundColor: '#ffffff',
-              minHeight: 40,
-            }}
+        <Flex align='center' gap="large" className='w-full!'>
+          {/* Track Info & Waveform */}
+          <Flex
+            vertical
+            gap={4}
+            style={{ flex: 1, minWidth: 0 }}
           >
-            {isLoading && (
-              <div
-                style={{
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#999',
-                  fontSize: 12,
-                }}
+            {/* Track Title & Artist */}
+            {(title || artist) && (
+              <Flex
+                gap={2}
+                align='start'
+                vertical
               >
-                Loading...
-              </div>
+                {title && (
+                  <Text
+                    strong
+                    ellipsis
+                    style={{ fontSize: 14 }}
+                  >
+                    {title}
+                  </Text>
+                )}
+                {artist && (
+                  <Text
+                    type='secondary'
+                    ellipsis
+                    style={{ fontSize: 13 }}
+                  >
+                    {artist}
+                  </Text>
+                )}
+              </Flex>
             )}
-          </div>
 
-          {/* Time Display */}
-          <Text
-            type='secondary'
-            style={{ fontSize: 12 }}
-          >
-            {formatDuration(currentTime)} / {formatDuration(duration)}
-          </Text>
+            {/* Waveform */}
+            <div
+              ref={containerRef}
+              style={{
+                cursor: 'pointer',
+                borderRadius: 4,
+                overflow: 'hidden',
+                backgroundColor: '#ffffff',
+                minHeight: 40,
+              }}
+            >
+              {isLoading && (
+                <div
+                  style={{
+                    height: 40,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#999',
+                    fontSize: 12,
+                  }}
+                >
+                  Loading...
+                </div>
+              )}
+            </div>
+
+            {/* Time Display */}
+            <Text
+              type='secondary'
+              style={{ fontSize: 12 }}
+            >
+              {formatDuration(currentTime)} / {formatDuration(duration)}
+            </Text>
+          </Flex>
+
+          {/* Play/Pause Button */}
+          <Button
+            shape='circle'
+            type='primary'
+            icon={
+              isPlaying ? (
+                <PauseIcon className='size-8' />
+              ) : (
+                <PlayIcon className='size-8' />
+              )
+            }
+            onClick={togglePlayPause}
+            disabled={isLoading}
+            className='size-20! shrink-0! [&>span]:size-8!'
+          />
         </Flex>
-
-        {/* Play/Pause Button */}
-        <Button
-          type='text'
-          icon={
-            isPlaying ? (
-              <PauseCircleOutlined style={{ fontSize: 24 }} />
-            ) : (
-              <PlayCircleOutlined style={{ fontSize: 24 }} />
-            )
-          }
-          onClick={togglePlayPause}
-          disabled={isLoading}
-          style={{ padding: 0, flexShrink: 0 }}
-        />
       </Flex>
     </Card>
   );

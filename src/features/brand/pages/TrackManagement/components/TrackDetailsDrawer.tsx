@@ -1,7 +1,6 @@
 import {
   Drawer,
   Descriptions,
-  Image,
   Tag,
   Progress,
   Space,
@@ -9,7 +8,6 @@ import {
   Flex,
   Typography,
 } from 'antd';
-import { MusicIcon } from 'lucide-react';
 import { useTrack } from '@/shared/modules/tracks/hooks';
 import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
 import { formatDateTime } from '@/shared/utils/formHelpers';
@@ -60,7 +58,12 @@ export const TrackDetailsDrawer = ({
           {/* Audio Player */}
           {track.audioUrl && (
             <div>
-              <Title level={5} className='mb-4!'>Audio Player</Title>
+              <Title
+                level={5}
+                className='mb-4!'
+              >
+                Audio Player
+              </Title>
               <TrackAudioPlayer
                 audioUrl={track.audioUrl}
                 title={track.title}
