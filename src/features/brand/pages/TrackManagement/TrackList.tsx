@@ -106,10 +106,6 @@ export const TrackList = () => {
     });
   };
 
-  const handlePreview = (id: string) => {
-    setSelectedTrackId(id);
-    setDetailsDrawerOpen(true);
-  };
 
   const handleReset = () => {
     setFilter({
@@ -136,7 +132,6 @@ export const TrackList = () => {
     onEdit: handleEdit,
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
-    onPreview: handlePreview,
   });
 
   return (

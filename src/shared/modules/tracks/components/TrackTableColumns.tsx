@@ -28,7 +28,6 @@ export const getTrackColumns = ({
   onEdit,
   onDelete,
   onToggleStatus,
-  onPreview,
 }: TrackColumnActions): ColumnsType<TrackListItem> => [
   {
     title: 'No.',
@@ -161,13 +160,6 @@ export const getTrackColumns = ({
               icon: <EyeOutlined />,
               label: 'View Details',
               onClick: () => onView(record.id),
-            },
-            {
-              key: 'preview',
-              icon: <PlayCircleOutlined />,
-              label: 'Preview Audio',
-              onClick: () => onPreview(record.id),
-              disabled: !record.audioUrl,
             },
             { type: 'divider' },
             {
