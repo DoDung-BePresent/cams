@@ -1,4 +1,5 @@
 import {
+  CustomerServiceOutlined,
   DashboardOutlined,
   EnvironmentOutlined,
   SettingOutlined,
@@ -26,5 +27,10 @@ export const STORE_MENU_ITEMS: MenuItem[] = [
     key: '/store/settings',
     icon: <SettingOutlined />,
     label: 'Settings',
+  },
+  {
+    key: '/store/tracks',
+    icon: <CustomerServiceOutlined />,
+    label: 'Track Library',
   },
 ];

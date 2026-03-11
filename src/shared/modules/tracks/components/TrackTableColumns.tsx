@@ -1,11 +1,10 @@
 import { Space, Tag, Image, Dropdown, Button } from 'antd';
-import type { ColumnsType } from 'antd/es/table';
+import type { ColumnsType, MenuProps } from 'antd/es/table';
 import {
   MoreOutlined,
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
-  PlayCircleOutlined,
   PoweroffOutlined,
 } from '@ant-design/icons';
 import { MusicIcon } from 'lucide-react';
@@ -17,10 +16,10 @@ import type { TrackListItem } from '../types';
 
 interface TrackColumnActions {
   onView: (id: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onToggleStatus: (id: string) => void;
-  onPreview: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onToggleStatus?: (id: string) => void;
+  onPreview?: (id: string) => void;
 }
 
 export const getTrackColumns = ({
@@ -151,46 +150,62 @@ export const getTrackColumns = ({
     key: 'actions',
     fixed: 'right',
     width: 80,
-    render: (_, record: TrackListItem) => (
-      <Dropdown
-        menu={{
-          items: [
-            {
-              key: 'view',
-              icon: <EyeOutlined />,
-              label: 'View Details',
-              onClick: () => onView(record.id),
-            },
-            { type: 'divider' },
-            {
-              key: 'edit',
-              icon: <EditOutlined />,
-              label: 'Edit',
-              onClick: () => onEdit(record.id),
-            },
-            {
-              key: 'toggle',
-              icon: <PoweroffOutlined />,
-              label: record.status === 1 ? 'Deactivate' : 'Activate',
-              onClick: () => onToggleStatus(record.id),
-            },
-            { type: 'divider' },
-            {
-              key: 'delete',
-              icon: <DeleteOutlined />,
-              label: 'Delete',
-              danger: true,
-              onClick: () => onDelete(record.id),
-            },
-          ],
-        }}
-        trigger={['click']}
-      >
-        <Button
-          type='text'
-          icon={<MoreOutlined />}
-        />
-      </Dropdown>
-    ),
+    render: (_, record: TrackListItem) => {
+      const menuItems: MenuProps['items'] = [
+        {
+          key: 'view',
+          icon: <EyeOutlined />,
+          label: 'View Details',
+          onClick: () => onView(record.id),
+        },
+      ];
+
+      if (onEdit || onToggleStatus || onDelete) {
+        menuItems.push({ type: 'divider' });
+      }
+
+      if (onEdit) {
+        menuItems.push({
+          key: 'edit',
+          icon: <EditOutlined />,
+          label: 'Edit',
+          onClick: () => onEdit(record.id),
+        });
+      }
+
+      if (onToggleStatus) {
+        menuItems.push({
+          key: 'toggle',
+          icon: <PoweroffOutlined />,
+          label: record.status === 1 ? 'Deactivate' : 'Activate',
+          onClick: () => onToggleStatus(record.id),
+        });
+      }
+
+      if (onDelete) {
+        if (onEdit || onToggleStatus) {
+          menuItems.push({ type: 'divider' });
+        }
+        menuItems.push({
+          key: 'delete',
+          icon: <DeleteOutlined />,
+          label: 'Delete',
+          danger: true,
+          onClick: () => onDelete(record.id),
+        });
+      }
+
+      return (
+        <Dropdown
+          menu={{ items: menuItems }}
+          trigger={['click']}
+        >
+          <Button
+            type='text'
+            icon={<MoreOutlined />}
+          />
+        </Dropdown>
+      );
+    },
   },
 ];
