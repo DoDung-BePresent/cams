@@ -20,8 +20,8 @@ import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
  */
 import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
 import { ADMIN_ROUTE_MAP } from '@/features/admin/constants/adminRouteMap';
-import { managerMenuItems } from '@/features/manager/constants/managerMenuItems';
-import { MANAGER_ROUTE_MAP } from '@/features/manager/constants/managerRouteMap';
+import { brandMenuItems } from '@/features/brand/constants/brandMenuItems';
+import { BRAND_ROUTE_MAP } from '@/features/brand/constants/brandRouteMap';
 
 /**
  * Components
@@ -50,8 +50,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
 
   const isAdmin = user?.role === ROLES.SYSTEM_ADMIN;
   // FIXME: It's a bit redundant because we know that only person with SystemAdmin role can access this layout!
-  const menuItems = isAdmin ? adminMenuItems : managerMenuItems;
-  const routeMap = isAdmin ? ADMIN_ROUTE_MAP : MANAGER_ROUTE_MAP;
+  const menuItems = isAdmin ? adminMenuItems : brandMenuItems;
+  const routeMap = isAdmin ? ADMIN_ROUTE_MAP : BRAND_ROUTE_MAP;
 
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
     menuItems,

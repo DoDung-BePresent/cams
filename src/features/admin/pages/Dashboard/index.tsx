@@ -1,5 +1,5 @@
 import { Typography } from 'antd';
-import { MusicScheduleCalendar } from '@/features/manager/components/MusicScheduleCalendar';
+import { MusicScheduleCalendar } from '@/features/brand/components/MusicScheduleCalendar';
 
 const { Title } = Typography;
 

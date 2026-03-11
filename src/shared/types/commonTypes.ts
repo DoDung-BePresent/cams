@@ -5,6 +5,15 @@ export enum EntityStatusEnum {
   Rejected = 3,
 }
 
+export interface BasePaginationFilter {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  isAscending?: boolean;
+  status?: EntityStatusEnum;
+}
+
 export type BaseResponse = {
   id: string;
   createdAt: string;
@@ -13,6 +22,13 @@ export type BaseResponse = {
   updatedBy: string | null;
   status: EntityStatusEnum;
 };
+
+export interface Result<T = any> {
+  success: boolean;
+  message: string;
+  data: T;
+  errors?: Record<string, string[]>;
+}
 
 export type PaginationResult<T> = {
   currentPage: number;

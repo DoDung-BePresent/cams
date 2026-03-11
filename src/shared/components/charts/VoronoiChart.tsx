@@ -4,7 +4,7 @@ import * as d3 from 'd3-voronoi';
 import type {
   DeviceCoordinate,
   VoronoiPolygon,
-} from '@/features/manager/types/visualizationTypes';
+} from '@/features/brand/types/visualizationTypes';
 import { cn } from '@/shared/lib/utils';
 
 type VoronoiChartProps = {

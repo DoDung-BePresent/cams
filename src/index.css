@@ -64,6 +64,10 @@
     margin-right: 0;
     margin-left: 4px;
   }
+  .lucide {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 /* ===== LEAFLET ===== */
