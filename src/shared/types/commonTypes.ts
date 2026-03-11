@@ -23,6 +23,13 @@ export type BaseResponse = {
   status: EntityStatusEnum;
 };
 
+export interface Result<T = any> {
+  success: boolean;
+  message: string;
+  data: T;
+  errors?: Record<string, string[]>;
+}
+
 export type PaginationResult<T> = {
   currentPage: number;
   pageSize: number;

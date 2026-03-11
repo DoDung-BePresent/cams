@@ -10,6 +10,7 @@ import {
   EnvironmentOutlined,
   MobileOutlined,
 } from '@ant-design/icons';
+import { MusicIcon } from 'lucide-react';
 
 type MenuItem = Required<MenuProps>['items'][number];
 
@@ -50,6 +51,11 @@ export const brandMenuItems: MenuItem[] = [
         key: 'devices',
         icon: <MobileOutlined />,
         label: 'Devices',
+      },
+      {
+        key: 'tracks',
+        icon: <MusicIcon />,
+        label: 'Track Library',
       },
     ],
   },

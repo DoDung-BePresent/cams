@@ -1,5 +1,9 @@
 import { Upload, message } from 'antd';
 import type { UploadFile, UploadProps, RcFile } from 'antd/es/upload/interface';
+import {
+  AUDIO_FILE_EXTENSIONS,
+  MAX_AUDIO_SIZE,
+} from '@/shared/modules/tracks/constants';
 
 /**
  * Allowed image MIME types
@@ -72,7 +76,7 @@ export const createImageUploadProps = <T extends Record<string, any>>(
       return Upload.LIST_IGNORE;
     }
 
-    // ✅ RcFile already has uid property
+    // RcFile already has uid property
     onFileChange({
       uid: file.uid,
       name: file.name,
@@ -90,3 +94,63 @@ export const createImageUploadProps = <T extends Record<string, any>>(
   accept: IMAGE_ACCEPT,
   listType: 'picture',
 });
+
+/**
+ * Validate audio file (extension + size)
+ */
+export const validateAudioFile = (file: File): boolean => {
+  const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+
+  if (!AUDIO_FILE_EXTENSIONS.includes(extension)) {
+    message.error(
+      `Invalid audio format. Allowed: ${AUDIO_FILE_EXTENSIONS.join(', ')}`,
+    );
+    return false;
+  }
+
+  if (file.size > MAX_AUDIO_SIZE) {
+    message.error('Audio file size cannot exceed 50MB!');
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Create audio upload props with validation
+ */
+export const createAudioUploadProps = <T extends Record<string, any>>(
+  setFile: (file: UploadFile | null) => void,
+  setFieldValue: (field: keyof T, value: any) => void,
+): UploadProps => ({
+  name: 'audioFile',
+  accept: AUDIO_FILE_EXTENSIONS.join(','),
+  maxCount: 1,
+  beforeUpload: (file) => {
+    if (validateAudioFile(file)) {
+      const uploadFile: UploadFile = {
+        uid: file.uid,
+        name: file.name,
+        status: 'done',
+        originFileObj: file,
+      };
+      setFile(uploadFile);
+      setFieldValue('audioFile' as keyof T, file);
+    }
+    return false;
+  },
+  onRemove: () => {
+    setFile(null);
+    setFieldValue('audioFile' as keyof T, null);
+  },
+});
+
+/**
+ * Format audio duration (seconds to mm:ss)
+ */
+export const formatDuration = (seconds?: number): string => {
+  if (!seconds) return '--:--';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};

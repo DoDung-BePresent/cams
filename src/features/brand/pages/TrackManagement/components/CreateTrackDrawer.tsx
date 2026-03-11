@@ -1,0 +1,340 @@
+import { useState } from 'react';
+import {
+  Drawer,
+  Form,
+  Input,
+  Button,
+  Flex,
+  Row,
+  Col,
+  Typography,
+  InputNumber,
+  Slider,
+  Select,
+} from 'antd';
+import type { UploadFile } from 'antd';
+import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import {
+  createImageUploadProps,
+  createAudioUploadProps,
+} from '@/shared/utils/uploadHelpers';
+import { useCreateTrack } from '@/shared/modules/tracks/hooks';
+import { createTrackValidation } from '@/shared/modules/tracks/validations';
+import {
+  GENRE_OPTIONS,
+  MUSIC_PROVIDER_OPTIONS,
+} from '@/shared/modules/tracks/constants';
+import type { CreateTrackRequest } from '@/shared/modules/tracks/types';
+
+const { Title, Text } = Typography;
+
+interface CreateTrackDrawerProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export const CreateTrackDrawer = ({
+  open,
+  onClose,
+  onSuccess,
+}: CreateTrackDrawerProps) => {
+  const [form] = Form.useForm<CreateTrackRequest>();
+  const createTrack = useCreateTrack();
+
+  const [coverImageFile, setCoverImageFile] = useState<UploadFile | null>(null);
+  const [audioFile, setAudioFile] = useState<UploadFile | null>(null);
+  const [energyLevel, setEnergyLevel] = useState(0.5);
+  const [valence, setValence] = useState(0.5);
+
+  const imageUploadProps = createImageUploadProps<CreateTrackRequest>(
+    setCoverImageFile,
+    (field, value) => form.setFieldValue(field, value),
+  );
+
+  const audioUploadProps = createAudioUploadProps<CreateTrackRequest>(
+    setAudioFile,
+    (field, value) => form.setFieldValue(field, value),
+  );
+
+  const getCoverPreviewUrl = () => {
+    if (coverImageFile?.originFileObj) {
+      return URL.createObjectURL(coverImageFile.originFileObj);
+    }
+    return null;
+  };
+
+  const handleSubmit = async (values: CreateTrackRequest) => {
+    if (!audioFile?.originFileObj) {
+      return;
+    }
+
+    const payload: CreateTrackRequest = {
+      title: values.title,
+      artist: values.artist,
+      moodId: values.moodId,
+      genre: values.genre,
+      durationSec: values.durationSec,
+      bpm: values.bpm,
+      energyLevel,
+      valence,
+      provider: values.provider,
+      audioFile: audioFile.originFileObj,
+      coverImageFile: coverImageFile?.originFileObj,
+    };
+
+    createTrack.mutate(payload, {
+      onSuccess: () => {
+        handleCancel();
+        onSuccess();
+      },
+    });
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    setCoverImageFile(null);
+    setAudioFile(null);
+    setEnergyLevel(0.5);
+    setValence(0.5);
+    onClose();
+  };
+
+  return (
+    <Drawer
+      title='Upload New Track'
+      placement='right'
+      width={720}
+      open={open}
+      onClose={handleCancel}
+      closeIcon={null}
+      footer={
+        <Flex
+          justify='end'
+          gap='small'
+        >
+          <Button
+            size='large'
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
+            type='primary'
+            onClick={() => form.submit()}
+            loading={createTrack.isPending}
+          >
+            Upload
+          </Button>
+        </Flex>
+      }
+    >
+      <Form
+        size='large'
+        form={form}
+        layout='vertical'
+        onFinish={handleSubmit}
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
+      >
+        {/* Basic Information */}
+        <div style={{ marginBottom: 24 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
+            Basic Information
+          </Title>
+
+          <Form.Item
+            label='Track Title'
+            name='title'
+            rules={createTrackValidation.title}
+          >
+            <Input placeholder='e.g., Summer Vibes' />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label='Artist'
+                name='artist'
+                rules={createTrackValidation.artist}
+              >
+                <Input placeholder='e.g., John Doe' />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='Genre'
+                name='genre'
+                rules={createTrackValidation.genre}
+              >
+                <Select
+                  placeholder='Select genre'
+                  options={GENRE_OPTIONS}
+                  showSearch
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </div>
+
+        {/* Audio File */}
+        <div style={{ marginBottom: 24 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
+            Audio File
+          </Title>
+
+          <Form.Item
+            label='Audio File'
+            name='audioFile'
+            rules={createTrackValidation.audioFile}
+            valuePropName='file'
+          >
+            <div>
+              <input
+                type='file'
+                accept='.mp3,.wav,.aac,.flac,.ogg,.m4a'
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file && audioUploadProps.beforeUpload) {
+                    audioUploadProps.beforeUpload(file as any, []);
+                  }
+                }}
+                style={{ marginBottom: 8 }}
+              />
+              {audioFile && (
+                <Text type='secondary'>Selected: {audioFile.name}</Text>
+              )}
+            </div>
+          </Form.Item>
+        </div>
+
+        {/* Cover Image */}
+        <div style={{ marginBottom: 24 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
+            Cover Image (Optional)
+          </Title>
+
+          <Form.Item
+            label='Cover Image'
+            name='coverImageFile'
+            valuePropName='file'
+          >
+            <ImageDragger
+              previewUrl={getCoverPreviewUrl()}
+              uploadProps={imageUploadProps}
+            />
+          </Form.Item>
+        </div>
+
+        {/* Audio Metadata */}
+        <div style={{ marginBottom: 24 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
+            Audio Metadata
+          </Title>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label='Duration (seconds)'
+                name='durationSec'
+                rules={createTrackValidation.durationSec}
+              >
+                <InputNumber
+                  min={1}
+                  placeholder='e.g., 180'
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='BPM'
+                name='bpm'
+                rules={createTrackValidation.bpm}
+              >
+                <InputNumber
+                  min={20}
+                  max={300}
+                  placeholder='e.g., 120'
+                  style={{ width: '100%' }}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item label='Energy Level (0.0 - 1.0)'>
+            <Slider
+              min={0}
+              max={1}
+              step={0.1}
+              value={energyLevel}
+              onChange={setEnergyLevel}
+              marks={{ 0: '0.0', 0.5: '0.5', 1: '1.0' }}
+            />
+          </Form.Item>
+
+          <Form.Item label='Valence (0.0 - 1.0)'>
+            <Slider
+              min={0}
+              max={1}
+              step={0.1}
+              value={valence}
+              onChange={setValence}
+              marks={{ 0: '0.0', 0.5: '0.5', 1: '1.0' }}
+            />
+          </Form.Item>
+        </div>
+
+        {/* Additional Settings */}
+        <div style={{ marginBottom: 24 }}>
+          <Title
+            level={5}
+            style={{ marginBottom: 16 }}
+          >
+            Additional Settings
+          </Title>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label='Mood'
+                name='moodId'
+              >
+                <Select
+                  placeholder='Select mood'
+                  allowClear
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='Provider'
+                name='provider'
+                initialValue={0}
+              >
+                <Select options={MUSIC_PROVIDER_OPTIONS} />
+              </Form.Item>
+            </Col>
+          </Row>
+        </div>
+      </Form>
+    </Drawer>
+  );
+};

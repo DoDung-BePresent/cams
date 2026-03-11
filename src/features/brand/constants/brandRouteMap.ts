@@ -8,6 +8,7 @@ export const BRAND_ROUTE_MAP: Record<string, string> = {
   staff: '/brand/staff',
   spaces: '/brand/spaces',
   devices: '/brand/devices',
+  tracks: '/brand/tracks',
   'auto-manual-mode': '/brand/music-control/mode',
   'playback-control': '/brand/music-control/playback',
   'time-based-rules': '/brand/schedule/time-based',

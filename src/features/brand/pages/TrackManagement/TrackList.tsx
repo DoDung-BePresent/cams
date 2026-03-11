@@ -1,0 +1,411 @@
+import { useState } from 'react';
+import {
+  Card,
+  Button,
+  Input,
+  Space,
+  Flex,
+  Select,
+  Modal,
+  Tag,
+  Row,
+  Col,
+  Statistic,
+} from 'antd';
+import {
+  PlusOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  FilterOutlined,
+  SoundOutlined,
+  PlayCircleOutlined,
+} from '@ant-design/icons';
+import { MusicIcon } from 'lucide-react';
+import { DataTable } from '@/shared/components/common/DataTable';
+import {
+  useTracks,
+  useDeleteTrack,
+  useToggleTrackStatus,
+} from '@/shared/modules/tracks/hooks';
+import { getTrackColumns } from '@/shared/modules/tracks/components';
+import {
+  GENRE_OPTIONS,
+  MUSIC_PROVIDER_OPTIONS,
+} from '@/shared/modules/tracks/constants';
+import { ENTITY_STATUS_OPTIONS } from '@/shared/constants';
+import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
+import {
+  CreateTrackDrawer,
+  EditTrackDrawer,
+  TrackDetailsDrawer,
+} from './components';
+
+const { confirm } = Modal;
+
+export const TrackList = () => {
+  const [filter, setFilter] = useState<TrackFilter>({
+    page: 1,
+    pageSize: 10,
+    sortBy: 'createdAt',
+    isAscending: false,
+  });
+
+  const [showFilters, setShowFilters] = useState(false);
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [selectedTrackId, setSelectedTrackId] = useState<string>();
+
+  const { data, isLoading, refetch } = useTracks(filter);
+  const deleteTrack = useDeleteTrack();
+  const toggleStatus = useToggleTrackStatus();
+
+  const handleSearch = (value: string) => {
+    setFilter((prev) => ({ ...prev, search: value, page: 1 }));
+  };
+
+  const handleFilterChange = (key: keyof TrackFilter, value: any) => {
+    setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const handleTableChange = (
+    pagination: TablePaginationConfig,
+    _filters: Record<string, FilterValue | null>,
+    sorter: SorterResult<TrackListItem> | SorterResult<TrackListItem>[],
+  ) => {
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+
+    setFilter((prev) => ({
+      ...prev,
+      page: pagination.current || 1,
+      pageSize: pagination.pageSize || 10,
+      sortBy: currentSorter.field ? String(currentSorter.field) : 'createdAt',
+      isAscending: currentSorter.order === 'ascend',
+    }));
+  };
+
+  const handleView = (id: string) => {
+    setSelectedTrackId(id);
+    setDetailsDrawerOpen(true);
+  };
+
+  const handleEdit = (id: string) => {
+    setSelectedTrackId(id);
+    setEditDrawerOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    confirm({
+      title: 'Delete Track',
+      content:
+        'Are you sure you want to delete this track? This action cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: () => {
+        deleteTrack.mutate(id, {
+          onSuccess: () => refetch(),
+        });
+      },
+    });
+  };
+
+  const handleToggleStatus = (id: string) => {
+    confirm({
+      title: 'Toggle Track Status',
+      content: 'Are you sure you want to change this track status?',
+      okText: 'Confirm',
+      cancelText: 'Cancel',
+      onOk: () => {
+        toggleStatus.mutate(id, {
+          onSuccess: () => refetch(),
+        });
+      },
+    });
+  };
+
+  const handlePreview = (id: string) => {
+    setSelectedTrackId(id);
+    setDetailsDrawerOpen(true);
+  };
+
+  const handleReset = () => {
+    setFilter({
+      page: 1,
+      pageSize: 10,
+      sortBy: 'createdAt',
+      isAscending: false,
+    });
+  };
+
+  const columns = getTrackColumns({
+    onView: handleView,
+    onEdit: handleEdit,
+    onDelete: handleDelete,
+    onToggleStatus: handleToggleStatus,
+    onPreview: handlePreview,
+  });
+
+  return (
+    <>
+      <Space
+        direction='vertical'
+        size='large'
+        style={{ width: '100%' }}
+      >
+        {/* Statistics Cards */}
+        <Row gutter={16}>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title='Total Tracks'
+                value={data?.totalItems || 0}
+                prefix={<MusicIcon />}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title='Active Tracks'
+                value={data?.items.filter((t) => t.status === 1).length || 0}
+                prefix={<SoundOutlined />}
+                valueStyle={{ color: '#52c41a' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title='Total Plays'
+                value={
+                  data?.items.reduce((sum, t) => sum + t.playCount, 0) || 0
+                }
+                prefix={<PlayCircleOutlined />}
+                valueStyle={{ color: '#1890ff' }}
+              />
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title='AI Generated'
+                value={data?.items.filter((t) => t.isAiGenerated).length || 0}
+                prefix={<MusicIcon />}
+                valueStyle={{ color: '#722ed1' }}
+              />
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Main Content Card */}
+        <Card
+          title={
+            <Flex
+              justify='space-between'
+              align='center'
+            >
+              <span>Track Library</span>
+              <Space>
+                <Button
+                  type='primary'
+                  icon={<PlusOutlined />}
+                  onClick={() => setCreateDrawerOpen(true)}
+                >
+                  Upload Track
+                </Button>
+              </Space>
+            </Flex>
+          }
+        >
+          {/* Search & Filters */}
+          <Space
+            direction='vertical'
+            size='middle'
+            style={{ width: '100%' }}
+          >
+            <Flex
+              gap='middle'
+              wrap='wrap'
+            >
+              <Input
+                placeholder='Search by title or artist...'
+                prefix={<SearchOutlined />}
+                value={filter.search}
+                onChange={(e) => handleSearch(e.target.value)}
+                style={{ width: 300 }}
+                allowClear
+              />
+
+              <Button
+                icon={<FilterOutlined />}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                {showFilters ? 'Hide' : 'Show'} Filters
+              </Button>
+
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={() => refetch()}
+              >
+                Refresh
+              </Button>
+
+              {(filter.search ||
+                filter.genre ||
+                filter.moodId ||
+                filter.provider !== undefined ||
+                filter.status !== undefined) && (
+                <Button onClick={handleReset}>Reset Filters</Button>
+              )}
+            </Flex>
+
+            {/* Advanced Filters */}
+            {showFilters && (
+              <Card size='small'>
+                <Row gutter={[16, 16]}>
+                  <Col span={6}>
+                    <Select
+                      placeholder='Filter by Genre'
+                      options={GENRE_OPTIONS}
+                      value={filter.genre}
+                      onChange={(value) => handleFilterChange('genre', value)}
+                      style={{ width: '100%' }}
+                      allowClear
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Select
+                      placeholder='Filter by Provider'
+                      options={MUSIC_PROVIDER_OPTIONS}
+                      value={filter.provider}
+                      onChange={(value) =>
+                        handleFilterChange('provider', value)
+                      }
+                      style={{ width: '100%' }}
+                      allowClear
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Select
+                      placeholder='Filter by Status'
+                      options={ENTITY_STATUS_OPTIONS}
+                      value={filter.status}
+                      onChange={(value) => handleFilterChange('status', value)}
+                      style={{ width: '100%' }}
+                      allowClear
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Select
+                      placeholder='AI Generated'
+                      options={[
+                        { label: 'All', value: undefined },
+                        { label: 'AI Generated', value: true },
+                        { label: 'Custom Upload', value: false },
+                      ]}
+                      value={filter.isAiGenerated}
+                      onChange={(value) =>
+                        handleFilterChange('isAiGenerated', value)
+                      }
+                      style={{ width: '100%' }}
+                      allowClear
+                    />
+                  </Col>
+                </Row>
+              </Card>
+            )}
+
+            {/* Active Filters Display */}
+            {(filter.genre ||
+              filter.provider !== undefined ||
+              filter.status !== undefined) && (
+              <Space wrap>
+                {filter.genre && (
+                  <Tag
+                    closable
+                    onClose={() => handleFilterChange('genre', undefined)}
+                  >
+                    Genre: {filter.genre}
+                  </Tag>
+                )}
+                {filter.provider !== undefined && (
+                  <Tag
+                    closable
+                    onClose={() => handleFilterChange('provider', undefined)}
+                  >
+                    Provider:{' '}
+                    {
+                      MUSIC_PROVIDER_OPTIONS.find(
+                        (o) => o.value === filter.provider,
+                      )?.label
+                    }
+                  </Tag>
+                )}
+                {filter.status !== undefined && (
+                  <Tag
+                    closable
+                    onClose={() => handleFilterChange('status', undefined)}
+                  >
+                    Status:{' '}
+                    {
+                      ENTITY_STATUS_OPTIONS.find(
+                        (o) => o.value === filter.status,
+                      )?.label
+                    }
+                  </Tag>
+                )}
+              </Space>
+            )}
+          </Space>
+
+          {/* Data Table */}
+          <DataTable<TrackListItem>
+            columns={columns}
+            dataSource={data?.items || []}
+            loading={isLoading}
+            rowKey='id'
+            pagination={{
+              current: filter.page,
+              pageSize: filter.pageSize,
+              total: data?.totalItems,
+              showSizeChanger: true,
+              showTotal: (total) => `Total ${total} tracks`,
+              pageSizeOptions: ['10', '20', '50', '100'],
+            }}
+            onChange={handleTableChange}
+            scroll={{ x: 1400 }}
+          />
+        </Card>
+      </Space>
+
+      {/* Drawers */}
+      <CreateTrackDrawer
+        open={createDrawerOpen}
+        onClose={() => setCreateDrawerOpen(false)}
+        onSuccess={() => refetch()}
+      />
+
+      <EditTrackDrawer
+        open={editDrawerOpen}
+        trackId={selectedTrackId}
+        onClose={() => {
+          setEditDrawerOpen(false);
+          setSelectedTrackId(undefined);
+        }}
+        onSuccess={() => refetch()}
+      />
+
+      <TrackDetailsDrawer
+        open={detailsDrawerOpen}
+        trackId={selectedTrackId}
+        onClose={() => {
+          setDetailsDrawerOpen(false);
+          setSelectedTrackId(undefined);
+        }}
+      />
+    </>
+  );
+};

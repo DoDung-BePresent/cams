@@ -20,6 +20,11 @@ const DeviceList = Loadable(
   'DeviceList',
 );
 
+const TrackList = Loadable(
+  () => import('@/features/brand/pages/TrackManagement/TrackList'),
+  'TrackList',
+);
+
 export const brandRoutes = [
   {
     path: 'dashboard',
@@ -36,5 +41,9 @@ export const brandRoutes = [
   {
     path: 'devices',
     element: <DeviceList />,
+  },
+  {
+    path: 'tracks',
+    element: <TrackList />,
   },
 ];
