@@ -11,10 +11,11 @@ import {
   InputNumber,
   Slider,
   Select,
+  Tag,
 } from 'antd';
 import type { UploadFile } from 'antd';
 import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { AudioDragger } from '@/shared/components/common/AudioDragger'; // ✅ Import
+import { AudioDragger } from '@/shared/components/common/AudioDragger';
 import {
   createImageUploadProps,
   createAudioUploadProps,
@@ -26,7 +27,9 @@ import {
   GENRE_OPTIONS,
   MUSIC_PROVIDER_OPTIONS,
 } from '@/shared/modules/tracks/constants';
+import { MOOD_TYPE_COLORS } from '@/shared/modules/moods/constants';
 import type { CreateTrackRequest } from '@/shared/modules/tracks/types';
+import { useMoodOptions } from '@/shared/modules/moods/hooks';
 
 const { Title } = Typography;
 
@@ -49,6 +52,8 @@ export const CreateTrackDrawer = ({
   const [audioDuration, setAudioDuration] = useState<number>();
   const [energyLevel, setEnergyLevel] = useState(0.5);
   const [valence, setValence] = useState(0.5);
+
+  const { options: moodOptions, isLoading: moodsLoading } = useMoodOptions();
 
   const imageUploadProps = createImageUploadProps<CreateTrackRequest>(
     setCoverImageFile,
@@ -323,10 +328,34 @@ export const CreateTrackDrawer = ({
               <Form.Item
                 label='Mood'
                 name='moodId'
+                help={moodsLoading ? 'Loading moods...' : undefined}
               >
                 <Select
                   placeholder='Select mood'
+                  options={moodOptions}
+                  loading={moodsLoading}
+                  optionRender={(option) => (
+                    <Flex
+                      justify='space-between'
+                      align='center'
+                    >
+                      <span>{option.label}</span>
+                      {option.data.moodType && (
+                        <Tag
+                          color={MOOD_TYPE_COLORS[option.data.moodType]}
+                        >
+                          {option.data.moodType}
+                        </Tag>
+                      )}
+                    </Flex>
+                  )}
                   allowClear
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.label ?? '')
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                 />
               </Form.Item>
             </Col>

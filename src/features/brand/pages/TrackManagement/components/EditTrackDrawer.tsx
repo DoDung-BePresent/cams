@@ -12,18 +12,18 @@ import {
   Slider,
   Select,
   Spin,
+  Tag,
 } from 'antd';
 import type { UploadFile } from 'antd';
 import { ImageDragger } from '@/shared/components/common/ImageDragger';
 import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
 import { useTrack, useUpdateTrack } from '@/shared/modules/tracks/hooks';
 import { updateTrackValidation } from '@/shared/modules/tracks/validations';
-import {
-  GENRE_OPTIONS,
-  MUSIC_PROVIDER_OPTIONS,
-} from '@/shared/modules/tracks/constants';
+import { GENRE_OPTIONS } from '@/shared/modules/tracks/constants';
 import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
 import type { UpdateTrackRequest } from '@/shared/modules/tracks/types';
+import { useMoodOptions } from '@/shared/modules/moods/hooks';
+import { MOOD_TYPE_COLORS } from '@/shared/modules/moods/constants';
 
 const { Title } = Typography;
 
@@ -43,6 +43,7 @@ export const EditTrackDrawer = ({
   const [form] = Form.useForm<UpdateTrackRequest>();
   const { data: track, isLoading } = useTrack(trackId, open);
   const updateTrack = useUpdateTrack();
+  const { options: moodOptions, isLoading: moodsLoading } = useMoodOptions();
 
   const [coverImageFile, setCoverImageFile] = useState<UploadFile | null>(null);
   const [energyLevel, setEnergyLevel] = useState(0.5);
@@ -317,7 +318,23 @@ export const EditTrackDrawer = ({
             >
               <Select
                 placeholder='Select mood'
+                options={moodOptions}
+                loading={moodsLoading}
+                optionRender={(option) => (
+                  <Flex
+                    justify='space-between'
+                    align='center'
+                  >
+                    <span>{option.label}</span>
+                    {option.data.moodType && (
+                      <Tag color={MOOD_TYPE_COLORS[option.data.moodType]}>
+                        {option.data.moodType}
+                      </Tag>
+                    )}
+                  </Flex>
+                )}
                 allowClear
+                showSearch
               />
             </Form.Item>
           </div>
