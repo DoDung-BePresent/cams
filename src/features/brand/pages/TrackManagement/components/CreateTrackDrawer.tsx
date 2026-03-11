@@ -14,9 +14,11 @@ import {
 } from 'antd';
 import type { UploadFile } from 'antd';
 import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { AudioDragger } from '@/shared/components/common/AudioDragger'; // ✅ Import
 import {
   createImageUploadProps,
   createAudioUploadProps,
+  getAudioDuration,
 } from '@/shared/utils/uploadHelpers';
 import { useCreateTrack } from '@/shared/modules/tracks/hooks';
 import { createTrackValidation } from '@/shared/modules/tracks/validations';
@@ -26,7 +28,7 @@ import {
 } from '@/shared/modules/tracks/constants';
 import type { CreateTrackRequest } from '@/shared/modules/tracks/types';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface CreateTrackDrawerProps {
   open: boolean;
@@ -44,6 +46,7 @@ export const CreateTrackDrawer = ({
 
   const [coverImageFile, setCoverImageFile] = useState<UploadFile | null>(null);
   const [audioFile, setAudioFile] = useState<UploadFile | null>(null);
+  const [audioDuration, setAudioDuration] = useState<number>();
   const [energyLevel, setEnergyLevel] = useState(0.5);
   const [valence, setValence] = useState(0.5);
 
@@ -53,7 +56,20 @@ export const CreateTrackDrawer = ({
   );
 
   const audioUploadProps = createAudioUploadProps<CreateTrackRequest>(
-    setAudioFile,
+    async (file) => {
+      setAudioFile(file);
+
+      // Auto-extract duration
+      if (file?.originFileObj) {
+        try {
+          const duration = await getAudioDuration(file.originFileObj);
+          setAudioDuration(duration);
+          form.setFieldValue('durationSec', Math.floor(duration));
+        } catch (error) {
+          console.error('Failed to get audio duration:', error);
+        }
+      }
+    },
     (field, value) => form.setFieldValue(field, value),
   );
 
@@ -95,6 +111,7 @@ export const CreateTrackDrawer = ({
     form.resetFields();
     setCoverImageFile(null);
     setAudioFile(null);
+    setAudioDuration(undefined);
     setEnergyLevel(0.5);
     setValence(0.5);
     onClose();
@@ -200,22 +217,11 @@ export const CreateTrackDrawer = ({
             rules={createTrackValidation.audioFile}
             valuePropName='file'
           >
-            <div>
-              <input
-                type='file'
-                accept='.mp3,.wav,.aac,.flac,.ogg,.m4a'
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file && audioUploadProps.beforeUpload) {
-                    audioUploadProps.beforeUpload(file as any, []);
-                  }
-                }}
-                style={{ marginBottom: 8 }}
-              />
-              {audioFile && (
-                <Text type='secondary'>Selected: {audioFile.name}</Text>
-              )}
-            </div>
+            <AudioDragger
+              audioFile={audioFile?.originFileObj}
+              uploadProps={audioUploadProps}
+              duration={audioDuration}
+            />
           </Form.Item>
         </div>
 
@@ -258,8 +264,9 @@ export const CreateTrackDrawer = ({
               >
                 <InputNumber
                   min={1}
-                  placeholder='e.g., 180'
+                  placeholder='Auto-detected'
                   style={{ width: '100%' }}
+                  disabled={!!audioDuration}
                 />
               </Form.Item>
             </Col>

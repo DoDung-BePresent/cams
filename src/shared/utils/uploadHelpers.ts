@@ -154,3 +154,35 @@ export const formatDuration = (seconds?: number): string => {
   const secs = Math.floor(seconds % 60);
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 };
+
+/**
+ * Format file size (bytes to human-readable)
+ */
+export const formatFileSize = (bytes?: number): string => {
+  if (!bytes) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
+/**
+ * Get audio duration from file (async)
+ */
+export const getAudioDuration = (file: File): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    const audio = document.createElement('audio');
+    audio.preload = 'metadata';
+
+    audio.onloadedmetadata = () => {
+      window.URL.revokeObjectURL(audio.src);
+      resolve(audio.duration);
+    };
+
+    audio.onerror = () => {
+      reject(new Error('Failed to load audio metadata'));
+    };
+
+    audio.src = URL.createObjectURL(file);
+  });
+};
