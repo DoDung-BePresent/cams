@@ -1,15 +1,17 @@
 import { api } from '@/config/api';
+
+/**
+ * Types
+ */
 import type {
   AccountListItem,
   AccountDetailResponse,
-  CreateAccountRequest,
-  UpdateAccountRequest,
   ResetPasswordRequest,
   AssignBrandRequest,
   AssignStoreRequest,
   AccountFilter,
-} from '../types/accountTypes';
-import type { PaginationResult } from '@/shared/types/commonTypes';
+} from '../types';
+import type { PaginationResult, Result } from '@/shared/types';
 
 const ACCOUNT_ENDPOINTS = {
   list: '/api/users',
@@ -50,54 +52,33 @@ export const accountService = {
 
   // GET /api/users/{id}
   getById: (id: string) =>
-    api.get<{ isSuccess: boolean; data: AccountDetailResponse }>(
-      ACCOUNT_ENDPOINTS.detail(id),
-    ),
+    api.get<Result<AccountDetailResponse>>(ACCOUNT_ENDPOINTS.detail(id)),
 
   // POST /api/users (multipart/form-data)
   create: (formData: FormData) =>
-    api.post<{ isSuccess: boolean; message: string }>(
-      ACCOUNT_ENDPOINTS.create,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    ),
+    api.post<Result>(ACCOUNT_ENDPOINTS.create, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   // PATCH /api/users/{id} (multipart/form-data, partial)
   update: (id: string, formData: FormData) =>
-    api.patch<{ isSuccess: boolean; message: string }>(
-      ACCOUNT_ENDPOINTS.update(id),
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    ),
+    api.patch<Result>(ACCOUNT_ENDPOINTS.update(id), formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   // PUT /api/users/{id}/status
   toggleStatus: (id: string) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      ACCOUNT_ENDPOINTS.toggleStatus(id),
-    ),
+    api.put<Result>(ACCOUNT_ENDPOINTS.toggleStatus(id)),
 
   // PUT /api/users/{id}/reset-password
   resetPassword: (id: string, data: ResetPasswordRequest) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      ACCOUNT_ENDPOINTS.resetPassword(id),
-      data,
-    ),
+    api.put<Result>(ACCOUNT_ENDPOINTS.resetPassword(id), data),
 
   // PUT /api/users/{id}/brand (SA only)
   assignBrand: (id: string, data: AssignBrandRequest) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      ACCOUNT_ENDPOINTS.assignBrand(id),
-      data,
-    ),
+    api.put<Result>(ACCOUNT_ENDPOINTS.assignBrand(id), data),
 
   // PUT /api/users/{id}/store
   assignStore: (id: string, data: AssignStoreRequest) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      ACCOUNT_ENDPOINTS.assignStore(id),
-      data,
-    ),
+    api.put<Result>(ACCOUNT_ENDPOINTS.assignStore(id), data),
 };

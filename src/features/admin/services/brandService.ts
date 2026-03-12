@@ -1,15 +1,11 @@
 import { api } from '@/config/api';
-
-/**
- * Types
- */
 import type {
   BrandListItem,
   BrandDetailResponse,
   BrandRequest,
   BrandFilter,
 } from '../types/brandTypes';
-import type { PaginationResult } from '@/shared/types/commonTypes';
+import type { PaginationResult, Result } from '@/shared/types/commonTypes';
 
 const BRAND_ENDPOINTS = {
   list: '/api/brands',
@@ -29,7 +25,8 @@ export const brandService = {
     if (filter.sortBy) params.append('sortBy', filter.sortBy);
     if (filter.isAscending !== undefined)
       params.append('isAscending', filter.isAscending.toString());
-    if (filter.status) params.append('status', filter.status);
+    if (filter.status !== undefined)
+      params.append('status', filter.status.toString());
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
 
@@ -40,33 +37,20 @@ export const brandService = {
 
   // GET /api/brands/{id}
   getById: (id: string) =>
-    api.get<{ isSuccess: boolean; data: BrandDetailResponse }>(
-      BRAND_ENDPOINTS.detail(id),
-    ),
+    api.get<Result<BrandDetailResponse>>(BRAND_ENDPOINTS.detail(id)),
 
   // POST /api/brands (multipart/form-data)
   create: (formData: FormData) =>
-    api.post<{ isSuccess: boolean; message: string }>(
-      BRAND_ENDPOINTS.create,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    ),
+    api.post<Result>(BRAND_ENDPOINTS.create, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   // PATCH /api/brands/{id} (multipart/form-data)
   update: (id: string, formData: FormData) =>
-    api.patch<{ isSuccess: boolean; message: string }>(
-      BRAND_ENDPOINTS.update(id),
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    ),
+    api.patch<Result>(BRAND_ENDPOINTS.update(id), formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   // DELETE /api/brands/{id}
-  delete: (id: string) =>
-    api.delete<{ isSuccess: boolean; message: string }>(
-      BRAND_ENDPOINTS.delete(id),
-    ),
+  delete: (id: string) => api.delete<Result>(BRAND_ENDPOINTS.delete(id)),
 };

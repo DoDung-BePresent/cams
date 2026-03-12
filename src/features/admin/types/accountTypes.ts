@@ -1,15 +1,14 @@
 import type { EntityStatusEnum, RoleEnum } from '@/shared/types/commonTypes';
 
-// Request DTOs
 export type CreateAccountRequest = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   phoneNumber?: string;
-  role: RoleEnum; // Admin chỉ tạo BrandManager (role = 1)
-  brandId?: string; // Required nếu role = BrandManager
-  storeId?: string; // null cho BrandManager
+  role: RoleEnum;
+  brandId?: string;
+  storeId?: string;
   avatar?: File;
 };
 
@@ -33,34 +32,32 @@ export type AssignStoreRequest = {
   newStoreId: string | null;
 };
 
-// Filter
 export type AccountFilter = {
   page?: number;
   pageSize?: number;
-  search?: string; // Search email, name, phone
+  search?: string;
   sortBy?: string;
   isAscending?: boolean;
   status?: EntityStatusEnum;
-  role?: RoleEnum; // Admin filter: 0 (SA) hoặc 1 (BM)
-  brandId?: string; // Filter by brand
-  storeId?: string; // Filter by store
-  joiningFrom?: string; // ISO 8601
+  role?: RoleEnum;
+  brandId?: string;
+  storeId?: string;
+  joiningFrom?: string;
   joiningTo?: string;
-  isPrimaryOwner?: boolean; // true/false/null
+  isPrimaryOwner?: boolean;
 };
 
-// Response DTOs
 export type AccountListItem = {
   id: string;
   firstName: string;
   lastName: string;
-  fullName: string; // Computed by backend
+  fullName: string;
   email: string;
   phoneNumber: string | null;
   avatarUrl: string | null;
-  lastLoginAt: string | null; // ISO 8601 UTC
-  roles: RoleEnum[]; // Array of role enums (int[])
-  brandId: string | null; // null for SystemAdmin
+  lastLoginAt: string | null;
+  roles: RoleEnum[];
+  brandId: string | null;
   brandName: string | null;
   storeId: string | null;
   storeName: string | null;

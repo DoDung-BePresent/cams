@@ -30,10 +30,11 @@ export type BaseResponse = {
 };
 
 export interface Result<T = any> {
-  success: boolean;
+  isSuccess: boolean;
   message: string;
-  data: T;
-  errors?: Record<string, string[]>;
+  data?: T;
+  errors?: Array<{ field: string; message: string }> | null;
+  errorCode?: string | null;
 }
 
 export type PaginationResult<T> = {
