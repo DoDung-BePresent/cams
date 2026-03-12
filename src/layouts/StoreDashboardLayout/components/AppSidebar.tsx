@@ -21,7 +21,7 @@ import { STORE_MENU_ITEMS, STORE_ROUTE_MAP } from '@/features/store/constants';
 /**
  * Components
  */
-import { NavCard } from './NavCard';
+import { NavCard } from '@/shared/components';
 
 type AppSidebarProps = {
   collapsed: boolean;

@@ -3,9 +3,8 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
 /**
- * Shared
+ * Libs
  */
-import { Logo } from '@/shared/components/common/Logo';
 import { cn } from '@/shared/lib/utils';
 
 /**
@@ -16,13 +15,12 @@ import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
 /**
  * Features
  */
-import { BRAND_MENU_ITEMS } from '@/features/brand/constants/brandMenuItems';
-import { BRAND_ROUTE_MAP } from '@/features/brand/constants/brandRouteMap';
+import { BRAND_MENU_ITEMS, BRAND_ROUTE_MAP } from '@/features/brand/constants';
 
 /**
  * Components
  */
-import { NavCard } from './NavCard';
+import { NavCard, Logo } from '@/shared/components';
 
 type AppSidebarProps = {
   collapsed: boolean;

@@ -34,16 +34,18 @@ import avatarImage from '@/assets/images/avatar-1.png';
 /**
  * Providers
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers';
 
 /**
  * Shared
  */
-import { useFullscreen } from '@/shared/hooks/useFullScreen';
+import { useFullscreen } from '@/shared/hooks';
 
 /**
  * Types
  */
+import type { MenuProps } from 'antd';
+
 type AppHeaderProps = {
   collapsed: boolean;
   onClick: () => void;
@@ -78,7 +80,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
     });
   };
 
-  const userMenuItems = [
+  const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       label: (

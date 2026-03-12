@@ -20,8 +20,7 @@ import { ADMIN_MENU_ITEMS, ADMIN_ROUTE_MAP } from '@/features/admin/constants';
 /**
  * Components
  */
-import { NavCard } from '@/shared/components';
-import { Logo } from '@/shared/components/common/Logo';
+import { NavCard, Logo } from '@/shared/components';
 
 type AppSidebarProps = {
   collapsed: boolean;
