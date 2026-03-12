@@ -10,27 +10,22 @@ import { saveTokens, clearTokens, getAccessToken } from '@/config/api';
 /**
  * Utils
  */
-import { isTokenExpired } from '@/shared/utils/jwt';
-import { handleApiError } from '@/shared/utils/errorHandler';
-import { ERROR_MESSAGES, ErrorCodeEnum } from '@/shared/types/errorTypes';
+import { isTokenExpired } from '@/shared/utils';
 
 /**
  * Hooks
  */
-import { useProfile } from '@/features/auth/hooks/useProfile';
+import { useProfile } from '@/features/auth/hooks';
 
 /**
  * Services
  */
-import { authService } from '@/features/auth/services/authService';
+import { authService } from '@/features/auth/services';
 
 /**
  * Types
  */
-import type {
-  LoginPayload,
-  User,
-} from '@/features/auth/types/authTypes';
+import type { LoginPayload, User } from '@/features/auth/types';
 import type { UseMutationResult } from '@tanstack/react-query';
 
 type EnhancedAuthContextType = {

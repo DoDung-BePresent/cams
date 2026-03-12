@@ -6,7 +6,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 /**
  * Hooks
  */
-import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
+import { useNetworkStatus } from '@/shared/hooks';
 
 export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
   const { isOnline } = useNetworkStatus();
@@ -18,7 +18,7 @@ export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           queries: {
             staleTime: 60 * 1000,
             gcTime: 1000 * 60 * 60 * 24,
-            retry: (failureCount, error: any) => {
+            retry: (failureCount, _error) => {
               // Don't retry if offline
               if (!navigator.onLine) return false;
               // Retry up to 2 times for other errors
@@ -29,14 +29,14 @@ export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           },
           mutations: {
             // Block mutations when offline
-            retry: (failureCount, error: any) => {
+            retry: (failureCount, _error) => {
               if (!navigator.onLine) {
                 message.error('Cannot perform action while offline!');
                 return false;
               }
               return failureCount < 1;
             },
-            onError: (error: any) => {
+            onError: (_error) => {
               if (!navigator.onLine) {
                 message.error('Cannot perform action while offline!');
               }

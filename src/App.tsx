@@ -1,9 +1,19 @@
 import { RouterProvider } from 'react-router';
 
-import { AppProvider } from '@/providers/AppProvider';
+/**
+ * Providers
+ */
+import { AppProvider } from '@/providers';
+
+/**
+ * Routes
+ */
 import { router } from '@/routes';
-import { ScrollTop } from '@/shared/components/common/ScrollTop';
-import { ErrorBoundary } from '@/shared/components/common/ErrorBoundary';
+
+/**
+ * Components
+ */
+import { ScrollTop, ErrorBoundary } from '@/shared/components';
 
 export const App = () => {
   return (

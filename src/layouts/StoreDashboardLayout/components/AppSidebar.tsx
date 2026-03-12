@@ -6,7 +6,7 @@ import 'simplebar-react/dist/simplebar.min.css';
  * Shared
  */
 import { Logo } from '@/shared/components/common/Logo';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib';
 
 /**
  * Hooks

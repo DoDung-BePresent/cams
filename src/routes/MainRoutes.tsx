@@ -3,22 +3,28 @@ import { Navigate } from 'react-router';
 /**
  * Layouts
  */
-import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
-import { BrandDashboardLayout } from '@/layouts/BrandDashboardLayout';
-import { StoreDashboardLayout } from '@/layouts/StoreDashboardLayout';
+import {
+  AdminDashboardLayout,
+  BrandDashboardLayout,
+  StoreDashboardLayout,
+} from '@/layouts';
 
 /**
- * Shared
+ * Constants
  */
-import { ROLES } from '@/shared/constants/rolesConstants';
-import { ProtectedRoute } from '@/shared/components/common/ProtectedRoute';
+import { ROLES } from '@/shared/constants';
 
 /**
- * Features
+ * Components
  */
-import { adminRoutes } from '@/features/admin/routes/adminRoutes';
-import { brandRoutes } from '@/features/brand/routes/brandRoutes';
-import { storeRoutes } from '@/features/store/routes/storeRoutes';
+import { ProtectedRoute } from '@/shared/components';
+
+/**
+ * Routes
+ */
+import { adminRoutes } from '@/features/admin/routes';
+import { brandRoutes } from '@/features/brand/routes';
+import { storeRoutes } from '@/features/store/routes';
 
 export const MainRoutes = [
   {
