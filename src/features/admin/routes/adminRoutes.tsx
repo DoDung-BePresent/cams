@@ -20,6 +20,11 @@ const TrackList = Loadable(
   'TrackList',
 );
 
+const PlaylistList = Loadable(
+  () => import('@/features/admin/pages/PlaylistManagement/PlaylistList'),
+  'PlaylistList',
+);
+
 export const adminRoutes = [
   {
     path: 'dashboard',
@@ -36,5 +41,9 @@ export const adminRoutes = [
   {
     path: 'tracks',
     element: <TrackList />,
+  },
+  {
+    path: 'playlists',
+    element: <PlaylistList />,
   },
 ];
