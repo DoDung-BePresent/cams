@@ -8,10 +8,7 @@ import { useState } from 'react';
 /**
  * Components
  */
-import { AppSidebar } from './components/AppSidebar';
-import { AppHeader } from './components/AppHeader';
-import { AppFooter } from './components/AppFooter';
-import { AppContent } from './components/AppContent';
+import { AppSidebar, AppHeader, AppFooter, AppContent } from './components';
 
 export const AdminDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);

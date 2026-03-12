@@ -10,22 +10,43 @@ import {
   Button,
   Popconfirm,
 } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
   PlayCircleOutlined,
 } from '@ant-design/icons';
-import { usePlaylist } from '@/shared/modules/playlists/hooks';
-import { useRemoveTrackFromPlaylist } from '@/shared/modules/playlists/hooks';
+
+/**
+ * Hooks
+ */
+import {
+  usePlaylist,
+  useRemoveTrackFromPlaylist,
+} from '@/shared/modules/playlists/hooks';
+
+/**
+ * Constants
+ */
 import {
   PLAYLIST_TYPE_LABELS,
   PLAYLIST_TYPE_COLORS,
 } from '@/shared/modules/playlists/constants';
 import { ENTITY_STATUS_LABELS } from '@/shared/constants';
-import { formatDuration } from '@/shared/utils/uploadHelpers';
+
+/**
+ * Utils
+ */
+import { formatDuration, formatDate } from '@/shared/utils';
+
+/**
+ * Types
+ */
 import type { PlaylistTrackItem } from '@/shared/modules/playlists/types';
-import { formatDate } from '@/shared/utils/formHelpers';
 
 const { Title, Text } = Typography;
 

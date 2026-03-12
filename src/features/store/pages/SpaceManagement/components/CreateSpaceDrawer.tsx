@@ -137,7 +137,6 @@ export const CreateSpaceDrawer = ({
               label='Max Occupancy'
               name='maxOccupancy'
               rules={createSpaceValidation.maxOccupancy}
-              // extra='Maximum number of people allowed in this space'
             >
               <InputNumber
                 min={1}
@@ -151,7 +150,6 @@ export const CreateSpaceDrawer = ({
               label='Critical Queue Threshold'
               name='criticalQueueThreshold'
               rules={createSpaceValidation.criticalQueueThreshold}
-              // extra='Trigger alert when queue exceeds this number'
             >
               <InputNumber
                 min={1}

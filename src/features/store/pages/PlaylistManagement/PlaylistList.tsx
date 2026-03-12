@@ -1,22 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from 'antd';
+
+/**
+ * Icons
+ */
 import { PlusOutlined } from '@ant-design/icons';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { usePlaylists } from '@/shared/modules/playlists/hooks';
-import { useDeletePlaylist } from '@/shared/modules/playlists/hooks';
-import { useTogglePlaylistStatus } from '@/shared/modules/playlists/hooks';
-import { useRetranscodePlaylist } from '@/shared/modules/playlists/hooks';
-import { getPlaylistColumns } from '@/shared/modules/playlists/components/PlaylistTableColumns';
-import { useMoods } from '@/shared/modules/moods/hooks';
-import type {
-  PlaylistFilter,
-  PlaylistListItem,
-} from '@/shared/modules/playlists/types';
-import type { TablePaginationConfig } from 'antd';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
+
+/**
+ * Components
+ */
+import { PageHeader, DataTable, AppModal } from '@/shared/components';
+import { getPlaylistColumns } from '@/shared/modules/playlists/components';
 import {
   PlaylistFilter as PlaylistFilterComponent,
   PlaylistDetailsDrawer,
@@ -24,6 +19,27 @@ import {
   EditPlaylistDrawer,
   AddTracksDrawer,
 } from './components';
+
+/**
+ * Hooks
+ */
+import {
+  usePlaylists,
+  useDeletePlaylist,
+  useTogglePlaylistStatus,
+  useRetranscodePlaylist,
+} from '@/shared/modules/playlists/hooks';
+import { useMoods } from '@/shared/modules/moods/hooks';
+
+/**
+ * Types
+ */
+import type {
+  PlaylistFilter,
+  PlaylistListItem,
+} from '@/shared/modules/playlists/types';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
 export const PlaylistList = () => {
   const navigate = useNavigate();

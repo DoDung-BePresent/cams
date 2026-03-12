@@ -11,13 +11,29 @@ import {
   Typography,
   Alert,
 } from 'antd';
+
+/**
+ * Icons
+ */
 import { InfoCircleOutlined } from '@ant-design/icons';
+
+/**
+ * Hooks
+ */
 import {
   usePlaylist,
   useUpdatePlaylist,
 } from '@/shared/modules/playlists/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
+
+/**
+ * Validations
+ */
 import { updatePlaylistValidation } from '@/shared/modules/playlists/validations';
+
+/**
+ * Types
+ */
 import type { UpdatePlaylistRequest } from '@/shared/modules/playlists/types';
 
 const { Title, Text } = Typography;

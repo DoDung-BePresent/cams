@@ -10,7 +10,7 @@ import { cn } from '@/shared/lib/utils';
 /**
  * Hooks
  */
-import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
+import { useMenuNavigation } from '@/shared/hooks';
 
 /**
  * Constants
@@ -20,7 +20,7 @@ import { ADMIN_MENU_ITEMS, ADMIN_ROUTE_MAP } from '@/features/admin/constants';
 /**
  * Components
  */
-import { NavCard } from './NavCard';
+import { NavCard } from '@/shared/components';
 import { Logo } from '@/shared/components/common/Logo';
 
 type AppSidebarProps = {

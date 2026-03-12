@@ -36,15 +36,3 @@ export const SPACE_TYPE_COLORS: Record<SpaceTypeEnum, string> = {
   [SpaceTypeEnum.Kitchen]: 'volcano',
   [SpaceTypeEnum.Restroom]: 'purple',
 };
-
-/**
- * API Endpoints
- */
-export const SPACE_ENDPOINTS = {
-  list: '/api/spaces',
-  detail: (id: string) => `/api/spaces/${id}`,
-  create: '/api/spaces',
-  update: (id: string) => `/api/spaces/${id}`,
-  delete: (id: string) => `/api/spaces/${id}`,
-  toggleStatus: (id: string) => `/api/spaces/${id}/toggle-status`,
-} as const;

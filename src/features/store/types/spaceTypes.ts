@@ -1,7 +1,4 @@
-import type {
-  BaseResponse,
-  PaginationResult,
-} from '@/shared/types/commonTypes';
+import type { BaseResponse } from '@/shared/types/commonTypes';
 import type { BasePaginationFilter } from '@/shared/types/commonTypes';
 
 /**
@@ -80,8 +77,3 @@ export interface SpaceFilter extends BasePaginationFilter {
   createdFrom?: string; // ISO 8601 datetime
   createdTo?: string; // ISO 8601 datetime
 }
-
-/**
- * Pagination Result for Space List
- */
-export type SpacePaginationResult = PaginationResult<SpaceListItem>;

@@ -14,7 +14,8 @@ import dayjs from 'dayjs';
  * Types
  */
 import type { SpaceListItem } from '@/features/store/types';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { EntityStatusEnum } from '@/shared/types';
+import { SpaceTypeEnum } from '@/features/store/types';
 
 /**
  * Constants
@@ -50,14 +51,13 @@ export const getSpaceColumns = ({
     width: 200,
     fixed: 'left',
     sorter: true,
-    // render: (name: string) => <p>{name}</p>,
   },
   {
     title: 'Type',
     dataIndex: 'type',
     key: 'type',
     width: 120,
-    render: (type: number) => (
+    render: (type: SpaceTypeEnum) => (
       <Tag color={SPACE_TYPE_COLORS[type]}>{SPACE_TYPE_LABELS[type]}</Tag>
     ),
   },

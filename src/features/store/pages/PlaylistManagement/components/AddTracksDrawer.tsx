@@ -10,10 +10,24 @@ import {
   Empty,
   Spin,
 } from 'antd';
+
+/**
+ * Icons
+ */
 import { SearchOutlined } from '@ant-design/icons';
+
+/**
+ * Hooks
+ */
 import { useTracks } from '@/shared/modules/tracks/hooks';
-import { usePlaylist } from '@/shared/modules/playlists/hooks';
-import { useAddTracksToPlaylist } from '@/shared/modules/playlists/hooks';
+import {
+  usePlaylist,
+  useAddTracksToPlaylist,
+} from '@/shared/modules/playlists/hooks';
+
+/**
+ * Types
+ */
 import type { TransferProps } from 'antd';
 
 const { Title, Text } = Typography;
@@ -79,6 +93,14 @@ export const AddTracksDrawer = ({
     setSelectedKeys([]);
     setSearchValue('');
     onClose();
+  };
+
+  const handleTransferChange: TransferProps['onChange'] = (
+    targetKeys,
+    _direction,
+    _moveKeys,
+  ) => {
+    setSelectedKeys(targetKeys as string[]);
   };
 
   // Get existing track IDs from playlist
@@ -182,7 +204,7 @@ export const AddTracksDrawer = ({
                   .includes(inputValue.toLowerCase())
               }
               targetKeys={selectedKeys}
-              onChange={setSelectedKeys}
+              onChange={handleTransferChange}
               render={(item) => (
                 <div>
                   <div style={{ fontWeight: 500 }}>{item.title}</div>
