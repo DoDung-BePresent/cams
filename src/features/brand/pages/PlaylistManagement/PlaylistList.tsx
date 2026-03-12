@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, Modal } from 'antd';
-import { PlusOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import { PageHeader } from '@/shared/components/common/PageHeader';
 import { DataTable } from '@/shared/components/common/DataTable';
+import { AppModal } from '@/shared/components/ui/AppModal';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useDeletePlaylist } from '@/shared/modules/playlists/hooks';
 import { useTogglePlaylistStatus } from '@/shared/modules/playlists/hooks';
@@ -22,10 +23,8 @@ import {
   PlaylistDetailsDrawer,
   CreatePlaylistDrawer,
   EditPlaylistDrawer,
-  AddTracksModal,
+  AddTracksDrawer,
 } from './components';
-
-const { confirm } = Modal;
 
 export const PlaylistList = () => {
   const navigate = useNavigate();
@@ -40,7 +39,7 @@ export const PlaylistList = () => {
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
-  const [addTracksModalOpen, setAddTracksModalOpen] = useState(false);
+  const [addTracksDrawerOpen, setAddTracksDrawerOpen] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>();
 
   const { data, isLoading, refetch } = usePlaylists(filter);
@@ -91,15 +90,14 @@ export const PlaylistList = () => {
 
   const handleAddTracks = (id: string) => {
     setSelectedPlaylistId(id);
-    setAddTracksModalOpen(true);
+    setAddTracksDrawerOpen(true);
   };
 
   const handleDelete = (id: string) => {
     const playlist = data?.items.find((p) => p.id === id);
 
-    confirm({
+    AppModal.confirm({
       title: 'Delete Playlist',
-      icon: <ExclamationCircleOutlined />,
       content: (
         <div>
           <p>
@@ -112,8 +110,10 @@ export const PlaylistList = () => {
         </div>
       ),
       okText: 'Delete',
-      okType: 'danger',
       cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
       onOk: () => {
         deletePlaylist.mutate(id, {
           onSuccess: () => refetch(),
@@ -126,12 +126,14 @@ export const PlaylistList = () => {
     const playlist = data?.items.find((p) => p.id === id);
     const action = playlist?.status === 1 ? 'deactivate' : 'activate';
 
-    confirm({
+    AppModal.confirm({
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} Playlist`,
-      icon: <ExclamationCircleOutlined />,
-      content: `Are you sure you want to ${action} "${playlist?.name}"?`,
+      content: `Are you sure you want to ${action} playlist "${playlist?.name}"?`,
       okText: action.charAt(0).toUpperCase() + action.slice(1),
       cancelText: 'Cancel',
+      okButtonProps: {
+        danger: playlist?.status === 1,
+      },
       onOk: () => {
         toggleStatus.mutate(id, {
           onSuccess: () => refetch(),
@@ -143,9 +145,8 @@ export const PlaylistList = () => {
   const handleRetranscode = (id: string) => {
     const playlist = data?.items.find((p) => p.id === id);
 
-    confirm({
+    AppModal.confirm({
       title: 'Re-transcode Playlist',
-      icon: <ExclamationCircleOutlined />,
       content: (
         <div>
           <p>
@@ -202,14 +203,10 @@ export const PlaylistList = () => {
   }));
 
   // Transform moods data to options
-  const moodOptions = (moodsData?.items || []).map((mood) => ({
+  const moodOptions = (moodsData || []).map((mood) => ({
     label: mood.name || 'Unnamed Mood',
     value: mood.id,
   }));
-
-  // Get existing track IDs for AddTracksModal
-  // const selectedPlaylist = data?.items.find((p) => p.id === selectedPlaylistId);
-  const existingTrackIds: string[] = []; // Will be populated from playlist detail in modal
 
   return (
     <div>
@@ -290,13 +287,12 @@ export const PlaylistList = () => {
         }}
       />
 
-      {/* Add Tracks Modal */}
-      <AddTracksModal
-        open={addTracksModalOpen}
+      {/* Add Tracks Drawer */}
+      <AddTracksDrawer
+        open={addTracksDrawerOpen}
         playlistId={selectedPlaylistId}
-        existingTrackIds={existingTrackIds}
         onClose={() => {
-          setAddTracksModalOpen(false);
+          setAddTracksDrawerOpen(false);
           setSelectedPlaylistId(undefined);
         }}
         onSuccess={() => refetch()}

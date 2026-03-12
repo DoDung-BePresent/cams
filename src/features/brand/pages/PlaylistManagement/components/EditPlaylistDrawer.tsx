@@ -39,7 +39,7 @@ export const EditPlaylistDrawer = ({
   const { data: playlist, isLoading } = usePlaylist(playlistId, open);
   const updatePlaylist = useUpdatePlaylist();
 
-  const { data: moodsData } = useMoods({ page: 1, pageSize: 1000, status: 1 });
+  const { data: moodsData } = useMoods();
 
   const isDynamic = Form.useWatch('isDynamic', form);
 
@@ -67,7 +67,7 @@ export const EditPlaylistDrawer = ({
           handleCancel();
           onSuccess?.();
         },
-      }
+      },
     );
   };
 
@@ -76,7 +76,7 @@ export const EditPlaylistDrawer = ({
     onClose();
   };
 
-  const moodOptions = (moodsData?.items || []).map((mood) => ({
+  const moodOptions = (moodsData || []).map((mood) => ({
     label: mood.name || 'Unnamed Mood',
     value: mood.id,
   }));
@@ -90,8 +90,14 @@ export const EditPlaylistDrawer = ({
       open={open}
       onClose={handleCancel}
       footer={
-        <Flex justify='end' gap='small'>
-          <Button size='large' onClick={handleCancel}>
+        <Flex
+          justify='end'
+          gap='small'
+        >
+          <Button
+            size='large'
+            onClick={handleCancel}
+          >
             Cancel
           </Button>
           <Button
@@ -125,7 +131,10 @@ export const EditPlaylistDrawer = ({
         >
           {/* Basic Information */}
           <div style={{ marginBottom: 24 }}>
-            <Title level={5} style={{ marginBottom: 16 }}>
+            <Title
+              level={5}
+              style={{ marginBottom: 16 }}
+            >
               Basic Information
             </Title>
 
@@ -153,7 +162,6 @@ export const EditPlaylistDrawer = ({
             <Form.Item
               label='Mood'
               name='moodId'
-              tooltip='Optional: Assign a mood to this playlist'
             >
               <Select
                 placeholder='Select mood (optional)'
@@ -181,7 +189,10 @@ export const EditPlaylistDrawer = ({
 
           {/* Configuration */}
           <div style={{ marginBottom: 24 }}>
-            <Title level={5} style={{ marginBottom: 16 }}>
+            <Title
+              level={5}
+              style={{ marginBottom: 16 }}
+            >
               Configuration
             </Title>
 
@@ -189,9 +200,11 @@ export const EditPlaylistDrawer = ({
               label='Playlist Type'
               name='isDynamic'
               valuePropName='checked'
-              tooltip='Dynamic playlists automatically manage tracks based on mood'
             >
-              <Switch checkedChildren='Dynamic' unCheckedChildren='Static' />
+              <Switch
+                checkedChildren='Dynamic'
+                unCheckedChildren='Static'
+              />
             </Form.Item>
 
             {isDynamic && (
@@ -209,15 +222,20 @@ export const EditPlaylistDrawer = ({
               label='Default Playlist'
               name='isDefault'
               valuePropName='checked'
-              tooltip='Set as the default playlist for the store'
             >
-              <Switch checkedChildren='Yes' unCheckedChildren='No' />
+              <Switch
+                checkedChildren='Yes'
+                unCheckedChildren='No'
+              />
             </Form.Item>
           </div>
 
           {/* Advanced Settings */}
           <div style={{ marginBottom: 24 }}>
-            <Title level={5} style={{ marginBottom: 16 }}>
+            <Title
+              level={5}
+              style={{ marginBottom: 16 }}
+            >
               Advanced Settings
             </Title>
 
@@ -225,7 +243,6 @@ export const EditPlaylistDrawer = ({
               label='HLS URL'
               name='hlsUrl'
               rules={updatePlaylistValidation.hlsUrl}
-              tooltip='Optional: Provide a custom HLS stream URL'
             >
               <Input placeholder='https://example.com/playlist.m3u8' />
             </Form.Item>
@@ -234,7 +251,6 @@ export const EditPlaylistDrawer = ({
               label='Total Duration (seconds)'
               name='totalDurationSeconds'
               rules={updatePlaylistValidation.totalDurationSeconds}
-              tooltip='Optional: Manually set total duration'
             >
               <Input
                 type='number'
