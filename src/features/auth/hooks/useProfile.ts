@@ -3,17 +3,17 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { authService } from '../services/authService';
+import { authService } from '../services';
 
 /**
- * Shared
+ * Utils
  */
-import { mapRoleFromEnum } from '@/shared/utils/jwt';
+import { mapRoleFromEnum } from '@/shared/utils';
 
 /**
  * Types
  */
-import type { User } from '../types/authTypes';
+import type { User } from '../types';
 
 export const useProfile = (enabled: boolean = true) => {
   return useQuery({

@@ -1,6 +1,18 @@
 import { Avatar, Button, Flex, Typography } from 'antd';
+
+/**
+ * Icons
+ */
 import { FullscreenOutlined } from '@ant-design/icons';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+
+/**
+ * Stores
+ */
+import { usePlayerStore } from '../../stores';
+
+/**
+ * Components
+ */
 import { PlayerControls } from './PlayerControls';
 import { PlayerProgress } from './PlayerProgress';
 import { PlayerVolume } from './PlayerVolume';
@@ -18,7 +30,7 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
   if (!currentTrack) return null;
 
   const sidebarWidth = sidebarCollapsed ? 60 : 260;
-
+  // TODO: Dùng màu có sẵn của antd thay thế hardcore
   return (
     <div
       style={{

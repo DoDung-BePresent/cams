@@ -1,6 +1,14 @@
 import { Button, Flex, Slider } from 'antd';
+
+/**
+ * Icons
+ */
 import { SoundOutlined, MutedOutlined } from '@ant-design/icons';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+
+/**
+ * Stores
+ */
+import { usePlayerStore } from '../../stores';
 
 type PlayerVolumeProps = {
   dark?: boolean;
@@ -9,6 +17,7 @@ type PlayerVolumeProps = {
 export const PlayerVolume = ({ dark = false }: PlayerVolumeProps) => {
   const volume = usePlayerStore((s) => s.volume);
   const setVolume = usePlayerStore((s) => s.setVolume);
+  // TODO: Dùng màu có sẵn của antd thay thế hardcore
 
   const iconStyle = {
     color: dark ? 'rgba(255,255,255,0.85)' : undefined,

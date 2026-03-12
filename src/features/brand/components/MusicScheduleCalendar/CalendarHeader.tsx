@@ -1,4 +1,8 @@
 import { Button, Flex, Space, Typography } from 'antd';
+
+/**
+ * Icons
+ */
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;

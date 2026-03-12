@@ -1,4 +1,4 @@
-import { Logo } from '@/shared/components/common/Logo';
+import { Logo } from '@/shared/components';
 
 export const AuthHeader = () => {
   return (

@@ -4,22 +4,22 @@ import { Button, Checkbox, Flex, Form, Input, message, Typography } from 'antd';
 /**
  * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers';
 
 /**
  * Validations
  */
-import { loginValidation } from '../validations/authValidation';
+import { loginValidation } from '../validations';
 
 /**
  * Utils
  */
-import { handleApiError } from '@/shared/utils/errorHandler';
+import { handleApiError } from '@/shared/utils';
 
 /**
  * Types
  */
-import { ErrorCodeEnum } from '@/shared/types/errorTypes';
+import { ErrorCodeEnum } from '@/shared/types';
 
 /**
  * Types

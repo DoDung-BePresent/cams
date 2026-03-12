@@ -1,7 +1,7 @@
 import type {
   BaseResponse,
   EntityStatusEnum,
-} from '@/shared/types/commonTypes';
+} from '@/shared/types';
 
 // Enums
 export enum MoodTypeEnum {

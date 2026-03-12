@@ -1,5 +1,9 @@
 import { Slider, Typography, Flex } from 'antd';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+
+/**
+ * Stores
+ */
+import { usePlayerStore } from '../../stores';
 
 const { Text } = Typography;
 
@@ -17,6 +21,7 @@ export const PlayerProgress = ({ dark = false }: PlayerProgressProps) => {
   const currentTime = usePlayerStore((s) => s.currentTime);
   const duration = usePlayerStore((s) => s.duration);
   const setCurrentTime = usePlayerStore((s) => s.setCurrentTime);
+  // TODO: Dùng màu có sẵn của antd thay thế hardcore
 
   const textStyle = {
     color: dark ? 'rgba(255,255,255,0.65)' : undefined,

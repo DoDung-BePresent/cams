@@ -1,14 +1,16 @@
 import { api } from '@/config/api';
+
+/**
+ * Types
+ */
 import type {
   StaffFilter,
   StaffListItem,
   StaffDetailResponse,
-  CreateStaffRequest,
-  UpdateStaffRequest,
-  AssignStaffStoreRequest,
   ResetStaffPasswordRequest,
-} from '../types/staffTypes';
-import type { PaginationResult } from '@/shared/types/commonTypes';
+  AssignStaffStoreRequest,
+} from '../types';
+import type { PaginationResult, Result } from '@/shared/types';
 
 const STAFF_ENDPOINTS = {
   list: '/api/users',
@@ -43,47 +45,29 @@ export const staffService = {
 
   // GET /api/users/{id}
   getById: (id: string) =>
-    api.get<{ isSuccess: boolean; data: StaffDetailResponse }>(
-      STAFF_ENDPOINTS.detail(id),
-    ),
+    api.get<Result<StaffDetailResponse>>(STAFF_ENDPOINTS.detail(id)),
 
   // POST /api/users (multipart/form-data for avatar)
   create: (formData: FormData) =>
-    api.post<{ isSuccess: boolean; message: string }>(
-      STAFF_ENDPOINTS.create,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    ),
+    api.post<Result>(STAFF_ENDPOINTS.create, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   // PATCH /api/users/{id} (multipart/form-data for avatar)
   update: (id: string, formData: FormData) =>
-    api.patch<{ isSuccess: boolean; message: string }>(
-      STAFF_ENDPOINTS.update(id),
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      },
-    ),
+    api.patch<Result>(STAFF_ENDPOINTS.update(id), formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 
   // PUT /api/users/{id}/reset-password
   resetPassword: (id: string, data: ResetStaffPasswordRequest) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      STAFF_ENDPOINTS.resetPassword(id),
-      data,
-    ),
+    api.put<Result>(STAFF_ENDPOINTS.resetPassword(id), data),
 
   // PUT /api/users/{id}/store
   assignStore: (id: string, data: AssignStaffStoreRequest) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      STAFF_ENDPOINTS.assignStore(id),
-      data,
-    ),
+    api.put<Result>(STAFF_ENDPOINTS.assignStore(id), data),
 
-  // PUT /api/users/{id}/toggle-status
+  // PUT /api/users/{id}/status
   toggleStatus: (id: string) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      STAFF_ENDPOINTS.toggleStatus(id),
-    ),
+    api.put<Result>(STAFF_ENDPOINTS.toggleStatus(id)),
 };

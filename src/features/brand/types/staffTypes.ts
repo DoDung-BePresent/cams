@@ -2,7 +2,7 @@ import type {
   BaseResponse,
   EntityStatusEnum,
   RoleEnum,
-} from '@/shared/types/commonTypes';
+} from '@/shared/types';
 
 // Request DTOs for StoreManager
 export type CreateStaffRequest = {

@@ -15,11 +15,6 @@ const StaffList = Loadable(
   'StaffList',
 );
 
-const DeviceList = Loadable(
-  () => import('@/features/brand/pages/DeviceManagement/DeviceList'),
-  'DeviceList',
-);
-
 const TrackList = Loadable(
   () => import('@/features/brand/pages/TrackManagement/TrackList'),
   'TrackList',
@@ -42,10 +37,6 @@ export const brandRoutes = [
   {
     path: 'staff',
     element: <StaffList />,
-  },
-  {
-    path: 'devices',
-    element: <DeviceList />,
   },
   {
     path: 'tracks',

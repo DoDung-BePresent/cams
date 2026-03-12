@@ -16,7 +16,7 @@ import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
 /**
  * Features
  */
-import { brandMenuItems } from '@/features/brand/constants/brandMenuItems';
+import { BRAND_MENU_ITEMS } from '@/features/brand/constants/brandMenuItems';
 import { BRAND_ROUTE_MAP } from '@/features/brand/constants/brandRouteMap';
 
 /**
@@ -43,7 +43,7 @@ const siderStyle: React.CSSProperties = {
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
-    menuItems: brandMenuItems,
+    menuItems: BRAND_MENU_ITEMS,
     routeMap: BRAND_ROUTE_MAP,
   });
 
@@ -70,7 +70,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           className='border-none!'
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
-          items={brandMenuItems}
+          items={BRAND_MENU_ITEMS}
           onClick={({ key }) => handleMenuClick(key)}
         />
         {!collapsed && <NavCard />}

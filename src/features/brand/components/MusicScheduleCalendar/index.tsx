@@ -1,9 +1,13 @@
 import { useState, useRef } from 'react';
 import { Card, Flex, Tag } from 'antd';
-import { CalendarOutlined } from '@ant-design/icons';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+
+/**
+ * Icons
+ */
+import { CalendarOutlined } from '@ant-design/icons';
 
 /**
  * Types
