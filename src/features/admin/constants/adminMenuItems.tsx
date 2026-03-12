@@ -4,6 +4,7 @@ import {
   UserOutlined,
   ShopOutlined,
   CustomerServiceOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 
 export const adminMenuItems: ItemType[] = [
@@ -26,5 +27,10 @@ export const adminMenuItems: ItemType[] = [
     key: 'tracks',
     icon: <CustomerServiceOutlined />,
     label: 'Track Library',
+  },
+  {
+    key: 'playlists',
+    icon: <UnorderedListOutlined />,
+    label: 'Playlist Library',
   },
 ];

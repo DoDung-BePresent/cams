@@ -1,36 +1,30 @@
+import type { ItemType } from 'antd/es/menu/interface';
 import {
-  CustomerServiceOutlined,
   DashboardOutlined,
-  EnvironmentOutlined,
-  SettingOutlined,
+  ShopOutlined,
+  CustomerServiceOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
 
-type MenuItem = Required<MenuProps>['items'][number];
-
-/**
- * Store Manager Menu Items
- * Simplified menu compared to BrandManager
- */
-export const STORE_MENU_ITEMS: MenuItem[] = [
+export const STORE_MENU_ITEMS: ItemType[] = [
   {
-    key: '/store/dashboard',
+    key: 'dashboard',
     icon: <DashboardOutlined />,
     label: 'Dashboard',
   },
   {
-    key: '/store/spaces',
-    icon: <EnvironmentOutlined />,
+    key: 'spaces',
+    icon: <ShopOutlined />,
     label: 'Space Management',
   },
   {
-    key: '/store/settings',
-    icon: <SettingOutlined />,
-    label: 'Settings',
-  },
-  {
-    key: '/store/tracks',
+    key: 'tracks',
     icon: <CustomerServiceOutlined />,
     label: 'Track Library',
+  },
+  {
+    key: 'playlists',
+    icon: <UnorderedListOutlined />,
+    label: 'Playlist Management',
   },
 ];
