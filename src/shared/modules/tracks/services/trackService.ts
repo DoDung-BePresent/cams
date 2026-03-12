@@ -2,12 +2,12 @@ import { api } from '@/config/api';
 import { TRACK_ENDPOINTS } from '../constants';
 import type {
   TrackFilter,
-  TrackPaginationResult,
   TrackDetailResponse,
   CreateTrackRequest,
   UpdateTrackRequest,
+  TrackListItem,
 } from '../types';
-import type { Result } from '@/shared/types/commonTypes';
+import type { PaginationResult, Result } from '@/shared/types/commonTypes';
 
 /**
  * Create FormData from CreateTrackRequest
@@ -77,7 +77,7 @@ export const trackService = {
    * Authorization: SystemAdmin, BrandManager (own brand), StoreManager (own brand)
    *
    * @param filter - TrackFilter with pagination & search params
-   * @returns Promise<TrackPaginationResult>
+   * @returns Promise<PaginationResult<TrackListItem>>
    */
   getList: (filter: TrackFilter = {}) => {
     const params = new URLSearchParams();
@@ -107,7 +107,7 @@ export const trackService = {
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
 
-    return api.get<TrackPaginationResult>(
+    return api.get<PaginationResult<TrackListItem>>(
       `${TRACK_ENDPOINTS.list}?${params.toString()}`,
     );
   },
