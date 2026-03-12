@@ -10,6 +10,7 @@ export enum ErrorCodeEnum {
   DuplicateEntry = 'DuplicateEntry',
   NotFound = 'NotFound',
   InternalError = 'InternalError',
+  BusinessRuleViolation = 'BusinessRuleViolation',
 }
 
 export const ERROR_MESSAGES: Record<ErrorCodeEnum, string> = {
@@ -26,4 +27,6 @@ export const ERROR_MESSAGES: Record<ErrorCodeEnum, string> = {
   [ErrorCodeEnum.NotFound]: 'Resource not found',
   [ErrorCodeEnum.InternalError]:
     'An unexpected error occurred. Please try again later',
+  [ErrorCodeEnum.BusinessRuleViolation]:
+    'This action violates business rules. Please check the conditions and try again',
 };

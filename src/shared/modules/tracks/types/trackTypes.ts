@@ -95,9 +95,3 @@ export interface TrackFilter extends BasePaginationFilter {
   createdFrom?: string; // ISO 8601
   createdTo?: string; // ISO 8601
 }
-
-/**
- * Track Pagination Result
- * Used in GET /api/tracks response
- */
-export type TrackPaginationResult = PaginationResult<TrackListItem>;
