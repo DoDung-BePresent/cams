@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { accountService } from '../services';
+import { accountService } from '@/features/admin/services';
 
 export const useAccount = (id: string | undefined, enabled: boolean = true) => {
   return useQuery({

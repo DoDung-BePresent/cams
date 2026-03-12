@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { accountService } from '../services';
+import { accountService } from '@/features/admin/services';
 
 /**
  * Types
  */
 import { RoleEnum } from '@/shared/types';
-import type { AccountFilter } from '../types';
+import type { AccountFilter } from '@/features/admin/types';
 
 export const useAccounts = (filter: Omit<AccountFilter, 'role'> = {}) => {
   return useQuery({

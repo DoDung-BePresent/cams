@@ -4,7 +4,11 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { brandService } from '../services';
+import { brandService } from '@/features/admin/services';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
 
 export const useUpdateBrand = () => {

@@ -9,12 +9,12 @@ import { showErrorMessage } from '@/shared/utils';
 /**
  * Services
  */
-import { accountService } from '../services';
+import { accountService } from '@/features/admin/services';
 
 /**
  * Types
  */
-import type { AssignStoreRequest } from '../types';
+import type { AssignStoreRequest } from '@/features/admin/types';
 
 export const useAssignAccountStore = () => {
   const queryClient = useQueryClient();

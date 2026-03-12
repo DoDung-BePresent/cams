@@ -4,7 +4,7 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { accountService } from '../services';
+import { accountService } from '@/features/admin/services';
 
 /**
  * Utils

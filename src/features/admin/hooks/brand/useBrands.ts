@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { brandService } from '../services/brandService';
+import { brandService } from '@/features/admin/services';
 
 /**
  * Types
  */
-import type { BrandFilter } from '../types/brandTypes';
+import type { BrandFilter } from '@/features/admin/types';
 
 export const useBrands = (filter: BrandFilter = {}) => {
   return useQuery({

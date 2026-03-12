@@ -4,7 +4,7 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { brandService } from '../services';
+import { brandService } from '@/features/admin/services';
 
 /**
  * Shared

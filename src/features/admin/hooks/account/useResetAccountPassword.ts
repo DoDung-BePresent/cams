@@ -1,7 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
 import { message } from 'antd';
-import { accountService } from '../services/accountService';
-import type { ResetPasswordRequest } from '../types/accountTypes';
+
+/**
+ * Services
+ */
+import { accountService } from '@/features/admin/services';
+
+/**
+ * Types
+ */
+import type { ResetPasswordRequest } from '@/features/admin/types';
 
 export const useResetAccountPassword = () => {
   return useMutation({
