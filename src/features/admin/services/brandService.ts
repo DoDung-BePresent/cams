@@ -2,7 +2,6 @@ import { api } from '@/config/api';
 import type {
   BrandListItem,
   BrandDetailResponse,
-  BrandRequest,
   BrandFilter,
 } from '../types/brandTypes';
 import type { PaginationResult, Result } from '@/shared/types/commonTypes';

@@ -4,24 +4,26 @@ import { Alert, Form, Select } from 'antd';
 /**
  * Hooks
  */
-import { useAssignAccountBrand } from '@/features/admin/hooks/useAssignAccountBrand';
-import { useBrands } from '@/features/admin/hooks/useBrands';
-import { useAccount } from '@/features/admin/hooks/useAccount';
+import {
+  useAssignAccountBrand,
+  useBrands,
+  useAccount,
+} from '@/features/admin/hooks';
 
 /**
  * Components
  */
-import { AppModal } from '@/shared/components/ui/AppModal';
+import { AppModal } from '@/shared/components/ui';
 
 /**
  * Types
  */
-import type { AssignBrandRequest } from '@/features/admin/types/accountTypes';
+import type { AssignBrandRequest } from '@/features/admin/types';
 
 /**
  * Validations
  */
-import { assignBrandValidation } from '@/features/admin/validations/accountValidation';
+import { assignBrandValidation } from '@/features/admin/validations';
 
 type AssignBrandModalProps = {
   open: boolean;

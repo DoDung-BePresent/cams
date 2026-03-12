@@ -15,7 +15,7 @@ import {
  */
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
-import type { BrandListItem } from '@/features/admin/types/brandTypes';
+import type { BrandListItem } from '@/features/admin/types';
 
 /**
  * Constants
@@ -23,7 +23,7 @@ import type { BrandListItem } from '@/features/admin/types/brandTypes';
 import {
   BRAND_STATUS_COLORS,
   BRAND_STATUS_LABELS,
-} from '@/features/admin/constants/brandConstants';
+} from '@/features/admin/constants';
 
 type GetColumnsProps = {
   onView: (brandId: string) => void;

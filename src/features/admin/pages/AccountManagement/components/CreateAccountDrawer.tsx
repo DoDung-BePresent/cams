@@ -14,36 +14,34 @@ import {
 /**
  * Hooks
  */
-import { useCreateAccount } from '@/features/admin/hooks/useCreateAccount';
-import { useBrands } from '@/features/admin/hooks/useBrands';
+import { useCreateAccount, useBrands } from '@/features/admin/hooks';
 
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
+import { ImageDragger, PasswordStrength } from '@/shared/components';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
+import { RoleEnum } from '@/shared/types';
 import type { CreateAccountRequest } from '@/features/admin/types/accountTypes';
-import { RoleEnum } from '@/features/admin/types/accountTypes';
 
 /**
  * Constants
  */
-import { ROLE_OPTIONS_FOR_ADMIN } from '@/features/admin/constants/accountConstants';
+import { ROLE_OPTIONS_FOR_ADMIN } from '@/features/admin/constants';
 
 /**
  * Validations
  */
-import { createAccountValidation } from '@/features/admin/validations/accountValidation';
+import { createAccountValidation } from '@/features/admin/validations';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { createImageUploadProps } from '@/shared/utils';
 
 const { Title } = Typography;
 

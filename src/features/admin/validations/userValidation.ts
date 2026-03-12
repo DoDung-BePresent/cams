@@ -7,11 +7,3 @@ export const createUserValidation = {
   ] as Rule[],
   role: [{ required: true, message: 'Please select a role!' }] as Rule[],
 };
-
-export const assignStoreValidation = {
-  store_id: [{ required: true, message: 'Please select a store!' }] as Rule[],
-};
-
-export const assignBranchValidation = {
-  branch_id: [{ required: true, message: 'Please select a branch!' }] as Rule[],
-};

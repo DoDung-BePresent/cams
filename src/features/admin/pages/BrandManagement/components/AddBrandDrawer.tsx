@@ -15,36 +15,33 @@ import {
 /**
  * Hooks
  */
-import { useCreateBrand } from '@/features/admin/hooks/useCreateBrand';
+import { useCreateBrand } from '@/features/admin/hooks';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { BrandRequest } from '@/features/admin/types/brandTypes';
+import type { BrandRequest } from '@/features/admin/types';
 
 /**
  * Constants
  */
-import {
-  INDUSTRY_OPTIONS,
-  TIMEZONE_OPTIONS,
-} from '@/features/admin/constants/brandConstants';
+import { INDUSTRY_OPTIONS, TIMEZONE_OPTIONS } from '@/features/admin/constants';
 
 /**
  * Validations
  */
-import { brandValidation } from '@/features/admin/validations/brandValidation';
+import { brandValidation } from '@/features/admin/validations';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { createImageUploadProps } from '@/shared/utils';
 
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { ImageDragger } from '@/shared/components';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -110,13 +107,11 @@ export const AddBrandDrawer = ({
     onClose();
   };
 
-  // ✅ Use shared upload config
   const uploadProps = createImageUploadProps<BrandRequest>(
     setLogoFile,
     (field, value) => form.setFieldValue(field, value),
   );
 
-  // ✅ Get preview URL
   const getPreviewUrl = () => {
     if (logoFile?.originFileObj) {
       return URL.createObjectURL(logoFile.originFileObj);
@@ -210,7 +205,6 @@ export const AddBrandDrawer = ({
             </Col>
           </Row>
 
-          {/* ✅ Use shared ImageDragger */}
           <Form.Item
             label='Logo'
             name='logo'

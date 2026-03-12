@@ -18,9 +18,8 @@ import {
  */
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
-import { RoleEnum } from '@/features/admin/types/accountTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
-import type { AccountListItem } from '@/features/admin/types/accountTypes';
+import { EntityStatusEnum, RoleEnum } from '@/shared/types';
+import type { AccountListItem } from '@/features/admin/types';
 
 /**
  * Constants
@@ -30,7 +29,7 @@ import {
   ROLE_COLORS,
   ACCOUNT_STATUS_COLORS,
   ACCOUNT_STATUS_LABELS,
-} from '@/features/admin/constants/accountConstants';
+} from '@/features/admin/constants';
 
 type GetColumnsProps = {
   onView: (accountId: string) => void;

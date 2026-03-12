@@ -10,25 +10,24 @@ import { PlusOutlined } from '@ant-design/icons';
 /**
  * Types
  */
-import { type AccountListItem } from '@/features/admin/types/accountTypes';
+import { type AccountListItem } from '@/features/admin/types';
 
 /**
  * Components
  */
-import { CreateAccountDrawer } from './components/CreateAccountDrawer';
-import { EditAccountDrawer } from './components/EditAccountDrawer';
-import { ResetPasswordModal } from './components/ResetPasswordModal';
-import { AssignBrandModal } from './components/AssignBrandModal';
-import { getAccountColumns } from './components/AccountTableColumns';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { AppModal } from '@/shared/components/ui/AppModal';
+import {
+  CreateAccountDrawer,
+  EditAccountDrawer,
+  ResetPasswordModal,
+  AssignBrandModal,
+  getAccountColumns,
+} from './components';
+import { PageHeader, DataTable, AppModal } from '@/shared/components';
 
 /**
  * Hooks
  */
-import { useAccounts } from '@/features/admin/hooks/useAccounts';
-import { useToggleAccountStatus } from '@/features/admin/hooks/useToggleAccountStatus';
+import { useAccounts, useToggleAccountStatus } from '@/features/admin/hooks';
 
 export const AccountList = () => {
   const navigate = useNavigate();

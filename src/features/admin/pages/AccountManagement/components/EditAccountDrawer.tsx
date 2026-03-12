@@ -14,30 +14,28 @@ import {
 /**
  * Hooks
  */
-import { useUpdateAccount } from '@/features/admin/hooks/useUpdateAccount';
-import { useAccount } from '@/features/admin/hooks/useAccount';
+import { useUpdateAccount, useAccount } from '@/features/admin/hooks';
 
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { ImageDragger } from '@/shared/components';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { UpdateAccountRequest } from '@/features/admin/types/accountTypes';
+import type { UpdateAccountRequest } from '@/features/admin/types';
 
 /**
  * Validations
  */
-import { updateAccountValidation } from '@/features/admin/validations/accountValidation';
+import { updateAccountValidation } from '@/features/admin/validations';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
-import { nullToUndefined } from '@/shared/utils/formHelpers';
+import { createImageUploadProps, nullToUndefined } from '@/shared/utils';
 
 const { Title } = Typography;
 
@@ -73,7 +71,7 @@ export const EditAccountDrawer = ({
         firstName: account.firstName,
         lastName: account.lastName,
         email: account.email,
-        phoneNumber: nullToUndefined(account.phoneNumber), // ✅ Handle null
+        phoneNumber: nullToUndefined(account.phoneNumber),
       });
       setExistingAvatarUrl(account.avatarUrl);
     }
@@ -110,13 +108,11 @@ export const EditAccountDrawer = ({
     onClose();
   };
 
-  // ✅ Use shared upload helper
   const uploadProps = createImageUploadProps<UpdateAccountRequest>(
     setAvatarFile,
     (field, value) => form.setFieldValue(field, value),
   );
 
-  // ✅ Get preview URL
   const getPreviewUrl = () => {
     if (avatarFile?.originFileObj) {
       return URL.createObjectURL(avatarFile.originFileObj);
@@ -222,7 +218,6 @@ export const EditAccountDrawer = ({
               <Input placeholder='+84901234567 or 0901234567' />
             </Form.Item>
 
-            {/* ✅ Use shared ImageDragger */}
             <Form.Item
               label='Avatar'
               name='avatar'
