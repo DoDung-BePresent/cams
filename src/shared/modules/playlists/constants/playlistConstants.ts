@@ -1,14 +1,14 @@
 export const PLAYLIST_ENDPOINTS = {
-  list: '/playlists',
-  create: '/playlists',
-  detail: (id: string) => `/playlists/${id}`,
-  update: (id: string) => `/playlists/${id}`,
-  delete: (id: string) => `/playlists/${id}`,
-  toggleStatus: (id: string) => `/playlists/${id}/toggle-status`,
-  addTracks: (id: string) => `/playlists/${id}/tracks`,
+  list: '/api/playlists',
+  create: '/api/playlists',
+  detail: (id: string) => `/api/playlists/${id}`,
+  update: (id: string) => `/api/playlists/${id}`,
+  delete: (id: string) => `/api/playlists/${id}`,
+  toggleStatus: (id: string) => `/api/playlists/${id}/toggle-status`,
+  addTracks: (id: string) => `/api/playlists/${id}/tracks`,
   removeTrack: (id: string, trackId: string) =>
-    `/playlists/${id}/tracks/${trackId}`,
-  retranscode: (id: string) => `/playlists/${id}/retranscode`,
+    `/api/playlists/${id}/tracks/${trackId}`,
+  retranscode: (id: string) => `/api/playlists/${id}/retranscode`,
 } as const;
 
 export const PLAYLIST_TYPE_LABELS: Record<number, string> = {
