@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { spaceService } from '../services';
 
 /**
- * Hook to fetch space detail by ID
- * @param id - Space ID
- * @param enabled - Whether to run the query (default: true if id exists)
+ * Services
  */
+import { spaceService } from '../services';
+
 export const useSpace = (id?: string, enabled = true) => {
   return useQuery({
     queryKey: ['space', id],

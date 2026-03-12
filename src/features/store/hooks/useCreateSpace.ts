@@ -1,7 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+
+/**
+ * Services
+ */
 import { spaceService } from '../services';
+
+/**
+ * Types
+ */
 import type { CreateSpaceRequest } from '../types';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
 
 /**

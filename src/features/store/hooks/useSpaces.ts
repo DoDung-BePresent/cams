@@ -1,11 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
-import { spaceService } from '../services';
-import type { SpaceFilter } from '../types';
 
 /**
- * Hook to fetch spaces list (with pagination & filters)
- * StoreManager: Automatically filtered to their store
+ * Services
  */
+import { spaceService } from '../services';
+
+/**
+ * Types
+ */
+import type { SpaceFilter } from '../types';
+
 export const useSpaces = (filter: SpaceFilter = {}) => {
   return useQuery({
     queryKey: ['spaces', filter],

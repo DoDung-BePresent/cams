@@ -1,4 +1,8 @@
 import type { ItemType } from 'antd/es/menu/interface';
+
+/**
+ * Icons
+ */
 import {
   DashboardOutlined,
   ShopOutlined,

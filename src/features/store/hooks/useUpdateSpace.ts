@@ -1,12 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { spaceService } from '../services';
-import type { UpdateSpaceRequest } from '../types';
-import { showErrorMessage } from '@/shared/utils';
 
 /**
- * Hook to update space (partial update)
+ * Services
  */
+import { spaceService } from '../services';
+
+/**
+ * Types
+ */
+import type { UpdateSpaceRequest } from '../types';
+
+/**
+ * Utils
+ */
+import { showErrorMessage } from '@/shared/utils';
+
 export const useUpdateSpace = () => {
   const queryClient = useQueryClient();
 

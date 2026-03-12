@@ -42,7 +42,7 @@ export const AddTracksDrawer = ({
   const { data: tracksData, isLoading: isLoadingTracks } = useTracks({
     page: 1,
     pageSize: 1000,
-    status: 1, // Only active tracks
+    status: 1,
     search: searchValue,
   });
 
@@ -86,7 +86,7 @@ export const AddTracksDrawer = ({
 
   // Transform tracks data for Transfer component
   const dataSource: TransferProps['dataSource'] = (tracksData?.items || [])
-    .filter((track) => !existingTrackIds.includes(track.id)) // Exclude already added tracks
+    .filter((track) => !existingTrackIds.includes(track.id))
     .map((track) => ({
       key: track.id,
       title: track.title || 'Untitled',
