@@ -1,16 +1,27 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { useTracks } from '@/shared/modules/tracks/hooks';
+
+/**
+ * Components
+ */
+import { PageHeader, DataTable } from '@/shared/components';
 import { getTrackColumns } from '@/shared/modules/tracks/components';
-import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
-import type { TablePaginationConfig } from 'antd';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import {
   TrackDetailsDrawer,
   TrackFilter as TrackFilterComponent,
 } from './components';
+
+/**
+ * Hooks
+ */
+import { useTracks } from '@/shared/modules/tracks/hooks';
+
+/**
+ * Types
+ */
+import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
 export const TrackList = () => {
   const navigate = useNavigate();

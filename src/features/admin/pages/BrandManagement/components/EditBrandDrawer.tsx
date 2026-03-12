@@ -15,39 +15,33 @@ import {
 /**
  * Hooks
  */
-import { useUpdateBrand } from '@/features/admin/hooks/useUpdateBrand';
-import { useBrand } from '@/features/admin/hooks/useBrand';
+import { useUpdateBrand, useBrand } from '@/features/admin/hooks';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { BrandRequest } from '@/features/admin/types/brandTypes';
+import type { BrandRequest } from '@/features/admin/types';
 
 /**
  * Constants
  */
-import {
-  INDUSTRY_OPTIONS,
-  TIMEZONE_OPTIONS,
-} from '@/features/admin/constants/brandConstants';
+import { INDUSTRY_OPTIONS, TIMEZONE_OPTIONS } from '@/features/admin/constants';
 
 /**
  * Validations
  */
-import { brandValidation } from '@/features/admin/validations/brandValidation';
+import { brandValidation } from '@/features/admin/validations';
 
 /**
  * Utils
  */
-import { nullToUndefined } from '@/shared/utils/formHelpers';
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { nullToUndefined, createImageUploadProps } from '@/shared/utils';
 
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { FormSkeleton } from '@/shared/components/common/FormSkeleton';
+import { ImageDragger, FormSkeleton } from '@/shared/components';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -187,7 +181,6 @@ export const EditBrandDrawer = ({
         </Flex>
       }
     >
-      {/* ✅ Use shared FormSkeleton */}
       {isFetching ? (
         <FormSkeleton
           inputCount={2}
@@ -248,7 +241,6 @@ export const EditBrandDrawer = ({
               </Col>
             </Row>
 
-            {/* ✅ Use shared ImageDragger */}
             <Form.Item
               label='Logo'
               name='logo'
@@ -274,7 +266,6 @@ export const EditBrandDrawer = ({
             </Form.Item>
           </div>
 
-          {/* ... rest of the form sections (same as AddBrandDrawer) ... */}
           {/* Contact Information Section */}
           <div style={{ marginBottom: 24 }}>
             <Title

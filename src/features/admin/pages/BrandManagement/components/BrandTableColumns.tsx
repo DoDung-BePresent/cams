@@ -16,6 +16,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import type { BrandListItem } from '@/features/admin/types';
+import type { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Constants
@@ -117,13 +118,9 @@ export const getBrandColumns = ({
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => (
-        <Tag
-          color={
-            BRAND_STATUS_COLORS[status as keyof typeof BRAND_STATUS_COLORS]
-          }
-        >
-          {BRAND_STATUS_LABELS[status as keyof typeof BRAND_STATUS_LABELS]}
+      render: (status: EntityStatusEnum) => (
+        <Tag color={BRAND_STATUS_COLORS[status]}>
+          {BRAND_STATUS_LABELS[status]}
         </Tag>
       ),
     },

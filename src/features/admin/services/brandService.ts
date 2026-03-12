@@ -1,10 +1,10 @@
 import { api } from '@/config/api';
-import type {
-  BrandListItem,
-  BrandDetailResponse,
-  BrandFilter,
-} from '../types/brandTypes';
-import type { PaginationResult, Result } from '@/shared/types/commonTypes';
+
+/**
+ * Types
+ */
+import type { BrandListItem, BrandDetailResponse, BrandFilter } from '../types';
+import type { PaginationResult, Result } from '@/shared/types';
 
 const BRAND_ENDPOINTS = {
   list: '/api/brands',

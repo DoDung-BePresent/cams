@@ -10,23 +10,18 @@ import { PlusOutlined } from '@ant-design/icons';
 /**
  * Types
  */
-import type { BrandListItem } from '@/features/admin/types/brandTypes';
+import type { BrandListItem } from '@/features/admin/types';
 
 /**
  * Components
  */
-import { AddBrandDrawer } from './components/AddBrandDrawer';
-import { EditBrandDrawer } from './components/EditBrandDrawer';
-import { getBrandColumns } from './components/BrandTableColumns';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { AppModal } from '@/shared/components/ui/AppModal';
+import { AddBrandDrawer, EditBrandDrawer, getBrandColumns } from './components';
+import { PageHeader, DataTable, AppModal } from '@/shared/components';
 
 /**
  * Hooks
  */
-import { useBrands } from '@/features/admin/hooks/useBrands';
-import { useDeleteBrand } from '@/features/admin/hooks/useDeleteBrand';
+import { useBrands, useDeleteBrand } from '@/features/admin/hooks';
 
 export const BrandList = () => {
   const navigate = useNavigate();
@@ -45,8 +40,6 @@ export const BrandList = () => {
 
   const handleView = (brandId: string) => {
     console.log('View brand:', brandId);
-    // TODO: Navigate to brand detail page
-    // navigate(`/admin/brands/${brandId}`);
     message.info('Brand detail page will be implemented soon');
   };
 

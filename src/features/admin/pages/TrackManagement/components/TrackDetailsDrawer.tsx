@@ -7,20 +7,40 @@ import {
   Space,
   Typography,
 } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   RobotOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Hooks
+ */
 import { useTrack } from '@/shared/modules/tracks/hooks';
+
+/**
+ * Components
+ */
 import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
+
+/**
+ * Constants
+ */
 import {
   MUSIC_PROVIDER_LABELS,
   MUSIC_PROVIDER_COLORS,
 } from '@/shared/modules/tracks/constants';
 import { ENTITY_STATUS_LABELS } from '@/shared/constants';
-import { formatDate } from '@/shared/utils/formHelpers';
+
+/**
+ * Utils
+ */
+import { formatDate } from '@/shared/utils';
 
 const { Title } = Typography;
 
