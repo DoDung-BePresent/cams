@@ -1,7 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { accountService } from '../services/accountService';
-import type { AssignStoreRequest } from '../types/accountTypes';
+
+/**
+ * Utils
+ */
+import { showErrorMessage } from '@/shared/utils';
+
+/**
+ * Services
+ */
+import { accountService } from '../services';
+
+/**
+ * Types
+ */
+import type { AssignStoreRequest } from '../types';
 
 export const useAssignAccountStore = () => {
   const queryClient = useQueryClient();
@@ -17,9 +30,7 @@ export const useAssignAccountStore = () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
     onError: (error: any) => {
-      const errorMessage =
-        error?.response?.data?.message || 'Failed to update store assignment!';
-      message.error(errorMessage);
+      showErrorMessage(error, 'Failed to update store assignment!');
     },
   });
 };

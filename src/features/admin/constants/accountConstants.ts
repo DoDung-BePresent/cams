@@ -1,8 +1,9 @@
+/**
+ * Types
+ */
 import type { DefaultOptionType } from 'antd/es/select';
-import { RoleEnum } from '../types/accountTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { EntityStatusEnum, RoleEnum } from '@/shared/types/commonTypes';
 
-// Admin chỉ tạo BrandManager
 export const ROLE_OPTIONS_FOR_ADMIN: DefaultOptionType[] = [
   { label: 'Brand Manager', value: RoleEnum.BrandManager },
 ] as const;

@@ -4,7 +4,8 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { brandService } from '../services/brandService';
+import { brandService } from '../services';
+import { showErrorMessage } from '@/shared/utils';
 
 export const useUpdateBrand = () => {
   const queryClient = useQueryClient();
@@ -14,14 +15,11 @@ export const useUpdateBrand = () => {
       brandService.update(id, formData),
     onSuccess: (response, variables) => {
       message.success(response.data.message || 'Brand updated successfully!');
-      // Invalidate specific brand + list
       queryClient.invalidateQueries({ queryKey: ['brand', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['brands'] });
     },
     onError: (error: any) => {
-      const errorMessage =
-        error?.response?.data?.message || 'Failed to update brand!';
-      message.error(errorMessage);
+      showErrorMessage(error, 'Failed to update brand!');
     },
   });
 };

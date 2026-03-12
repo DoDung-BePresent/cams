@@ -1,3 +1,6 @@
+/**
+ * Types
+ */
 import type { DefaultOptionType } from 'antd/es/select';
 import { EntityStatusEnum } from '@/shared/types/commonTypes';
 

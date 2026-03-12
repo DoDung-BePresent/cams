@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { spaceService } from '../services';
 import type { CreateSpaceRequest } from '../types';
-import { showErrorMessage } from '@/shared/utils/errorHandler';
+import { showErrorMessage } from '@/shared/utils';
 
 /**
  * Hook to create new space

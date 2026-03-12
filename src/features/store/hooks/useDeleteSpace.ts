@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { spaceService } from '../services';
-import { showErrorMessage } from '@/shared/utils/errorHandler';
+import { showErrorMessage } from '@/shared/utils';
 
 /**
  * Hook to delete space (soft-delete)

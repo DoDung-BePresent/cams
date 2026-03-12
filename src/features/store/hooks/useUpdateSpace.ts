@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { spaceService } from '../services';
 import type { UpdateSpaceRequest } from '../types';
-import { showErrorMessage } from '@/shared/utils/errorHandler';
+import { showErrorMessage } from '@/shared/utils';
 
 /**
  * Hook to update space (partial update)
@@ -19,7 +19,7 @@ export const useUpdateSpace = () => {
       message.success(response.data.message || 'Space updated successfully');
     },
     onError: (error: any) => {
-      showErrorMessage(error, 'Failed to update space')
+      showErrorMessage(error, 'Failed to update space');
     },
   });
 };

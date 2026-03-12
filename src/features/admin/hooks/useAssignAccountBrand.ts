@@ -1,7 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { accountService } from '../services/accountService';
-import type { AssignBrandRequest } from '../types/accountTypes';
+
+/**
+ * Utils
+ */
+import { showErrorMessage } from '@/shared/utils';
+
+/**
+ * Services
+ */
+import { accountService } from '../services';
+
+/**
+ * Types
+ */
+import type { AssignBrandRequest } from '../types/';
 
 export const useAssignAccountBrand = () => {
   const queryClient = useQueryClient();
@@ -15,9 +28,7 @@ export const useAssignAccountBrand = () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
     onError: (error: any) => {
-      const errorMessage =
-        error?.response?.data?.message || 'Failed to assign brand!';
-      message.error(errorMessage);
+      showErrorMessage(error, 'Failed to assign brand!');
     },
   });
 };

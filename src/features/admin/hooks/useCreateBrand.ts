@@ -4,7 +4,12 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { brandService } from '../services/brandService';
+import { brandService } from '../services';
+
+/**
+ * Shared
+ */
+import { showErrorMessage } from '@/shared/utils';
 
 export const useCreateBrand = () => {
   const queryClient = useQueryClient();
@@ -13,13 +18,10 @@ export const useCreateBrand = () => {
     mutationFn: (formData: FormData) => brandService.create(formData),
     onSuccess: (response) => {
       message.success(response.data.message || 'Brand created successfully!');
-      // Invalidate brands list to refetch
       queryClient.invalidateQueries({ queryKey: ['brands'] });
     },
     onError: (error: any) => {
-      const errorMessage =
-        error?.response?.data?.message || 'Failed to create brand!';
-      message.error(errorMessage);
+      showErrorMessage(error, 'Failed to create brand!');
     },
   });
 };

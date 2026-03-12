@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { accountService } from '../services/accountService';
+
+/**
+ * Services
+ */
+import { accountService } from '../services';
 
 export const useAccount = (id: string | undefined, enabled: boolean = true) => {
   return useQuery({

@@ -964,7 +964,7 @@ export const spaceService = {
 ```typescript
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { showErrorMessage } from '@/shared/utils/errorHandler';
+import { showErrorMessage } from '@/shared/utils';
 import { spaceService } from '../services';
 import type { CreateSpaceRequest } from '../types';
 

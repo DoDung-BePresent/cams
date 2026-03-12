@@ -1,11 +1,4 @@
-import type { EntityStatusEnum } from '@/shared/types/commonTypes';
-
-// Enums
-export enum RoleEnum {
-  SystemAdmin = 0,
-  BrandManager = 1,
-  StoreManager = 2,
-}
+import type { EntityStatusEnum, RoleEnum } from '@/shared/types/commonTypes';
 
 // Request DTOs
 export type CreateAccountRequest = {

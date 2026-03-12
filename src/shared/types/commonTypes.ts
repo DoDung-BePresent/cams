@@ -5,6 +5,12 @@ export enum EntityStatusEnum {
   Rejected = 3,
 }
 
+export enum RoleEnum {
+  SystemAdmin = 0,
+  BrandManager = 1,
+  StoreManager = 2,
+}
+
 export interface BasePaginationFilter {
   page?: number;
   pageSize?: number;

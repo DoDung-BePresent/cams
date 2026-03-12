@@ -1,14 +1,8 @@
 import type {
   BaseResponse,
   EntityStatusEnum,
+  RoleEnum,
 } from '@/shared/types/commonTypes';
-
-// Enums - Reuse from account types
-export enum RoleEnum {
-  SystemAdmin = 0,
-  BrandManager = 1,
-  StoreManager = 2,
-}
 
 // Request DTOs for StoreManager
 export type CreateStaffRequest = {

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { brandService } from '../services/brandService';
+import { brandService } from '../services';
 
 export const useBrand = (id: string | undefined, enabled: boolean = true) => {
   return useQuery({

@@ -4,12 +4,12 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { accountService } from '../services/accountService';
+import { accountService } from '../services';
 
 /**
  * Utils
  */
-import { showErrorMessage } from '@/shared/utils/errorHandler';
+import { showErrorMessage } from '@/shared/utils';
 
 export const useCreateAccount = () => {
   const queryClient = useQueryClient();

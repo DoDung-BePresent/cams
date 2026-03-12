@@ -1,6 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { accountService } from '../services/accountService';
+
+/**
+ * Services
+ */
+import { accountService } from '../services';
+
+/**
+ * Utils
+ */
+import { showErrorMessage } from '@/shared/utils';
 
 export const useUpdateAccount = () => {
   const queryClient = useQueryClient();
@@ -14,9 +23,7 @@ export const useUpdateAccount = () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
     onError: (error: any) => {
-      const errorMessage =
-        error?.response?.data?.message || 'Failed to update account!';
-      message.error(errorMessage);
+      showErrorMessage(error, 'Failed to update account!');
     },
   });
 };
