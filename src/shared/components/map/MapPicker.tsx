@@ -1,7 +1,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import { Input, Button, Space, Typography, message } from 'antd';
+
+/**
+ * Icons
+ */
 import { SearchOutlined, AimOutlined } from '@ant-design/icons';
+
+/**
+ * Types
+ */
 import type { LatLngExpression } from 'leaflet';
 import L from 'leaflet';
 

@@ -1,5 +1,5 @@
 import type { SelectProps } from 'antd';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Entity Status Options (used across all features)

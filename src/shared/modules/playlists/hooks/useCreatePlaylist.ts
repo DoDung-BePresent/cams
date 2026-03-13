@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
-import { playlistService } from '../services';
-import type { CreatePlaylistRequest } from '../types';
+
+/**
+ * Services
+ */
+import { playlistService } from '@/shared/modules/playlists/services';
+
+/**
+ * Types
+ */
+import type { CreatePlaylistRequest } from '@/shared/modules/playlists/types';
 
 export const useCreatePlaylist = () => {
   const queryClient = useQueryClient();
@@ -10,7 +22,7 @@ export const useCreatePlaylist = () => {
   return useMutation({
     mutationFn: (data: CreatePlaylistRequest) => playlistService.create(data),
     onSuccess: (response) => {
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['playlists'] });
         message.success(
           response.data.message || 'Playlist created successfully!',

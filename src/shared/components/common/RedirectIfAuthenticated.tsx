@@ -3,12 +3,12 @@ import { Navigate } from 'react-router';
 /**
  * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers';
 
 /**
  * Constants
  */
-import { ROLES } from '@/shared/constants/rolesConstants';
+import { ROLES } from '@/shared/constants';
 
 const ROLE_HOME_MAP: Record<string, string> = {
   [ROLES.SYSTEM_ADMIN]: '/admin/dashboard',

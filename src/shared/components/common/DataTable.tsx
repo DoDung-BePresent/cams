@@ -1,4 +1,8 @@
 import { Card, Table, type TableProps } from 'antd';
+
+/**
+ * Types
+ */
 import type { AnyObject } from 'antd/es/_util/type';
 import type { ReactNode } from 'react';
 

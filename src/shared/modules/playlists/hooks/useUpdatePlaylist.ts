@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
-import { playlistService } from '../services';
-import type { UpdatePlaylistRequest } from '../types';
+
+/**
+ * Services
+ */
+import { playlistService } from '@/shared/modules/playlists/services';
+
+/**
+ * Types
+ */
+import type { UpdatePlaylistRequest } from '@/shared/modules/playlists/types';
 
 export const useUpdatePlaylist = () => {
   const queryClient = useQueryClient();
@@ -11,7 +23,7 @@ export const useUpdatePlaylist = () => {
     mutationFn: ({ id, data }: { id: string; data: UpdatePlaylistRequest }) =>
       playlistService.update(id, data),
     onSuccess: (response) => {
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['playlists'] });
         message.success(
           response.data.message || 'Playlist updated successfully!',

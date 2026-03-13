@@ -1,5 +1,15 @@
 import { Modal, type ModalProps } from 'antd';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
+
+/**
+ * Types
+ */
 import type { ModalFuncProps } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   ExclamationCircleOutlined,
   CheckCircleOutlined,
@@ -7,8 +17,6 @@ import {
   InfoCircleOutlined,
   DeleteFilled,
 } from '@ant-design/icons';
-import SimpleBar from 'simplebar-react';
-import 'simplebar-react/dist/simplebar.min.css';
 
 // ========== Static Modal Props ==========
 type AppModalProps = ModalFuncProps & {

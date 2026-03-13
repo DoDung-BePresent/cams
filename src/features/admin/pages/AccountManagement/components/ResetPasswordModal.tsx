@@ -114,6 +114,7 @@ export const ResetPasswordModal = ({
               description='This is the password to your account, so it must be strong and hard to guess.'
             />
           }
+          className='mb-0!'
         >
           <Input.Password
             placeholder='Enter new password'

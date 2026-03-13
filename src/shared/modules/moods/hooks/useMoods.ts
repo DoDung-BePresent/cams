@@ -1,7 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { moodService } from '../services';
-import { MOOD_QUERY_KEYS } from '../constants';
-import type { MoodOption } from '../types';
+
+/**
+ * Services
+ */
+import { moodService } from '@/shared/modules/moods/services';
+
+/**
+ * Constants
+ */
+import { MOOD_QUERY_KEYS } from '@/shared/modules/moods/constants';
+
+/**
+ * Types
+ */
+import type { MoodOption } from '@/shared/modules/moods/types';
 
 /**
  * Hook to fetch mood list

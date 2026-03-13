@@ -1,7 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
-import { playlistService } from '../services';
+
+/**
+ * Services
+ */
+import { playlistService } from '@/shared/modules/playlists/services';
 
 export const useRetranscodePlaylist = () => {
   const queryClient = useQueryClient();
@@ -9,7 +17,7 @@ export const useRetranscodePlaylist = () => {
   return useMutation({
     mutationFn: (id: string) => playlistService.retranscode(id),
     onSuccess: (response) => {
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['playlists'] });
         message.success(
           response.data.message || 'Retranscode job queued successfully!',

@@ -56,9 +56,12 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
       >
         <Avatar
           src={currentTrack.albumArt}
-          size={62}
+          size={60}
           shape='square'
-          style={{ borderRadius: 4, flexShrink: 0 }}
+          style={{
+            borderRadius: 5,
+            flexShrink: 0,
+          }}
         />
         <Flex vertical>
           <Text

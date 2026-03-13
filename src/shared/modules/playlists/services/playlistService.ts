@@ -1,5 +1,8 @@
 import { api } from '@/config/api';
-import { PLAYLIST_ENDPOINTS } from '../constants';
+
+/**
+ * Types
+ */
 import type {
   PlaylistPaginationResult,
   PlaylistDetailResponse,
@@ -7,8 +10,21 @@ import type {
   UpdatePlaylistRequest,
   AddTracksToPlaylistRequest,
   PlaylistFilter,
-} from '../types';
-import type { Result } from '@/shared/types/commonTypes';
+} from '@/shared/modules/playlists/types';
+import type { Result } from '@/shared/types';
+
+const PLAYLIST_ENDPOINTS = {
+  list: '/api/playlists',
+  create: '/api/playlists',
+  detail: (id: string) => `/api/playlists/${id}`,
+  update: (id: string) => `/api/playlists/${id}`,
+  delete: (id: string) => `/api/playlists/${id}`,
+  toggleStatus: (id: string) => `/api/playlists/${id}/toggle-status`,
+  addTracks: (id: string) => `/api/playlists/${id}/tracks`,
+  removeTrack: (id: string, trackId: string) =>
+    `/api/playlists/${id}/tracks/${trackId}`,
+  retranscode: (id: string) => `/api/playlists/${id}/retranscode`,
+} as const;
 
 export const playlistService = {
   /**

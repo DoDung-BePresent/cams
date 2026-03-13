@@ -3,7 +3,7 @@ import { Navigate } from 'react-router';
 /**
  * Providers
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers';
 
 type ProtectedRouteProps = {
   children: React.ReactNode;

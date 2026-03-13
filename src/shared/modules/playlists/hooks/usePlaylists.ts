@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { playlistService } from '../services';
-import type { PlaylistFilter } from '../types';
+
+/**
+ * Services
+ */
+import { playlistService } from '@/shared/modules/playlists/services';
+
+/**
+ * Types
+ */
+import type { PlaylistFilter } from '@/shared/modules/playlists/types';
 
 export const usePlaylists = (filter: PlaylistFilter = {}) => {
   return useQuery({

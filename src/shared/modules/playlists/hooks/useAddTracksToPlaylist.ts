@@ -1,9 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { handleApiError } from '@/shared/utils/errorHandler';
-import { ErrorCodeEnum } from '@/shared/types/errorTypes';
-import { playlistService } from '../services';
-import type { AddTracksToPlaylistRequest } from '../types';
+
+/**
+ * Utils
+ */
+import { handleApiError } from '@/shared/utils';
+
+/**
+ * Types
+ */
+import { ErrorCodeEnum } from '@/shared/types';
+import type { AddTracksToPlaylistRequest } from '@/shared/modules/playlists/types';
+
+/**
+ * Services
+ */
+import { playlistService } from '@/shared/modules/playlists/services';
 
 export const useAddTracksToPlaylist = () => {
   const queryClient = useQueryClient();
@@ -17,7 +29,7 @@ export const useAddTracksToPlaylist = () => {
       data: AddTracksToPlaylistRequest;
     }) => playlistService.addTracks(id, data),
     onSuccess: (response) => {
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['playlists'] });
         message.success(response.data.message || 'Tracks added successfully!');
       }

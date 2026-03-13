@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { playlistService } from '../services';
+
+/**
+ * Services
+ */
+import { playlistService } from '@/shared/modules/playlists/services';
 
 export const usePlaylist = (id?: string, enabled = true) => {
   return useQuery({

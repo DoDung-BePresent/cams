@@ -121,6 +121,7 @@ export const AssignBrandModal = ({
           name='newBrandId'
           rules={assignBrandValidation.newBrandId}
           extra='This account will be reassigned to the selected brand'
+          className='mb-0!'
         >
           <Select
             placeholder='Select a brand'

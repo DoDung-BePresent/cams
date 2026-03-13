@@ -1,5 +1,9 @@
 import { Breadcrumb, Flex, Typography } from 'antd';
 import { Helmet } from 'react-helmet-async';
+
+/**
+ * Types
+ */
 import type { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb';
 import type { ReactNode } from 'react';
 

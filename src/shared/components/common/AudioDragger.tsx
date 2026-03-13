@@ -1,8 +1,19 @@
 import { Upload, Typography, Flex } from 'antd';
 import type { UploadProps } from 'antd';
+
+/**
+ * Icons
+ */
 import { SoundOutlined } from '@ant-design/icons';
-import { formatFileSize, formatDuration } from '@/shared/utils/uploadHelpers';
-import { MusicIcon } from 'lucide-react';
+
+/**
+ * Utils
+ */
+import { formatFileSize, formatDuration } from '@/shared/utils';
+
+/**
+ * Assets
+ */
 import filesImage from '@/assets/images/files.png';
 
 const { Dragger } = Upload;
