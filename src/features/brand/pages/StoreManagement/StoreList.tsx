@@ -15,17 +15,17 @@ import { useStores, useToggleStoreStatus } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { getStoreColumns } from './components/StoreTableColumns';
-import { CreateStoreDrawer } from './components/CreateStoreDrawer';
-import { EditStoreDrawer } from './components/EditStoreDrawer';
+import { PageHeader, AppModal, DataTable } from '@/shared/components';
+import {
+  getStoreColumns,
+  CreateStoreDrawer,
+  EditStoreDrawer,
+} from './components';
 
 /**
  * Types
  */
-import type { StoreFilter } from '@/features/brand/types/storeTypes';
+import type { StoreFilter } from '@/features/brand/types';
 
 export const StoreList = () => {
   const navigate = useNavigate();

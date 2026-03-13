@@ -21,7 +21,7 @@ import { useStore, useUpdateStore } from '@/features/brand/hooks';
 /**
  * Types
  */
-import type { StoreRequest } from '@/features/brand/types/storeTypes';
+import type { StoreRequest } from '@/features/brand/types';
 
 /**
  * Constants
@@ -30,17 +30,17 @@ import {
   HCMC_DISTRICTS,
   TIMEZONE_OPTIONS,
   VIETNAM_CITIES,
-} from '@/shared/constants/storeConstants';
+} from '@/shared/constants';
 
 /**
  * Validations
  */
-import { updateStoreValidation } from '@/features/brand/validations/storeValidation';
+import { updateStoreValidation } from '@/features/brand/validations';
 
 /**
  * Components
  */
-import { MapPicker } from '@/shared/components/map/MapPicker';
+import { MapPicker } from '@/shared/components';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -100,7 +100,6 @@ export const EditStoreDrawer = ({
     onClose();
   };
 
-  // ✅ Auto-update lat/lng/mapUrl when user picks on map
   const handleMapLocationChange = (location: { lat: number; lng: number }) => {
     form.setFieldsValue({
       latitude: location.lat,
@@ -109,7 +108,6 @@ export const EditStoreDrawer = ({
     });
   };
 
-  // ✅ Auto-fill address from reverse geocoding
   const handleAddressChange = (address: string) => {
     form.setFieldsValue({
       address: address,
@@ -189,7 +187,7 @@ export const EditStoreDrawer = ({
             </Form.Item>
           </div>
 
-          {/* ✅ Location Section - Simplified */}
+          {/* Location Section - Simplified */}
           <div style={{ marginBottom: 24 }}>
             <Title
               level={5}
@@ -223,11 +221,7 @@ export const EditStoreDrawer = ({
                     placeholder='Select city'
                     options={VIETNAM_CITIES}
                     showSearch
-                    filterOption={(input, option) =>
-                      (option?.label ?? '')
-                        .toLowerCase()
-                        .includes(input.toLowerCase())
-                    }
+                    optionFilterProp='label'
                   />
                 </Form.Item>
               </Col>
@@ -241,17 +235,13 @@ export const EditStoreDrawer = ({
                     placeholder='Select district'
                     options={HCMC_DISTRICTS}
                     showSearch
-                    filterOption={(input, option) =>
-                      (option?.label ?? '')
-                        .toLowerCase()
-                        .includes(input.toLowerCase())
-                    }
+                    optionFilterProp='label'
                   />
                 </Form.Item>
               </Col>
             </Row>
 
-            {/* ✅ Map Picker */}
+            {/* Map Picker */}
             <Form.Item
               label='Pinpoint Store Location on Map'
               extra='Click on the map or search for the address to update coordinates'
@@ -275,7 +265,7 @@ export const EditStoreDrawer = ({
               </Form.Item>
             </Form.Item>
 
-            {/* ✅ Hidden fields for lat/lng/mapUrl */}
+            {/* Hidden fields for lat/lng/mapUrl */}
             <Form.Item
               name='latitude'
               hidden

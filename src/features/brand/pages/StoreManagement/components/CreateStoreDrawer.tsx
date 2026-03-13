@@ -120,6 +120,7 @@ export const CreateStoreDrawer = ({
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        autoComplete='off'
         initialValues={{
           timeZone: 'Asia/Ho_Chi_Minh',
         }}
@@ -155,7 +156,7 @@ export const CreateStoreDrawer = ({
           </Form.Item>
         </div>
 
-        {/* Location Section - Simplified */}
+        {/* Location Section */}
         <div style={{ marginBottom: 24 }}>
           <Title
             level={5}
@@ -164,7 +165,6 @@ export const CreateStoreDrawer = ({
             Location
           </Title>
 
-          {/* Address Field */}
           <Form.Item
             label='Address'
             name='address'
@@ -177,7 +177,6 @@ export const CreateStoreDrawer = ({
             />
           </Form.Item>
 
-          {/* City & District */}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -189,11 +188,7 @@ export const CreateStoreDrawer = ({
                   placeholder='Select city'
                   options={VIETNAM_CITIES}
                   showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
+                  optionFilterProp='label'
                 />
               </Form.Item>
             </Col>
@@ -207,17 +202,12 @@ export const CreateStoreDrawer = ({
                   placeholder='Select district'
                   options={HCMC_DISTRICTS}
                   showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
+                  optionFilterProp='label'
                 />
               </Form.Item>
             </Col>
           </Row>
 
-          {/* Map Picker - Pinpoint exact location */}
           <Form.Item
             label='Pinpoint Store Location on Map'
             extra='Click on the map or search for the address to set coordinates'
@@ -241,7 +231,7 @@ export const CreateStoreDrawer = ({
             </Form.Item>
           </Form.Item>
 
-          {/* Hidden fields for lat/lng/mapUrl (auto-populated by map) */}
+          {/* Hidden fields for coordinates */}
           <Form.Item
             name='latitude'
             hidden

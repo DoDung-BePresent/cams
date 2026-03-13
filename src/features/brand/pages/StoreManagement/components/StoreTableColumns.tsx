@@ -1,5 +1,9 @@
-import { Tag, Space, Dropdown, Button } from 'antd';
+import { Tag, Dropdown, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+
+/**
+ * Icons
+ */
 import {
   EyeOutlined,
   EditOutlined,
@@ -7,8 +11,16 @@ import {
   PoweroffOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Types
+ */
 import type { StoreListItem } from '@/features/brand/types/storeTypes';
 import { EntityStatusEnum } from '@/shared/types/commonTypes';
+
+/**
+ * Constants
+ */
 import {
   STORE_STATUS_COLORS,
   STORE_STATUS_LABELS,
