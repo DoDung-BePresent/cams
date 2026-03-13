@@ -94,6 +94,10 @@ export const BrandList = () => {
       <PageHeader
         title='Brand Management'
         breadcrumbs={breadcrumbs}
+        seo={{
+          description: 'Manage all brands in the system',
+          keywords: 'brand, management, admin, cms',
+        }}
         extra={
           <Button
             size='large'
