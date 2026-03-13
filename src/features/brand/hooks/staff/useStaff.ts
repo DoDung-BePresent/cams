@@ -3,13 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { staffService } from '../services/staffService';
+import { staffService } from '@/features/brand/services';
 
 /**
  * Types
  */
-import { RoleEnum } from '../types/staffTypes';
-import type { StaffFilter } from '../types/staffTypes';
+import { RoleEnum } from '@/shared/types';
+import type { StaffFilter } from '@/features/brand/types';
 
 export const useStaff = (filter: Omit<StaffFilter, 'role'> = {}) => {
   return useQuery({

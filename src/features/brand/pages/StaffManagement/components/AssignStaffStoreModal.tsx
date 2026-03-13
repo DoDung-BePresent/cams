@@ -13,18 +13,18 @@ import {
 /**
  * Components
  */
-import { AppModal } from '@/shared/components/ui/AppModal';
+import { AppModal } from '@/shared/components';
 
 /**
  * Types
  */
-import type { AssignStaffStoreRequest } from '@/features/brand/types/staffTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import type { AssignStaffStoreRequest } from '@/features/brand/types';
+import { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Validations
  */
-import { assignStoreValidation } from '@/features/brand/validations/staffValidation';
+import { assignStoreValidation } from '@/features/brand/validations';
 
 type AssignStaffStoreModalProps = {
   open: boolean;

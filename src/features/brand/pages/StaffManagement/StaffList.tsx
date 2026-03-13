@@ -15,14 +15,14 @@ import { useStaff, useToggleStaffStatus } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { DataTable } from '@/shared/components/common/DataTable';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { getStaffColumns } from './components/StaffTableColumns';
-import { CreateStaffDrawer } from './components/CreateStaffDrawer';
-import { EditStaffDrawer } from './components/EditStaffDrawer';
-import { AssignStaffStoreModal } from './components/AssignStaffStoreModal';
-import { ResetPasswordModal } from './components/ResetPasswordModal';
+import { DataTable, PageHeader, AppModal } from '@/shared/components';
+import {
+  getStaffColumns,
+  CreateStaffDrawer,
+  EditStaffDrawer,
+  AssignStaffStoreModal,
+  ResetPasswordModal,
+} from './components';
 
 export const StaffList = () => {
   const navigate = useNavigate();

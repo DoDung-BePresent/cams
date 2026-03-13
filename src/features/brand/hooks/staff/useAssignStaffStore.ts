@@ -1,10 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 
-
-import { staffService } from '../services/staffService';
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
-import type { AssignStaffStoreRequest } from '../types/staffTypes';
+
+/**
+ * Types
+ */
+import type { AssignStaffStoreRequest } from '@/features/brand/types';
+
+/**
+ * Services
+ */
+import { staffService } from '@/features/brand/services';
 
 export const useAssignStaffStore = () => {
   const queryClient = useQueryClient();

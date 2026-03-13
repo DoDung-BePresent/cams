@@ -15,7 +15,7 @@ export const PageHeader = ({ title, breadcrumbs, extra }: PageHeaderProps) => {
     <>
       {breadcrumbs && (
         <Breadcrumb
-          className='mb-3! custom-breadcrumb'
+          className='custom-breadcrumb mb-3!'
           items={breadcrumbs}
         />
       )}

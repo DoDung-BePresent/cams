@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { storeService } from '../services/storeService';
+
+/**
+ * Services
+ */
+import { storeService } from '@/features/brand/services';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
-import type { StoreRequest } from '../types/storeTypes';
+
+/**
+ * Types
+ */
+import type { StoreRequest } from '@/features/brand/types';
 
 export const useCreateStore = () => {
   const queryClient = useQueryClient();

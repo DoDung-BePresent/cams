@@ -19,28 +19,24 @@ import { useCreateStaff, useStores } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
+import { ImageDragger, PasswordStrength } from '@/shared/components';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import {
-  RoleEnum,
-  type CreateStaffRequest,
-} from '@/features/brand/types/staffTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { type CreateStaffRequest } from '@/features/brand/types';
+import { EntityStatusEnum, RoleEnum } from '@/shared/types';
 
 /**
  * Validations
  */
-import { createStaffValidation } from '@/features/brand/validations/staffValidation';
+import { createStaffValidation } from '@/features/brand/validations';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { createImageUploadProps } from '@/shared/utils';
 
 const { Title } = Typography;
 

@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { staffService } from '../services/staffService';
+
+/**
+ * Services
+ */
+import { staffService } from '@/features/brand/services';
 
 export const useStaffDetail = (
   id: string | undefined,

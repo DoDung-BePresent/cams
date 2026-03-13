@@ -10,11 +10,27 @@ import {
   Typography,
   Alert,
 } from 'antd';
+
+/**
+ * Icon
+ */
 import { InfoCircleOutlined } from '@ant-design/icons';
+
+/**
+ * Hooks
+ */
 import { useCreatePlaylist } from '@/shared/modules/playlists/hooks';
 import { useStores } from '@/features/brand/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
+
+/**
+ * Validations
+ */
 import { createPlaylistValidation } from '@/shared/modules/playlists/validations';
+
+/**
+ * Types
+ */
 import type { CreatePlaylistRequest } from '@/shared/modules/playlists/types';
 
 const { Title } = Typography;

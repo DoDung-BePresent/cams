@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { storeService } from '../services/storeService';
+
+/**
+ * Services
+ */
+import { storeService } from '@/features/brand/services';
 
 export const useStore = (id: string | undefined, enabled: boolean = true) => {
   return useQuery({

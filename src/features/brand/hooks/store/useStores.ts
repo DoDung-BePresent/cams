@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { storeService } from '../services/storeService';
-import type { StoreFilter } from '../types/storeTypes';
+
+/**
+ * Services
+ */
+import { storeService } from '@/features/brand/services';
+
+/**
+ * Types
+ */
+import type { StoreFilter } from '@/features/brand/types';
 
 export const useStores = (filter: StoreFilter = {}) => {
   return useQuery({
@@ -9,7 +17,7 @@ export const useStores = (filter: StoreFilter = {}) => {
       const response = await storeService.getList(filter);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     placeholderData: (previousData) => previousData,
   });
 };

@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { staffService } from '../services/staffService';
+
+/**
+ * Services
+ */
+import { staffService } from '@/features/brand/services';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
-import type { ResetStaffPasswordRequest } from '../types/staffTypes';
+
+/**
+ * Types
+ */
+import type { ResetStaffPasswordRequest } from '@/features/brand/types';
 
 export const useResetStaffPassword = () => {
   const queryClient = useQueryClient();

@@ -9,18 +9,17 @@ import { useResetStaffPassword } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
+import { AppModal, PasswordStrength } from '@/shared/components';
 
 /**
  * Types
  */
-import type { ResetStaffPasswordRequest } from '@/features/brand/types/staffTypes';
+import type { ResetStaffPasswordRequest } from '@/features/brand/types';
 
 /**
  * Validations
  */
-import { resetPasswordValidation } from '@/features/brand/validations/staffValidation';
+import { resetPasswordValidation } from '@/features/brand/validations';
 
 type ResetPasswordModalProps = {
   open: boolean;

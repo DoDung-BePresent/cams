@@ -19,12 +19,12 @@ import { useCreateStore } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { MapPicker } from '@/shared/components/map/MapPicker';
+import { MapPicker } from '@/shared/components';
 
 /**
  * Types
  */
-import type { StoreRequest } from '@/features/brand/types/storeTypes';
+import type { StoreRequest } from '@/features/brand/types';
 
 /**
  * Constants
@@ -33,12 +33,12 @@ import {
   VIETNAM_CITIES,
   HCMC_DISTRICTS,
   TIMEZONE_OPTIONS,
-} from '@/shared/constants/storeConstants';
+} from '@/shared/constants';
 
 /**
  * Validations
  */
-import { createStoreValidation } from '@/features/brand/validations/storeValidation';
+import { createStoreValidation } from '@/features/brand/validations';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -71,7 +71,6 @@ export const CreateStoreDrawer = ({
     onClose();
   };
 
-  // ✅ Auto-update lat/lng/mapUrl when user picks on map
   const handleMapLocationChange = (location: { lat: number; lng: number }) => {
     form.setFieldsValue({
       latitude: location.lat,
@@ -80,7 +79,6 @@ export const CreateStoreDrawer = ({
     });
   };
 
-  // ✅ Auto-fill address from reverse geocoding
   const handleAddressChange = (address: string) => {
     form.setFieldsValue({
       address: address,
@@ -157,7 +155,7 @@ export const CreateStoreDrawer = ({
           </Form.Item>
         </div>
 
-        {/* ✅ Location Section - Simplified */}
+        {/* Location Section - Simplified */}
         <div style={{ marginBottom: 24 }}>
           <Title
             level={5}
@@ -219,7 +217,7 @@ export const CreateStoreDrawer = ({
             </Col>
           </Row>
 
-          {/* ✅ Map Picker - Pinpoint exact location */}
+          {/* Map Picker - Pinpoint exact location */}
           <Form.Item
             label='Pinpoint Store Location on Map'
             extra='Click on the map or search for the address to set coordinates'
@@ -243,7 +241,7 @@ export const CreateStoreDrawer = ({
             </Form.Item>
           </Form.Item>
 
-          {/* ✅ Hidden fields for lat/lng/mapUrl (auto-populated by map) */}
+          {/* Hidden fields for lat/lng/mapUrl (auto-populated by map) */}
           <Form.Item
             name='latitude'
             hidden

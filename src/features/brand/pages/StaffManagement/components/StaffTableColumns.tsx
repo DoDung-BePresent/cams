@@ -18,8 +18,8 @@ import {
  * Types
  */
 import type { ColumnsType } from 'antd/es/table';
-import type { StaffListItem } from '@/features/brand/types/staffTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import type { StaffListItem } from '@/features/brand/types';
+import { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Constants
@@ -29,7 +29,7 @@ import {
   STAFF_STATUS_LABELS,
   STAFF_ROLE_LABEL,
   STAFF_ROLE_COLOR,
-} from '@/shared/constants/staffConstants';
+} from '@/shared/constants';
 
 type StaffColumnsProps = {
   onView: (id: string) => void;
