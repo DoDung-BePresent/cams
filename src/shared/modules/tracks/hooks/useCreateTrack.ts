@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+
+/**
+ * Utils
+ */
 import { showErrorMessage } from '@/shared/utils';
-import { trackService } from '../services';
-import type { CreateTrackRequest } from '../types';
+
+/**
+ * Services
+ */
+import { trackService } from '@/shared/modules/tracks/services';
+
+/**
+ * Types
+ */
+import type { CreateTrackRequest } from '@/shared/modules/tracks/types';
 
 export const useCreateTrack = () => {
   const queryClient = useQueryClient();
@@ -10,7 +22,7 @@ export const useCreateTrack = () => {
   return useMutation({
     mutationFn: (data: CreateTrackRequest) => trackService.create(data),
     onSuccess: (response) => {
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['tracks'] });
 
         if (!response.data.data?.audioUrl) {

@@ -1,5 +1,9 @@
-import { Space, Tag, Image, Dropdown, Button } from 'antd';
-import type { ColumnsType, MenuProps } from 'antd/es/table';
+import { Space, Tag, Image, Dropdown, Button, type MenuProps } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+
+/**
+ * Icons
+ */
 import {
   MoreOutlined,
   EyeOutlined,
@@ -8,11 +12,28 @@ import {
   PoweroffOutlined,
 } from '@ant-design/icons';
 import { MusicIcon } from 'lucide-react';
-import { formatDuration } from '@/shared/utils/uploadHelpers';
-import { formatDateTime } from '@/shared/utils/formHelpers';
+
+/**
+ * Utils
+ */
+import { formatDuration, formatDateTime } from '@/shared/utils';
+
+/**
+ * Constants
+ */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
-import { MUSIC_PROVIDER_LABELS, MUSIC_PROVIDER_COLORS } from '../constants';
-import type { TrackListItem } from '../types';
+import {
+  MUSIC_PROVIDER_LABELS,
+  MUSIC_PROVIDER_COLORS,
+} from '@/shared/modules/tracks/constants';
+
+/**
+ * Types
+ */
+import type {
+  MusicProviderEnum,
+  TrackListItem,
+} from '@/shared/modules/tracks/types';
 
 interface TrackColumnActions {
   onView: (id: string) => void;
@@ -111,7 +132,7 @@ export const getTrackColumns = ({
     dataIndex: 'provider',
     key: 'provider',
     width: 120,
-    render: (provider: number) =>
+    render: (provider: MusicProviderEnum) =>
       provider !== undefined && (
         <Tag color={MUSIC_PROVIDER_COLORS[provider]}>
           {MUSIC_PROVIDER_LABELS[provider]}
@@ -131,7 +152,7 @@ export const getTrackColumns = ({
     dataIndex: 'status',
     key: 'status',
     width: 100,
-    render: (status: number) => (
+    render: (status: MusicProviderEnum) => (
       <Tag color={ENTITY_STATUS_COLORS[status]}>
         {ENTITY_STATUS_LABELS[status]}
       </Tag>

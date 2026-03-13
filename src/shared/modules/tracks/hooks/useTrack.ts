@@ -1,5 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { trackService } from '../services';
+
+/**
+ * Services
+ */
+import { trackService } from '@/shared/modules/tracks/services';
 
 export const useTrack = (id?: string, enabled = true) => {
   return useQuery({

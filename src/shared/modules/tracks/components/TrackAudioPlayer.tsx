@@ -1,13 +1,17 @@
 import { useRef, useState, useEffect } from 'react';
 import { Button, Typography, Flex, Card, Avatar } from 'antd';
-import {
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  SoundOutlined,
-} from '@ant-design/icons';
 import WaveSurfer from 'wavesurfer.js';
-import { formatDuration } from '@/shared/utils/uploadHelpers';
 import { PauseIcon, PlayIcon } from 'lucide-react';
+
+/**
+ * Icons
+ */
+import { SoundOutlined } from '@ant-design/icons';
+
+/**
+ * Utils
+ */
+import { formatDuration } from '@/shared/utils';
 
 const { Text } = Typography;
 
@@ -107,10 +111,14 @@ export const TrackAudioPlayer = ({
             size={120}
             src={coverImageUrl}
             alt={title}
-            className='rounded-lg! shrink-0!'
+            className='shrink-0! rounded-lg!'
           />
         )}
-        <Flex align='center' gap="large" className='w-full!'>
+        <Flex
+          align='center'
+          gap='large'
+          className='w-full!'
+        >
           {/* Track Info & Waveform */}
           <Flex
             vertical

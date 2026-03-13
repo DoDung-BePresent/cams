@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { trackService } from '../services';
-import type { TrackFilter } from '../types';
+
+/**
+ * Services
+ */
+import { trackService } from '@/shared/modules/tracks/services';
+
+/**
+ * Types
+ */
+import type { TrackFilter } from '@/shared/modules/tracks/types';
 
 export const useTracks = (filter: TrackFilter = {}) => {
   return useQuery({

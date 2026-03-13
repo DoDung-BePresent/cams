@@ -2,18 +2,6 @@ import type { SelectProps } from 'antd';
 import { MusicProviderEnum } from '../types';
 
 /**
- * Track API Endpoints (from API_Tracks.md)
- */
-export const TRACK_ENDPOINTS = {
-  list: '/api/tracks',
-  detail: (id: string) => `/api/tracks/${id}`,
-  create: '/api/tracks',
-  update: (id: string) => `/api/tracks/${id}`,
-  delete: (id: string) => `/api/tracks/${id}`,
-  toggleStatus: (id: string) => `/api/tracks/${id}/toggle-status`,
-} as const;
-
-/**
  * Music Provider Options (for Select dropdown)
  */
 export const MUSIC_PROVIDER_OPTIONS: SelectProps['options'] = [

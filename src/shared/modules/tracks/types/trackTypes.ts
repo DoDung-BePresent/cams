@@ -1,6 +1,5 @@
 import type {
   BaseResponse,
-  PaginationResult,
   BasePaginationFilter,
 } from '@/shared/types/commonTypes';
 

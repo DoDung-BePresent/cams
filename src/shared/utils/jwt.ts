@@ -1,4 +1,4 @@
-import { ROLE_ENUM_MAP, ROLES } from '@/shared/constants/rolesConstants';
+import { ROLE_ENUM_MAP, ROLES } from '@/shared/constants';
 
 type JwtPayload = {
   sub: string;
@@ -40,7 +40,7 @@ export const getRoleFromJwt = (token: string): string => {
   const roleMap: Record<string, string> = {
     SystemAdmin: ROLES.SYSTEM_ADMIN,
     StoreManager: ROLES.STORE_MANAGER,
-    BranchManager: ROLES.BRANCH_MANAGER,
+    BranchManager: ROLES.BRAND_MANAGER,
   };
 
   return roleMap[claimRole] ?? claimRole;

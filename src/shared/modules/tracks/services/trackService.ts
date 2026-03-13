@@ -1,13 +1,28 @@
 import { api } from '@/config/api';
-import { TRACK_ENDPOINTS } from '../constants';
+
+/**
+ * Types
+ */
 import type {
   TrackFilter,
   TrackDetailResponse,
   CreateTrackRequest,
   UpdateTrackRequest,
   TrackListItem,
-} from '../types';
-import type { PaginationResult, Result } from '@/shared/types/commonTypes';
+} from '@/shared/modules/tracks/types';
+import type { PaginationResult, Result } from '@/shared/types';
+
+/**
+ * Track API Endpoints (from API_Tracks.md)
+ */
+const TRACK_ENDPOINTS = {
+  list: '/api/tracks',
+  detail: (id: string) => `/api/tracks/${id}`,
+  create: '/api/tracks',
+  update: (id: string) => `/api/tracks/${id}`,
+  delete: (id: string) => `/api/tracks/${id}`,
+  toggleStatus: (id: string) => `/api/tracks/${id}/toggle-status`,
+} as const;
 
 /**
  * Create FormData from CreateTrackRequest
