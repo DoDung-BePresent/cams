@@ -1,5 +1,8 @@
 import { Loadable } from '@/shared/components/common/Loadable';
 
+/**
+ * Pages
+ */
 const ManagerDashboard = Loadable(
   () => import('@/features/brand/pages/Dashboard'),
   'BrandDashboard',

@@ -15,9 +15,7 @@ import {
 /**
  * Components
  */
-import { DataTable } from '@/shared/components/common/DataTable';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { AppModal } from '@/shared/components/ui/AppModal';
+import { DataTable, PageHeader, AppModal } from '@/shared/components';
 import {
   getSpaceColumns,
   CreateSpaceDrawer,
