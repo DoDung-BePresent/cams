@@ -25,6 +25,7 @@ import { ImageDragger } from '@/shared/components';
  * Types
  */
 import type { UploadFile } from 'antd';
+import { ErrorCodeEnum } from '@/shared/types';
 import type { UpdateAccountRequest } from '@/features/admin/types';
 
 /**
@@ -35,7 +36,11 @@ import { updateAccountValidation } from '@/features/admin/validations';
 /**
  * Utils
  */
-import { createImageUploadProps, nullToUndefined } from '@/shared/utils';
+import {
+  createImageUploadProps,
+  handleApiError,
+  nullToUndefined,
+} from '@/shared/utils';
 
 /**
  * Configs
@@ -101,6 +106,42 @@ export const EditAccountDrawer = ({
         onSuccess: () => {
           handleCancel();
           onSuccess();
+        },
+        onError: (error: any) => {
+          const errorCode = error.response?.data?.errorCode;
+          const fieldErrors = error.response?.data?.errors;
+
+          // NOTE: sao payload là camelCase nhưng field lỗi là PascalCase vậy ta?
+          if (errorCode === ErrorCodeEnum.ValidationFailed && fieldErrors) {
+            form.setFields(
+              fieldErrors.map((err: { field: string; message: string }) => ({
+                name: err.field.charAt(0).toLowerCase() + err.field.slice(1),
+                errors: [err.message],
+              })),
+            );
+            return;
+          }
+
+          if (errorCode === ErrorCodeEnum.BusinessRuleViolation) {
+            // NOTE: BusinessValidationRule ở đây hơi kỳ khi không chỉ rõ là validation cho trường hợp nào email hay phone!
+            form.setFields([
+              {
+                name: 'email',
+                errors: ['Email or phone number already exists'],
+              },
+              {
+                name: 'phoneNumber',
+                errors: ['Email or phone number already exists'],
+              },
+            ]);
+
+            return;
+          }
+          handleApiError(
+            error,
+            {},
+            'Failed to create account. Please try again.',
+          );
         },
       },
     );
