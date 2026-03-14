@@ -83,7 +83,7 @@ export const EditAccountDrawer = ({
         email: account.email,
         phoneNumber: nullToUndefined(account.phoneNumber),
       });
-      setExistingAvatarUrl(account.avatarUrl);
+      setExistingAvatarUrl(account.avatarUrl ?? null);
     }
   }, [account, open, form]);
 
