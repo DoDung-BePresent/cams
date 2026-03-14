@@ -24,7 +24,9 @@ export const RedirectIfAuthenticated = ({
   const { isAuthenticated, user } = useAuth();
 
   if (isAuthenticated && user) {
-    const redirectTo = ROLE_HOME_MAP[user.role] ?? '/unauthorized';
+    const primaryRole = user.roles[0];
+    const redirectTo = ROLE_HOME_MAP[primaryRole] ?? '/unauthorized';
+
     return (
       <Navigate
         to={redirectTo}
@@ -32,6 +34,5 @@ export const RedirectIfAuthenticated = ({
       />
     );
   }
-
   return <>{children}</>;
 };

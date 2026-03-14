@@ -3,15 +3,29 @@ import type {
   LoginPayload,
   LoginResponse,
   ProfileResponse,
-} from '../types/authTypes';
+  RefreshTokenResponse,
+} from '@/features/auth/types';
+import type { Result } from '@/shared/types';
+
+const AUTH_ENDPOINTS = {
+  login: '/api/auth/login',
+  logout: '/api/auth/logout',
+  profile: '/api/auth/profile',
+  refreshToken: '/api/auth/refresh-token',
+} as const;
 
 export const authService = {
+  // POST /api/auth/login
   login: (payload: LoginPayload) =>
-    api.post<LoginResponse>('/api/auth/login', payload),
+    api.post<LoginResponse>(AUTH_ENDPOINTS.login, payload),
 
-  logout: () => api.post('/api/auth/logout'),
+  // POST /api/auth/logout
+  logout: () => api.post<Result>(AUTH_ENDPOINTS.logout),
 
-  refreshToken: () => api.post('/api/auth/refresh-token'),
+  // GET /api/auth/profile
+  getProfile: () => api.get<ProfileResponse>(AUTH_ENDPOINTS.profile),
 
-  getProfile: () => api.get<ProfileResponse>('/api/auth/profile'),
+  // POST /api/auth/refresh-token
+  refreshToken: () =>
+    api.post<RefreshTokenResponse>(AUTH_ENDPOINTS.refreshToken),
 };

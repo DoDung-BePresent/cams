@@ -60,6 +60,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useMutation({
     mutationFn: async (payload: LoginPayload) => {
       const response = await authService.login(payload);
+
+      // Type-safe access to nested data
+      if (!response.data.isSuccess || !response.data.data) {
+        throw new Error(response.data.message || 'Login failed');
+      }
+
       const { accessToken: token } = response.data.data;
 
       saveTokens(token, payload.rememberMe);
@@ -88,7 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   if (isInitializing || (accessToken && isLoadingProfile)) {
-    return null; // Or <Spin fullscreen />
+    return null;
   }
 
   return (

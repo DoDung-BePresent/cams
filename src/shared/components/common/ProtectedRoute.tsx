@@ -5,9 +5,14 @@ import { Navigate } from 'react-router';
  */
 import { useAuth } from '@/providers';
 
+/**
+ * Types
+ */
+import type { RoleEnum } from '@/shared/types';
+
 type ProtectedRouteProps = {
   children: React.ReactNode;
-  allowedRoles: string[];
+  allowedRoles: RoleEnum[];
 };
 
 export const ProtectedRoute = ({
@@ -25,7 +30,9 @@ export const ProtectedRoute = ({
     );
   }
 
-  if (user && !allowedRoles.includes(user.role)) {
+  const hasPermission = user?.roles.some((role) => allowedRoles.includes(role));
+
+  if (!hasPermission) {
     return (
       <Navigate
         to='/unauthorized'
