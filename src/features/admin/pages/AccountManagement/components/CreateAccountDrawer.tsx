@@ -26,7 +26,7 @@ import { ImageDragger, PasswordStrength } from '@/shared/components';
  */
 import type { UploadFile } from 'antd';
 import { RoleEnum } from '@/shared/types';
-import type { CreateAccountRequest } from '@/features/admin/types/accountTypes';
+import type { CreateAccountRequest } from '@/features/admin/types';
 
 /**
  * Constants
@@ -238,7 +238,6 @@ export const CreateAccountDrawer = ({
             <Input placeholder='+84901234567 or 0901234567' />
           </Form.Item>
 
-          {/* ✅ Use shared ImageDragger */}
           <Form.Item
             label='Avatar'
             name='avatar'
@@ -264,6 +263,7 @@ export const CreateAccountDrawer = ({
             label='Role'
             name='role'
             rules={createAccountValidation.role}
+            hidden
           >
             <Select
               placeholder='Select role'

@@ -1,4 +1,4 @@
-import { Button, Dropdown, Tag, Avatar, Space } from 'antd';
+import { Button, Dropdown, Tag, Avatar } from 'antd';
 
 /**
  * Icons
@@ -11,6 +11,7 @@ import {
   SwapOutlined,
   PoweroffOutlined,
   CheckCircleOutlined,
+  CrownOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -25,8 +26,6 @@ import type { AccountListItem } from '@/features/admin/types';
  * Constants
  */
 import {
-  ROLE_LABELS,
-  ROLE_COLORS,
   ACCOUNT_STATUS_COLORS,
   ACCOUNT_STATUS_LABELS,
 } from '@/features/admin/constants';
@@ -55,7 +54,7 @@ export const getAccountColumns = ({
         onClick: () => onView(record.id),
       },
       {
-        type: 'divider',
+        type: 'divider' as const,
       },
       {
         key: 'edit',
@@ -82,7 +81,7 @@ export const getAccountColumns = ({
     }
 
     items.push({
-      type: 'divider',
+      type: 'divider' as const,
     });
 
     // Toggle status
@@ -129,7 +128,17 @@ export const getAccountColumns = ({
             {record.firstName?.charAt(0).toUpperCase()}
           </Avatar>
           <div>
-            <div style={{ fontWeight: 500 }}>{record.fullName}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontWeight: 500 }}>{record.fullName}</span>
+              {record.isPrimaryOwner && (
+                <Tag
+                  icon={<CrownOutlined />}
+                  color='gold'
+                >
+                  Primary Owner
+                </Tag>
+              )}
+            </div>
             <div style={{ fontSize: 12, color: '#8c8c8c' }}>{record.email}</div>
             {record.phoneNumber && (
               <div style={{ fontSize: 12, color: '#8c8c8c' }}>
@@ -142,33 +151,13 @@ export const getAccountColumns = ({
       sorter: (a, b) => a.fullName.localeCompare(b.fullName),
     },
     {
-      title: 'Roles',
-      key: 'roles',
-      width: 180,
-      render: (_, record) => (
-        <Space
-          size={[0, 4]}
-          wrap
-        >
-          {record.roles.map((role) => (
-            <Tag
-              key={role}
-              color={ROLE_COLORS[role]}
-            >
-              {ROLE_LABELS[role]}
-            </Tag>
-          ))}
-          {record.isPrimaryOwner && <Tag color='gold'>Primary Owner</Tag>}
-        </Space>
-      ),
-    },
-    {
       title: 'Brand',
       dataIndex: 'brandName',
       key: 'brandName',
-      width: 180,
+      width: 200,
       render: (name: string | null) =>
-        name || <span style={{ color: '#8c8c8c' }}>—</span>,
+        name || <span style={{ color: '#8c8c8c' }}>Not Assigned</span>,
+      sorter: (a, b) => (a.brandName || '').localeCompare(b.brandName || ''),
     },
     {
       title: 'Status',
@@ -180,6 +169,11 @@ export const getAccountColumns = ({
           {ACCOUNT_STATUS_LABELS[status]}
         </Tag>
       ),
+      filters: [
+        { text: 'Active', value: EntityStatusEnum.Active },
+        { text: 'Inactive', value: EntityStatusEnum.Inactive },
+      ],
+      onFilter: (value, record) => record.status === value,
     },
     {
       title: 'Last Login',
@@ -188,10 +182,17 @@ export const getAccountColumns = ({
       width: 150,
       render: (date: string | null) =>
         date ? (
-          new Date(date).toLocaleDateString()
+          new Date(date).toLocaleDateString('en-GB')
         ) : (
           <span style={{ color: '#8c8c8c' }}>Never</span>
         ),
+      sorter: (a, b) => {
+        if (!a.lastLoginAt) return 1;
+        if (!b.lastLoginAt) return -1;
+        return (
+          new Date(a.lastLoginAt).getTime() - new Date(b.lastLoginAt).getTime()
+        );
+      },
     },
     {
       title: 'Actions',

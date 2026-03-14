@@ -90,7 +90,7 @@ export const AccountList = () => {
       className: 'cursor-pointer',
     },
     {
-      title: 'Account Management',
+      title: 'Manager Management',
     },
   ];
 
@@ -105,7 +105,7 @@ export const AccountList = () => {
   return (
     <div>
       <PageHeader
-        title='Account Management'
+        title='Manager Management'
         breadcrumbs={breadcrumbs}
         extra={
           <Button
@@ -117,6 +117,10 @@ export const AccountList = () => {
             Create Account
           </Button>
         }
+        seo={{
+          description: 'Manage brand manager accounts and permissions',
+          keywords: 'brand manager, accounts, users, management',
+        }}
       />
 
       <DataTable

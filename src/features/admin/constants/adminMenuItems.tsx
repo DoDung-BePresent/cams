@@ -23,7 +23,7 @@ export const ADMIN_MENU_ITEMS: ItemType[] = [
   {
     key: 'accounts',
     icon: <UserOutlined />,
-    label: 'Account Management',
+    label: 'Manager Management',
   },
   {
     key: 'brands',
