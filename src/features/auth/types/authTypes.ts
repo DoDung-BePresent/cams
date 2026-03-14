@@ -1,4 +1,4 @@
-import type { Result } from '@/shared/types/commonTypes';
+import type { Result, RoleEnum } from '@/shared/types/commonTypes';
 
 /**
  * Request Payloads
@@ -51,7 +51,7 @@ export type User = {
   lastName: string;
   phoneNumber?: string;
   avatarUrl?: string;
-  roles: number[];
+  roles: RoleEnum[];
 };
 
 /**

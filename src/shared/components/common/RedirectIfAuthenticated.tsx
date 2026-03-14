@@ -6,14 +6,17 @@ import { Navigate } from 'react-router';
 import { useAuth } from '@/providers';
 
 /**
- * Constants
+ * Types
  */
-import { ROLES } from '@/shared/constants';
+import { RoleEnum } from '@/shared/types';
 
-const ROLE_HOME_MAP: Record<string, string> = {
-  [ROLES.SYSTEM_ADMIN]: '/admin/dashboard',
-  [ROLES.BRAND_MANAGER]: '/brand/dashboard',
-  [ROLES.STORE_MANAGER]: '/store/dashboard',
+/**
+ * Role to Dashboard Route Mapping
+ */
+const ROLE_HOME_MAP: Record<RoleEnum, string> = {
+  [RoleEnum.SystemAdmin]: '/admin/dashboard',
+  [RoleEnum.BrandManager]: '/brand/dashboard',
+  [RoleEnum.StoreManager]: '/store/dashboard',
 };
 
 export const RedirectIfAuthenticated = ({
@@ -34,5 +37,6 @@ export const RedirectIfAuthenticated = ({
       />
     );
   }
+
   return <>{children}</>;
 };
