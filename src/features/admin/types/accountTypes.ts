@@ -62,6 +62,7 @@ export type AccountListItem = {
   isPrimaryOwner: boolean;
   brandId?: string;
   brandName?: string;
+  brandLogoUrl?: string;
   lastLoginAt?: string;
   children?: AccountListItem[];
 };

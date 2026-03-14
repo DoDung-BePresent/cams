@@ -25,6 +25,10 @@ export const groupAccountsByBrand = (
       ? 'Unassigned Accounts'
       : groupAccounts[0].brandName || 'Unknown Brand';
 
+    const brandLogoUrl = isUnassigned
+      ? undefined
+      : groupAccounts[0].brandLogoUrl;
+
     // Find primary owner for the brand
     const primaryOwner = groupAccounts.find((acc) => acc.isPrimaryOwner);
 
@@ -40,13 +44,14 @@ export const groupAccountsByBrand = (
       email: '', // Not shown in parent row
       firstName: '',
       lastName: '',
-      fullName: `${brandName} (${groupAccounts.length} ${groupAccounts.length === 1 ? 'manager' : 'managers'})`,
+      fullName: '', // Not used in group row
       status: primaryOwner?.status || 1, // Use primary owner's status
       roles: [],
       isPrimaryOwner: false,
       brandId: isUnassigned ? undefined : brandId,
       brandName,
-      children: sortedAccounts, // ✅ Nested accounts
+      brandLogoUrl, // Include brand logo
+      children: sortedAccounts, // Nested accounts
     };
 
     result.push(parentRow);

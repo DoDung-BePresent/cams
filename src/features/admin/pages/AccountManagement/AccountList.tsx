@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button } from 'antd';
+import { Button, Table } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -22,7 +22,8 @@ import {
   EditAccountDrawer,
   ResetPasswordModal,
   AssignBrandModal,
-  getAccountColumns,
+  getGroupColumns,
+  getExpandedColumns,
   AccountFilter as AccountFilterComponent,
 } from './components';
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
@@ -145,13 +146,18 @@ export const AccountList = () => {
     },
   ];
 
-  const columns = getAccountColumns({
+  // Column handlers
+  const columnHandlers = {
     onView: handleView,
     onEdit: handleEdit,
     onToggleStatus: handleToggleStatus,
     onResetPassword: handleResetPassword,
     onAssignBrand: handleAssignBrand,
-  });
+  };
+
+  // Separate columns for group and expanded rows
+  const groupColumns = getGroupColumns();
+  const expandedColumns = getExpandedColumns(columnHandlers);
 
   // Transform brands data to options
   const brandOptions = (brandsData?.items || []).map((brand) => ({
@@ -196,7 +202,7 @@ export const AccountList = () => {
             onReset={handleReset}
           />
         }
-        columns={columns}
+        columns={groupColumns}
         dataSource={groupedData}
         loading={isLoading}
         rowKey='id'
@@ -218,13 +224,14 @@ export const AccountList = () => {
               return null;
             }
             return (
-              <DataTable<AccountListItem>
-                columns={columns.filter((col) => col.key !== 'brand')} // Hide brand column in nested table
-                dataSource={record.children}
-                rowKey='id'
-                pagination={false}
-                showHeader={false}
-              />
+              <div style={{ padding: '0 48px 16px' }}>
+                <Table<AccountListItem>
+                  columns={expandedColumns}
+                  dataSource={record.children}
+                  rowKey='id'
+                  pagination={false}
+                />
+              </div>
             );
           },
           rowExpandable: (record) =>
