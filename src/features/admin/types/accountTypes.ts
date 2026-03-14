@@ -32,6 +32,9 @@ export type AssignStoreRequest = {
   newStoreId: string | null;
 };
 
+/**
+ * Filter Parameters
+ */
 export type AccountFilter = {
   page?: number;
   pageSize?: number;
@@ -39,34 +42,28 @@ export type AccountFilter = {
   sortBy?: string;
   isAscending?: boolean;
   status?: EntityStatusEnum;
-  role?: RoleEnum;
   brandId?: string;
-  storeId?: string;
-  joiningFrom?: string;
-  joiningTo?: string;
-  isPrimaryOwner?: boolean;
+  hasAssignedBrand?: boolean;
 };
 
+/**
+ * List Item with optional children for grouping
+ */
 export type AccountListItem = {
   id: string;
+  email: string;
   firstName: string;
   lastName: string;
   fullName: string;
-  email: string;
-  phoneNumber: string | null;
-  avatarUrl: string | null;
-  lastLoginAt: string | null;
-  roles: RoleEnum[];
-  brandId: string | null;
-  brandName: string | null;
-  storeId: string | null;
-  storeName: string | null;
-  isPrimaryOwner: boolean;
-  createdAt: string;
-  updatedAt: string | null;
-  createdBy: string | null;
-  updatedBy: string | null;
+  phoneNumber?: string;
+  avatarUrl?: string;
   status: EntityStatusEnum;
+  roles: RoleEnum[];
+  isPrimaryOwner: boolean;
+  brandId?: string;
+  brandName?: string;
+  lastLoginAt?: string;
+  children?: AccountListItem[];
 };
 
 export type AccountDetailResponse = AccountListItem & {

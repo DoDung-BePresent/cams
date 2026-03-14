@@ -218,6 +218,202 @@ export const getUserColumns = ({
 ];
 ```
 
+### Filter Component Pattern
+
+All filter components should follow this consistent structure:
+
+#### Structure Requirements
+
+```typescript
+// ✅ Standard filter component structure
+import { Input, Space, Flex, Button, Select, Tag, Row, Col } from 'antd';
+import { SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+
+type EntityFilterProps = {
+  filter: EntityFilterType;
+  showAdvanced: boolean;
+  // Additional props for select options (brands, moods, etc.)
+  onSearch: (value: string) => void;
+  onFilterChange: (key: keyof EntityFilterType, value: any) => void;
+  onToggleAdvanced: () => void;
+  onRefresh: () => void;
+  onReset: () => void;
+};
+
+export const EntityFilter = ({
+  filter,
+  showAdvanced,
+  onSearch,
+  onFilterChange,
+  onToggleAdvanced,
+  onRefresh,
+  onReset,
+}: EntityFilterProps) => {
+  // Calculate if any filters are active
+  const hasActiveFilters =
+    filter.search ||
+    filter.someField ||
+    filter.anotherField !== undefined;
+
+  return (
+    <Space direction='vertical' size='middle' style={{ width: '100%' }}>
+      {/* 1. Search Bar & Action Buttons */}
+      <Flex justify='space-between' wrap='wrap'>
+        <Input
+          size='large'
+          placeholder='Search...'
+          prefix={<SearchOutlined />}
+          value={filter.search}
+          onChange={(e) => onSearch(e.target.value)}
+          style={{ width: 300 }}
+          allowClear
+        />
+
+        <Space>
+          <Button size='large' icon={<FilterOutlined />} onClick={onToggleAdvanced}>
+            {showAdvanced ? 'Hide' : 'Show'} Filters
+          </Button>
+          <Button size='large' icon={<ReloadOutlined />} onClick={onRefresh}>
+            Refresh
+          </Button>
+          {hasActiveFilters && (
+            <Button size='large' onClick={onReset}>
+              Reset Filters
+            </Button>
+          )}
+        </Space>
+      </Flex>
+
+      {/* 2. Advanced Filters (Toggleable) */}
+      {showAdvanced && (
+        <Row gutter={[16, 16]}>
+          <Col span={6}>
+            <Select
+              size='large'
+              placeholder='Filter by...'
+              options={OPTIONS}
+              value={filter.field}
+              onChange={(value) => onFilterChange('field', value)}
+              style={{ width: '100%' }}
+              allowClear
+              showSearch
+              optionFilterProp='label'
+            />
+          </Col>
+          {/* More filter columns */}
+        </Row>
+      )}
+
+      {/* 3. Active Filters Display (Tags) */}
+      {hasActiveFilters && (
+        <Space wrap>
+          {filter.field && (
+            <Tag closable onClose={() => onFilterChange('field', undefined)}>
+              Field: {filter.field}
+            </Tag>
+          )}
+          {/* More active filter tags */}
+        </Space>
+      )}
+    </Space>
+  );
+};
+```
+
+#### Filter Component Rules
+
+1. **Layout Structure**
+   - ✅ Use `Space direction='vertical'` as wrapper
+   - ✅ Search bar in `Flex` with `justify='space-between'`
+   - ✅ Advanced filters in `Row` with `gutter={[16, 16]}`
+   - ✅ Active filters as closable `Tag` components
+
+2. **Search Input**
+   - ✅ Width: `300px`
+   - ✅ Always use `SearchOutlined` prefix
+   - ✅ Enable `allowClear`
+   - ✅ Descriptive placeholder
+
+3. **Action Buttons**
+   - ✅ "Show/Hide Filters" button (always visible)
+   - ✅ "Refresh" button (always visible)
+   - ✅ "Reset Filters" button (conditional on `hasActiveFilters`)
+
+4. **Advanced Filters**
+   - ✅ Show/hide based on `showAdvanced` prop
+   - ✅ Use `Col span={6}` for 4 columns or `Col span={8}` for 3 columns
+   - ✅ All `Select` components have `size='large'`
+   - ✅ Enable `showSearch` and `optionFilterProp='label'` for searchable selects
+   - ✅ Always include `allowClear`
+
+5. **Active Filters Display**
+   - ✅ Show only when filters are active
+   - ✅ Use closable `Tag` components
+   - ✅ Each tag shows "Label: Value" format
+   - ✅ Clicking X calls `onFilterChange(key, undefined)`
+
+6. **Reset Button Logic**
+   ```typescript
+   const hasActiveFilters =
+     filter.search ||
+     filter.field1 ||
+     filter.field2 !== undefined ||
+     filter.field3 !== undefined;
+   ```
+
+#### Layout Variants
+
+```typescript
+// ✅ 3-column layout (Col span={8})
+<Row gutter={[16, 16]}>
+  <Col span={8}><Select /></Col>
+  <Col span={8}><Select /></Col>
+  <Col span={8}><Select /></Col>
+</Row>
+
+// ✅ 4-column layout (Col span={6})
+<Row gutter={[16, 16]}>
+  <Col span={6}><Select /></Col>
+  <Col span={6}><Select /></Col>
+  <Col span={6}><Select /></Col>
+  <Col span={6}><Select /></Col>
+</Row>
+```
+
+#### Examples
+
+- **AccountFilter**: 3 filters (Brand, Status, Assignment) = 3 columns
+- **TrackFilter**: 4 filters (Genre, Provider, Status, AI) = 4 columns
+- **PlaylistFilter**: 4 filters (Mood, Type, Default, Status) = 4 columns
+
+#### ❌ What to Avoid
+
+```typescript
+// ❌ Don't use Card wrapper
+<Card size='small'>...</Card>
+
+// ❌ Don't use different spacing
+<Space direction='vertical' size='large'>
+
+// ❌ Don't use inline gutter
+<Row gutter={12}>
+
+// ❌ Don't use different search width
+<Input style={{ width: 400 }} />
+
+// ❌ Don't put Reset button in advanced filters section
+{showAdvanced && (
+  <Button onClick={onReset}>Reset</Button>
+)}
+
+// ✅ Put Reset button in main action bar
+<Space>
+  <Button>Show Filters</Button>
+  <Button>Refresh</Button>
+  {hasActiveFilters && <Button>Reset Filters</Button>}
+</Space>
+```
+
 ### Form Patterns
 
 #### Form with Drawer
