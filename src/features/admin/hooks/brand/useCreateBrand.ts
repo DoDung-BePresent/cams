@@ -20,8 +20,5 @@ export const useCreateBrand = () => {
       message.success(response.data.message || 'Brand created successfully!');
       queryClient.invalidateQueries({ queryKey: ['brands'] });
     },
-    onError: (error: any) => {
-      showErrorMessage(error, 'Failed to create brand!');
-    },
   });
 };
