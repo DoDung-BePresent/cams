@@ -90,7 +90,6 @@ export const EditBrandDrawer = ({
         legalName: nullToUndefined(brand.legalName),
         taxCode: nullToUndefined(brand.taxCode),
         billingAddress: nullToUndefined(brand.billingAddress),
-        defaultTimeZone: brand.defaultTimeZone,
       });
       setExistingLogoUrl(brand.logoUrl);
     }
@@ -361,27 +360,6 @@ export const EditBrandDrawer = ({
                 placeholder='Full billing address'
                 maxLength={500}
                 showCount
-              />
-            </Form.Item>
-          </div>
-
-          {/* Configuration Section */}
-          <div>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Configuration
-            </Title>
-
-            <Form.Item
-              label='Default Timezone'
-              name='defaultTimeZone'
-              rules={brandValidation.defaultTimeZone}
-            >
-              <Select
-                placeholder='Select timezone'
-                options={TIMEZONE_OPTIONS}
               />
             </Form.Item>
           </div>

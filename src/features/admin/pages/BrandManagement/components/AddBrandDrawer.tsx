@@ -5,11 +5,11 @@ import {
   Form,
   Input,
   Select,
-  message,
   Row,
   Col,
   Typography,
   Flex,
+  message,
 } from 'antd';
 
 /**
@@ -21,12 +21,13 @@ import { useCreateBrand } from '@/features/admin/hooks';
  * Types
  */
 import type { UploadFile } from 'antd';
+import { ErrorCodeEnum } from '@/shared/types';
 import type { BrandRequest } from '@/features/admin/types';
 
 /**
  * Constants
  */
-import { INDUSTRY_OPTIONS, TIMEZONE_OPTIONS } from '@/features/admin/constants';
+import { INDUSTRY_OPTIONS } from '@/features/admin/constants';
 
 /**
  * Validations
@@ -36,7 +37,7 @@ import { brandValidation } from '@/features/admin/validations';
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils';
+import { createImageUploadProps, handleApiError } from '@/shared/utils';
 
 /**
  * Components
@@ -94,16 +95,46 @@ export const AddBrandDrawer = ({
 
     createBrand.mutate(formData, {
       onSuccess: () => {
-        form.resetFields();
-        setLogoFile(null);
+        handleCancel();
         onSuccess();
-        onClose();
+      },
+      onError: (error: any) => {
+        const errorCode = error.response?.data?.errorCode;
+        const errorMessage = error.response?.data?.message;
+        const fieldErrors = error.response?.data?.errors;
+
+        // Handle ValidationFailed - show field errors only (no toast)
+        if (errorCode === ErrorCodeEnum.ValidationFailed && fieldErrors) {
+          form.setFields(
+            fieldErrors.map((err: { field: string; message: string }) => ({
+              name: err.field.charAt(0).toLowerCase() + err.field.slice(1),
+              errors: [err.message],
+            })),
+          );
+          return; // Stop - don't show generic error
+        }
+
+        // Handle BusinessRuleViolation - show BOTH toast and field error
+        if (errorCode === ErrorCodeEnum.BusinessRuleViolation) {
+          // Highlight the field
+          form.setFields([
+            {
+              name: 'name',
+              errors: [errorMessage || 'A brand with this name already exists'],
+            },
+          ]);
+
+          // Show toast message (for visibility in long form)
+          message.error(
+            errorMessage || 'A brand with this name already exists',
+          );
+
+          return;
+        }
+
+        handleApiError(error, {}, 'Failed to create brand. Please try again.');
       },
     });
-  };
-
-  const handleSubmitFailed = () => {
-    message.error('Please fill in all required fields correctly!');
   };
 
   const handleCancel = () => {
@@ -159,7 +190,6 @@ export const AddBrandDrawer = ({
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
-        onFinishFailed={handleSubmitFailed}
         initialValues={{
           defaultTimeZone: 'SE Asia Standard Time',
         }}
@@ -322,27 +352,6 @@ export const AddBrandDrawer = ({
               placeholder='Full billing address'
               maxLength={500}
               showCount
-            />
-          </Form.Item>
-        </div>
-
-        {/* Configuration Section */}
-        <div>
-          <Title
-            level={5}
-            style={{ marginBottom: 16 }}
-          >
-            Configuration
-          </Title>
-
-          <Form.Item
-            label='Default Timezone'
-            name='defaultTimeZone'
-            rules={brandValidation.defaultTimeZone}
-          >
-            <Select
-              placeholder='Select timezone'
-              options={TIMEZONE_OPTIONS}
             />
           </Form.Item>
         </div>
