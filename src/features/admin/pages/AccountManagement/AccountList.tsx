@@ -237,6 +237,8 @@ export const AccountList = () => {
           rowExpandable: (record) =>
             !!record.children && record.children.length > 0,
           defaultExpandAllRows: false,
+          // ✅ Fix ghost rows: Use childrenColumnName to prevent rendering children as rows
+          childrenColumnName: '__children_placeholder__',
         }}
       />
 
