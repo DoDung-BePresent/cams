@@ -588,6 +588,53 @@ setUser(null);
 
 ---
 
+## 🎨 Configuration Constants
+
+### Always Use Config for Drawer Sizes & Modal Sizes & Stale Time
+
+```typescript
+// ✅ Import from centralized config
+import { DRAWER_WIDTHS, MODAL_WIDTHS, STALE_TIME, QUERY_KEYS } from '@/config';
+
+// ❌ Don't use magic numbers
+<Drawer width={720} />
+<AppModal width={500} />
+staleTime: 5 * 60 * 1000
+
+// ✅ Use config constants
+<Drawer width={DRAWER_WIDTHS.medium} />
+<AppModal width={MODAL_WIDTHS.medium} />
+staleTime: STALE_TIME.medium
+```
+
+### Drawer Widths
+
+| Constant | Value | Use Case |
+|----------|-------|----------|
+| `DRAWER_WIDTHS.small` | 480px | Simple forms (change password, toggle status) |
+| `DRAWER_WIDTHS.medium` | 720px | **Default** - Standard create/edit forms |
+| `DRAWER_WIDTHS.large` | 900px | Complex forms with multiple sections |
+| `DRAWER_WIDTHS.extraLarge` | 1200px | Detailed views, multi-step wizards |
+
+### Modal Widths
+
+| Constant | Value | Use Case |
+|----------|-------|----------|
+| `DRAWER_WIDTHS.medium` | 720px | **Default** |
+
+### Stale Times
+
+| Constant | Value | Use Case |
+|----------|-------|----------|
+| `STALE_TIME.instant` | 0 | Real-time data (dashboards) |
+| `STALE_TIME.short` | 30s | Frequently changing (notifications) |
+| `STALE_TIME.medium` | 5min | **Default** - Most queries |
+| `STALE_TIME.long` | 15min | Stable data (settings) |
+| `STALE_TIME.veryLong` | 1h | Rarely changes (constants) |
+
+
+---
+
 ## 🚫 What to Avoid
 
 ```typescript
