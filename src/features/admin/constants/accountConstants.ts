@@ -2,7 +2,7 @@
  * Types
  */
 import type { DefaultOptionType } from 'antd/es/select';
-import { EntityStatusEnum, RoleEnum } from '@/shared/types/commonTypes';
+import { EntityStatusEnum, RoleEnum } from '@/shared/types';
 
 export const ROLE_OPTIONS_FOR_ADMIN: DefaultOptionType[] = [
   { label: 'Brand Manager', value: RoleEnum.BrandManager },

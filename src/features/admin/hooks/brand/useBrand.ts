@@ -5,6 +5,11 @@ import { useQuery } from '@tanstack/react-query';
  */
 import { brandService } from '@/features/admin/services';
 
+/**
+ * Configs
+ */
+import { STALE_TIME } from '@/config';
+
 export const useBrand = (id: string | undefined, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['brand', id],
@@ -14,6 +19,6 @@ export const useBrand = (id: string | undefined, enabled: boolean = true) => {
       return response.data.data;
     },
     enabled: !!id && enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
   });
 };

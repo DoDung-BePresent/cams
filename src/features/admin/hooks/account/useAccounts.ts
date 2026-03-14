@@ -11,6 +11,11 @@ import { accountService } from '@/features/admin/services';
 import { RoleEnum } from '@/shared/types';
 import type { AccountFilter } from '@/features/admin/types';
 
+/**
+ * Configs
+ */
+import { STALE_TIME } from '@/config';
+
 export const useAccounts = (filter: Omit<AccountFilter, 'role'> = {}) => {
   return useQuery({
     queryKey: ['accounts', filter],
@@ -21,7 +26,7 @@ export const useAccounts = (filter: Omit<AccountFilter, 'role'> = {}) => {
       });
       return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
     placeholderData: (previousData) => previousData,
   });
 };

@@ -314,7 +314,7 @@ export const useUsers = (filter: UserFilter = {}) => {
   return useQuery({
     queryKey: ['users', filter],
     queryFn: () => userService.getList(filter),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: STALE_TIME.medium, // 5 minutes
   });
 };
 
@@ -355,7 +355,7 @@ export const useCreateUser = () => {
 ### Service Structure
 
 ```typescript
-import { api } from '@/config/api';
+import { api } from '@/config';
 import type { PaginationResult, Result } from '@/shared/types/commonTypes';
 import type { UserListItem, CreateUserRequest } from '../types';
 
@@ -455,7 +455,7 @@ const AdminRoutes = {
 
 ```typescript
 // ✅ Use @ alias for src root
-import { api } from '@/config/api';
+import { api } from '@/config';
 import { useAuth } from '@/providers';
 import { Button } from 'antd';
 

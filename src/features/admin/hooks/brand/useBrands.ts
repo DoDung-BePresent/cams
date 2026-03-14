@@ -9,6 +9,7 @@ import { brandService } from '@/features/admin/services';
  * Types
  */
 import type { BrandFilter } from '@/features/admin/types';
+import { STALE_TIME } from '@/config';
 
 export const useBrands = (filter: BrandFilter = {}) => {
   return useQuery({
@@ -17,7 +18,7 @@ export const useBrands = (filter: BrandFilter = {}) => {
       const response = await brandService.getList(filter);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
     placeholderData: (previousData) => previousData,
   });
 };

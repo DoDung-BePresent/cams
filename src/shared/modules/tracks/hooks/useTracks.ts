@@ -9,6 +9,7 @@ import { trackService } from '@/shared/modules/tracks/services';
  * Types
  */
 import type { TrackFilter } from '@/shared/modules/tracks/types';
+import { STALE_TIME } from '@/config';
 
 export const useTracks = (filter: TrackFilter = {}) => {
   return useQuery({
@@ -17,7 +18,7 @@ export const useTracks = (filter: TrackFilter = {}) => {
       const response = await trackService.getList(filter);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
     placeholderData: (previousData) => previousData,
   });
 };

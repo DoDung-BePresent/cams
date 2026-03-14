@@ -9,6 +9,7 @@ import { spaceService } from '../services';
  * Types
  */
 import type { SpaceFilter } from '../types';
+import { STALE_TIME } from '@/config';
 
 export const useSpaces = (filter: SpaceFilter = {}) => {
   return useQuery({
@@ -17,7 +18,7 @@ export const useSpaces = (filter: SpaceFilter = {}) => {
       const response = await spaceService.getList(filter);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: STALE_TIME.medium, // 5 minutes
     placeholderData: (previousData) => previousData,
   });
 };

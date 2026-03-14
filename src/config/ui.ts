@@ -1,0 +1,10 @@
+/**
+ * Drawer Widths
+ * Use these for consistent drawer sizes across the application
+ */
+export const DRAWER_WIDTHS = {
+  small: 480, // For simple forms (e.g., Change Password)
+  medium: 720, // Default for most forms (e.g., Create/Edit Store)
+  large: 900, // For complex forms with multiple sections
+  extraLarge: 1200, // For very detailed forms or multi-step wizards
+} as const;

@@ -9,6 +9,7 @@ import { playlistService } from '@/shared/modules/playlists/services';
  * Types
  */
 import type { PlaylistFilter } from '@/shared/modules/playlists/types';
+import { STALE_TIME } from '@/config';
 
 export const usePlaylists = (filter: PlaylistFilter = {}) => {
   return useQuery({
@@ -17,6 +18,6 @@ export const usePlaylists = (filter: PlaylistFilter = {}) => {
       const response = await playlistService.getList(filter);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
   });
 };

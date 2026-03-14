@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
  * Services
  */
 import { staffService } from '@/features/brand/services';
+import { STALE_TIME } from '@/config';
 
 export const useStaffDetail = (
   id: string | undefined,
@@ -17,6 +18,6 @@ export const useStaffDetail = (
       return response.data.data;
     },
     enabled: enabled && !!id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
   });
 };

@@ -10,6 +10,7 @@ import { staffService } from '@/features/brand/services';
  */
 import { RoleEnum } from '@/shared/types';
 import type { StaffFilter } from '@/features/brand/types';
+import { STALE_TIME } from '@/config';
 
 export const useStaff = (filter: Omit<StaffFilter, 'role'> = {}) => {
   return useQuery({
@@ -21,7 +22,7 @@ export const useStaff = (filter: Omit<StaffFilter, 'role'> = {}) => {
       });
       return response.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
     placeholderData: (previousData) => previousData,
   });
 };

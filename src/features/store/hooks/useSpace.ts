@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
  * Services
  */
 import { spaceService } from '../services';
+import { STALE_TIME } from '@/config';
 
 export const useSpace = (id?: string, enabled = true) => {
   return useQuery({
@@ -14,6 +15,6 @@ export const useSpace = (id?: string, enabled = true) => {
       return response.data.data;
     },
     enabled: enabled && !!id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
   });
 };

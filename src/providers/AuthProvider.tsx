@@ -5,7 +5,7 @@ import { message } from 'antd';
 /**
  * Configs
  */
-import { saveTokens, clearTokens, getAccessToken } from '@/config/api';
+import { saveTokens, clearTokens, getAccessToken } from '@/config';
 
 /**
  * Utils

@@ -9,6 +9,7 @@ import { authService } from '@/features/auth/services';
  * Types
  */
 import type { User } from '@/features/auth/types';
+import { STALE_TIME } from '@/config';
 
 export const useProfile = (enabled = true) => {
   return useQuery({
@@ -37,7 +38,7 @@ export const useProfile = (enabled = true) => {
       return user;
     },
     enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
     retry: false,
   });
 };

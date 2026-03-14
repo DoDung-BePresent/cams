@@ -2,7 +2,7 @@
  * Types
  */
 import type { DefaultOptionType } from 'antd/es/select';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { EntityStatusEnum } from '@/shared/types';
 
 export const INDUSTRY_OPTIONS: DefaultOptionType[] = [
   { label: 'F&B', value: 'F&B' },
