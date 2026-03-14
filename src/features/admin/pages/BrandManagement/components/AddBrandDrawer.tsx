@@ -43,6 +43,11 @@ import { createImageUploadProps } from '@/shared/utils';
  */
 import { ImageDragger } from '@/shared/components';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { TextArea } = Input;
 const { Title } = Typography;
 
@@ -124,7 +129,7 @@ export const AddBrandDrawer = ({
       closeIcon={null}
       title='Add New Brand'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

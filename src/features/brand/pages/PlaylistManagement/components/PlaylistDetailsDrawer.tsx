@@ -53,6 +53,11 @@ import type { PlaylistTrackItem } from '@/shared/modules/playlists/types';
  */
 import { formatDate } from '@/shared/utils';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title, Text } = Typography;
 
 interface PlaylistDetailsDrawerProps {
@@ -91,7 +96,7 @@ export const PlaylistDetailsDrawer = ({
     <Drawer
       title='Playlist Details'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={onClose}
     >

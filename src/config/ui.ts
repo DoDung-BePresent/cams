@@ -8,3 +8,12 @@ export const DRAWER_WIDTHS = {
   large: 900, // For complex forms with multiple sections
   extraLarge: 1200, // For very detailed forms or multi-step wizards
 } as const;
+
+export const SIDEBAR_WIDTHS = {
+  width: 260,
+  collapsedWidth: 60,
+} as const;
+
+export const MODAL_WIDTHS = {
+  medium: 500,
+};

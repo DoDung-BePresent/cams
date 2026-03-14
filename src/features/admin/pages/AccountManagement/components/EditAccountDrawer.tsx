@@ -37,6 +37,11 @@ import { updateAccountValidation } from '@/features/admin/validations';
  */
 import { createImageUploadProps, nullToUndefined } from '@/shared/utils';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 
 type EditAccountDrawerProps = {
@@ -125,7 +130,7 @@ export const EditAccountDrawer = ({
       closeIcon={null}
       title='Edit Account Profile'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

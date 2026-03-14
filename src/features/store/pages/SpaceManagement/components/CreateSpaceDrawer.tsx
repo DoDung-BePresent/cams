@@ -30,6 +30,11 @@ import { SPACE_TYPE_OPTIONS } from '@/features/store/constants';
  */
 import { createSpaceValidation } from '@/features/store/validations';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 type CreateSpaceDrawerProps = {
   open: boolean;
   onClose: () => void;
@@ -63,7 +68,7 @@ export const CreateSpaceDrawer = ({
       closeIcon={null}
       title='Create New Space'
       placement='right'
-      width={600}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

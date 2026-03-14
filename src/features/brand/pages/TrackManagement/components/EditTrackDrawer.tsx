@@ -49,6 +49,11 @@ import { useMoodOptions } from '@/shared/modules/moods/hooks';
 import { GENRE_OPTIONS } from '@/shared/modules/tracks/constants';
 import { MOOD_TYPE_COLORS } from '@/shared/modules/moods/constants';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 
 interface EditTrackDrawerProps {
@@ -136,7 +141,7 @@ export const EditTrackDrawer = ({
     <Drawer
       title='Edit Track'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       closeIcon={null}

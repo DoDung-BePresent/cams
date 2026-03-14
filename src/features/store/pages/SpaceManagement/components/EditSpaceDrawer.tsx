@@ -35,6 +35,11 @@ import { updateSpaceValidation } from '@/features/store/validations';
  */
 import { nullToUndefined } from '@/shared/utils/formHelpers';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 type EditSpaceDrawerProps = {
   open: boolean;
   spaceId: string | null;
@@ -92,7 +97,7 @@ export const EditSpaceDrawer = ({
       closeIcon={null}
       title='Edit Space'
       placement='right'
-      width={600}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

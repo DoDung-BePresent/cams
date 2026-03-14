@@ -36,6 +36,11 @@ import { updatePlaylistValidation } from '@/shared/modules/playlists/validations
  */
 import type { UpdatePlaylistRequest } from '@/shared/modules/playlists/types';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title, Text } = Typography;
 
 interface EditPlaylistDrawerProps {
@@ -102,7 +107,7 @@ export const EditPlaylistDrawer = ({
       closeIcon={null}
       title='Edit Playlist'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

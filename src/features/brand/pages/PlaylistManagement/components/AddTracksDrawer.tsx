@@ -30,6 +30,11 @@ import {
  */
 import type { TransferProps } from 'antd';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title, Text } = Typography;
 
 interface AddTracksDrawerProps {
@@ -123,7 +128,7 @@ export const AddTracksDrawer = ({
       closeIcon={null}
       title='Add Tracks to Playlist'
       placement='right'
-      width={900}
+      width={DRAWER_WIDTHS.large}
       open={open}
       onClose={handleCancel}
       footer={

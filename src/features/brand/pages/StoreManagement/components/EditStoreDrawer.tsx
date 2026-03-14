@@ -42,6 +42,11 @@ import { updateStoreValidation } from '@/features/brand/validations';
  */
 import { MapPicker } from '@/shared/components';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 const { TextArea } = Input;
 
@@ -119,7 +124,7 @@ export const EditStoreDrawer = ({
       closeIcon={null}
       title='Edit Store'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

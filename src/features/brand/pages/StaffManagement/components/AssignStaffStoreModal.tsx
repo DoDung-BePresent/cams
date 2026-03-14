@@ -26,6 +26,11 @@ import { EntityStatusEnum } from '@/shared/types';
  */
 import { assignStoreValidation } from '@/features/brand/validations';
 
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
+
 type AssignStaffStoreModalProps = {
   open: boolean;
   staffId: string | null;
@@ -96,7 +101,7 @@ export const AssignStaffStoreModal = ({
       okButtonProps={{
         loading: assignStore.isPending,
       }}
-      width={500}
+      width={MODAL_WIDTHS.medium}
     >
       <Alert
         type='warning'

@@ -53,6 +53,7 @@ import { MOOD_TYPE_COLORS } from '@/shared/modules/moods/constants';
  */
 import type { UploadFile } from 'antd';
 import type { CreateTrackRequest } from '@/shared/modules/tracks/types';
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 
@@ -149,7 +150,7 @@ export const CreateTrackDrawer = ({
     <Drawer
       title='Upload New Track'
       placement='right'
-      width={620}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       closeIcon={null}

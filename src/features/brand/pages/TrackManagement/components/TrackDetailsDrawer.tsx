@@ -33,6 +33,11 @@ import {
   MUSIC_PROVIDER_COLORS,
 } from '@/shared/modules/tracks/constants';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 
 interface TrackDetailsDrawerProps {
@@ -52,7 +57,7 @@ export const TrackDetailsDrawer = ({
     <Drawer
       title='Track Details'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={onClose}
     >

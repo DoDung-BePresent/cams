@@ -43,6 +43,11 @@ import { nullToUndefined, createImageUploadProps } from '@/shared/utils';
  */
 import { ImageDragger, FormSkeleton } from '@/shared/components';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { TextArea } = Input;
 const { Title } = Typography;
 
@@ -156,7 +161,7 @@ export const EditBrandDrawer = ({
       closeIcon={null}
       title='Edit Brand'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

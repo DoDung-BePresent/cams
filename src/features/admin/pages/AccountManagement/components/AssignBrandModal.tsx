@@ -25,6 +25,11 @@ import type { AssignBrandRequest } from '@/features/admin/types';
  */
 import { assignBrandValidation } from '@/features/admin/validations';
 
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
+
 type AssignBrandModalProps = {
   open: boolean;
   accountId: string | null;
@@ -91,7 +96,7 @@ export const AssignBrandModal = ({
       okButtonProps={{
         loading: assignBrand.isPending,
       }}
-      width={500}
+      width={MODAL_WIDTHS.medium}
     >
       <Alert
         type='warning'

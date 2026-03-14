@@ -21,6 +21,7 @@ import { BRAND_MENU_ITEMS, BRAND_ROUTE_MAP } from '@/features/brand/constants';
  * Components
  */
 import { NavCard, Logo } from '@/shared/components';
+import { SIDEBAR_WIDTHS } from '@/config';
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -50,8 +51,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       trigger={null}
       style={siderStyle}
       theme='light'
-      width={260}
-      collapsedWidth={60}
+      width={SIDEBAR_WIDTHS.width}
+      collapsedWidth={SIDEBAR_WIDTHS.collapsedWidth}
       collapsible
       collapsed={collapsed}
     >

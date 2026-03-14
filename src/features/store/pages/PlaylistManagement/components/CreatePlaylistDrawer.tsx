@@ -32,6 +32,11 @@ import { createPlaylistValidation } from '@/shared/modules/playlists/validations
  */
 import type { CreatePlaylistRequest } from '@/shared/modules/playlists/types';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 
 interface CreatePlaylistDrawerProps {
@@ -87,7 +92,7 @@ export const CreatePlaylistDrawer = ({
       closeIcon={null}
       title='Create New Playlist'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

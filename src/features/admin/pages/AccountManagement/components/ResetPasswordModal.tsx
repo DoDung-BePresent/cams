@@ -21,6 +21,11 @@ import type { ResetPasswordRequest } from '@/features/admin/types';
  */
 import { resetPasswordValidation } from '@/features/admin/validations';
 
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
+
 type ResetPasswordModalProps = {
   open: boolean;
   accountId: string | null;
@@ -78,7 +83,7 @@ export const ResetPasswordModal = ({
         loading: resetPassword.isPending,
         danger: true,
       }}
-      width={550}
+      width={MODAL_WIDTHS.medium}
     >
       <Alert
         type='warning'

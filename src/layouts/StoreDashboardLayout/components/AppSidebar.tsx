@@ -23,6 +23,11 @@ import { STORE_MENU_ITEMS, STORE_ROUTE_MAP } from '@/features/store/constants';
  */
 import { NavCard } from '@/shared/components';
 
+/**
+ * Configs
+ */
+import { SIDEBAR_WIDTHS } from '@/config';
+
 type AppSidebarProps = {
   collapsed: boolean;
 };
@@ -51,8 +56,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       trigger={null}
       style={siderStyle}
       theme='light'
-      width={260}
-      collapsedWidth={60}
+      width={SIDEBAR_WIDTHS.width}
+      collapsedWidth={SIDEBAR_WIDTHS.collapsedWidth}
       collapsible
       collapsed={collapsed}
     >

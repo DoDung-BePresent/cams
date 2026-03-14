@@ -38,6 +38,11 @@ import { createStaffValidation } from '@/features/brand/validations';
  */
 import { createImageUploadProps } from '@/shared/utils';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 
 type CreateStaffDrawerProps = {
@@ -122,7 +127,7 @@ export const CreateStaffDrawer = ({
       closeIcon={null}
       title='Add New Staff Member'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

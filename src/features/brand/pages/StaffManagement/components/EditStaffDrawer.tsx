@@ -38,6 +38,11 @@ import { updateStaffValidation } from '@/features/brand/validations';
 import { createImageUploadProps } from '@/shared/utils';
 import { nullToUndefined } from '@/shared/utils';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 
 type EditStaffDrawerProps = {
@@ -125,7 +130,7 @@ export const EditStaffDrawer = ({
       closeIcon={null}
       title='Edit Staff Member'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

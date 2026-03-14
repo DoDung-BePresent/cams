@@ -43,6 +43,11 @@ import { createAccountValidation } from '@/features/admin/validations';
  */
 import { createImageUploadProps } from '@/shared/utils';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 const { Title } = Typography;
 
 type CreateAccountDrawerProps = {
@@ -124,7 +129,7 @@ export const CreateAccountDrawer = ({
       closeIcon={null}
       title='Create Brand Manager Account'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={
