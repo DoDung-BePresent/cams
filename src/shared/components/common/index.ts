@@ -1,6 +1,5 @@
 export * from './DataTable';
 export * from './ErrorBoundary';
-export * from './FormSkeleton';
 export * from './LinearProgress';
 export * from './Loadable';
 export * from './Loader';

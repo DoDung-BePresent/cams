@@ -10,6 +10,7 @@ import {
   Col,
   Typography,
   Flex,
+  Spin,
 } from 'antd';
 
 /**
@@ -41,7 +42,7 @@ import { nullToUndefined, createImageUploadProps } from '@/shared/utils';
 /**
  * Components
  */
-import { ImageDragger, FormSkeleton } from '@/shared/components';
+import { ImageDragger } from '@/shared/components';
 
 /**
  * Configs
@@ -187,11 +188,13 @@ export const EditBrandDrawer = ({
       }
     >
       {isFetching ? (
-        <FormSkeleton
-          inputCount={2}
-          showImage
-          textAreaRows={3}
-        />
+        <Flex
+          justify='center'
+          align='center'
+          style={{ minHeight: 400 }}
+        >
+          <Spin size='large' />
+        </Flex>
       ) : (
         <Form
           size='large'

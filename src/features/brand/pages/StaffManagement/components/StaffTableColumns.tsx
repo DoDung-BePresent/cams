@@ -31,6 +31,11 @@ import {
   STAFF_ROLE_COLOR,
 } from '@/shared/constants';
 
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 type StaffColumnsProps = {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
@@ -111,7 +116,7 @@ export const getStaffColumns = ({
       render: (_, record) => (
         <div className='flex items-center gap-3'>
           <Avatar
-            size={60}
+            size={AVATAR_SIZE.medium}
             shape='square'
             style={{
               borderRadius: 5,

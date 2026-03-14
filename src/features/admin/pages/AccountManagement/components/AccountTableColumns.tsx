@@ -31,6 +31,11 @@ import {
   ACCOUNT_STATUS_LABELS,
 } from '@/features/admin/constants';
 
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 type GetColumnsProps = {
   onView: (accountId: string) => void;
   onEdit: (account: AccountListItem) => void;
@@ -120,7 +125,7 @@ export const getGroupColumns = (): ColumnsType<AccountListItem> => [
       <Space size={12}>
         <Avatar
           src={record.brandLogoUrl}
-          size={48}
+          size={AVATAR_SIZE.medium}
           shape='square'
           style={{ borderRadius: 8 }}
         >
@@ -160,7 +165,7 @@ export const getExpandedColumns = (
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <Avatar
           src={record.avatarUrl}
-          size={48}
+          size={AVATAR_SIZE.medium}
           shape='square'
           style={{ borderRadius: 5 }}
         >

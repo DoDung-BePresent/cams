@@ -17,6 +17,11 @@ import { PlayerControls } from './PlayerControls';
 import { PlayerProgress } from './PlayerProgress';
 import { PlayerVolume } from './PlayerVolume';
 
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 const { Text } = Typography;
 
 type MiniPlayerProps = {
@@ -56,7 +61,7 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
       >
         <Avatar
           src={currentTrack.albumArt}
-          size={60}
+          size={AVATAR_SIZE.medium}
           shape='square'
           style={{
             borderRadius: 5,

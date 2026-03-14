@@ -46,6 +46,11 @@ import { useFullscreen } from '@/shared/hooks';
  */
 import type { MenuProps } from 'antd';
 
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 type AppHeaderProps = {
   collapsed: boolean;
   onClick: () => void;
@@ -171,7 +176,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             arrow
           >
             <Avatar
-              size={36}
+              size={AVATAR_SIZE.medium}
               src={avatarImage}
               icon={<UserOutlined />}
               style={{ cursor: 'pointer' }}

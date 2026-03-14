@@ -26,6 +26,11 @@ import {
   BRAND_STATUS_LABELS,
 } from '@/features/admin/constants';
 
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 type GetColumnsProps = {
   onView: (brandId: string) => void;
   onEdit: (brand: BrandListItem) => void;
@@ -76,7 +81,7 @@ export const getBrandColumns = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar
             src={record.logoUrl}
-            size={60}
+            size={AVATAR_SIZE.medium}
             shape='square'
             style={{ borderRadius: 5 }}
           >
