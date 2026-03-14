@@ -9,7 +9,6 @@ export type LoginResponse = {
   message: string;
   data: {
     accessToken: string;
-    refreshToken?: string;
     expiresAt: string;
     roles: number[];
   };

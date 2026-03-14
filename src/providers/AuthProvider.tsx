@@ -60,29 +60,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginMutation = useMutation({
     mutationFn: async (payload: LoginPayload) => {
       const response = await authService.login(payload);
-      const { accessToken: token, refreshToken } = response.data.data;
+      const { accessToken: token } = response.data.data;
 
-      saveTokens(token, refreshToken ?? null, payload.rememberMe);
+      saveTokens(token, payload.rememberMe);
       setAccessToken(token);
       await queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
     onSuccess: () => {
       message.success('Login successful!');
     },
-    // onError: (error) => {
-    //   handleApiError(
-    //     error,
-    //     {
-    //       [ErrorCodeEnum.InvalidCredentials]: () => {
-    //         message.error(ERROR_MESSAGES[ErrorCodeEnum.InvalidCredentials]);
-    //       },
-    //       [ErrorCodeEnum.Forbidden]: () => {
-    //         message.error('You do not have permission to access CMS!');
-    //       },
-    //     },
-    //     'Login failed! Please try again.',
-    //   );
-    // },
   });
 
   const logoutMutation = useMutation({

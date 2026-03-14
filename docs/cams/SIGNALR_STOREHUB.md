@@ -25,34 +25,31 @@ Hub URL: **`/hubs/store`**
 Tất cả enum trong SignalR payload dùng **giá trị số nguyên**. KHÔNG dùng string.
 
 ### `PlaybackCommandEnum`
-
 _Dùng trong: event `PlaybackStateChanged` (field `command`)_
 
-| Giá trị | Tên            | `seekPositionSeconds` trong event       | `targetTrackId` trong event |
-| ------- | -------------- | --------------------------------------- | --------------------------- |
-| `1`     | `Pause`        | null                                    | null                        |
-| `2`     | `Resume`       | null                                    | null                        |
-| `3`     | `Seek`         | Vị trí tuyệt đối (giây)                 | null                        |
-| `4`     | `SeekForward`  | **Absolute** đã tính (không phải delta) | null                        |
-| `5`     | `SeekBackward` | **Absolute** đã tính (không phải delta) | null                        |
-| `6`     | `SkipNext`     | Offset của track kế (absolute)          | GUID của track kế           |
-| `7`     | `SkipPrevious` | Offset của track trước (absolute)       | null                        |
-| `8`     | `SkipToTrack`  | Offset của track đích (absolute)        | GUID của track đích         |
+| Giá trị | Tên | `seekPositionSeconds` trong event | `targetTrackId` trong event |
+|---|---|---|---|
+| `1` | `Pause` | null | null |
+| `2` | `Resume` | null | null |
+| `3` | `Seek` | Vị trí tuyệt đối (giây) | null |
+| `4` | `SeekForward` | **Absolute** đã tính (không phải delta) | null |
+| `5` | `SeekBackward` | **Absolute** đã tính (không phải delta) | null |
+| `6` | `SkipNext` | Offset của track kế (absolute) | GUID của track kế |
+| `7` | `SkipPrevious` | Offset của track trước (absolute) | null |
+| `8` | `SkipToTrack` | Offset của track đích (absolute) | GUID của track đích |
 
 > ⚠️ Khi server relay `SeekForward`/`SeekBackward`, giá trị `seekPositionSeconds` trong event đã được **convert sang vị trí tuyệt đối** — tablet gọi `seekTo(seekPositionSeconds)` trực tiếp, không cộng/trừ thêm.
 
 ### `TransitionTypeEnum`
-
 _Dùng trong: event `PlayStream` (field `transitionType`)_
 
-| Giá trị | Tên         | Tablet nên làm gì                                            |
-| ------- | ----------- | ------------------------------------------------------------ |
-| `1`     | `Immediate` | Hard-switch ngay: dừng player cũ, load HLS URL mới           |
-| `2`     | `Crossfade` | Fade out player cũ, fade in stream mới (khoảng 3–5s)         |
-| `3`     | `Pending`   | Nhận event nhưng chờ `PlayStream` tiếp theo khi HLS sẵn sàng |
+| Giá trị | Tên | Tablet nên làm gì |
+|---|---|---|
+| `1` | `Immediate` | Hard-switch ngay: dừng player cũ, load HLS URL mới |
+| `2` | `Crossfade` | Fade out player cũ, fade in stream mới (khoảng 3–5s) |
+| `3` | `Pending` | Nhận event nhưng chờ `PlayStream` tiếp theo khi HLS sẵn sàng |
 
 **Flutter enum khai báo tường minh:**
-
 ```dart
 enum PlaybackCommand {
   pause       = 1,
@@ -73,23 +70,22 @@ enum TransitionType {
 ```
 
 **TypeScript enum khai báo tường minh:**
-
 ```typescript
 export enum PlaybackCommand {
-  Pause = 1,
-  Resume = 2,
-  Seek = 3,
-  SeekForward = 4,
+  Pause        = 1,
+  Resume       = 2,
+  Seek         = 3,
+  SeekForward  = 4,
   SeekBackward = 5,
-  SkipNext = 6,
+  SkipNext     = 6,
   SkipPrevious = 7,
-  SkipToTrack = 8,
+  SkipToTrack  = 8,
 }
 
 export enum TransitionType {
   Immediate = 1,
   Crossfade = 2,
-  Pending = 3,
+  Pending   = 3,
 }
 ```
 
@@ -98,11 +94,10 @@ export enum TransitionType {
 ## 2. Hub Methods (Client → Server)
 
 ### `JoinSpaceAsync(spaceId: string)`
-
 Tablet gọi ngay sau khi kết nối để đăng ký nhận events của Space đó.
 
-| Param     | Type            | Mô tả                     |
-| --------- | --------------- | ------------------------- |
+| Param | Type | Mô tả |
+|---|---|---|
 | `spaceId` | `string` (GUID) | ID của Space cần theo dõi |
 
 **Server phản hồi:** event `ConnectionConfirmed` (xem Section 3)
@@ -110,24 +105,21 @@ Tablet gọi ngay sau khi kết nối để đăng ký nhận events của Space
 ---
 
 ### `LeaveSpaceAsync(spaceId: string)`
-
-Tablet/brand gọi khi rời Space (trước khi switch sang Space khác).
+Tablet/manager gọi khi rời Space (trước khi switch sang Space khác).
 
 ---
 
 ### `JoinManagerRoomAsync(storeId: string)`
-
 Manager browser tab gọi để nhận đồng bộ trạng thái tất cả Spaces trong Store.
 Server thêm connection vào group `mgr-{storeId}`.
 
-| Param     | Type            | Mô tả                                |
-| --------- | --------------- | ------------------------------------ |
+| Param | Type | Mô tả |
+|---|---|---|
 | `storeId` | `string` (GUID) | ID của Store mà manager đang quản lý |
 
 ---
 
 ### `ReportPlaybackStateAsync(report)`
-
 Tablet báo cáo trạng thái phát nhạc (analytics / health monitoring). Fire-and-forget.
 
 ```json
@@ -142,7 +134,6 @@ Tablet báo cáo trạng thái phát nhạc (analytics / health monitoring). Fir
 ---
 
 ### `SendPlaybackCommandAsync(command)`
-
 Manager gửi lệnh điều khiển trực tiếp qua Hub (low-latency alternative cho REST).
 Chỉ dành cho trường hợp cần độ trễ tối thiểu. REST path là path chính khuyên dùng.
 
@@ -160,7 +151,6 @@ Chỉ dành cho trường hợp cần độ trễ tối thiểu. REST path là p
 ## 3. Server Events (Server → Client)
 
 ### `ConnectionConfirmed`
-
 Phản hồi sau `JoinSpaceAsync` hoặc `JoinManagerRoomAsync`.
 
 ```json
@@ -175,7 +165,6 @@ Phản hồi sau `JoinSpaceAsync` hoặc `JoinManagerRoomAsync`.
 ---
 
 ### `PlayStream`
-
 Khi AI scheduler hoặc manager override thay đổi playlist (bao gồm cả sau 202 khi transcode COMPLETE).
 
 ```json
@@ -194,7 +183,6 @@ Khi AI scheduler hoặc manager override thay đổi playlist (bao gồm cả sa
 ---
 
 ### `PlaybackStateChanged`
-
 Broadcast sau mỗi lệnh playback (Pause/Resume/Seek/Skip…). Gửi đến **cả tablet lẫn manager tabs** trong Space group.
 
 ```json
@@ -209,7 +197,6 @@ Broadcast sau mỗi lệnh playback (Pause/Resume/Seek/Skip…). Gửi đến **
 ---
 
 ### `SpaceStateSync`
-
 Gửi sau `CancelOverride` — toàn bộ `SpaceStateDto` để client re-render.
 
 ```json
@@ -230,13 +217,11 @@ Gửi sau `CancelOverride` — toàn bộ `SpaceStateDto` để client re-render
 ---
 
 ### `StopPlayback`
-
 Dừng phát nhạc hoàn toàn (không có payload). Tablet dừng player và clear UI.
 
 ---
 
 ### `Error`
-
 Lỗi validation tại Hub (ví dụ: `spaceId` không hợp lệ).
 
 ```json
@@ -535,15 +520,15 @@ import * as signalR from '@microsoft/signalr';
 export interface PlayStreamPayload {
   spaceId: string;
   hlsUrl: string;
-  transitionType: TransitionType; // số nguyên
+  transitionType: TransitionType;   // số nguyên
   playlistId: string;
   isManualOverride: boolean;
-  startedAtUtc: string; // ISO 8601
+  startedAtUtc: string;             // ISO 8601
 }
 
 export interface PlaybackStateChangedPayload {
   spaceId: string;
-  command: PlaybackCommand; // số nguyên
+  command: PlaybackCommand;         // số nguyên
   seekPositionSeconds: number | null;
   targetTrackId: string | null;
 }
@@ -562,20 +547,20 @@ export interface SpaceStateDto {
 }
 
 export enum PlaybackCommand {
-  Pause = 1,
-  Resume = 2,
-  Seek = 3,
-  SeekForward = 4,
+  Pause        = 1,
+  Resume       = 2,
+  Seek         = 3,
+  SeekForward  = 4,
   SeekBackward = 5,
-  SkipNext = 6,
+  SkipNext     = 6,
   SkipPrevious = 7,
-  SkipToTrack = 8,
+  SkipToTrack  = 8,
 }
 
 export enum TransitionType {
   Immediate = 1,
   Crossfade = 2,
-  Pending = 3,
+  Pending   = 3,
 }
 
 // ─── Service ────────────────────────────────────────────────────────────────
@@ -596,9 +581,7 @@ export class StoreHubService {
         nextRetryDelayInMilliseconds: (context) => {
           // Exponential backoff: 0s, 2s, 5s, 10s, 30s, ...
           const delays = [0, 2000, 5000, 10000, 30000];
-          return delays[
-            Math.min(context.previousRetryCount, delays.length - 1)
-          ];
+          return delays[Math.min(context.previousRetryCount, delays.length - 1)];
         },
       })
       .configureLogging(signalR.LogLevel.Information)
@@ -611,10 +594,7 @@ export class StoreHubService {
 
   async connect(): Promise<void> {
     await this.connection.start();
-    console.log(
-      '[StoreHub] Connected. ConnectionId:',
-      this.connection.connectionId,
-    );
+    console.log('[StoreHub] Connected. ConnectionId:', this.connection.connectionId);
   }
 
   async disconnect(): Promise<void> {
@@ -654,12 +634,9 @@ export class StoreHubService {
       this.playStreamHandlers.forEach((h) => h(payload));
     });
 
-    this.connection.on(
-      'PlaybackStateChanged',
-      (payload: PlaybackStateChangedPayload) => {
-        this.playbackCommandHandlers.forEach((h) => h(payload));
-      },
-    );
+    this.connection.on('PlaybackStateChanged', (payload: PlaybackStateChangedPayload) => {
+      this.playbackCommandHandlers.forEach((h) => h(payload));
+    });
 
     this.connection.on('SpaceStateSync', (state: SpaceStateDto) => {
       this.stateSyncHandlers.forEach((h) => h(state));
@@ -691,21 +668,17 @@ export class StoreHubService {
 
   // ─── Event subscription API ──────────────────────────────────────────────────
 
-  private playStreamHandlers = new Set<(p: PlayStreamPayload) => void>();
-  private playbackCommandHandlers = new Set<
-    (p: PlaybackStateChangedPayload) => void
-  >();
-  private stateSyncHandlers = new Set<(s: SpaceStateDto) => void>();
-  private stopHandlers = new Set<() => void>();
+  private playStreamHandlers   = new Set<(p: PlayStreamPayload) => void>();
+  private playbackCommandHandlers = new Set<(p: PlaybackStateChangedPayload) => void>();
+  private stateSyncHandlers    = new Set<(s: SpaceStateDto) => void>();
+  private stopHandlers         = new Set<() => void>();
 
   onPlayStream(handler: (p: PlayStreamPayload) => void): () => void {
     this.playStreamHandlers.add(handler);
     return () => this.playStreamHandlers.delete(handler); // returns unsub fn
   }
 
-  onPlaybackCommand(
-    handler: (p: PlaybackStateChangedPayload) => void,
-  ): () => void {
+  onPlaybackCommand(handler: (p: PlaybackStateChangedPayload) => void): () => void {
     this.playbackCommandHandlers.add(handler);
     return () => this.playbackCommandHandlers.delete(handler);
   }
@@ -730,11 +703,7 @@ export class StoreHubService {
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import {
-  StoreHubService,
-  PlayStreamPayload,
-  PlaybackStateChangedPayload,
-} from '@/services/StoreHubService';
+import { StoreHubService, PlayStreamPayload, PlaybackStateChangedPayload } from '@/services/StoreHubService';
 import { useAuthStore } from '@/stores/authStore';
 
 // Singleton hub per session
@@ -767,22 +736,12 @@ export function useStoreHub(spaceId: string) {
       // Subscribe events
       cleanup.push(
         hub.onPlayStream((payload: PlayStreamPayload) => {
-          console.log(
-            'New stream:',
-            payload.hlsUrl,
-            'transition:',
-            payload.transitionType,
-          );
+          console.log('New stream:', payload.hlsUrl, 'transition:', payload.transitionType);
           // Update your audio player / state manager here
         }),
 
         hub.onPlaybackCommand((payload: PlaybackStateChangedPayload) => {
-          console.log(
-            'Playback command:',
-            payload.command,
-            'seek:',
-            payload.seekPositionSeconds,
-          );
+          console.log('Playback command:', payload.command, 'seek:', payload.seekPositionSeconds);
           // Sync UI state (pause icon, progress bar, etc.)
         }),
 
@@ -810,14 +769,10 @@ export function useStoreHub(spaceId: string) {
 ```tsx
 // Kết hợp joinSpace (cho một Space cụ thể) + joinManagerRoom (toàn Store)
 
-async function setupManagerHub(
-  hub: StoreHubService,
-  storeId: string,
-  spaceId: string,
-) {
+async function setupManagerHub(hub: StoreHubService, storeId: string, spaceId: string) {
   await hub.connect();
-  await hub.joinManagerRoom(storeId); // nhận events toàn Store
-  await hub.joinSpace(spaceId); // nhận events Space đang xem
+  await hub.joinManagerRoom(storeId);   // nhận events toàn Store
+  await hub.joinSpace(spaceId);          // nhận events Space đang xem
 
   hub.onSpaceStateSync((state) => {
     // Khi manager khác cancel override → tự đồng bộ UI
@@ -831,10 +786,10 @@ async function setupManagerHub(
 
 ## 6. Connection Groups
 
-| Group name         | Thành viên                                      | Events nhận                                                  |
-| ------------------ | ----------------------------------------------- | ------------------------------------------------------------ |
-| `{spaceId}` (GUID) | Tablet của Space đó + manager đang xem Space đó | `PlayStream`, `PlaybackStateChanged`, `StopPlayback`         |
-| `mgr-{storeId}`    | Tất cả manager tabs/sessions của Store          | `SpaceStateSync`, `OverrideActivated`\*, `OverrideCleared`\* |
+| Group name | Thành viên | Events nhận |
+|---|---|---|
+| `{spaceId}` (GUID) | Tablet của Space đó + manager đang xem Space đó | `PlayStream`, `PlaybackStateChanged`, `StopPlayback` |
+| `mgr-{storeId}` | Tất cả manager tabs/sessions của Store | `SpaceStateSync`, `OverrideActivated`\*, `OverrideCleared`\* |
 
 > \* Chưa implement, dự kiến Phase 14.
 
