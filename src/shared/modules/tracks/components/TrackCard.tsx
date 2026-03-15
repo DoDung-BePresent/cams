@@ -1,9 +1,24 @@
 import { Card, Space, Typography, Tag, Image } from 'antd';
 import { MusicIcon } from 'lucide-react';
-import { formatDuration } from '@/shared/utils/uploadHelpers';
+
+/**
+ * Utils
+ */
+import { formatDuration } from '@/shared/utils';
+
+/**
+ * Constants
+ */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
-import { MUSIC_PROVIDER_LABELS, MUSIC_PROVIDER_COLORS } from '../constants';
-import type { TrackListItem } from '../types';
+import {
+  MUSIC_PROVIDER_LABELS,
+  MUSIC_PROVIDER_COLORS,
+} from '@/shared/modules/tracks/constants';
+
+/**
+ * Types
+ */
+import type { TrackListItem } from '@/shared/modules/tracks/types';
 
 const { Text, Title } = Typography;
 

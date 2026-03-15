@@ -5,6 +5,12 @@ export enum EntityStatusEnum {
   Rejected = 3,
 }
 
+export enum RoleEnum {
+  SystemAdmin = 0,
+  BrandManager = 1,
+  StoreManager = 2,
+}
+
 export interface BasePaginationFilter {
   page?: number;
   pageSize?: number;
@@ -24,10 +30,11 @@ export type BaseResponse = {
 };
 
 export interface Result<T = any> {
-  success: boolean;
+  isSuccess: boolean;
   message: string;
-  data: T;
-  errors?: Record<string, string[]>;
+  data?: T;
+  errors?: Array<{ field: string; message: string }> | null;
+  errorCode?: string | null;
 }
 
 export type PaginationResult<T> = {

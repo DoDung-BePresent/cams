@@ -1,7 +1,4 @@
-import type {
-  BaseResponse,
-  PaginationResult,
-} from '@/shared/types/commonTypes';
+import type { BaseResponse, PaginationResult } from '@/shared/types';
 
 // ============================================================================
 // Enums

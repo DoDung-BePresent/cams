@@ -1,7 +1,15 @@
+import { api } from '@/config';
+
+/**
+ * Constants
+ */
+import { MOOD_ENDPOINTS } from '@/shared/modules/moods/constants';
+
+/**
+ * Types
+ */
 import type { Result } from '@/shared/types/commonTypes';
-import { MOOD_ENDPOINTS } from '../constants';
-import type { MoodListItem } from '../types';
-import { api } from '@/config/api';
+import type { MoodListItem } from '@/shared/modules/moods/types';
 
 /**
  * Mood Service - API calls for mood management

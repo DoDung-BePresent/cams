@@ -1,14 +1,4 @@
-import type {
-  BaseResponse,
-  EntityStatusEnum,
-} from '@/shared/types/commonTypes';
-
-// Enums - Reuse from account types
-export enum RoleEnum {
-  SystemAdmin = 0,
-  BrandManager = 1,
-  StoreManager = 2,
-}
+import type { BaseResponse, EntityStatusEnum, RoleEnum } from '@/shared/types';
 
 // Request DTOs for StoreManager
 export type CreateStaffRequest = {
@@ -40,29 +30,33 @@ export type ResetStaffPasswordRequest = {
 // Filter
 export type StaffFilter = {
   page?: number;
-  role?: RoleEnum;
   pageSize?: number;
   search?: string; // Search by name, email, phone
   sortBy?: string; // 'firstname' | 'lastname' | 'email' | 'createdat'
+  role?: RoleEnum;
   isAscending?: boolean;
   status?: EntityStatusEnum;
   storeId?: string; // Filter by assigned store
 };
 
 // Response DTOs
-export type StaffListItem = BaseResponse & {
+export interface StaffListItem extends BaseResponse {
   firstName: string;
   lastName: string;
-  fullName: string; // firstName + lastName
+  fullName: string;
   email: string;
   phoneNumber: string | null;
   avatarUrl: string | null;
-  roles: RoleEnum[]; // Always [RoleEnum.StoreManager]
-  brandId: string;
+  lastLoginAt: string | null;
+  roles: RoleEnum[];
+  brandId: string | null;
   brandName: string | null;
+  brandLogoUrl: string | null;
   storeId: string | null;
   storeName: string | null;
-};
+  isPrimaryOwner: boolean;
+  children?: StaffListItem[];
+}
 
 export type StaffDetailResponse = StaffListItem & {
   // Same as StaffListItem for now

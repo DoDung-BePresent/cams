@@ -1,18 +1,32 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { useTracks } from '@/shared/modules/tracks/hooks';
+
+/**
+ * Components
+ */
+import { PageHeader, DataTable } from '@/shared/components';
 import { getTrackColumns } from '@/shared/modules/tracks/components';
-import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
-import type { TablePaginationConfig } from 'antd';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import {
   TrackDetailsDrawer,
   TrackFilter as TrackFilterComponent,
 } from './components';
+
+/**
+ * Hooks
+ */
+import { useTracks } from '@/shared/modules/tracks/hooks';
+
+/**
+ * Constants
+ */
+import { PAGINATION_SIZES } from '@/shared/constants';
+
+/**
+ * Types
+ */
+import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
 export const TrackList = () => {
   const navigate = useNavigate();
@@ -118,7 +132,7 @@ export const TrackList = () => {
           total: data?.totalItems || 0,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} tracks`,
-          pageSizeOptions: ['10', '20', '50', '100'],
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
             setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },

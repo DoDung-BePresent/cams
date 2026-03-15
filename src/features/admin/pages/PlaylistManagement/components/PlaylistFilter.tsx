@@ -1,12 +1,24 @@
 import { Input, Space, Flex, Button, Select, Tag, Row, Col, Alert } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   SearchOutlined,
   ReloadOutlined,
   FilterOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Constants
+ */
 import { ENTITY_STATUS_OPTIONS } from '@/shared/constants';
 import { PLAYLIST_TYPE_OPTIONS } from '@/shared/modules/playlists/constants';
+
+/**
+ * Types
+ */
 import type { PlaylistFilter as PlaylistFilterType } from '@/shared/modules/playlists/types';
 
 interface PlaylistFilterProps {
@@ -210,7 +222,7 @@ export const PlaylistFilter = ({
             >
               Status:{' '}
               {
-                ENTITY_STATUS_OPTIONS.find((o) => o.value === filter.status)
+                ENTITY_STATUS_OPTIONS?.find((o) => o.value === filter.status)
                   ?.label
               }
             </Tag>

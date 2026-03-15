@@ -14,30 +14,38 @@ import {
 /**
  * Hooks
  */
-import { useUpdateAccount } from '@/features/admin/hooks/useUpdateAccount';
-import { useAccount } from '@/features/admin/hooks/useAccount';
+import { useUpdateAccount, useAccount } from '@/features/admin/hooks';
 
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { ImageDragger } from '@/shared/components';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { UpdateAccountRequest } from '@/features/admin/types/accountTypes';
+import { ErrorCodeEnum } from '@/shared/types';
+import type { UpdateAccountRequest } from '@/features/admin/types';
 
 /**
  * Validations
  */
-import { updateAccountValidation } from '@/features/admin/validations/accountValidation';
+import { updateAccountValidation } from '@/features/admin/validations';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
-import { nullToUndefined } from '@/shared/utils/formHelpers';
+import {
+  createImageUploadProps,
+  handleApiError,
+  nullToUndefined,
+} from '@/shared/utils';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 
@@ -73,9 +81,9 @@ export const EditAccountDrawer = ({
         firstName: account.firstName,
         lastName: account.lastName,
         email: account.email,
-        phoneNumber: nullToUndefined(account.phoneNumber), // ✅ Handle null
+        phoneNumber: nullToUndefined(account.phoneNumber),
       });
-      setExistingAvatarUrl(account.avatarUrl);
+      setExistingAvatarUrl(account.avatarUrl ?? null);
     }
   }, [account, open, form]);
 
@@ -99,6 +107,42 @@ export const EditAccountDrawer = ({
           handleCancel();
           onSuccess();
         },
+        onError: (error: any) => {
+          const errorCode = error.response?.data?.errorCode;
+          const fieldErrors = error.response?.data?.errors;
+
+          // NOTE: sao payload là camelCase nhưng field lỗi là PascalCase vậy ta?
+          if (errorCode === ErrorCodeEnum.ValidationFailed && fieldErrors) {
+            form.setFields(
+              fieldErrors.map((err: { field: string; message: string }) => ({
+                name: err.field.charAt(0).toLowerCase() + err.field.slice(1),
+                errors: [err.message],
+              })),
+            );
+            return;
+          }
+
+          if (errorCode === ErrorCodeEnum.BusinessRuleViolation) {
+            // NOTE: BusinessValidationRule ở đây hơi kỳ khi không chỉ rõ là validation cho trường hợp nào email hay phone!
+            form.setFields([
+              {
+                name: 'email',
+                errors: ['Email or phone number already exists'],
+              },
+              {
+                name: 'phoneNumber',
+                errors: ['Email or phone number already exists'],
+              },
+            ]);
+
+            return;
+          }
+          handleApiError(
+            error,
+            {},
+            'Failed to create account. Please try again.',
+          );
+        },
       },
     );
   };
@@ -110,13 +154,11 @@ export const EditAccountDrawer = ({
     onClose();
   };
 
-  // ✅ Use shared upload helper
   const uploadProps = createImageUploadProps<UpdateAccountRequest>(
     setAvatarFile,
     (field, value) => form.setFieldValue(field, value),
   );
 
-  // ✅ Get preview URL
   const getPreviewUrl = () => {
     if (avatarFile?.originFileObj) {
       return URL.createObjectURL(avatarFile.originFileObj);
@@ -129,7 +171,7 @@ export const EditAccountDrawer = ({
       closeIcon={null}
       title='Edit Account Profile'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={
@@ -222,7 +264,6 @@ export const EditAccountDrawer = ({
               <Input placeholder='+84901234567 or 0901234567' />
             </Form.Item>
 
-            {/* ✅ Use shared ImageDragger */}
             <Form.Item
               label='Avatar'
               name='avatar'

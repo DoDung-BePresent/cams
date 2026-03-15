@@ -1,8 +1,7 @@
 /**
  * Components
  */
-import { Loadable } from '@/shared/components/common/Loadable';
-import { RedirectIfAuthenticated } from '@/shared/components/common/RedirectIfAuthenticated';
+import { Loadable, RedirectIfAuthenticated } from '@/shared/components';
 
 /**
  * Pages

@@ -4,23 +4,27 @@ import { Alert, Form, Input } from 'antd';
 /**
  * Hooks
  */
-import { useResetAccountPassword } from '@/features/admin/hooks/useResetAccountPassword';
+import { useResetAccountPassword } from '@/features/admin/hooks';
 
 /**
  * Components
  */
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
+import { AppModal, PasswordStrength } from '@/shared/components';
 
 /**
  * Types
  */
-import type { ResetPasswordRequest } from '@/features/admin/types/accountTypes';
+import type { ResetPasswordRequest } from '@/features/admin/types';
 
 /**
  * Validations
  */
-import { resetPasswordValidation } from '@/features/admin/validations/accountValidation';
+import { resetPasswordValidation } from '@/features/admin/validations';
+
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
 
 type ResetPasswordModalProps = {
   open: boolean;
@@ -79,7 +83,7 @@ export const ResetPasswordModal = ({
         loading: resetPassword.isPending,
         danger: true,
       }}
-      width={550}
+      width={MODAL_WIDTHS.medium}
     >
       <Alert
         type='warning'
@@ -115,6 +119,7 @@ export const ResetPasswordModal = ({
               description='This is the password to your account, so it must be strong and hard to guess.'
             />
           }
+          className='mb-0!'
         >
           <Input.Password
             placeholder='Enter new password'

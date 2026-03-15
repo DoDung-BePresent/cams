@@ -111,18 +111,6 @@ export const formatCurrency = (amount?: number): string => {
 };
 
 /**
- * Format file size
- * Example: 1048576 → "1.00 MB"
- */
-export const formatFileSize = (bytes?: number): string => {
-  if (!bytes) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-};
-
-/**
  * Convert NULL value to UNDEFINED
  */
 export const nullToUndefined = <T>(value: T | null): T | undefined => {

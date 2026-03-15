@@ -3,17 +3,20 @@ import { Navigate } from 'react-router';
 /**
  * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers';
 
 /**
- * Constants
+ * Types
  */
-import { ROLES } from '@/shared/constants/rolesConstants';
+import { RoleEnum } from '@/shared/types';
 
-const ROLE_HOME_MAP: Record<string, string> = {
-  [ROLES.SYSTEM_ADMIN]: '/admin/dashboard',
-  [ROLES.BRAND_MANAGER]: '/brand/dashboard',
-  [ROLES.STORE_MANAGER]: '/store/dashboard',
+/**
+ * Role to Dashboard Route Mapping
+ */
+const ROLE_HOME_MAP: Record<RoleEnum, string> = {
+  [RoleEnum.SystemAdmin]: '/admin/dashboard',
+  [RoleEnum.BrandManager]: '/brand/dashboard',
+  [RoleEnum.StoreManager]: '/store/dashboard',
 };
 
 export const RedirectIfAuthenticated = ({
@@ -24,7 +27,9 @@ export const RedirectIfAuthenticated = ({
   const { isAuthenticated, user } = useAuth();
 
   if (isAuthenticated && user) {
-    const redirectTo = ROLE_HOME_MAP[user.role] ?? '/unauthorized';
+    const primaryRole = user.roles[0];
+    const redirectTo = ROLE_HOME_MAP[primaryRole] ?? '/unauthorized';
+
     return (
       <Navigate
         to={redirectTo}

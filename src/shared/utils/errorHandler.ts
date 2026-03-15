@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import { ErrorCodeEnum, ERROR_MESSAGES } from '@/shared/types/errorTypes';
+import { ErrorCodeEnum, ERROR_MESSAGES } from '@/shared/types';
 
 /**
  * API Error Response Type

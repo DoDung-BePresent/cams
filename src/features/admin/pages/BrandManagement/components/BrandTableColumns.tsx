@@ -15,7 +15,8 @@ import {
  */
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
-import type { BrandListItem } from '@/features/admin/types/brandTypes';
+import type { BrandListItem } from '@/features/admin/types';
+import type { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Constants
@@ -23,7 +24,12 @@ import type { BrandListItem } from '@/features/admin/types/brandTypes';
 import {
   BRAND_STATUS_COLORS,
   BRAND_STATUS_LABELS,
-} from '@/features/admin/constants/brandConstants';
+} from '@/features/admin/constants';
+
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
 
 type GetColumnsProps = {
   onView: (brandId: string) => void;
@@ -75,7 +81,7 @@ export const getBrandColumns = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Avatar
             src={record.logoUrl}
-            size={60}
+            size={AVATAR_SIZE.medium}
             shape='square'
             style={{ borderRadius: 5 }}
           >
@@ -117,13 +123,9 @@ export const getBrandColumns = ({
       dataIndex: 'status',
       key: 'status',
       width: 120,
-      render: (status: string) => (
-        <Tag
-          color={
-            BRAND_STATUS_COLORS[status as keyof typeof BRAND_STATUS_COLORS]
-          }
-        >
-          {BRAND_STATUS_LABELS[status as keyof typeof BRAND_STATUS_LABELS]}
+      render: (status: EntityStatusEnum) => (
+        <Tag color={BRAND_STATUS_COLORS[status]}>
+          {BRAND_STATUS_LABELS[status]}
         </Tag>
       ),
     },

@@ -30,6 +30,11 @@ import { SPACE_TYPE_OPTIONS } from '@/features/store/constants';
  */
 import { createSpaceValidation } from '@/features/store/validations';
 
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
 type CreateSpaceDrawerProps = {
   open: boolean;
   onClose: () => void;
@@ -63,7 +68,7 @@ export const CreateSpaceDrawer = ({
       closeIcon={null}
       title='Create New Space'
       placement='right'
-      width={600}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={
@@ -132,12 +137,10 @@ export const CreateSpaceDrawer = ({
 
         <Row gutter={16}>
           <Col span={12}>
-            {' '}
             <Form.Item
               label='Max Occupancy'
               name='maxOccupancy'
               rules={createSpaceValidation.maxOccupancy}
-              // extra='Maximum number of people allowed in this space'
             >
               <InputNumber
                 min={1}
@@ -151,7 +154,6 @@ export const CreateSpaceDrawer = ({
               label='Critical Queue Threshold'
               name='criticalQueueThreshold'
               rules={createSpaceValidation.criticalQueueThreshold}
-              // extra='Trigger alert when queue exceeds this number'
             >
               <InputNumber
                 min={1}

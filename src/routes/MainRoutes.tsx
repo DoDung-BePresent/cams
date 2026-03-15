@@ -3,28 +3,34 @@ import { Navigate } from 'react-router';
 /**
  * Layouts
  */
-import { AdminDashboardLayout } from '@/layouts/AdminDashboardLayout';
-import { BrandDashboardLayout } from '@/layouts/BrandDashboardLayout';
-import { StoreDashboardLayout } from '@/layouts/StoreDashboardLayout';
+import {
+  AdminDashboardLayout,
+  BrandDashboardLayout,
+  StoreDashboardLayout,
+} from '@/layouts';
 
 /**
- * Shared
+ * Components
  */
-import { ROLES } from '@/shared/constants/rolesConstants';
-import { ProtectedRoute } from '@/shared/components/common/ProtectedRoute';
+import { ProtectedRoute } from '@/shared/components';
 
 /**
- * Features
+ * Routes
  */
-import { adminRoutes } from '@/features/admin/routes/adminRoutes';
-import { brandRoutes } from '@/features/brand/routes/brandRoutes';
-import { storeRoutes } from '@/features/store/routes/storeRoutes';
+import { adminRoutes } from '@/features/admin/routes';
+import { brandRoutes } from '@/features/brand/routes';
+import { storeRoutes } from '@/features/store/routes';
+
+/**
+ * Types
+ */
+import { RoleEnum } from '@/shared/types';
 
 export const MainRoutes = [
   {
     path: '/admin',
     element: (
-      <ProtectedRoute allowedRoles={[ROLES.SYSTEM_ADMIN]}>
+      <ProtectedRoute allowedRoles={[RoleEnum.SystemAdmin]}>
         <AdminDashboardLayout />
       </ProtectedRoute>
     ),
@@ -44,7 +50,7 @@ export const MainRoutes = [
   {
     path: '/brand',
     element: (
-      <ProtectedRoute allowedRoles={[ROLES.BRAND_MANAGER]}>
+      <ProtectedRoute allowedRoles={[RoleEnum.BrandManager]}>
         <BrandDashboardLayout />
       </ProtectedRoute>
     ),
@@ -64,7 +70,7 @@ export const MainRoutes = [
   {
     path: '/store',
     element: (
-      <ProtectedRoute allowedRoles={[ROLES.STORE_MANAGER]}>
+      <ProtectedRoute allowedRoles={[RoleEnum.StoreManager]}>
         <StoreDashboardLayout />
       </ProtectedRoute>
     ),

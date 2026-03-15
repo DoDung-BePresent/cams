@@ -1,5 +1,4 @@
 import type { Rule } from 'antd/es/form';
-import { RoleEnum } from '../types/accountTypes';
 
 export const createAccountValidation = {
   firstName: [

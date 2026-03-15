@@ -19,24 +19,29 @@ import { useStaffDetail, useUpdateStaff } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
+import { ImageDragger } from '@/shared/components';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { UpdateStaffRequest } from '@/features/brand/types/staffTypes';
+import type { UpdateStaffRequest } from '@/features/brand/types';
 
 /**
  * Validations
  */
-import { updateStaffValidation } from '@/features/brand/validations/staffValidation';
+import { updateStaffValidation } from '@/features/brand/validations';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
-import { nullToUndefined } from '@/shared/utils/formHelpers';
+import { createImageUploadProps } from '@/shared/utils';
+import { nullToUndefined } from '@/shared/utils';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 
@@ -125,7 +130,7 @@ export const EditStaffDrawer = ({
       closeIcon={null}
       title='Edit Staff Member'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

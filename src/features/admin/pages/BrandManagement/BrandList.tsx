@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -10,44 +10,77 @@ import { PlusOutlined } from '@ant-design/icons';
 /**
  * Types
  */
-import type { BrandListItem } from '@/features/admin/types/brandTypes';
+import type { BrandListItem, BrandFilter } from '@/features/admin/types';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
 /**
  * Components
  */
-import { AddBrandDrawer } from './components/AddBrandDrawer';
-import { EditBrandDrawer } from './components/EditBrandDrawer';
-import { getBrandColumns } from './components/BrandTableColumns';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { AppModal } from '@/shared/components/ui/AppModal';
+import {
+  AddBrandDrawer,
+  EditBrandDrawer,
+  getBrandColumns,
+  BrandFilter as BrandFilterComponent,
+} from './components';
+import { PageHeader, DataTable, AppModal } from '@/shared/components';
 
 /**
  * Hooks
  */
-import { useBrands } from '@/features/admin/hooks/useBrands';
-import { useDeleteBrand } from '@/features/admin/hooks/useDeleteBrand';
+import { useBrands, useDeleteBrand } from '@/features/admin/hooks';
+
+/**
+ * Constants
+ */
+import { PAGINATION_SIZES } from '@/shared/constants';
 
 export const BrandList = () => {
   const navigate = useNavigate();
+  const [filter, setFilter] = useState<BrandFilter>({
+    page: 1,
+    pageSize: 10,
+    sortBy: 'createdat',
+    isAscending: false,
+  });
+
+  const [showFilters, setShowFilters] = useState(false);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
 
-  const { data, isLoading } = useBrands({
-    page: currentPage,
-    pageSize,
-  });
+  const { data, isLoading, refetch } = useBrands(filter);
 
   const deleteBrand = useDeleteBrand();
 
+  const handleSearch = (value: string) => {
+    setFilter((prev) => ({ ...prev, search: value, page: 1 }));
+  };
+
+  const handleFilterChange = (key: keyof BrandFilter, value: any) => {
+    setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const handleTableChange = (
+    pagination: TablePaginationConfig,
+    _filters: Record<string, FilterValue | null>,
+    sorter: SorterResult<BrandListItem> | SorterResult<BrandListItem>[],
+  ) => {
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+
+    setFilter((prev) => ({
+      ...prev,
+      page: pagination.current || 1,
+      pageSize: pagination.pageSize || 10,
+      sortBy: currentSorter.field
+        ? (String(currentSorter.field) as BrandFilter['sortBy'])
+        : 'createdat',
+      isAscending: currentSorter.order === 'ascend',
+    }));
+  };
+
   const handleView = (brandId: string) => {
     console.log('View brand:', brandId);
-    // TODO: Navigate to brand detail page
-    // navigate(`/admin/brands/${brandId}`);
-    message.info('Brand detail page will be implemented soon');
   };
 
   const handleEdit = (brand: BrandListItem) => {
@@ -79,6 +112,15 @@ export const BrandList = () => {
     });
   };
 
+  const handleReset = () => {
+    setFilter({
+      page: 1,
+      pageSize: 10,
+      sortBy: 'createdat',
+      isAscending: false,
+    });
+  };
+
   const breadcrumbs = [
     {
       title: 'Dashboard',
@@ -101,6 +143,10 @@ export const BrandList = () => {
       <PageHeader
         title='Brand Management'
         breadcrumbs={breadcrumbs}
+        seo={{
+          description: 'Manage all brands in the system',
+          keywords: 'brand, management, admin, cms',
+        }}
         extra={
           <Button
             size='large'
@@ -113,27 +159,43 @@ export const BrandList = () => {
         }
       />
 
-      <DataTable
+      <DataTable<BrandListItem>
+        filter={
+          <BrandFilterComponent
+            filter={filter}
+            showAdvanced={showFilters}
+            onSearch={handleSearch}
+            onFilterChange={handleFilterChange}
+            onToggleAdvanced={() => setShowFilters(!showFilters)}
+            onRefresh={() => refetch()}
+            onReset={handleReset}
+          />
+        }
         columns={columns}
         dataSource={data?.items || []}
         rowKey='id'
         loading={isLoading}
         pagination={{
-          current: currentPage,
-          pageSize,
+          current: filter.page,
+          pageSize: filter.pageSize,
           total: data?.totalItems || 0,
+          showSizeChanger: true,
           showTotal: (total) => `Total ${total} brands`,
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
-            setCurrentPage(page);
-            setPageSize(size || 10);
+            setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },
         }}
+        onChange={handleTableChange}
       />
 
       <AddBrandDrawer
         open={addDrawerOpen}
         onClose={() => setAddDrawerOpen(false)}
-        onSuccess={() => setAddDrawerOpen(false)}
+        onSuccess={() => {
+          setAddDrawerOpen(false);
+          refetch();
+        }}
       />
 
       <EditBrandDrawer
@@ -146,6 +208,7 @@ export const BrandList = () => {
         onSuccess={() => {
           setEditDrawerOpen(false);
           setSelectedBrandId(null);
+          refetch();
         }}
       />
     </div>

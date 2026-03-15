@@ -34,16 +34,23 @@ import avatarImage from '@/assets/images/avatar-1.png';
 /**
  * Providers
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers';
 
 /**
  * Shared
  */
-import { useFullscreen } from '@/shared/hooks/useFullScreen';
+import { useFullscreen } from '@/shared/hooks';
 
 /**
  * Types
  */
+import type { MenuProps } from 'antd';
+
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 type AppHeaderProps = {
   collapsed: boolean;
   onClick: () => void;
@@ -78,7 +85,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
     });
   };
 
-  const userMenuItems = [
+  const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       label: (
@@ -169,7 +176,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             arrow
           >
             <Avatar
-              size={36}
+              size={AVATAR_SIZE.small}
               src={avatarImage}
               icon={<UserOutlined />}
               style={{ cursor: 'pointer' }}

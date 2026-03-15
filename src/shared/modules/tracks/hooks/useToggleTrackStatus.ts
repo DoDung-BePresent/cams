@@ -1,7 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { showErrorMessage } from '@/shared/utils/errorHandler';
-import { trackService } from '../services';
+
+/**
+ * Utils
+ */
+import { showErrorMessage } from '@/shared/utils';
+
+/**
+ * Services
+ */
+import { trackService } from '@/shared/modules/tracks/services';
 
 export const useToggleTrackStatus = () => {
   const queryClient = useQueryClient();
@@ -9,7 +17,7 @@ export const useToggleTrackStatus = () => {
   return useMutation({
     mutationFn: (id: string) => trackService.toggleStatus(id),
     onSuccess: (response) => {
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['tracks'] });
         message.success(
           response.data.message || 'Track status updated successfully!',

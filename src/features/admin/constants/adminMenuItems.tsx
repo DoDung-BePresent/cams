@@ -1,4 +1,11 @@
+/**
+ * Types
+ */
 import type { ItemType } from 'antd/es/menu/interface';
+
+/**
+ * Icons
+ */
 import {
   DashboardOutlined,
   UserOutlined,
@@ -7,7 +14,7 @@ import {
   UnorderedListOutlined,
 } from '@ant-design/icons';
 
-export const adminMenuItems: ItemType[] = [
+export const ADMIN_MENU_ITEMS: ItemType[] = [
   {
     key: 'dashboard',
     icon: <DashboardOutlined />,
@@ -16,7 +23,7 @@ export const adminMenuItems: ItemType[] = [
   {
     key: 'accounts',
     icon: <UserOutlined />,
-    label: 'Account Management',
+    label: 'Manager Management',
   },
   {
     key: 'brands',

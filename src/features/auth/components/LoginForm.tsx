@@ -1,29 +1,21 @@
 import { Link } from 'react-router';
-import { Button, Checkbox, Flex, Form, Input, message, Typography } from 'antd';
+import { Button, Checkbox, Flex, Form, Input, Typography } from 'antd';
 
 /**
  * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
+import { useAuth } from '@/providers';
 
 /**
  * Validations
  */
-import { loginValidation } from '../validations/authValidation';
-
-/**
- * Utils
- */
-import { handleApiError } from '@/shared/utils/errorHandler';
+import { loginValidation } from '../validations';
 
 /**
  * Types
  */
-import { ErrorCodeEnum } from '@/shared/types/errorTypes';
+import { ErrorCodeEnum } from '@/shared/types';
 
-/**
- * Types
- */
 type LoginFormType = {
   email: string;
   password: string;
@@ -44,19 +36,36 @@ export const LoginForm = () => {
         rememberMe: values.rememberMe ?? false,
       },
       {
-        onError: (error) => {
-          handleApiError(
-            error,
-            {
-              [ErrorCodeEnum.InvalidCredentials]: () => {
-                message.error('Invalid credentials! Please try again!');
+        onError: (error: any) => {
+          const errorCode = error.response?.data?.errorCode;
+          const errorMessage =
+            error.response?.data?.message || 'Login failed! Please try again.';
+
+          // Handle InvalidCredentials (wrong email/password)
+          if (errorCode === ErrorCodeEnum.InvalidCredentials) {
+            form.setFields([
+              {
+                name: 'email',
+                errors: [''],
               },
-              [ErrorCodeEnum.Unauthorized]: () => {
-                message.error('Invalid credentials! Please try again!');
+              {
+                name: 'password',
+                errors: [errorMessage], // Show error on password field
               },
-            },
-            'Login failed! Please try again.',
-          );
+            ]);
+            return;
+          }
+
+          // Handle other auth errors
+          if (errorCode === ErrorCodeEnum.Forbidden) {
+            form.setFields([
+              {
+                name: 'email',
+                errors: ['You do not have permission to access this system'],
+              },
+            ]);
+            return;
+          }
         },
       },
     );
@@ -69,9 +78,13 @@ export const LoginForm = () => {
       layout='vertical'
       requiredMark={false}
       onFinish={handleSubmit}
+      // autoComplete='off'
+      initialValues={{
+        rememberMe: true,
+      }}
       styles={{ label: { height: 20 } }}
     >
-      <Form.Item
+      <Form.Item<LoginFormType>
         label='Email Address'
         name='email'
         rules={loginValidation.email}
@@ -79,7 +92,7 @@ export const LoginForm = () => {
         <Input placeholder='Enter email address' />
       </Form.Item>
 
-      <Form.Item
+      <Form.Item<LoginFormType>
         label='Password'
         name='password'
         rules={loginValidation.password}
@@ -87,13 +100,13 @@ export const LoginForm = () => {
         <Input.Password placeholder='Enter password' />
       </Form.Item>
 
-      <Form.Item
+      <Form.Item<LoginFormType>
         name='rememberMe'
         valuePropName='checked'
         label={null}
       >
         <Flex justify='space-between'>
-          <Checkbox>Remember me</Checkbox>
+          <Checkbox defaultChecked>Remember me</Checkbox>
           <Link to='/forgot-password'>
             <AntLink>Forgot Password?</AntLink>
           </Link>

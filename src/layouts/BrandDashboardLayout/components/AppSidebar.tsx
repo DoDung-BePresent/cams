@@ -3,10 +3,9 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
 /**
- * Shared
+ * Libs
  */
-import { Logo } from '@/shared/components/common/Logo';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib';
 
 /**
  * Hooks
@@ -16,13 +15,13 @@ import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
 /**
  * Features
  */
-import { brandMenuItems } from '@/features/brand/constants/brandMenuItems';
-import { BRAND_ROUTE_MAP } from '@/features/brand/constants/brandRouteMap';
+import { BRAND_MENU_ITEMS, BRAND_ROUTE_MAP } from '@/features/brand/constants';
 
 /**
  * Components
  */
-import { NavCard } from './NavCard';
+import { NavCard, Logo } from '@/shared/components';
+import { SIDEBAR_WIDTHS } from '@/config';
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -43,7 +42,7 @@ const siderStyle: React.CSSProperties = {
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
-    menuItems: brandMenuItems,
+    menuItems: BRAND_MENU_ITEMS,
     routeMap: BRAND_ROUTE_MAP,
   });
 
@@ -52,8 +51,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       trigger={null}
       style={siderStyle}
       theme='light'
-      width={260}
-      collapsedWidth={60}
+      width={SIDEBAR_WIDTHS.width}
+      collapsedWidth={SIDEBAR_WIDTHS.collapsedWidth}
       collapsible
       collapsed={collapsed}
     >
@@ -70,7 +69,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           className='border-none!'
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
-          items={brandMenuItems}
+          items={BRAND_MENU_ITEMS}
           onClick={({ key }) => handleMenuClick(key)}
         />
         {!collapsed && <NavCard />}

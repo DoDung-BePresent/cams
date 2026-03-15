@@ -9,18 +9,22 @@ import { useResetStaffPassword } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { AppModal } from '@/shared/components/ui/AppModal';
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
+import { AppModal, PasswordStrength } from '@/shared/components';
 
 /**
  * Types
  */
-import type { ResetStaffPasswordRequest } from '@/features/brand/types/staffTypes';
+import type { ResetStaffPasswordRequest } from '@/features/brand/types';
 
 /**
  * Validations
  */
-import { resetPasswordValidation } from '@/features/brand/validations/staffValidation';
+import { resetPasswordValidation } from '@/features/brand/validations';
+
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
 
 type ResetPasswordModalProps = {
   open: boolean;
@@ -79,7 +83,7 @@ export const ResetPasswordModal = ({
         loading: resetPassword.isPending,
         danger: true,
       }}
-      width={550}
+      width={MODAL_WIDTHS.medium}
     >
       <Alert
         type='warning'

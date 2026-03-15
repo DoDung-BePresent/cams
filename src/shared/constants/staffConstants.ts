@@ -1,4 +1,4 @@
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { EntityStatusEnum } from '@/shared/types';
 
 export const STAFF_STATUS_COLORS = {
   [EntityStatusEnum.Inactive]: 'default',

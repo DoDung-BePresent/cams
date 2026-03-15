@@ -8,15 +8,35 @@ import {
   Flex,
   Typography,
 } from 'antd';
+
+/**
+ * Hooks
+ */
 import { useTrack } from '@/shared/modules/tracks/hooks';
+
+/**
+ * Components
+ */
 import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
-import { formatDateTime } from '@/shared/utils/formHelpers';
-import { formatDuration } from '@/shared/utils/uploadHelpers';
+
+/**
+ * Utils
+ */
+import { formatDateTime, formatDuration } from '@/shared/utils';
+
+/**
+ * Constants
+ */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
 import {
   MUSIC_PROVIDER_LABELS,
   MUSIC_PROVIDER_COLORS,
 } from '@/shared/modules/tracks/constants';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 
@@ -37,7 +57,7 @@ export const TrackDetailsDrawer = ({
     <Drawer
       title='Track Details'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={onClose}
     >

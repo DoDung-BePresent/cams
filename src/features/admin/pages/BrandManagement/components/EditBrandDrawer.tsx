@@ -10,44 +10,44 @@ import {
   Col,
   Typography,
   Flex,
+  Spin,
 } from 'antd';
 
 /**
  * Hooks
  */
-import { useUpdateBrand } from '@/features/admin/hooks/useUpdateBrand';
-import { useBrand } from '@/features/admin/hooks/useBrand';
+import { useUpdateBrand, useBrand } from '@/features/admin/hooks';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { BrandRequest } from '@/features/admin/types/brandTypes';
+import type { BrandRequest } from '@/features/admin/types';
 
 /**
  * Constants
  */
-import {
-  INDUSTRY_OPTIONS,
-  TIMEZONE_OPTIONS,
-} from '@/features/admin/constants/brandConstants';
+import { INDUSTRY_OPTIONS } from '@/features/admin/constants';
 
 /**
  * Validations
  */
-import { brandValidation } from '@/features/admin/validations/brandValidation';
+import { brandValidation } from '@/features/admin/validations';
 
 /**
  * Utils
  */
-import { nullToUndefined } from '@/shared/utils/formHelpers';
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { nullToUndefined, createImageUploadProps } from '@/shared/utils';
 
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { FormSkeleton } from '@/shared/components/common/FormSkeleton';
+import { ImageDragger } from '@/shared/components';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -90,7 +90,6 @@ export const EditBrandDrawer = ({
         legalName: nullToUndefined(brand.legalName),
         taxCode: nullToUndefined(brand.taxCode),
         billingAddress: nullToUndefined(brand.billingAddress),
-        defaultTimeZone: brand.defaultTimeZone,
       });
       setExistingLogoUrl(brand.logoUrl);
     }
@@ -162,7 +161,7 @@ export const EditBrandDrawer = ({
       closeIcon={null}
       title='Edit Brand'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={
@@ -187,13 +186,14 @@ export const EditBrandDrawer = ({
         </Flex>
       }
     >
-      {/* ✅ Use shared FormSkeleton */}
       {isFetching ? (
-        <FormSkeleton
-          inputCount={2}
-          showImage
-          textAreaRows={3}
-        />
+        <Flex
+          justify='center'
+          align='center'
+          style={{ minHeight: 400 }}
+        >
+          <Spin size='large' />
+        </Flex>
       ) : (
         <Form
           size='large'
@@ -248,7 +248,6 @@ export const EditBrandDrawer = ({
               </Col>
             </Row>
 
-            {/* ✅ Use shared ImageDragger */}
             <Form.Item
               label='Logo'
               name='logo'
@@ -274,7 +273,6 @@ export const EditBrandDrawer = ({
             </Form.Item>
           </div>
 
-          {/* ... rest of the form sections (same as AddBrandDrawer) ... */}
           {/* Contact Information Section */}
           <div style={{ marginBottom: 24 }}>
             <Title
@@ -362,27 +360,6 @@ export const EditBrandDrawer = ({
                 placeholder='Full billing address'
                 maxLength={500}
                 showCount
-              />
-            </Form.Item>
-          </div>
-
-          {/* Configuration Section */}
-          <div>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Configuration
-            </Title>
-
-            <Form.Item
-              label='Default Timezone'
-              name='defaultTimeZone'
-              rules={brandValidation.defaultTimeZone}
-            >
-              <Select
-                placeholder='Select timezone'
-                options={TIMEZONE_OPTIONS}
               />
             </Form.Item>
           </div>

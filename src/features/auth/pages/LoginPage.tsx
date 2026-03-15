@@ -2,31 +2,37 @@
  * Node modules
  */
 import { Flex, Typography } from 'antd';
-import { Link } from 'react-router';
 
 const { Title } = Typography;
 
 /**
  * Components
  */
-import { AuthWrapper } from '../components/AuthWrapper';
-import { LoginForm } from '../components/LoginForm';
+import { Seo } from '@/shared/components';
+import { AuthWrapper, LoginForm } from '../components';
 
 export const LoginPage = () => {
   return (
-    <AuthWrapper>
-      <Flex
-        vertical
-        gap={24}
-      >
+    <>
+      <Seo
+        title='Login'
+        description='Sign in to CAMS - Content and Music System'
+        keywords='login, signin, authentication'
+      />
+      <AuthWrapper>
         <Flex
-          justify='start'
-          align='center'
+          vertical
+          gap={24}
         >
-          <Title level={3}>Login</Title>
+          <Flex
+            justify='start'
+            align='center'
+          >
+            <Title level={3}>Login</Title>
+          </Flex>
+          <LoginForm />
         </Flex>
-        <LoginForm />
-      </Flex>
-    </AuthWrapper>
+      </AuthWrapper>
+    </>
   );
 };
