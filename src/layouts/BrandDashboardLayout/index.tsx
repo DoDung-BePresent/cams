@@ -34,7 +34,7 @@ export const BrandDashboardLayout = () => {
           <Outlet />
         </AppContent>
         <AppFooter />
-        <MusicPlayer sidebarCollapsed={collapsed} />
+        {/* <MusicPlayer sidebarCollapsed={collapsed} /> */}
       </Layout>
     </Layout>
   );
