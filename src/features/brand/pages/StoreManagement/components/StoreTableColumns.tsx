@@ -28,7 +28,7 @@ import {
 
 type StoreColumnsProps = {
   onView: (id: string) => void;
-  onEdit: (id: string) => void;
+  onEdit: (store: StoreListItem) => void;
   onToggleStatus: (id: string) => void;
 };
 
@@ -49,7 +49,7 @@ export const getStoreColumns = ({
         key: 'edit',
         label: 'Edit',
         icon: <EditOutlined />,
-        onClick: () => onEdit(record.id),
+        onClick: () => onEdit(record),
       },
       {
         type: 'divider',

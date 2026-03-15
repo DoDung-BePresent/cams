@@ -1,7 +1,4 @@
-import type {
-  BaseResponse,
-  EntityStatusEnum,
-} from '@/shared/types';
+import type { BaseResponse, EntityStatusEnum } from '@/shared/types';
 
 // Enums
 export enum MoodTypeEnum {
@@ -31,12 +28,15 @@ export type StoreRequest = {
 export type StoreFilter = {
   page?: number;
   pageSize?: number;
-  search?: string; // Search name, address, contact
-  sortBy?: string; // 'name' | 'city' | 'createdat' | 'updatedat'
+  search?: string;
+  sortBy?: string;
   isAscending?: boolean;
+  status?: EntityStatusEnum;
   city?: string;
   district?: string;
-  status?: EntityStatusEnum;
+  createdFrom?: string; // ISO 8601
+  createdTo?: string; // ISO 8601
+  storeManagerName?: string;
 };
 
 // Response DTOs

@@ -1,11 +1,18 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
 
 /**
  * Icons
  */
 import { PlusOutlined } from '@ant-design/icons';
+
+/**
+ * Types
+ */
+import type { StoreListItem, StoreFilter } from '@/features/brand/types';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
 /**
  * Hooks
@@ -20,46 +27,71 @@ import {
   getStoreColumns,
   CreateStoreDrawer,
   EditStoreDrawer,
+  StoreFilter as StoreFilterComponent,
 } from './components';
 
 /**
- * Types
+ * Constants
  */
-import type { StoreFilter } from '@/features/brand/types';
+import { PAGINATION_SIZES } from '@/shared/constants';
 
 export const StoreList = () => {
   const navigate = useNavigate();
+  const [filter, setFilter] = useState<StoreFilter>({
+    page: 1,
+    pageSize: 10,
+    sortBy: 'createdat',
+    isAscending: false,
+  });
+
+  const [showFilters, setShowFilters] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState<StoreFilter>({});
 
-  const { data, isLoading } = useStores({
-    page: currentPage,
-    pageSize,
-    ...filters,
-  });
+  const { data, isLoading, refetch } = useStores(filter);
 
   const toggleStatus = useToggleStoreStatus();
 
-  const handleView = (storeId: string) => {
-    console.log('View store:', storeId);
-    // TODO: Navigate to store detail page
-    // navigate(`/brand/stores/${storeId}`);
-    message.info('Store detail page will be implemented soon');
+  const handleSearch = (value: string) => {
+    setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
-  const handleEdit = (storeId: string) => {
-    setSelectedStoreId(storeId);
+  const handleFilterChange = (key: keyof StoreFilter, value: any) => {
+    setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const handleTableChange = (
+    pagination: TablePaginationConfig,
+    _filters: Record<string, FilterValue | null>,
+    sorter: SorterResult<StoreListItem> | SorterResult<StoreListItem>[],
+  ) => {
+    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+
+    setFilter((prev) => ({
+      ...prev,
+      page: pagination.current || 1,
+      pageSize: pagination.pageSize || 10,
+      sortBy: currentSorter.field ? String(currentSorter.field) : 'createdat',
+      isAscending: currentSorter.order === 'ascend',
+    }));
+  };
+
+  const handleView = (storeId: string) => {
+    console.log('View store:', storeId);
+  };
+
+  const handleEdit = (store: StoreListItem) => {
+    setSelectedStoreId(store.id);
     setEditDrawerOpen(true);
   };
 
   const handleToggleStatus = (storeId: string) => {
+    const store = data?.items.find((s) => s.id === storeId);
+
     AppModal.confirm({
       title: 'Toggle Store Status',
-      content: 'Are you sure you want to change this store status?',
+      content: `Are you sure you want to change status of "${store?.name}"?`,
       okText: 'Yes',
       cancelText: 'No',
       okButtonProps: {
@@ -68,6 +100,15 @@ export const StoreList = () => {
       onOk: () => {
         toggleStatus.mutate(storeId);
       },
+    });
+  };
+
+  const handleReset = () => {
+    setFilter({
+      page: 1,
+      pageSize: 10,
+      sortBy: 'createdat',
+      isAscending: false,
     });
   };
 
@@ -88,11 +129,25 @@ export const StoreList = () => {
     onToggleStatus: handleToggleStatus,
   });
 
+  // Extract unique cities from data
+  const cityOptions = useMemo(() => {
+    const cities = new Set(
+      data?.items.filter((s) => s.city).map((s) => s.city!),
+    );
+    return Array.from(cities)
+      .sort()
+      .map((city) => ({ label: city, value: city }));
+  }, [data?.items]);
+
   return (
     <div>
       <PageHeader
         title='Store Management'
         breadcrumbs={breadcrumbs}
+        seo={{
+          description: 'Manage all stores in your brand',
+          keywords: 'store, management, brand, locations',
+        }}
         extra={
           <Button
             size='large'
@@ -105,22 +160,35 @@ export const StoreList = () => {
         }
       />
 
-      <DataTable
+      <DataTable<StoreListItem>
+        filter={
+          <StoreFilterComponent
+            filter={filter}
+            showAdvanced={showFilters}
+            cities={cityOptions}
+            onSearch={handleSearch}
+            onFilterChange={handleFilterChange}
+            onToggleAdvanced={() => setShowFilters(!showFilters)}
+            onRefresh={() => refetch()}
+            onReset={handleReset}
+          />
+        }
         columns={columns}
         dataSource={data?.items || []}
         rowKey='id'
         loading={isLoading}
         pagination={{
-          current: currentPage,
-          pageSize: pageSize,
+          current: filter.page,
+          pageSize: filter.pageSize,
           total: data?.totalItems || 0,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} stores`,
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
+            setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },
         }}
+        onChange={handleTableChange}
       />
 
       <CreateStoreDrawer
@@ -128,7 +196,7 @@ export const StoreList = () => {
         onClose={() => setCreateDrawerOpen(false)}
         onSuccess={() => {
           setCreateDrawerOpen(false);
-          message.success('Store created successfully!');
+          refetch();
         }}
       />
 
@@ -142,7 +210,7 @@ export const StoreList = () => {
         onSuccess={() => {
           setEditDrawerOpen(false);
           setSelectedStoreId(null);
-          message.success('Store updated successfully!');
+          refetch();
         }}
       />
     </div>
