@@ -29,11 +29,7 @@ import type { StoreRequest } from '@/features/brand/types';
 /**
  * Constants
  */
-import {
-  VIETNAM_CITIES,
-  HCMC_DISTRICTS,
-  TIMEZONE_OPTIONS,
-} from '@/shared/constants';
+import { VIETNAM_CITIES, HCMC_DISTRICTS } from '@/shared/constants';
 
 /**
  * Validations
@@ -265,17 +261,6 @@ export const CreateStoreDrawer = ({
           >
             Store Details
           </Title>
-
-          <Form.Item
-            label='Time Zone'
-            name='timeZone'
-            rules={createStoreValidation.timeZone}
-          >
-            <Select
-              placeholder='Select timezone'
-              options={TIMEZONE_OPTIONS}
-            />
-          </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>

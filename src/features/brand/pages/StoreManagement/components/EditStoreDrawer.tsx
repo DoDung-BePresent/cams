@@ -26,11 +26,7 @@ import type { StoreRequest } from '@/features/brand/types';
 /**
  * Constants
  */
-import {
-  HCMC_DISTRICTS,
-  TIMEZONE_OPTIONS,
-  VIETNAM_CITIES,
-} from '@/shared/constants';
+import { HCMC_DISTRICTS, VIETNAM_CITIES } from '@/shared/constants';
 
 /**
  * Validations
@@ -79,7 +75,6 @@ export const EditStoreDrawer = ({
         latitude: store.latitude || undefined,
         longitude: store.longitude || undefined,
         mapUrl: store.mapUrl || undefined,
-        timeZone: store.timeZone || 'Asia/Ho_Chi_Minh',
         areaSquareMeters: store.areaSquareMeters || undefined,
         maxCapacity: store.maxCapacity || undefined,
       });
@@ -300,17 +295,6 @@ export const EditStoreDrawer = ({
               Store Details
             </Title>
 
-            <Form.Item
-              label='Time Zone'
-              name='timeZone'
-              rules={updateStoreValidation.timeZone}
-            >
-              <Select
-                placeholder='Select timezone'
-                options={TIMEZONE_OPTIONS}
-              />
-            </Form.Item>
-
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
@@ -340,22 +324,6 @@ export const EditStoreDrawer = ({
                 </Form.Item>
               </Col>
             </Row>
-
-            {/* Read-only fields from API */}
-            {store?.currentMood && (
-              <div style={{ marginTop: 16 }}>
-                <Typography.Text type='secondary'>
-                  Current Mood: <strong>{store.currentMood}</strong>
-                  {store.lastMoodUpdateAt && (
-                    <span>
-                      {' '}
-                      (Updated:{' '}
-                      {new Date(store.lastMoodUpdateAt).toLocaleString()})
-                    </span>
-                  )}
-                </Typography.Text>
-              </div>
-            )}
           </div>
         </Form>
       )}
