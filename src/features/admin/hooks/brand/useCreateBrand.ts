@@ -6,11 +6,6 @@ import { message } from 'antd';
  */
 import { brandService } from '@/features/admin/services';
 
-/**
- * Shared
- */
-import { showErrorMessage } from '@/shared/utils';
-
 export const useCreateBrand = () => {
   const queryClient = useQueryClient();
 
