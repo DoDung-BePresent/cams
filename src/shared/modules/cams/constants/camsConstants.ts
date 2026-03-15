@@ -54,7 +54,8 @@ export const REPEAT_MODE_OPTIONS: SelectProps['options'] = [
 ];
 
 /**
- * SignalR Hub URL
+ * SignalR Hub URL (relative path)
+ * Will be combined with API_BASE_URL from env config
  */
 export const STORE_HUB_URL = '/hubs/store';
 

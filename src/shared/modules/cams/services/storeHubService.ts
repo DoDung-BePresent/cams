@@ -1,21 +1,11 @@
 import * as signalR from '@microsoft/signalr';
-
-/**
- * Constants
- */
-import {
-  STORE_HUB_URL,
-  STORE_HUB_EVENTS,
-} from '@/shared/modules/cams/constants';
-
-/**
- * Types
- */
+import { getSignalRUrl } from '@/config';
+import { STORE_HUB_URL, STORE_HUB_EVENTS } from '../constants';
 import type {
   PlayStreamPayload,
   PlaybackStateChangedPayload,
   SpaceStateDto,
-} from '@/shared/modules/cams/types';
+} from '../types';
 
 /**
  * Event handlers type
@@ -44,16 +34,27 @@ class StoreHubService {
    */
   async connect(storeId: string, token: string, handlers: EventHandlers = {}) {
     if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      console.warn('StoreHub already connected');
+      console.warn('⚠️ StoreHub already connected');
       return;
     }
 
     this.storeId = storeId;
     this.handlers = handlers;
 
+    // Build full Hub URL
+    const baseUrl = getSignalRUrl();
+    const hubUrl = `${baseUrl}${STORE_HUB_URL}`;
+
+    console.log('🔌 Connecting to StoreHub:', {
+      baseUrl,
+      hubUrl,
+      storeId,
+      hasToken: !!token,
+    });
+
     // Build connection
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(STORE_HUB_URL, {
+      .withUrl(hubUrl, {
         accessTokenFactory: () => token,
       })
       .withAutomaticReconnect({
@@ -72,13 +73,13 @@ class StoreHubService {
     this.registerEventHandlers();
 
     // Connection lifecycle events
-    this.connection.onreconnecting(() => {
-      console.log('StoreHub reconnecting...');
+    this.connection.onreconnecting((error) => {
+      console.log('🔄 StoreHub reconnecting...', error);
       this.handlers.onReconnecting?.();
     });
 
-    this.connection.onreconnected(async () => {
-      console.log('StoreHub reconnected');
+    this.connection.onreconnected(async (connectionId) => {
+      console.log('✅ StoreHub reconnected:', connectionId);
       // Rejoin store group
       if (this.storeId) {
         await this.joinStore(this.storeId);
@@ -86,22 +87,22 @@ class StoreHubService {
       this.handlers.onReconnected?.();
     });
 
-    this.connection.onclose(() => {
-      console.log('StoreHub disconnected');
+    this.connection.onclose((error) => {
+      console.log('❌ StoreHub disconnected', error);
       this.handlers.onDisconnected?.();
     });
 
     // Start connection
     try {
       await this.connection.start();
-      console.log('StoreHub connected');
+      console.log('✅ StoreHub connected successfully');
 
       // Join store group
       await this.joinStore(storeId);
 
       this.handlers.onConnected?.();
     } catch (error) {
-      console.error('Failed to connect to StoreHub:', error);
+      console.error('❌ Failed to connect to StoreHub:', error);
       throw error;
     }
   }
@@ -116,7 +117,7 @@ class StoreHubService {
     this.connection.on(
       STORE_HUB_EVENTS.PLAY_STREAM,
       (payload: PlayStreamPayload) => {
-        console.log('PlayStream event:', payload);
+        console.log('🎵 PlayStream event:', payload);
         this.handlers.onPlayStream?.(payload);
       },
     );
@@ -125,7 +126,7 @@ class StoreHubService {
     this.connection.on(
       STORE_HUB_EVENTS.PLAYBACK_STATE_CHANGED,
       (payload: PlaybackStateChangedPayload) => {
-        console.log('PlaybackStateChanged event:', payload);
+        console.log('⏯️ PlaybackStateChanged event:', payload);
         this.handlers.onPlaybackStateChanged?.(payload);
       },
     );
@@ -134,7 +135,7 @@ class StoreHubService {
     this.connection.on(
       STORE_HUB_EVENTS.SPACE_STATE_SYNC,
       (spaceId: string, state: SpaceStateDto) => {
-        console.log('SpaceStateSync event:', spaceId, state);
+        console.log('🔄 SpaceStateSync event:', spaceId, state);
         this.handlers.onSpaceStateSync?.(spaceId, state);
       },
     );
@@ -148,9 +149,9 @@ class StoreHubService {
 
     try {
       await this.connection.invoke(STORE_HUB_EVENTS.JOIN_STORE, storeId);
-      console.log(`Joined store group: ${storeId}`);
+      console.log(`✅ Joined store group: ${storeId}`);
     } catch (error) {
-      console.error('Failed to join store:', error);
+      console.error('❌ Failed to join store:', error);
       throw error;
     }
   }
@@ -163,9 +164,9 @@ class StoreHubService {
 
     try {
       await this.connection.invoke(STORE_HUB_EVENTS.LEAVE_STORE, this.storeId);
-      console.log(`Left store group: ${this.storeId}`);
+      console.log(`👋 Left store group: ${this.storeId}`);
     } catch (error) {
-      console.error('Failed to leave store:', error);
+      console.error('❌ Failed to leave store:', error);
     }
   }
 
@@ -180,9 +181,9 @@ class StoreHubService {
         STORE_HUB_EVENTS.UPDATE_SPACE_MUSIC_STATE,
         state,
       );
-      console.log('Updated space music state:', state);
+      console.log('✅ Updated space music state:', state);
     } catch (error) {
-      console.error('Failed to update space music state:', error);
+      console.error('❌ Failed to update space music state:', error);
       throw error;
     }
   }
@@ -198,9 +199,10 @@ class StoreHubService {
         STORE_HUB_EVENTS.GET_SPACE_CURRENT_STATE,
         spaceId,
       );
+      console.log('📊 Got space state:', state);
       return state;
     } catch (error) {
-      console.error('Failed to get space state:', error);
+      console.error('❌ Failed to get space state:', error);
       throw error;
     }
   }
@@ -215,9 +217,10 @@ class StoreHubService {
       const states = await this.connection.invoke<SpaceStateDto[]>(
         STORE_HUB_EVENTS.GET_STORE_SPACES_STATE,
       );
+      console.log('📊 Got store spaces state:', states);
       return states;
     } catch (error) {
-      console.error('Failed to get store spaces state:', error);
+      console.error('❌ Failed to get store spaces state:', error);
       throw error;
     }
   }
@@ -231,9 +234,9 @@ class StoreHubService {
     try {
       await this.leaveStore();
       await this.connection.stop();
-      console.log('StoreHub disconnected');
+      console.log('👋 StoreHub disconnected gracefully');
     } catch (error) {
-      console.error('Failed to disconnect from StoreHub:', error);
+      console.error('❌ Failed to disconnect from StoreHub:', error);
     } finally {
       this.connection = null;
       this.storeId = null;

@@ -119,3 +119,12 @@ export const clearTokens = (): void => {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
 };
+
+/**
+ * Get SignalR Hub base URL
+ * For local dev: http://localhost:5000
+ * For production: same as API_BASE_URL
+ */
+export const getSignalRUrl = (): string => {
+  return env.baseUrl;
+};

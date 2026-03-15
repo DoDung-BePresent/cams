@@ -8,8 +8,9 @@ import {
   Divider,
   Flex,
   message,
+  Empty,
 } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
+import { SettingOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { SpacePlayer } from '@/shared/modules/cams/components';
 import {
   useSpaceState,
@@ -49,13 +50,16 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const overridePlaylist = useOverridePlaylist();
 
   // Get current HLS URL from state
-  const hlsUrl = spaceState?.currentPlaylistId
-    ? playlistsData?.items.find((p) => p.id === spaceState.currentPlaylistId)
-        ?.hlsUrl || null
-    : null;
+  const hlsUrl = spaceState?.hlsUrl || null;
+  const hasPlaylist = !!spaceState?.currentPlaylistId;
 
   // Playback control handlers
   const handlePlayPause = useCallback(() => {
+    if (!hasPlaylist) {
+      message.warning('Please select a playlist first');
+      return;
+    }
+
     const command = spaceState?.isPlaying
       ? PlaybackCommand.Pause
       : PlaybackCommand.Resume;
@@ -64,7 +68,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       spaceId: space.id,
       command,
     });
-  }, [space.id, spaceState?.isPlaying, playbackControl]);
+  }, [space.id, spaceState?.isPlaying, hasPlaylist, playbackControl]);
 
   const handleSkipNext = useCallback(() => {
     playbackControl.mutate({
@@ -147,11 +151,11 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 strong
                 style={{ display: 'block', marginBottom: 8 }}
               >
-                Override Playlist
+                Select Playlist to Play
               </Text>
               <Select
                 size='large'
-                placeholder='Select a playlist to override'
+                placeholder='Choose a playlist'
                 options={playlistOptions}
                 value={spaceState?.currentPlaylistId || undefined}
                 onChange={handlePlaylistChange}
@@ -162,25 +166,55 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 optionFilterProp='label'
                 allowClear={false}
               />
+              {spaceState?.isManualOverride && (
+                <Text
+                  type='secondary'
+                  style={{ fontSize: 12, marginTop: 4 }}
+                >
+                  ⚠️ Manual override active
+                </Text>
+              )}
             </div>
             <Divider style={{ margin: '8px 0' }} />
           </>
         )}
 
-        {/* Music Player */}
-        <SpacePlayer
-          spaceId={space.id}
-          hlsUrl={hlsUrl}
-          state={spaceState ?? null}
-          isLoading={
-            isLoadingState ||
-            playbackControl.isPending ||
-            overridePlaylist.isPending
-          }
-          onPlayPause={handlePlayPause}
-          onSkipNext={handleSkipNext}
-          onSkipPrevious={handleSkipPrevious}
-        />
+        {/* Music Player or Empty State */}
+        {!hasPlaylist ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <Space
+                direction='vertical'
+                size='small'
+              >
+                <Text type='secondary'>No playlist selected</Text>
+                <Button
+                  type='primary'
+                  icon={<PlayCircleOutlined />}
+                  onClick={() => setShowSettings(true)}
+                >
+                  Select Playlist
+                </Button>
+              </Space>
+            }
+            style={{ padding: '40px 0' }}
+          />
+        ) : (
+          <SpacePlayer
+            spaceId={space.id}
+            hlsUrl={hlsUrl}
+            state={spaceState}
+            isLoading={
+              isLoadingState ||
+              playbackControl.isPending ||
+              overridePlaylist.isPending
+            }
+            onPlayPause={handlePlayPause}
+            onSkipNext={handleSkipNext}
+            onSkipPrevious={handleSkipPrevious}
+          />
+        )}
       </Space>
     </Card>
   );
