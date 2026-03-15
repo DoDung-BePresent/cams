@@ -11,13 +11,12 @@ import { PlusOutlined } from '@ant-design/icons';
  * Components
  */
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
-import { getPlaylistColumns } from '@/shared/modules/playlists/components';
+import { AddTracksDrawer, getPlaylistColumns } from '@/shared/modules/playlists/components';
 import {
   PlaylistFilter as PlaylistFilterComponent,
   PlaylistDetailsDrawer,
   CreatePlaylistDrawer,
   EditPlaylistDrawer,
-  AddTracksDrawer,
 } from './components';
 
 /**
