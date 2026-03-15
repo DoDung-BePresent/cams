@@ -43,6 +43,7 @@ export const groupStaffByStore = (staff: StaffListItem[]): StaffListItem[] => {
       storeName,
       brandId: groupStaff[0]?.brandId || null,
       brandName: groupStaff[0]?.brandName || null,
+      brandLogoUrl: groupStaff[0]?.brandLogoUrl || null,
       phoneNumber: null,
       avatarUrl: null,
       lastLoginAt: null,

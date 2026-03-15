@@ -1,6 +1,11 @@
 import { Space, Dropdown, Avatar, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { MoreOutlined, UserOutlined, CrownOutlined } from '@ant-design/icons';
+import {
+  MoreOutlined,
+  UserOutlined,
+  CrownOutlined,
+  ShopOutlined,
+} from '@ant-design/icons';
 
 /**
  * Types
@@ -17,6 +22,7 @@ import { formatDateTime } from '@/shared/utils';
  */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
 import type { EntityStatusEnum } from '@/shared/types';
+import { AVATAR_SIZE } from '@/config';
 
 type GetColumnsProps = {
   onView: (staffId: string) => void;
@@ -41,6 +47,12 @@ export const getGroupColumns = (): ColumnsType<StaffListItem> => [
     key: 'store',
     render: (_, record) => (
       <Space size={12}>
+        <Avatar
+          src={record.brandLogoUrl}
+          size={AVATAR_SIZE.medium}
+          icon={<ShopOutlined />}
+          shape='square'
+        />
         <div>
           <div style={{ fontWeight: 500, fontSize: 16 }}>
             {record.storeName || 'Unassigned Staff'}
@@ -57,7 +69,7 @@ export const getGroupColumns = (): ColumnsType<StaffListItem> => [
 ];
 
 /**
- * ✅ Columns for EXPANDED ROWS (Staff details)
+ * Columns for EXPANDED ROWS (Staff details)
  */
 export const getExpandedColumns = ({
   onView,
@@ -81,7 +93,8 @@ export const getExpandedColumns = ({
       <Space size={12}>
         <Avatar
           src={record.avatarUrl}
-          size={48}
+          size={AVATAR_SIZE.medium}
+          shape='square'
           icon={<UserOutlined />}
         />
         <div>

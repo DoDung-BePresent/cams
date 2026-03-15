@@ -39,7 +39,7 @@ export type StaffFilter = {
 };
 
 // Response DTOs
-export type StaffListItem = BaseResponse & {
+export interface StaffListItem extends BaseResponse {
   firstName: string;
   lastName: string;
   fullName: string;
@@ -50,11 +50,12 @@ export type StaffListItem = BaseResponse & {
   roles: RoleEnum[];
   brandId: string | null;
   brandName: string | null;
+  brandLogoUrl: string | null;
   storeId: string | null;
   storeName: string | null;
   isPrimaryOwner: boolean;
   children?: StaffListItem[];
-};
+}
 
 export type StaffDetailResponse = StaffListItem & {
   // Same as StaffListItem for now
