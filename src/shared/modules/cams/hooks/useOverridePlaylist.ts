@@ -17,11 +17,6 @@ import { camsService } from '@/shared/modules/cams/services';
 import type { OverridePlaylistRequest } from '@/shared/modules/cams/types';
 
 /**
- * Constants
- */
-import { CAMS_QUERY_KEYS } from '@/shared/modules/cams/constants';
-
-/**
  * Override playlist for a space
  * Triggers backend to generate new HLS stream and broadcast via SignalR
  */
@@ -43,7 +38,7 @@ export const useOverridePlaylist = () => {
       message.success('Playlist overridden successfully');
       // Invalidate space state to refetch
       queryClient.invalidateQueries({
-        queryKey: [CAMS_QUERY_KEYS.SPACE_STATE, variables.spaceId],
+        queryKey: ['cams-space-state', variables.spaceId],
       });
     },
     onError: (error: any) => {

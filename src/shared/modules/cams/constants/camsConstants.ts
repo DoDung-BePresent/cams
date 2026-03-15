@@ -91,11 +91,3 @@ export const HLS_PLAYER_CONFIG = {
   lowLatencyMode: true,
   backBufferLength: 90,
 } as const;
-
-/**
- * Query Keys
- */
-export const CAMS_QUERY_KEYS = {
-  SPACE_STATE: ['cams-space-state'] as const,
-  STORE_SPACES_STATE: ['cams-store-spaces-state'] as const,
-};

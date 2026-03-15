@@ -14,10 +14,7 @@ import { camsService } from '@/shared/modules/cams/services';
 /**
  * Constants
  */
-import {
-  CAMS_QUERY_KEYS,
-  PLAYBACK_COMMAND_LABELS,
-} from '@/shared/modules/cams/constants';
+import { PLAYBACK_COMMAND_LABELS } from '@/shared/modules/cams/constants';
 
 /**
  * Types
@@ -50,7 +47,7 @@ export const usePlaybackControl = () => {
       message.success(`${commandLabel} command sent`);
       // Invalidate space state
       queryClient.invalidateQueries({
-        queryKey: [CAMS_QUERY_KEYS.SPACE_STATE, variables.spaceId],
+        queryKey: ['cams-space-state', variables.spaceId],
       });
     },
     onError: (error: any) => {

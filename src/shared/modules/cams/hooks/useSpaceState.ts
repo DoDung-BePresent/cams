@@ -11,17 +11,12 @@ import { STALE_TIME } from '@/config';
 import { camsService } from '@/shared/modules/cams/services';
 
 /**
- * Constants
- */
-import { CAMS_QUERY_KEYS } from '@/shared/modules/cams/constants';
-
-/**
  * Get space current state from API
  * Use this for initial load or when SignalR is not available
  */
 export const useSpaceState = (spaceId?: string, enabled = true) => {
   return useQuery({
-    queryKey: [CAMS_QUERY_KEYS.SPACE_STATE, spaceId],
+    queryKey: ['cams-space-state', spaceId],
     queryFn: async () => {
       if (!spaceId) throw new Error('Space ID is required');
       const response = await camsService.getSpaceState(spaceId);
