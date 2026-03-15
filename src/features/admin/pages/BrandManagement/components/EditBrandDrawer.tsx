@@ -27,7 +27,7 @@ import type { BrandRequest } from '@/features/admin/types';
 /**
  * Constants
  */
-import { INDUSTRY_OPTIONS, TIMEZONE_OPTIONS } from '@/features/admin/constants';
+import { INDUSTRY_OPTIONS } from '@/features/admin/constants';
 
 /**
  * Validations

@@ -1,8 +1,15 @@
 /**
  * Types
  */
-import type { DefaultOptionType } from 'antd/es/select';
+import type { DefaultOptionType, SelectProps } from 'antd/es/select';
 import { EntityStatusEnum } from '@/shared/types';
+
+export const BRAND_STATUS_OPTIONS: SelectProps['options'] = [
+  { label: 'Active', value: EntityStatusEnum.Active },
+  { label: 'Inactive', value: EntityStatusEnum.Inactive },
+  { label: 'Pending', value: EntityStatusEnum.Pending },
+  { label: 'Rejected', value: EntityStatusEnum.Rejected },
+];
 
 export const INDUSTRY_OPTIONS: DefaultOptionType[] = [
   { label: 'F&B', value: 'F&B' },
@@ -13,16 +20,6 @@ export const INDUSTRY_OPTIONS: DefaultOptionType[] = [
   { label: 'Entertainment', value: 'Entertainment' },
   { label: 'Technology', value: 'Technology' },
   { label: 'Other', value: 'Other' },
-] as const;
-
-export const TIMEZONE_OPTIONS: DefaultOptionType[] = [
-  { label: 'SE Asia (UTC+7)', value: 'SE Asia Standard Time' },
-  { label: 'Singapore (UTC+8)', value: 'Singapore Standard Time' },
-  { label: 'China (UTC+8)', value: 'China Standard Time' },
-  { label: 'Tokyo (UTC+9)', value: 'Tokyo Standard Time' },
-  { label: 'India (UTC+5:30)', value: 'India Standard Time' },
-  { label: 'UTC (UTC+0)', value: 'UTC' },
-  { label: 'Pacific (UTC-8)', value: 'Pacific Standard Time' },
 ] as const;
 
 export const BRAND_STATUS_COLORS = {
