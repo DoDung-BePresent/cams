@@ -112,6 +112,9 @@ export const TrackList = () => {
       content: 'Are you sure you want to change this track status?',
       okText: 'Confirm',
       cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
       onOk: () => {
         toggleStatus.mutate(id, {
           onSuccess: () => refetch(),
