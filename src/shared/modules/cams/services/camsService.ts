@@ -1,14 +1,10 @@
 import { api } from '@/config';
-
-/**
- * Types
- */
 import type { Result } from '@/shared/types';
 import type {
   SpaceStateResponse,
   OverridePlaylistRequest,
   PlaybackControlRequest,
-} from '@/shared/modules/cams/types';
+} from '../types';
 
 /**
  * CAMS API endpoints
@@ -34,6 +30,9 @@ export const camsService = {
   /**
    * Override playlist for a space (§ 4.1)
    * POST /api/cams/spaces/{spaceId}/override
+   *
+   * Mode 1: Playlist override - send { playlistId: "guid" }
+   * Mode 2: Mood override - send { moodId: "guid" }
    */
   overridePlaylist: (spaceId: string, data: OverridePlaylistRequest) =>
     api.post<Result>(CAMS_ENDPOINTS.overridePlaylist(spaceId), data),

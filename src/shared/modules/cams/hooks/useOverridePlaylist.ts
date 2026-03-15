@@ -1,24 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-
-/**
- * Utils
- */
 import { handleApiError } from '@/shared/utils';
-
-/**
- * Services
- */
-import { camsService } from '@/shared/modules/cams/services';
-
-/**
- * Types
- */
-import type { OverridePlaylistRequest } from '@/shared/modules/cams/types';
+import { camsService } from '../services';
+import type { OverridePlaylistRequest } from '../types';
 
 /**
  * Override playlist for a space
  * Triggers backend to generate new HLS stream and broadcast via SignalR
+ *
+ * Mode 1: Override with specific playlist
+ * Mode 2: Override with mood (backend picks playlist)
  */
 export const useOverridePlaylist = () => {
   const queryClient = useQueryClient();
@@ -27,11 +18,16 @@ export const useOverridePlaylist = () => {
     mutationFn: ({
       spaceId,
       playlistId,
+      moodId,
     }: {
       spaceId: string;
-      playlistId: string;
+      playlistId?: string;
+      moodId?: string;
     }) => {
-      const data: OverridePlaylistRequest = { newPlaylistId: playlistId };
+      const data: OverridePlaylistRequest = {
+        playlistId: playlistId || null,
+        moodId: moodId || null,
+      };
       return camsService.overridePlaylist(spaceId, data);
     },
     onSuccess: (_, variables) => {

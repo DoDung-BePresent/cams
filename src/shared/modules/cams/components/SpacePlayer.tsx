@@ -20,14 +20,14 @@ import {
 import { HLS_PLAYER_CONFIG } from '../constants';
 import { formatPlaybackTime, volumeToAudioLevel } from '../utils';
 import type { SpaceStateResponse } from '../types';
-import { PlaybackCommand } from '../types';
 
 const { Text } = Typography;
 
 interface SpacePlayerProps {
   spaceId: string;
   hlsUrl: string | null;
-  state: SpaceStateResponse | null;
+  state: SpaceStateResponse | null | undefined;
+  isPlaying: boolean;
   isLoading?: boolean;
   onPlayPause: () => void;
   onSkipNext: () => void;
@@ -40,6 +40,7 @@ export const SpacePlayer = ({
   spaceId,
   hlsUrl,
   state,
+  isPlaying,
   isLoading = false,
   onPlayPause,
   onSkipNext,
@@ -52,7 +53,7 @@ export const SpacePlayer = ({
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(state?.volume ?? 75);
+  const [volume, setVolume] = useState(75);
   const [isBuffering, setIsBuffering] = useState(false);
 
   // Initialize HLS player
@@ -74,7 +75,7 @@ export const SpacePlayer = ({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         console.log('HLS manifest parsed');
         // Auto-play if state says it should be playing
-        if (state?.isPlaying) {
+        if (isPlaying) {
           audio.play().catch((err) => {
             console.error('Auto-play failed:', err);
             message.warning('Click play to start playback');
@@ -109,7 +110,7 @@ export const SpacePlayer = ({
     } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
       // Native HLS support (Safari)
       audio.src = hlsUrl;
-      if (state?.isPlaying) {
+      if (isPlaying) {
         audio.play().catch((err) => {
           console.error('Auto-play failed:', err);
         });
@@ -117,27 +118,26 @@ export const SpacePlayer = ({
     } else {
       message.error('HLS playback not supported in this browser');
     }
-  }, [hlsUrl, state?.isPlaying]);
+  }, [hlsUrl, isPlaying]);
 
-  // Sync audio playback state with backend state
+  // Sync audio playback state
   useEffect(() => {
     if (!audioRef.current) return;
 
     const audio = audioRef.current;
 
-    if (state?.isPlaying && audio.paused) {
+    if (isPlaying && audio.paused) {
       audio.play().catch(console.error);
-    } else if (!state?.isPlaying && !audio.paused) {
+    } else if (!isPlaying && !audio.paused) {
       audio.pause();
     }
-  }, [state?.isPlaying]);
+  }, [isPlaying]);
 
   // Sync volume
   useEffect(() => {
-    if (!audioRef.current || state?.volume === undefined) return;
-    audioRef.current.volume = volumeToAudioLevel(state.volume);
-    setVolume(state.volume);
-  }, [state?.volume]);
+    if (!audioRef.current) return;
+    audioRef.current.volume = volumeToAudioLevel(volume);
+  }, [volume]);
 
   // Audio event handlers
   useEffect(() => {
@@ -161,7 +161,6 @@ export const SpacePlayer = ({
     };
 
     const handleEnded = () => {
-      // Track ended, backend should trigger next track via SignalR
       console.log('Track ended');
     };
 
@@ -190,9 +189,7 @@ export const SpacePlayer = ({
 
   // Handle volume change
   const handleVolumeChange = (value: number) => {
-    if (!audioRef.current) return;
     setVolume(value);
-    audioRef.current.volume = volumeToAudioLevel(value);
     onVolumeChange?.(value);
   };
 
@@ -214,30 +211,28 @@ export const SpacePlayer = ({
             strong
             style={{ fontSize: 16, display: 'block' }}
           >
-            {state?.trackTitle || 'No track playing'}
+            {state?.currentPlaylistName || 'No playlist playing'}
           </Text>
           <Text
             type='secondary'
             style={{ fontSize: 14 }}
           >
-            {state?.playlistName || 'No playlist selected'}
+            {state?.moodName || 'No mood'}
           </Text>
-          {state?.isPlaying && (
-            <Tag
-              color='processing'
-              style={{ marginLeft: 8 }}
-            >
-              Playing
-            </Tag>
-          )}
-          {isBuffering && (
-            <Tag
-              color='warning'
-              style={{ marginLeft: 8 }}
-            >
-              Buffering...
-            </Tag>
-          )}
+          <Space style={{ marginTop: 8 }}>
+            {isPlaying && (
+              <Tag
+                color='processing'
+                icon={<PlayCircleOutlined />}
+              >
+                Playing
+              </Tag>
+            )}
+            {isBuffering && <Tag color='warning'>Buffering...</Tag>}
+            {state?.isManualOverride && (
+              <Tag color='orange'>Manual Override</Tag>
+            )}
+          </Space>
         </div>
 
         {/* Progress Bar */}
@@ -276,18 +271,18 @@ export const SpacePlayer = ({
           gap='middle'
         >
           <Button
+            size='large'
             type='text'
             icon={<StepBackwardOutlined />}
             onClick={onSkipPrevious}
             disabled={!state?.currentPlaylistId || isLoading}
-            size='large'
           />
           <Button
             type='primary'
             shape='circle'
             size='large'
             icon={
-              state?.isPlaying ? (
+              isPlaying ? (
                 <PauseCircleOutlined style={{ fontSize: 24 }} />
               ) : (
                 <PlayCircleOutlined style={{ fontSize: 24 }} />
@@ -299,11 +294,11 @@ export const SpacePlayer = ({
             style={{ width: 56, height: 56 }}
           />
           <Button
+            size='large'
             type='text'
             icon={<StepForwardOutlined />}
             onClick={onSkipNext}
             disabled={!state?.currentPlaylistId || isLoading}
-            size='large'
           />
         </Flex>
 

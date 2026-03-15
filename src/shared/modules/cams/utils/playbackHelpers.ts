@@ -43,6 +43,26 @@ export const audioLevelToVolume = (level: number): number => {
 };
 
 /**
+ * Check if space is currently playing
+ * Based on startedAtUtc and expectedEndAtUtc
+ */
+export const isSpacePlaying = (state: {
+  startedAtUtc: string | null;
+  expectedEndAtUtc: string | null;
+}): boolean => {
+  if (!state.startedAtUtc || !state.expectedEndAtUtc) {
+    return false;
+  }
+
+  const now = new Date();
+  const startedAt = new Date(state.startedAtUtc);
+  const expectedEndAt = new Date(state.expectedEndAtUtc);
+
+  // Currently playing if now is between start and end
+  return now >= startedAt && now <= expectedEndAt;
+};
+
+/**
  * Check if HLS is supported in current browser
  */
 export const isHLSSupported = (): boolean => {

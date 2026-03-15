@@ -9,6 +9,7 @@ import {
   Flex,
   message,
   Empty,
+  Tag,
 } from 'antd';
 import { SettingOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { SpacePlayer } from '@/shared/modules/cams/components';
@@ -18,6 +19,7 @@ import {
   useOverridePlaylist,
 } from '@/shared/modules/cams/hooks';
 import { PlaybackCommand } from '@/shared/modules/cams/types';
+import { isSpacePlaying } from '@/shared/modules/cams/utils';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { SpaceListItem } from '@/features/store/types';
 
@@ -53,6 +55,9 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const hlsUrl = spaceState?.hlsUrl || null;
   const hasPlaylist = !!spaceState?.currentPlaylistId;
 
+  // Calculate if currently playing based on time range
+  const isPlaying = spaceState ? isSpacePlaying(spaceState) : false;
+
   // Playback control handlers
   const handlePlayPause = useCallback(() => {
     if (!hasPlaylist) {
@@ -60,15 +65,14 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       return;
     }
 
-    const command = spaceState?.isPlaying
-      ? PlaybackCommand.Pause
-      : PlaybackCommand.Resume;
+    // Toggle based on current playing state
+    const command = isPlaying ? PlaybackCommand.Pause : PlaybackCommand.Resume;
 
     playbackControl.mutate({
       spaceId: space.id,
       command,
     });
-  }, [space.id, spaceState?.isPlaying, hasPlaylist, playbackControl]);
+  }, [space.id, isPlaying, hasPlaylist, playbackControl]);
 
   const handleSkipNext = useCallback(() => {
     playbackControl.mutate({
@@ -84,7 +88,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     });
   }, [space.id, playbackControl]);
 
-  // Override playlist handler
+  // Override playlist handler (Mode 1: Playlist)
   const handlePlaylistChange = useCallback(
     (playlistId: string) => {
       if (!playlistId) {
@@ -147,12 +151,20 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         {showSettings && (
           <>
             <div>
-              <Text
-                strong
-                style={{ display: 'block', marginBottom: 8 }}
+              <Flex
+                justify='space-between'
+                align='center'
               >
-                Select Playlist to Play
-              </Text>
+                <Text
+                  strong
+                  style={{ display: 'block', marginBottom: 8 }}
+                >
+                  Select Playlist to Play
+                </Text>
+                {spaceState?.isManualOverride && (
+                  <Tag color='warning'>Manual Override</Tag>
+                )}
+              </Flex>
               <Select
                 size='large'
                 placeholder='Choose a playlist'
@@ -166,12 +178,13 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 optionFilterProp='label'
                 allowClear={false}
               />
-              {spaceState?.isManualOverride && (
+              {spaceState?.currentPlaylistName && (
                 <Text
                   type='secondary'
                   style={{ fontSize: 12, marginTop: 4 }}
                 >
-                  ⚠️ Manual override active
+                  Current: {spaceState.currentPlaylistName}
+                  {spaceState.moodName && ` (${spaceState.moodName})`}
                 </Text>
               )}
             </div>
@@ -190,6 +203,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
               >
                 <Text type='secondary'>No playlist selected</Text>
                 <Button
+                  size='large'
                   type='primary'
                   icon={<PlayCircleOutlined />}
                   onClick={() => setShowSettings(true)}
@@ -205,6 +219,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             spaceId={space.id}
             hlsUrl={hlsUrl}
             state={spaceState}
+            isPlaying={isPlaying}
             isLoading={
               isLoadingState ||
               playbackControl.isPending ||

@@ -35,7 +35,16 @@ export enum RepeatMode {
 }
 
 /**
+ * Override mode enum (from API_CAMS.md § 4.1)
+ */
+export enum OverrideMode {
+  Playlist = 1,
+  Mood = 2,
+}
+
+/**
  * Space state DTO (from SIGNALR_STOREHUB.md § 2.3)
+ * Used in SignalR events only
  */
 export interface SpaceStateDto {
   spaceId: string;
@@ -71,9 +80,12 @@ export interface PlaybackStateChangedPayload {
 
 /**
  * Override playlist request (from API_CAMS.md § 4.1)
+ * Mode 1: Playlist override (provide playlistId only)
+ * Mode 2: Mood override (provide moodId only)
  */
 export interface OverridePlaylistRequest {
-  newPlaylistId: string;
+  playlistId?: string | null;
+  moodId?: string | null;
 }
 
 /**
@@ -85,9 +97,17 @@ export interface PlaybackControlRequest {
 
 /**
  * Space state response (from API_CAMS.md § 4.3)
+ * REST API GET /api/cams/spaces/{id}/state
  */
-export interface SpaceStateResponse extends SpaceStateDto {
-  spaceName: string;
-  playlistName: string | null;
-  trackTitle: string | null;
+export interface SpaceStateResponse {
+  spaceId: string;
+  currentPlaylistId: string | null;
+  currentPlaylistName: string | null;
+  hlsUrl: string | null;
+  moodName: string | null;
+  isManualOverride: boolean;
+  overrideMode: OverrideMode | null;
+  startedAtUtc: string | null;
+  expectedEndAtUtc: string | null;
+  seekOffsetSeconds: number | null;
 }
