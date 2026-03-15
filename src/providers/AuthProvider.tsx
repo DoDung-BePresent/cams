@@ -28,7 +28,7 @@ import { authService } from '@/features/auth/services';
 import type { LoginPayload, User } from '@/features/auth/types';
 import type { UseMutationResult } from '@tanstack/react-query';
 
-type EnhancedAuthContextType = {
+type AuthContextType = {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
@@ -36,9 +36,7 @@ type EnhancedAuthContextType = {
   logout: UseMutationResult<void, Error, void>;
 };
 
-const AuthContext = createContext<EnhancedAuthContextType | undefined>(
-  undefined,
-);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();

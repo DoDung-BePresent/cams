@@ -1,11 +1,15 @@
-import { useState } from 'react';
-import { Button } from 'antd';
+import { useState, useEffect } from 'react';
+import { Button, Tabs, Space, Typography } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
  * Icons
  */
-import { PlusOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  TableOutlined,
+  PlayCircleOutlined,
+} from '@ant-design/icons';
 
 /**
  * Types
@@ -22,6 +26,8 @@ import {
   useDeleteSpace,
   useToggleSpaceStatus,
 } from '@/features/store/hooks';
+import { useStoreHub } from '@/shared/modules/cams/hooks';
+import { useAuth } from '@/providers';
 
 /**
  * Components
@@ -32,6 +38,7 @@ import {
   CreateSpaceDrawer,
   EditSpaceDrawer,
   SpaceFilter as SpaceFilterComponent,
+  SpacePlayerCard,
 } from './components';
 
 /**
@@ -39,8 +46,15 @@ import {
  */
 import { PAGINATION_SIZES } from '@/shared/constants';
 
+const { Title, Text } = Typography;
+
+type ViewMode = 'table' | 'player';
+
 export const SpaceList = () => {
   const navigate = useNavigate();
+  const { user, accessToken } = useAuth();
+
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [filter, setFilter] = useState<SpaceFilter>({
     page: 1,
     pageSize: 10,
@@ -57,6 +71,29 @@ export const SpaceList = () => {
 
   const deleteSpace = useDeleteSpace();
   const toggleStatus = useToggleSpaceStatus();
+
+  // Connect to SignalR StoreHub for real-time updates
+  const { isConnected, isConnecting } = useStoreHub(
+    user?.storeId || null,
+    accessToken,
+    {
+      onPlayStream: (payload) => {
+        console.log('PlayStream event received:', payload);
+        // Refetch space state to update UI
+        refetch();
+      },
+      onPlaybackStateChanged: (payload) => {
+        console.log('PlaybackStateChanged event received:', payload);
+        // Refetch space state to update UI
+        refetch();
+      },
+      onSpaceStateSync: (spaceId, state) => {
+        console.log('SpaceStateSync event received:', spaceId, state);
+        // Refetch space state to update UI
+        refetch();
+      },
+    },
+  );
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
@@ -174,35 +211,116 @@ export const SpaceList = () => {
         }
       />
 
-      <DataTable<SpaceListItem>
-        filter={
-          <SpaceFilterComponent
-            filter={filter}
-            showAdvanced={showFilters}
-            onSearch={handleSearch}
-            onFilterChange={handleFilterChange}
-            onToggleAdvanced={() => setShowFilters(!showFilters)}
-            onRefresh={() => refetch()}
-            onReset={handleReset}
-          />
-        }
-        columns={columns}
-        dataSource={data?.items || []}
-        rowKey='id'
-        loading={isLoading}
-        pagination={{
-          current: filter.page,
-          pageSize: filter.pageSize,
-          total: data?.totalItems || 0,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} spaces`,
-          pageSizeOptions: PAGINATION_SIZES,
-          onChange: (page, size) => {
-            setFilter((prev) => ({ ...prev, page, pageSize: size }));
+      {/* View Mode Tabs */}
+      <Tabs
+        activeKey={viewMode}
+        onChange={(key) => setViewMode(key as ViewMode)}
+        items={[
+          {
+            key: 'table',
+            label: (
+              <span>
+                <TableOutlined /> Table View
+              </span>
+            ),
           },
-        }}
-        onChange={handleTableChange}
+          {
+            key: 'player',
+            label: (
+              <span>
+                <PlayCircleOutlined /> Player View
+              </span>
+            ),
+          },
+        ]}
+        style={{ marginBottom: 16 }}
       />
+
+      {/* Table View */}
+      {viewMode === 'table' && (
+        <DataTable<SpaceListItem>
+          filter={
+            <SpaceFilterComponent
+              filter={filter}
+              showAdvanced={showFilters}
+              onSearch={handleSearch}
+              onFilterChange={handleFilterChange}
+              onToggleAdvanced={() => setShowFilters(!showFilters)}
+              onRefresh={() => refetch()}
+              onReset={handleReset}
+            />
+          }
+          columns={columns}
+          dataSource={data?.items || []}
+          rowKey='id'
+          loading={isLoading}
+          pagination={{
+            current: filter.page,
+            pageSize: filter.pageSize,
+            total: data?.totalItems || 0,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} spaces`,
+            pageSizeOptions: PAGINATION_SIZES,
+            onChange: (page, size) => {
+              setFilter((prev) => ({ ...prev, page, pageSize: size }));
+            },
+          }}
+          onChange={handleTableChange}
+        />
+      )}
+
+      {/* Player View */}
+      {viewMode === 'player' && (
+        <Space
+          direction='vertical'
+          size='large'
+          style={{ width: '100%' }}
+        >
+          {/* Connection Status */}
+          {isConnecting && (
+            <div
+              style={{ padding: 16, background: '#e6f7ff', borderRadius: 8 }}
+            >
+              <Text>Connecting to music system...</Text>
+            </div>
+          )}
+          {!isConnected && !isConnecting && (
+            <div
+              style={{ padding: 16, background: '#fff7e6', borderRadius: 8 }}
+            >
+              <Text type='warning'>
+                Not connected to music system. Real-time updates disabled.
+              </Text>
+            </div>
+          )}
+
+          {/* Space Players */}
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: 48 }}>
+              <Title level={4}>Loading spaces...</Title>
+            </div>
+          ) : data?.items.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 48 }}>
+              <Title level={4}>No spaces found</Title>
+              <Button
+                type='primary'
+                icon={<PlusOutlined />}
+                onClick={() => setCreateDrawerOpen(true)}
+              >
+                Create Your First Space
+              </Button>
+            </div>
+          ) : (
+            (data?.items || []).map((space) => (
+              <SpacePlayerCard
+                key={space.id}
+                space={space}
+                storeId={user?.storeId || ''}
+              />
+            ))
+          )}
+        </Space>
+      )}
 
       <CreateSpaceDrawer
         open={createDrawerOpen}

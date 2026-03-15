@@ -44,15 +44,17 @@ export type RefreshTokenResponse = Result<RefreshTokenData>;
 /**
  * Domain Types
  */
-export type User = {
-  id: string;
+export interface User {
   email: string;
+  userId: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
-  avatarUrl?: string;
+  phoneNumber?: string | null;
+  avatarUrl?: string | null;
   roles: RoleEnum[];
-};
+  storeId?: string | null;
+  brandId?: string | null;
+}
 
 /**
  * Context Types
