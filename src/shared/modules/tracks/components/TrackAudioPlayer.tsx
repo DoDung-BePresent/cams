@@ -20,6 +20,7 @@ interface TrackAudioPlayerProps {
   title?: string;
   artist?: string;
   coverImageUrl?: string;
+  shouldStop?: boolean;
 }
 
 export const TrackAudioPlayer = ({
@@ -27,6 +28,7 @@ export const TrackAudioPlayer = ({
   title,
   artist,
   coverImageUrl,
+  shouldStop = false,
 }: TrackAudioPlayerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
@@ -34,6 +36,13 @@ export const TrackAudioPlayer = ({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (shouldStop && wavesurferRef.current) {
+      wavesurferRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [shouldStop]);
 
   useEffect(() => {
     if (!containerRef.current || !audioUrl) return;
@@ -74,7 +83,10 @@ export const TrackAudioPlayer = ({
     wavesurferRef.current = wavesurfer;
 
     return () => {
-      wavesurfer.destroy();
+      if (wavesurfer) {
+        wavesurfer.pause();
+        wavesurfer.destroy();
+      }
     };
   }, [audioUrl]);
 

@@ -97,6 +97,7 @@ export const TrackDetailsDrawer = ({
             title={track.title}
             artist={track.artist}
             coverImageUrl={track.coverImageUrl}
+            shouldStop={!open}
           />
 
           {/* Basic Information */}
