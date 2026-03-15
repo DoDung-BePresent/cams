@@ -13,12 +13,14 @@ import {
   Checkbox,
   Avatar,
   Tag,
+  message,
 } from 'antd';
 
 /**
  * Icons
  */
 import { SearchOutlined } from '@ant-design/icons';
+import { MusicIcon } from 'lucide-react';
 
 /**
  * Hooks
@@ -39,8 +41,8 @@ import { DRAWER_WIDTHS } from '@/config';
 /**
  * Utils
  */
-import { formatDuration } from '@/shared/utils';
-import { MusicIcon } from 'lucide-react';
+import { formatDuration, handleApiError } from '@/shared/utils';
+import { ErrorCodeEnum } from '@/shared/types';
 
 const { Title, Text } = Typography;
 
@@ -100,6 +102,22 @@ export const AddTracksDrawer = ({
         onSuccess: () => {
           handleCancel();
           onSuccess?.();
+        },
+        onError: (error: any) => {
+          const errorCode = error.response?.data?.errorCode;
+          const errorMessage = error.response?.data?.message;
+
+          if (errorCode === ErrorCodeEnum.Forbidden) {
+            if (errorMessage === 'Exception_Playlist_Modify_ActiveStream') {
+              message.error(
+                'Cannot modify playlist while it is actively streaming. Please stop playback first.',
+                5,
+              );
+              return;
+            }
+            message.error(errorMessage);
+          }
+          handleApiError(error, {}, 'Failed to add tracks. Please try again.');
         },
       },
     );

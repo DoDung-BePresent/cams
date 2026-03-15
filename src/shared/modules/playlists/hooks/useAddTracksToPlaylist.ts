@@ -34,16 +34,5 @@ export const useAddTracksToPlaylist = () => {
         message.success(response.data.message || 'Tracks added successfully!');
       }
     },
-    onError: (error: any) => {
-      handleApiError(
-        error,
-        {
-          [ErrorCodeEnum.BusinessRuleViolation]: () => {
-            message.error('Cannot modify playlist while actively streaming.');
-          },
-        },
-        'Failed to add tracks to playlist.',
-      );
-    },
   });
 };
