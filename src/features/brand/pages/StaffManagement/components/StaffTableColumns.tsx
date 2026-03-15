@@ -1,4 +1,4 @@
-import { Space, Dropdown, Avatar, Tag } from 'antd';
+import { Space, Dropdown, Avatar, Tag, Button } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   MoreOutlined,
@@ -177,10 +177,11 @@ export const getExpandedColumns = ({
           ],
         }}
         trigger={['click']}
+        placement='bottomRight'
       >
-        <MoreOutlined
-          style={{ fontSize: 20, cursor: 'pointer' }}
-          onClick={(e) => e.stopPropagation()}
+        <Button
+          type='text'
+          icon={<MoreOutlined />}
         />
       </Dropdown>
     ),

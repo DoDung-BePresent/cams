@@ -8,6 +8,8 @@ import {
   InputNumber,
   Flex,
   Spin,
+  Row,
+  Col,
 } from 'antd';
 
 /**
@@ -169,41 +171,34 @@ export const EditSpaceDrawer = ({
             />
           </Form.Item>
 
-          <Form.Item
-            label='Max Occupancy'
-            name='maxOccupancy'
-            rules={updateSpaceValidation.maxOccupancy}
-            extra='Maximum number of people allowed in this space'
-          >
-            <InputNumber
-              min={1}
-              style={{ width: '100%' }}
-              placeholder='e.g., 50'
-            />
-          </Form.Item>
-
-          <Form.Item
-            label='Critical Queue Threshold'
-            name='criticalQueueThreshold'
-            rules={updateSpaceValidation.criticalQueueThreshold}
-            extra='Trigger alert when queue exceeds this number'
-          >
-            <InputNumber
-              min={1}
-              style={{ width: '100%' }}
-              placeholder='e.g., 10'
-            />
-          </Form.Item>
-
-          {/* Read-only info */}
-          {space?.currentPlaylistId && (
-            <div style={{ marginTop: 16 }}>
-              <Flex justify='space-between'>
-                <span>Current Playlist ID:</span>
-                <strong>{space.currentPlaylistId}</strong>
-              </Flex>
-            </div>
-          )}
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label='Max Occupancy'
+                name='maxOccupancy'
+                rules={updateSpaceValidation.maxOccupancy}
+              >
+                <InputNumber
+                  min={1}
+                  style={{ width: '100%' }}
+                  placeholder='e.g., 50'
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                label='Critical Queue Threshold'
+                name='criticalQueueThreshold'
+                rules={updateSpaceValidation.criticalQueueThreshold}
+              >
+                <InputNumber
+                  min={1}
+                  style={{ width: '100%' }}
+                  placeholder='e.g., 10'
+                />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       )}
     </Drawer>
