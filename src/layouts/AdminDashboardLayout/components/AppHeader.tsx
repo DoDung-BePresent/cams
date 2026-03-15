@@ -39,6 +39,11 @@ import { useFullscreen, useNetworkStatus } from '@/shared/hooks';
  */
 import type { MenuProps } from 'antd';
 
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 type AppHeaderProps = {
   collapsed: boolean;
   onClick: () => void;
@@ -168,8 +173,10 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             placement='bottomRight'
           >
             <Avatar
+              size={AVATAR_SIZE.small}
               src={user?.avatarUrl}
               icon={<UserOutlined />}
+              style={{ cursor: 'pointer' }}
             />
           </Dropdown>
         </Flex>

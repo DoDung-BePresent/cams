@@ -176,7 +176,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             arrow
           >
             <Avatar
-              size={AVATAR_SIZE.medium}
+              size={AVATAR_SIZE.small}
               src={avatarImage}
               icon={<UserOutlined />}
               style={{ cursor: 'pointer' }}
