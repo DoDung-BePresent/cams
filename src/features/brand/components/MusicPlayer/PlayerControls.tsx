@@ -1,11 +1,19 @@
 import { Button, Flex } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   CaretRightOutlined,
   PauseOutlined,
   StepForwardOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+
+/**
+ * Stores
+ */
+import { usePlayerStore } from '../../stores';
 
 type PlayerControlsProps = {
   dark?: boolean;
@@ -16,6 +24,8 @@ export const PlayerControls = ({
   dark = false,
   size = 'default',
 }: PlayerControlsProps) => {
+  // TODO: Dùng màu có sẵn của antd thay thế hardcore
+
   const isPlaying = usePlayerStore((s) => s.isPlaying);
   const isShuffle = usePlayerStore((s) => s.isShuffle);
   const togglePlay = usePlayerStore((s) => s.togglePlay);

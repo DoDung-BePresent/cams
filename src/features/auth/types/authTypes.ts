@@ -1,44 +1,49 @@
+import type { Result, RoleEnum } from '@/shared/types/commonTypes';
+
+/**
+ * Request Payloads
+ */
 export type LoginPayload = {
   email: string;
   password: string;
   rememberMe: boolean;
 };
 
-export type LoginResponse = {
-  isSuccess: boolean;
-  message: string;
-  data: {
-    accessToken: string;
-    refreshToken?: string;
-    expiresAt: string;
-    roles: number[];
-  };
+/**
+ * Response Data Types (nested in Result<T>)
+ */
+export type LoginData = {
+  accessToken: string;
+  expiresAt: string;
+  roles: number[];
 };
 
-export type ProfileResponse = {
-  isSuccess: boolean;
-  message: string;
-  data: {
-    email: string;
-    userId: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber?: string;
-    avatarUrl?: string;
-    roles: number[];
-  };
+export type ProfileData = {
+  email: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
+  roles: number[];
 };
 
-export type RefreshTokenResponse = {
-  isSuccess: boolean;
-  message: string;
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    expiresAt: string;
-  };
+export type RefreshTokenData = {
+  accessToken: string;
+  expiresAt: string;
+  // refreshToken is in HttpOnly cookie, not in response
 };
 
+/**
+ * Response Types (using common Result<T>)
+ */
+export type LoginResponse = Result<LoginData>;
+export type ProfileResponse = Result<ProfileData>;
+export type RefreshTokenResponse = Result<RefreshTokenData>;
+
+/**
+ * Domain Types
+ */
 export type User = {
   id: string;
   email: string;
@@ -46,9 +51,12 @@ export type User = {
   lastName: string;
   phoneNumber?: string;
   avatarUrl?: string;
-  role: string;
+  roles: RoleEnum[];
 };
 
+/**
+ * Context Types
+ */
 export type AuthContextType = {
   user: User | null;
   accessToken: string | null;

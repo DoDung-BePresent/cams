@@ -13,18 +13,23 @@ import {
 /**
  * Components
  */
-import { AppModal } from '@/shared/components/ui/AppModal';
+import { AppModal } from '@/shared/components';
 
 /**
  * Types
  */
-import type { AssignStaffStoreRequest } from '@/features/brand/types/staffTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import type { AssignStaffStoreRequest } from '@/features/brand/types';
+import { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Validations
  */
-import { assignStoreValidation } from '@/features/brand/validations/staffValidation';
+import { assignStoreValidation } from '@/features/brand/validations';
+
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
 
 type AssignStaffStoreModalProps = {
   open: boolean;
@@ -96,7 +101,7 @@ export const AssignStaffStoreModal = ({
       okButtonProps={{
         loading: assignStore.isPending,
       }}
-      width={500}
+      width={MODAL_WIDTHS.medium}
     >
       <Alert
         type='warning'

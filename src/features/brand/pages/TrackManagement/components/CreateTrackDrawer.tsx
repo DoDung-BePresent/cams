@@ -13,23 +13,47 @@ import {
   Select,
   Tag,
 } from 'antd';
-import type { UploadFile } from 'antd';
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { AudioDragger } from '@/shared/components/common/AudioDragger';
+
+/**
+ * Components
+ */
+import { ImageDragger, AudioDragger } from '@/shared/components';
+
+/**
+ * Utils
+ */
 import {
   createImageUploadProps,
   createAudioUploadProps,
   getAudioDuration,
-} from '@/shared/utils/uploadHelpers';
+} from '@/shared/utils';
+
+/**
+ * Hooks
+ */
+import { useMoodOptions } from '@/shared/modules/moods/hooks';
 import { useCreateTrack } from '@/shared/modules/tracks/hooks';
+
+/**
+ * Validations
+ */
 import { createTrackValidation } from '@/shared/modules/tracks/validations';
+
+/**
+ * Constants
+ */
 import {
   GENRE_OPTIONS,
   MUSIC_PROVIDER_OPTIONS,
 } from '@/shared/modules/tracks/constants';
 import { MOOD_TYPE_COLORS } from '@/shared/modules/moods/constants';
+
+/**
+ * Types
+ */
+import type { UploadFile } from 'antd';
 import type { CreateTrackRequest } from '@/shared/modules/tracks/types';
-import { useMoodOptions } from '@/shared/modules/moods/hooks';
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 
@@ -126,7 +150,7 @@ export const CreateTrackDrawer = ({
     <Drawer
       title='Upload New Track'
       placement='right'
-      width={620}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       closeIcon={null}
@@ -341,9 +365,7 @@ export const CreateTrackDrawer = ({
                     >
                       <span>{option.label}</span>
                       {option.data.moodType && (
-                        <Tag
-                          color={MOOD_TYPE_COLORS[option.data.moodType]}
-                        >
+                        <Tag color={MOOD_TYPE_COLORS[option.data.moodType]}>
                           {option.data.moodType}
                         </Tag>
                       )}

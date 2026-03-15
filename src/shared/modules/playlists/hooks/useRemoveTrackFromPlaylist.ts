@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { handleApiError } from '@/shared/utils/errorHandler';
-import { ErrorCodeEnum } from '@/shared/types/errorTypes';
-import { playlistService } from '../services';
+
+/**
+ * Utils
+ */
+import { handleApiError } from '@/shared/utils';
+
+/**
+ * Types
+ */
+import { ErrorCodeEnum } from '@/shared/types';
+
+/**
+ * Services
+ */
+import { playlistService } from '@/shared/modules/playlists/services';
 
 export const useRemoveTrackFromPlaylist = () => {
   const queryClient = useQueryClient();
@@ -11,7 +23,7 @@ export const useRemoveTrackFromPlaylist = () => {
     mutationFn: ({ id, trackId }: { id: string; trackId: string }) =>
       playlistService.removeTrack(id, trackId),
     onSuccess: (response) => {
-      if (response.data.success) {
+      if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['playlists'] });
         message.success(response.data.message || 'Track removed successfully!');
       }

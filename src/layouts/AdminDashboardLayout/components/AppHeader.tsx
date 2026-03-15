@@ -29,20 +29,21 @@ import {
 } from '@ant-design/icons';
 
 /**
- * Constants
- */
-import { ROLES } from '@/shared/constants/rolesConstants';
-
-/**
  * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
-import { useFullscreen } from '@/shared/hooks/useFullScreen';
-import { useNetworkStatus } from '@/shared/hooks/useNetworkStatus';
+import { useAuth } from '@/providers';
+import { useFullscreen, useNetworkStatus } from '@/shared/hooks';
 
 /**
  * Types
  */
+import type { MenuProps } from 'antd';
+
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
+
 type AppHeaderProps = {
   collapsed: boolean;
   onClick: () => void;
@@ -70,8 +71,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const navigate = useNavigate();
   const { isOnline } = useNetworkStatus();
 
-  const isManager = user?.role === ROLES.SYSTEM_ADMIN;
-
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSuccess: () => {
@@ -80,7 +79,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
     });
   };
 
-  const userMenuItems = [
+  const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',
       label: (
@@ -174,8 +173,10 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             placement='bottomRight'
           >
             <Avatar
+              size={AVATAR_SIZE.small}
               src={user?.avatarUrl}
               icon={<UserOutlined />}
+              style={{ cursor: 'pointer' }}
             />
           </Dropdown>
         </Flex>

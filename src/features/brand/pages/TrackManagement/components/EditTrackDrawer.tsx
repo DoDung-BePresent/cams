@@ -14,16 +14,45 @@ import {
   Spin,
   Tag,
 } from 'antd';
-import type { UploadFile } from 'antd';
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
-import { useTrack, useUpdateTrack } from '@/shared/modules/tracks/hooks';
-import { updateTrackValidation } from '@/shared/modules/tracks/validations';
-import { GENRE_OPTIONS } from '@/shared/modules/tracks/constants';
+
+/**
+ * Components
+ */
+import { ImageDragger } from '@/shared/components';
 import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
+
+/**
+ * Utils
+ */
+import { createImageUploadProps } from '@/shared/utils';
+
+/**
+ * Validations
+ */
+import { updateTrackValidation } from '@/shared/modules/tracks/validations';
+
+/**
+ * Types
+ */
+import type { UploadFile } from 'antd';
 import type { UpdateTrackRequest } from '@/shared/modules/tracks/types';
+
+/**
+ * Hooks
+ */
+import { useTrack, useUpdateTrack } from '@/shared/modules/tracks/hooks';
 import { useMoodOptions } from '@/shared/modules/moods/hooks';
+
+/**
+ * Constants
+ */
+import { GENRE_OPTIONS } from '@/shared/modules/tracks/constants';
 import { MOOD_TYPE_COLORS } from '@/shared/modules/moods/constants';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 
@@ -112,7 +141,7 @@ export const EditTrackDrawer = ({
     <Drawer
       title='Edit Track'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       closeIcon={null}

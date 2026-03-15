@@ -3,30 +3,29 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
 /**
- * Shared
+ * Libs
  */
-import { ROLES } from '@/shared/constants/rolesConstants';
-import { Logo } from '@/shared/components/common/Logo';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib';
 
 /**
  * Hooks
  */
-import { useAuth } from '@/providers/AuthProvider';
-import { useMenuNavigation } from '@/shared/hooks/useMenuNavigation';
+import { useMenuNavigation } from '@/shared/hooks';
 
 /**
- * Features
+ * Constants
  */
-import { adminMenuItems } from '@/features/admin/constants/adminMenuItems';
-import { ADMIN_ROUTE_MAP } from '@/features/admin/constants/adminRouteMap';
-import { brandMenuItems } from '@/features/brand/constants/brandMenuItems';
-import { BRAND_ROUTE_MAP } from '@/features/brand/constants/brandRouteMap';
+import { ADMIN_MENU_ITEMS, ADMIN_ROUTE_MAP } from '@/features/admin/constants';
 
 /**
  * Components
  */
-import { NavCard } from './NavCard';
+import { NavCard, Logo } from '@/shared/components';
+
+/**
+ * Configs
+ */
+import { SIDEBAR_WIDTHS } from '@/config';
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -46,16 +45,9 @@ const siderStyle: React.CSSProperties = {
 };
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
-  const { user } = useAuth();
-
-  const isAdmin = user?.role === ROLES.SYSTEM_ADMIN;
-  // FIXME: It's a bit redundant because we know that only person with SystemAdmin role can access this layout!
-  const menuItems = isAdmin ? adminMenuItems : brandMenuItems;
-  const routeMap = isAdmin ? ADMIN_ROUTE_MAP : BRAND_ROUTE_MAP;
-
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
-    menuItems,
-    routeMap,
+    menuItems: ADMIN_MENU_ITEMS,
+    routeMap: ADMIN_ROUTE_MAP,
   });
 
   return (
@@ -63,8 +55,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       trigger={null}
       style={siderStyle}
       theme='light'
-      width={260}
-      collapsedWidth={60}
+      width={SIDEBAR_WIDTHS.width}
+      collapsedWidth={SIDEBAR_WIDTHS.collapsedWidth}
       collapsible
       collapsed={collapsed}
     >
@@ -81,7 +73,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           className='border-none!'
           selectedKeys={selectedKeys}
           defaultOpenKeys={openKeys}
-          items={menuItems}
+          items={ADMIN_MENU_ITEMS}
           onClick={({ key }) => handleMenuClick(key)}
         />
         {!collapsed && <NavCard />}

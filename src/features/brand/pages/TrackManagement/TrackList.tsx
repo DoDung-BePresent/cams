@@ -1,25 +1,44 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from 'antd';
+
+/**
+ * Icons
+ */
 import { PlusOutlined } from '@ant-design/icons';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
-import { AppModal } from '@/shared/components/ui/AppModal';
-import {
-  useTracks,
-  useDeleteTrack,
-  useToggleTrackStatus,
-} from '@/shared/modules/tracks/hooks';
+
+/**
+ * Components
+ */
+import { PageHeader, DataTable, AppModal } from '@/shared/components';
 import { getTrackColumns } from '@/shared/modules/tracks/components';
-import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
-import type { TablePaginationConfig } from 'antd';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import {
   CreateTrackDrawer,
   EditTrackDrawer,
   TrackDetailsDrawer,
   TrackFilter as TrackFilterComponent,
 } from './components';
+
+/**
+ * Hooks
+ */
+import {
+  useTracks,
+  useDeleteTrack,
+  useToggleTrackStatus,
+} from '@/shared/modules/tracks/hooks';
+
+/**
+ * Constants
+ */
+import { PAGINATION_SIZES } from '@/shared/constants';
+
+/**
+ * Types
+ */
+import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
+import type { TablePaginationConfig } from 'antd';
+import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
 export const TrackList = () => {
   const navigate = useNavigate();
@@ -98,6 +117,9 @@ export const TrackList = () => {
       content: 'Are you sure you want to change this track status?',
       okText: 'Confirm',
       cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
       onOk: () => {
         toggleStatus.mutate(id, {
           onSuccess: () => refetch(),
@@ -105,7 +127,6 @@ export const TrackList = () => {
       },
     });
   };
-
 
   const handleReset = () => {
     setFilter({
@@ -173,7 +194,7 @@ export const TrackList = () => {
           total: data?.totalItems || 0,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} tracks`,
-          pageSizeOptions: ['10', '20', '50', '100'],
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
             setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },

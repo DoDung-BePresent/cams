@@ -1,13 +1,28 @@
-import { api } from '@/config/api';
-import { SPACE_ENDPOINTS } from '../constants';
+import { api } from '@/config';
+
+/**
+ * Types
+ */
 import type {
   SpaceFilter,
-  SpacePaginationResult,
   SpaceDetailResponse,
   CreateSpaceRequest,
   UpdateSpaceRequest,
+  SpaceListItem,
 } from '../types';
-import type { Result } from '@/shared/types/commonTypes';
+import type { PaginationResult, Result } from '@/shared/types';
+
+/**
+ * API Endpoints
+ */
+const SPACE_ENDPOINTS = {
+  list: '/api/spaces',
+  detail: (id: string) => `/api/spaces/${id}`,
+  create: '/api/spaces',
+  update: (id: string) => `/api/spaces/${id}`,
+  delete: (id: string) => `/api/spaces/${id}`,
+  toggleStatus: (id: string) => `/api/spaces/${id}/toggle-status`,
+};
 
 /**
  * Space Service
@@ -42,7 +57,7 @@ export const spaceService = {
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
 
-    return api.get<SpacePaginationResult>(
+    return api.get<PaginationResult<SpaceListItem>>(
       `${SPACE_ENDPOINTS.list}?${params.toString()}`,
     );
   },

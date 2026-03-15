@@ -1,4 +1,8 @@
 import type { ItemType } from 'antd/es/menu/interface';
+
+/**
+ * Icons
+ */
 import {
   DashboardOutlined,
   ShopOutlined,
@@ -10,7 +14,7 @@ import {
   ControlOutlined,
 } from '@ant-design/icons';
 
-export const brandMenuItems: ItemType[] = [
+export const BRAND_MENU_ITEMS: ItemType[] = [
   {
     key: 'dashboard',
     icon: <DashboardOutlined />,
@@ -32,7 +36,7 @@ export const brandMenuItems: ItemType[] = [
     label: 'Track Management',
   },
   {
-    key: 'playlists', // ✅ Add this
+    key: 'playlists',
     icon: <UnorderedListOutlined />,
     label: 'Playlist Management',
   },

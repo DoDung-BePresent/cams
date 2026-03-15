@@ -6,6 +6,7 @@ import { Flex, Layout, Typography } from 'antd';
 const { Text, Link } = Typography;
 const { Footer } = Layout;
 
+// TODO: Dùng màu có sẵn của antd thay thế hardcore
 const footerStyle: React.CSSProperties = {
   background: '#FAFAFB',
 };

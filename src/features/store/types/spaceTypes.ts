@@ -1,8 +1,7 @@
 import type {
   BaseResponse,
-  PaginationResult,
+  EntityStatusEnum,
 } from '@/shared/types/commonTypes';
-import type { BasePaginationFilter } from '@/shared/types/commonTypes';
 
 /**
  * Space Type Enum (from API_Spaces.md §4.5)
@@ -75,13 +74,11 @@ export interface UpdateSpaceRequest {
  * Extends BasePaginationFilter
  * Note: storeId is auto-overridden to user.StoreId for StoreManager
  */
-export interface SpaceFilter extends BasePaginationFilter {
-  type?: SpaceTypeEnum;
-  createdFrom?: string; // ISO 8601 datetime
-  createdTo?: string; // ISO 8601 datetime
-}
-
-/**
- * Pagination Result for Space List
- */
-export type SpacePaginationResult = PaginationResult<SpaceListItem>;
+export type SpaceFilter = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  isAscending?: boolean;
+  status?: EntityStatusEnum;
+};

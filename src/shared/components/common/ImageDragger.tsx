@@ -1,5 +1,9 @@
 import { Upload, Typography, Flex } from 'antd';
 import type { UploadProps } from 'antd';
+
+/**
+ * Assets
+ */
 import filesImage from '@/assets/images/files.png';
 
 const { Dragger } = Upload;

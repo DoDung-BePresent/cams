@@ -1,5 +1,8 @@
 import { Loadable } from '@/shared/components/common/Loadable';
 
+/**
+ * Pages
+ */
 const ManagerDashboard = Loadable(
   () => import('@/features/brand/pages/Dashboard'),
   'BrandDashboard',
@@ -13,11 +16,6 @@ const StoreList = Loadable(
 const StaffList = Loadable(
   () => import('@/features/brand/pages/StaffManagement/StaffList'),
   'StaffList',
-);
-
-const DeviceList = Loadable(
-  () => import('@/features/brand/pages/DeviceManagement/DeviceList'),
-  'DeviceList',
 );
 
 const TrackList = Loadable(
@@ -42,10 +40,6 @@ export const brandRoutes = [
   {
     path: 'staff',
     element: <StaffList />,
-  },
-  {
-    path: 'devices',
-    element: <DeviceList />,
   },
   {
     path: 'tracks',

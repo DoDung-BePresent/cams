@@ -3,39 +3,42 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { authService } from '../services/authService';
-
-/**
- * Shared
- */
-import { mapRoleFromEnum } from '@/shared/utils/jwt';
+import { authService } from '@/features/auth/services';
 
 /**
  * Types
  */
-import type { User } from '../types/authTypes';
+import type { User } from '@/features/auth/types';
+import { STALE_TIME } from '@/config';
 
-export const useProfile = (enabled: boolean = true) => {
+export const useProfile = (enabled = true) => {
   return useQuery({
     queryKey: ['profile'],
-    queryFn: async (): Promise<User | null> => {
+    queryFn: async () => {
       const response = await authService.getProfile();
-      const { data } = response.data;
 
-      if (!data) return null;
+      // Type-safe data extraction
+      if (!response.data.isSuccess || !response.data.data) {
+        throw new Error(response.data.message || 'Failed to fetch profile');
+      }
 
-      return {
-        id: data.userId,
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        avatarUrl: data.avatarUrl,
-        role: mapRoleFromEnum(data.roles),
+      const profileData = response.data.data;
+
+      // Transform to User domain type
+      const user: User = {
+        id: profileData.userId,
+        email: profileData.email,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        phoneNumber: profileData.phoneNumber,
+        avatarUrl: profileData.avatarUrl,
+        roles: profileData.roles,
       };
+
+      return user;
     },
     enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: STALE_TIME.medium,
     retry: false,
   });
 };

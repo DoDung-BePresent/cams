@@ -1,7 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
-import { moodService } from '../services';
-import { MOOD_QUERY_KEYS } from '../constants';
-import type { MoodOption } from '../types';
+
+/**
+ * Services
+ */
+import { moodService } from '@/shared/modules/moods/services';
+
+/**
+ * Constants
+ */
+import { MOOD_QUERY_KEYS } from '@/shared/modules/moods/constants';
+
+/**
+ * Types
+ */
+import type { MoodOption } from '@/shared/modules/moods/types';
+
+/**
+ * Configs
+ */
+import { STALE_TIME } from '@/config';
 
 /**
  * Hook to fetch mood list
@@ -14,7 +31,7 @@ export const useMoods = () => {
       const response = await moodService.getList();
       return response.data;
     },
-    staleTime: 30 * 60 * 1000, // 30 minutes (moods rarely change)
+    staleTime: STALE_TIME.veryLong, // 60 minutes (moods rarely change)
   });
 };
 

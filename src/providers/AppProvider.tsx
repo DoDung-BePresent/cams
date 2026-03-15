@@ -8,7 +8,7 @@ import { ThemeProvider } from './ThemeProvider';
 /**
  * Components
  */
-import { NetworkStatusBanner } from '@/shared/components/common/NetworkStatusBanner';
+import { NetworkStatusBanner } from '@/shared/components';
 
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   return (

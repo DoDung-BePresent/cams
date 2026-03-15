@@ -11,14 +11,35 @@ import {
   Typography,
   Alert,
 } from 'antd';
+
+/**
+ * Icons
+ */
 import { InfoCircleOutlined } from '@ant-design/icons';
+
+/**
+ * Hooks
+ */
 import {
   usePlaylist,
   useUpdatePlaylist,
 } from '@/shared/modules/playlists/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
+
+/**
+ * Validations
+ */
 import { updatePlaylistValidation } from '@/shared/modules/playlists/validations';
+
+/**
+ * Types
+ */
 import type { UpdatePlaylistRequest } from '@/shared/modules/playlists/types';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title, Text } = Typography;
 
@@ -86,7 +107,7 @@ export const EditPlaylistDrawer = ({
       closeIcon={null}
       title='Edit Playlist'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={

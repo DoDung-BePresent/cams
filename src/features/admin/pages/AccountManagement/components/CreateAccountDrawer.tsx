@@ -14,36 +14,39 @@ import {
 /**
  * Hooks
  */
-import { useCreateAccount } from '@/features/admin/hooks/useCreateAccount';
-import { useBrands } from '@/features/admin/hooks/useBrands';
+import { useCreateAccount, useBrands } from '@/features/admin/hooks';
 
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components/common/ImageDragger';
-import { PasswordStrength } from '@/shared/components/ui/PasswordStrength';
+import { ImageDragger, PasswordStrength } from '@/shared/components';
 
 /**
  * Types
  */
 import type { UploadFile } from 'antd';
-import type { CreateAccountRequest } from '@/features/admin/types/accountTypes';
-import { RoleEnum } from '@/features/admin/types/accountTypes';
+import { ErrorCodeEnum, RoleEnum } from '@/shared/types';
+import type { CreateAccountRequest } from '@/features/admin/types';
 
 /**
  * Constants
  */
-import { ROLE_OPTIONS_FOR_ADMIN } from '@/features/admin/constants/accountConstants';
+import { ROLE_OPTIONS_FOR_ADMIN } from '@/features/admin/constants';
 
 /**
  * Validations
  */
-import { createAccountValidation } from '@/features/admin/validations/accountValidation';
+import { createAccountValidation } from '@/features/admin/validations';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils/uploadHelpers';
+import { createImageUploadProps, handleApiError } from '@/shared/utils';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 
@@ -87,12 +90,50 @@ export const CreateAccountDrawer = ({
       formData.append('avatar', avatarFile.originFileObj);
     }
     if (values.phoneNumber) formData.append('phoneNumber', values.phoneNumber);
+
+    // FIXME: Hình như không cần gửi thì phải!
     if (values.brandId) formData.append('brandId', values.brandId);
 
     createAccount.mutate(formData, {
       onSuccess: () => {
         handleCancel();
         onSuccess();
+      },
+      onError: (error: any) => {
+        const errorCode = error.response?.data?.errorCode;
+        const fieldErrors = error.response?.data?.errors;
+
+        // NOTE: sao payload là camelCase nhưng field lỗi là PascalCase vậy ta?
+        if (errorCode === ErrorCodeEnum.ValidationFailed && fieldErrors) {
+          form.setFields(
+            fieldErrors.map((err: { field: string; message: string }) => ({
+              name: err.field.charAt(0).toLowerCase() + err.field.slice(1),
+              errors: [err.message],
+            })),
+          );
+          return;
+        }
+        if (errorCode === ErrorCodeEnum.BusinessRuleViolation) {
+          // NOTE: BusinessValidationRule ở đây hơi kỳ khi không chỉ rõ là validation cho trường hợp nào email hay phone!
+          form.setFields([
+            {
+              name: 'email',
+              errors: ['Email or phone number already exists'],
+            },
+            {
+              name: 'phoneNumber',
+              errors: ['Email or phone number already exists'],
+            },
+          ]);
+
+          return;
+        }
+
+        handleApiError(
+          error,
+          {},
+          'Failed to create account. Please try again.',
+        );
       },
     });
   };
@@ -126,7 +167,7 @@ export const CreateAccountDrawer = ({
       closeIcon={null}
       title='Create Brand Manager Account'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={
@@ -235,7 +276,6 @@ export const CreateAccountDrawer = ({
             <Input placeholder='+84901234567 or 0901234567' />
           </Form.Item>
 
-          {/* ✅ Use shared ImageDragger */}
           <Form.Item
             label='Avatar'
             name='avatar'
@@ -261,6 +301,7 @@ export const CreateAccountDrawer = ({
             label='Role'
             name='role'
             rules={createAccountValidation.role}
+            hidden
           >
             <Select
               placeholder='Select role'

@@ -6,7 +6,7 @@ import 'simplebar-react/dist/simplebar.min.css';
  * Shared
  */
 import { Logo } from '@/shared/components/common/Logo';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib';
 
 /**
  * Hooks
@@ -21,7 +21,12 @@ import { STORE_MENU_ITEMS, STORE_ROUTE_MAP } from '@/features/store/constants';
 /**
  * Components
  */
-import { NavCard } from './NavCard';
+import { NavCard } from '@/shared/components';
+
+/**
+ * Configs
+ */
+import { SIDEBAR_WIDTHS } from '@/config';
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -51,8 +56,8 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       trigger={null}
       style={siderStyle}
       theme='light'
-      width={260}
-      collapsedWidth={60}
+      width={SIDEBAR_WIDTHS.width}
+      collapsedWidth={SIDEBAR_WIDTHS.collapsedWidth}
       collapsible
       collapsed={collapsed}
     >

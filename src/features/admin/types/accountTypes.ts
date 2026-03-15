@@ -1,22 +1,14 @@
-import type { EntityStatusEnum } from '@/shared/types/commonTypes';
+import type { EntityStatusEnum, RoleEnum } from '@/shared/types/commonTypes';
 
-// Enums
-export enum RoleEnum {
-  SystemAdmin = 0,
-  BrandManager = 1,
-  StoreManager = 2,
-}
-
-// Request DTOs
 export type CreateAccountRequest = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   phoneNumber?: string;
-  role: RoleEnum; // Admin chỉ tạo BrandManager (role = 1)
-  brandId?: string; // Required nếu role = BrandManager
-  storeId?: string; // null cho BrandManager
+  role: RoleEnum;
+  brandId?: string;
+  storeId?: string;
   avatar?: File;
 };
 
@@ -40,43 +32,39 @@ export type AssignStoreRequest = {
   newStoreId: string | null;
 };
 
-// Filter
+/**
+ * Filter Parameters
+ */
 export type AccountFilter = {
   page?: number;
   pageSize?: number;
-  search?: string; // Search email, name, phone
+  search?: string;
   sortBy?: string;
   isAscending?: boolean;
   status?: EntityStatusEnum;
-  role?: RoleEnum; // Admin filter: 0 (SA) hoặc 1 (BM)
-  brandId?: string; // Filter by brand
-  storeId?: string; // Filter by store
-  joiningFrom?: string; // ISO 8601
-  joiningTo?: string;
-  isPrimaryOwner?: boolean; // true/false/null
+  brandId?: string;
+  hasAssignedBrand?: boolean;
 };
 
-// Response DTOs
+/**
+ * List Item with optional children for grouping
+ */
 export type AccountListItem = {
   id: string;
+  email: string;
   firstName: string;
   lastName: string;
-  fullName: string; // Computed by backend
-  email: string;
-  phoneNumber: string | null;
-  avatarUrl: string | null;
-  lastLoginAt: string | null; // ISO 8601 UTC
-  roles: RoleEnum[]; // Array of role enums (int[])
-  brandId: string | null; // null for SystemAdmin
-  brandName: string | null;
-  storeId: string | null;
-  storeName: string | null;
-  isPrimaryOwner: boolean;
-  createdAt: string;
-  updatedAt: string | null;
-  createdBy: string | null;
-  updatedBy: string | null;
+  fullName: string;
+  phoneNumber?: string;
+  avatarUrl?: string;
   status: EntityStatusEnum;
+  roles: RoleEnum[];
+  isPrimaryOwner: boolean;
+  brandId?: string;
+  brandName?: string;
+  brandLogoUrl?: string;
+  lastLoginAt?: string;
+  children?: AccountListItem[];
 };
 
 export type AccountDetailResponse = AccountListItem & {

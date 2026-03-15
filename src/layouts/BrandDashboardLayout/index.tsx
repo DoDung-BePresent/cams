@@ -8,15 +8,12 @@ import { useState } from 'react';
 /**
  * Features
  */
-import { MusicPlayer } from '@/features/brand/components/MusicPlayer';
+import { MusicPlayer } from '@/features/brand/components';
 
 /**
  * Components
  */
-import { AppSidebar } from './components/AppSidebar';
-import { AppHeader } from './components/AppHeader';
-import { AppFooter } from './components/AppFooter';
-import { AppContent } from './components/AppContent';
+import { AppSidebar, AppHeader, AppFooter, AppContent } from './components';
 
 export const BrandDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -37,7 +34,7 @@ export const BrandDashboardLayout = () => {
           <Outlet />
         </AppContent>
         <AppFooter />
-        <MusicPlayer sidebarCollapsed={collapsed} />
+        {/* <MusicPlayer sidebarCollapsed={collapsed} /> */}
       </Layout>
     </Layout>
   );

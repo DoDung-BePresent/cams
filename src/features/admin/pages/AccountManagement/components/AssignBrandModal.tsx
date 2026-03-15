@@ -4,24 +4,31 @@ import { Alert, Form, Select } from 'antd';
 /**
  * Hooks
  */
-import { useAssignAccountBrand } from '@/features/admin/hooks/useAssignAccountBrand';
-import { useBrands } from '@/features/admin/hooks/useBrands';
-import { useAccount } from '@/features/admin/hooks/useAccount';
+import {
+  useAssignAccountBrand,
+  useBrands,
+  useAccount,
+} from '@/features/admin/hooks';
 
 /**
  * Components
  */
-import { AppModal } from '@/shared/components/ui/AppModal';
+import { AppModal } from '@/shared/components/ui';
 
 /**
  * Types
  */
-import type { AssignBrandRequest } from '@/features/admin/types/accountTypes';
+import type { AssignBrandRequest } from '@/features/admin/types';
 
 /**
  * Validations
  */
-import { assignBrandValidation } from '@/features/admin/validations/accountValidation';
+import { assignBrandValidation } from '@/features/admin/validations';
+
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
 
 type AssignBrandModalProps = {
   open: boolean;
@@ -89,7 +96,7 @@ export const AssignBrandModal = ({
       okButtonProps={{
         loading: assignBrand.isPending,
       }}
-      width={500}
+      width={MODAL_WIDTHS.medium}
     >
       <Alert
         type='warning'
@@ -119,6 +126,7 @@ export const AssignBrandModal = ({
           name='newBrandId'
           rules={assignBrandValidation.newBrandId}
           extra='This account will be reassigned to the selected brand'
+          className='mb-0!'
         >
           <Select
             placeholder='Select a brand'

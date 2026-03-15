@@ -1,5 +1,11 @@
 import type { SelectProps } from 'antd';
 import { SpaceTypeEnum } from '../types';
+import { EntityStatusEnum } from '@/shared/types';
+
+export const SPACE_STATUS_OPTIONS: SelectProps['options'] = [
+  { label: 'Active', value: EntityStatusEnum.Active },
+  { label: 'Inactive', value: EntityStatusEnum.Inactive },
+];
 
 /**
  * Space Type Options for Select Dropdown
@@ -36,15 +42,3 @@ export const SPACE_TYPE_COLORS: Record<SpaceTypeEnum, string> = {
   [SpaceTypeEnum.Kitchen]: 'volcano',
   [SpaceTypeEnum.Restroom]: 'purple',
 };
-
-/**
- * API Endpoints
- */
-export const SPACE_ENDPOINTS = {
-  list: '/api/spaces',
-  detail: (id: string) => `/api/spaces/${id}`,
-  create: '/api/spaces',
-  update: (id: string) => `/api/spaces/${id}`,
-  delete: (id: string) => `/api/spaces/${id}`,
-  toggleStatus: (id: string) => `/api/spaces/${id}/toggle-status`,
-} as const;

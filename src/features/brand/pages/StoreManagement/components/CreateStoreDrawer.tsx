@@ -19,26 +19,27 @@ import { useCreateStore } from '@/features/brand/hooks';
 /**
  * Components
  */
-import { MapPicker } from '@/shared/components/map/MapPicker';
+import { MapPicker } from '@/shared/components';
 
 /**
  * Types
  */
-import type { StoreRequest } from '@/features/brand/types/storeTypes';
+import type { StoreRequest } from '@/features/brand/types';
 
 /**
  * Constants
  */
-import {
-  VIETNAM_CITIES,
-  HCMC_DISTRICTS,
-  TIMEZONE_OPTIONS,
-} from '@/shared/constants/storeConstants';
+import { VIETNAM_CITIES, HCMC_DISTRICTS } from '@/shared/constants';
 
 /**
  * Validations
  */
-import { createStoreValidation } from '@/features/brand/validations/storeValidation';
+import { createStoreValidation } from '@/features/brand/validations';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -71,7 +72,6 @@ export const CreateStoreDrawer = ({
     onClose();
   };
 
-  // ✅ Auto-update lat/lng/mapUrl when user picks on map
   const handleMapLocationChange = (location: { lat: number; lng: number }) => {
     form.setFieldsValue({
       latitude: location.lat,
@@ -80,7 +80,6 @@ export const CreateStoreDrawer = ({
     });
   };
 
-  // ✅ Auto-fill address from reverse geocoding
   const handleAddressChange = (address: string) => {
     form.setFieldsValue({
       address: address,
@@ -92,7 +91,7 @@ export const CreateStoreDrawer = ({
       closeIcon={null}
       title='Add New Store'
       placement='right'
-      width={720}
+      width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
       footer={
@@ -122,6 +121,7 @@ export const CreateStoreDrawer = ({
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        autoComplete='off'
         initialValues={{
           timeZone: 'Asia/Ho_Chi_Minh',
         }}
@@ -157,7 +157,7 @@ export const CreateStoreDrawer = ({
           </Form.Item>
         </div>
 
-        {/* ✅ Location Section - Simplified */}
+        {/* Location Section */}
         <div style={{ marginBottom: 24 }}>
           <Title
             level={5}
@@ -166,7 +166,6 @@ export const CreateStoreDrawer = ({
             Location
           </Title>
 
-          {/* Address Field */}
           <Form.Item
             label='Address'
             name='address'
@@ -179,7 +178,6 @@ export const CreateStoreDrawer = ({
             />
           </Form.Item>
 
-          {/* City & District */}
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -191,11 +189,7 @@ export const CreateStoreDrawer = ({
                   placeholder='Select city'
                   options={VIETNAM_CITIES}
                   showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
+                  optionFilterProp='label'
                 />
               </Form.Item>
             </Col>
@@ -209,17 +203,12 @@ export const CreateStoreDrawer = ({
                   placeholder='Select district'
                   options={HCMC_DISTRICTS}
                   showSearch
-                  filterOption={(input, option) =>
-                    (option?.label ?? '')
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
+                  optionFilterProp='label'
                 />
               </Form.Item>
             </Col>
           </Row>
 
-          {/* ✅ Map Picker - Pinpoint exact location */}
           <Form.Item
             label='Pinpoint Store Location on Map'
             extra='Click on the map or search for the address to set coordinates'
@@ -243,7 +232,7 @@ export const CreateStoreDrawer = ({
             </Form.Item>
           </Form.Item>
 
-          {/* ✅ Hidden fields for lat/lng/mapUrl (auto-populated by map) */}
+          {/* Hidden fields for coordinates */}
           <Form.Item
             name='latitude'
             hidden
@@ -272,17 +261,6 @@ export const CreateStoreDrawer = ({
           >
             Store Details
           </Title>
-
-          <Form.Item
-            label='Time Zone'
-            name='timeZone'
-            rules={createStoreValidation.timeZone}
-          >
-            <Select
-              placeholder='Select timezone'
-              options={TIMEZONE_OPTIONS}
-            />
-          </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>

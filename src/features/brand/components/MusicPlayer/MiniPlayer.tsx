@@ -1,9 +1,26 @@
 import { Avatar, Button, Flex, Typography } from 'antd';
+
+/**
+ * Icons
+ */
 import { FullscreenOutlined } from '@ant-design/icons';
-import { usePlayerStore } from '../../stores/usePlayerStore';
+
+/**
+ * Stores
+ */
+import { usePlayerStore } from '../../stores';
+
+/**
+ * Components
+ */
 import { PlayerControls } from './PlayerControls';
 import { PlayerProgress } from './PlayerProgress';
 import { PlayerVolume } from './PlayerVolume';
+
+/**
+ * Configs
+ */
+import { AVATAR_SIZE } from '@/config';
 
 const { Text } = Typography;
 
@@ -18,7 +35,7 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
   if (!currentTrack) return null;
 
   const sidebarWidth = sidebarCollapsed ? 60 : 260;
-
+  // TODO: Dùng màu có sẵn của antd thay thế hardcore
   return (
     <div
       style={{
@@ -44,9 +61,12 @@ export const MiniPlayer = ({ sidebarCollapsed = false }: MiniPlayerProps) => {
       >
         <Avatar
           src={currentTrack.albumArt}
-          size={62}
+          size={AVATAR_SIZE.medium}
           shape='square'
-          style={{ borderRadius: 4, flexShrink: 0 }}
+          style={{
+            borderRadius: 5,
+            flexShrink: 0,
+          }}
         />
         <Flex vertical>
           <Text

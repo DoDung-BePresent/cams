@@ -1,23 +1,37 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
-import { PageHeader } from '@/shared/components/common/PageHeader';
-import { DataTable } from '@/shared/components/common/DataTable';
+
+/**
+ * Components
+ */
+import { PageHeader, DataTable } from '@/shared/components';
+import {
+  getPlaylistColumns,
+  PlaylistDetailsDrawer,
+} from '@/shared/modules/playlists/components';
+import { PlaylistFilter as PlaylistFilterComponent } from './components';
+
+/**
+ * Hooks
+ */
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useBrands } from '@/features/admin/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
-import { getPlaylistColumns } from '@/shared/modules/playlists/components/PlaylistTableColumns';
+
+/**
+ * Constants
+ */
+import { PAGINATION_SIZES } from '@/shared/constants';
+
+/**
+ * Types
+ */
 import type {
   PlaylistFilter,
   PlaylistListItem,
 } from '@/shared/modules/playlists/types';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
-import {
-  PlaylistFilter as PlaylistFilterComponent,
-  PlaylistDetailsDrawer,
-} from './components';
 
 export const PlaylistList = () => {
   const navigate = useNavigate();
@@ -85,19 +99,17 @@ export const PlaylistList = () => {
     },
   ];
 
-  // Read-only columns (no actions)
   const columns = getPlaylistColumns({
     onView: handleView,
   });
 
-  // Transform brands data to options
   const brandOptions = (brandsData?.items || []).map((brand) => ({
     label: brand.name || 'Unnamed Brand',
     value: brand.id,
   }));
 
   // Transform moods data to options
-  const moodOptions = (moodsData?.items || []).map((mood) => ({
+  const moodOptions = (moodsData || []).map((mood) => ({
     label: mood.name || 'Unnamed Mood',
     value: mood.id,
   }));
@@ -134,7 +146,7 @@ export const PlaylistList = () => {
           total: data?.totalItems || 0,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} playlists`,
-          pageSizeOptions: ['10', '20', '50', '100'],
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
             setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },

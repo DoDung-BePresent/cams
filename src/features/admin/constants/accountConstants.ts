@@ -1,8 +1,9 @@
+/**
+ * Types
+ */
 import type { DefaultOptionType } from 'antd/es/select';
-import { RoleEnum } from '../types/accountTypes';
-import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import { EntityStatusEnum, RoleEnum } from '@/shared/types';
 
-// Admin chỉ tạo BrandManager
 export const ROLE_OPTIONS_FOR_ADMIN: DefaultOptionType[] = [
   { label: 'Brand Manager', value: RoleEnum.BrandManager },
 ] as const;
@@ -32,3 +33,10 @@ export const ACCOUNT_STATUS_LABELS = {
   [EntityStatusEnum.Pending]: 'Pending',
   [EntityStatusEnum.Rejected]: 'Rejected',
 } as const;
+
+export const ACCOUNT_STATUS_OPTIONS: DefaultOptionType[] = [
+  { label: 'Active', value: EntityStatusEnum.Active },
+  { label: 'Inactive', value: EntityStatusEnum.Inactive },
+  { label: 'Pending', value: EntityStatusEnum.Pending },
+  { label: 'Rejected', value: EntityStatusEnum.Rejected },
+] as const;

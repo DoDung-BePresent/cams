@@ -5,7 +5,7 @@ import type {
   DeviceCoordinate,
   VoronoiPolygon,
 } from '@/features/brand/types/visualizationTypes';
-import { cn } from '@/shared/lib/utils';
+import { cn } from '@/shared/lib';
 
 type VoronoiChartProps = {
   devices: DeviceCoordinate[];

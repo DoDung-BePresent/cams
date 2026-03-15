@@ -1,14 +1,26 @@
 import { Input, Space, Flex, Button, Select, Tag, Row, Col } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   SearchOutlined,
   ReloadOutlined,
   FilterOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Constants
+ */
 import {
   GENRE_OPTIONS,
   MUSIC_PROVIDER_OPTIONS,
 } from '@/shared/modules/tracks/constants';
 import { ENTITY_STATUS_OPTIONS } from '@/shared/constants';
+
+/**
+ * Types
+ */
 import type { TrackFilter as TrackFilterType } from '@/shared/modules/tracks/types';
 
 interface TrackFilterProps {
@@ -162,7 +174,7 @@ export const TrackFilter = ({
             >
               Provider:{' '}
               {
-                MUSIC_PROVIDER_OPTIONS.find((o) => o.value === filter.provider)
+                MUSIC_PROVIDER_OPTIONS?.find((o) => o.value === filter.provider)
                   ?.label
               }
             </Tag>
@@ -174,7 +186,7 @@ export const TrackFilter = ({
             >
               Status:{' '}
               {
-                ENTITY_STATUS_OPTIONS.find((o) => o.value === filter.status)
+                ENTITY_STATUS_OPTIONS?.find((o) => o.value === filter.status)
                   ?.label
               }
             </Tag>

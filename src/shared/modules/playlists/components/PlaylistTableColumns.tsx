@@ -1,5 +1,8 @@
-import { Space, Tag, Dropdown, Button } from 'antd';
-import type { ColumnsType, MenuProps } from 'antd/es/table';
+import { Space, Tag, Dropdown, Button, type MenuProps } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   MoreOutlined,
   EyeOutlined,
@@ -9,11 +12,27 @@ import {
   ReloadOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import { formatDuration } from '@/shared/utils/uploadHelpers';
-import { formatDateTime } from '@/shared/utils/formHelpers';
+
+/**
+ * Utils
+ */
+import { formatDuration, formatDateTime } from '@/shared/utils';
+
+/**
+ * Constants
+ */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
-import { PLAYLIST_TYPE_LABELS, PLAYLIST_TYPE_COLORS } from '../constants';
-import type { PlaylistListItem } from '../types';
+import {
+  PLAYLIST_TYPE_LABELS,
+  PLAYLIST_TYPE_COLORS,
+} from '@/shared/modules/playlists/constants';
+
+/**
+ * Types
+ */
+import type { ColumnsType } from 'antd/es/table';
+import type { PlaylistListItem } from '@/shared/modules/playlists/types';
+import type { EntityStatusEnum } from '@/shared/types';
 
 interface PlaylistColumnActions {
   onView: (id: string) => void;
@@ -110,7 +129,7 @@ export const getPlaylistColumns = ({
     dataIndex: 'status',
     key: 'status',
     width: 100,
-    render: (status: number) => (
+    render: (status: EntityStatusEnum) => (
       <Tag color={ENTITY_STATUS_COLORS[status]}>
         {ENTITY_STATUS_LABELS[status]}
       </Tag>

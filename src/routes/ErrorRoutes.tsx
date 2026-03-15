@@ -1,4 +1,4 @@
-import { Loadable } from '@/shared/components/common/Loadable';
+import { Loadable } from '@/shared/components';
 
 const NotFoundPage = Loadable(
   () => import('@/features/errors/pages/NotFoundPage'),

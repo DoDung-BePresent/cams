@@ -1,8 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+
+/**
+ * Services
+ */
 import { spaceService } from '../services';
+
+/**
+ * Types
+ */
 import type { CreateSpaceRequest } from '../types';
-import { showErrorMessage } from '@/shared/utils/errorHandler';
+
+/**
+ * Utils
+ */
+import { showErrorMessage } from '@/shared/utils';
 
 /**
  * Hook to create new space

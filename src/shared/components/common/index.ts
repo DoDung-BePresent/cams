@@ -1,6 +1,5 @@
 export * from './DataTable';
 export * from './ErrorBoundary';
-export * from './FormSkeleton';
 export * from './LinearProgress';
 export * from './Loadable';
 export * from './Loader';
@@ -14,3 +13,4 @@ export * from './ImageDragger';
 export * from './AudioDragger';
 export * from './Loadable';
 export * from './PageHeader';
+export * from './NavCard';

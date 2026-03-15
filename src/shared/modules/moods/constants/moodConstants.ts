@@ -1,4 +1,4 @@
-import { MoodType } from '../types';
+import { MoodType } from '@/shared/modules/moods/types';
 
 /**
  * API Endpoints

@@ -1,11 +1,15 @@
-import { api } from '@/config/api';
+import { api } from '@/config';
+
+/**
+ * Types
+ */
 import type {
   StoreFilter,
   StoreListItem,
   StoreDetailResponse,
   StoreRequest,
-} from '../types/storeTypes';
-import type { PaginationResult } from '@/shared/types/commonTypes';
+} from '../types';
+import type { PaginationResult, Result } from '@/shared/types';
 
 const STORE_ENDPOINTS = {
   list: '/api/stores',
@@ -37,27 +41,17 @@ export const storeService = {
 
   // GET /api/stores/{id}
   getById: (id: string) =>
-    api.get<{ isSuccess: boolean; data: StoreDetailResponse }>(
-      STORE_ENDPOINTS.detail(id),
-    ),
+    api.get<Result<StoreDetailResponse>>(STORE_ENDPOINTS.detail(id)),
 
   // POST /api/stores (JSON body)
   create: (data: StoreRequest) =>
-    api.post<{ isSuccess: boolean; message: string }>(
-      STORE_ENDPOINTS.create,
-      data,
-    ),
+    api.post<Result>(STORE_ENDPOINTS.create, data),
 
   // PUT /api/stores/{id} (JSON body)
   update: (id: string, data: StoreRequest) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      STORE_ENDPOINTS.update(id),
-      data,
-    ),
+    api.put<Result>(STORE_ENDPOINTS.update(id), data),
 
   // PUT /api/stores/{id}/toggle-status
   toggleStatus: (id: string) =>
-    api.put<{ isSuccess: boolean; message: string }>(
-      STORE_ENDPOINTS.toggleStatus(id),
-    ),
+    api.put<Result>(STORE_ENDPOINTS.toggleStatus(id)),
 };
