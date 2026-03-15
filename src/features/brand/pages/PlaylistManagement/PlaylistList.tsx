@@ -11,10 +11,13 @@ import { PlusOutlined } from '@ant-design/icons';
  * Components
  */
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
-import { AddTracksDrawer, getPlaylistColumns } from '@/shared/modules/playlists/components';
+import {
+  AddTracksDrawer,
+  getPlaylistColumns,
+  PlaylistDetailsDrawer,
+} from '@/shared/modules/playlists/components';
 import {
   PlaylistFilter as PlaylistFilterComponent,
-  PlaylistDetailsDrawer,
   CreatePlaylistDrawer,
   EditPlaylistDrawer,
 } from './components';
@@ -30,6 +33,11 @@ import {
 } from '@/shared/modules/playlists/hooks';
 import { useStores } from '@/features/brand/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
+
+/**
+ * Constants
+ */
+import { PAGINATION_SIZES } from '@/shared/constants';
 
 /**
  * Types
@@ -265,7 +273,7 @@ export const PlaylistList = () => {
           total: data?.totalItems || 0,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} playlists`,
-          pageSizeOptions: ['10', '20', '50', '100'],
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
             setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },

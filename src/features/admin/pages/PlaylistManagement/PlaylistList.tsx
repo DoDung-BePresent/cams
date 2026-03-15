@@ -5,11 +5,11 @@ import { useNavigate } from 'react-router';
  * Components
  */
 import { PageHeader, DataTable } from '@/shared/components';
-import { getPlaylistColumns } from '@/shared/modules/playlists/components';
 import {
-  PlaylistFilter as PlaylistFilterComponent,
+  getPlaylistColumns,
   PlaylistDetailsDrawer,
-} from './components';
+} from '@/shared/modules/playlists/components';
+import { PlaylistFilter as PlaylistFilterComponent } from './components';
 
 /**
  * Hooks
@@ -17,6 +17,11 @@ import {
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useBrands } from '@/features/admin/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
+
+/**
+ * Constants
+ */
+import { PAGINATION_SIZES } from '@/shared/constants';
 
 /**
  * Types
@@ -141,7 +146,7 @@ export const PlaylistList = () => {
           total: data?.totalItems || 0,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} playlists`,
-          pageSizeOptions: ['10', '20', '50', '100'],
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
             setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },

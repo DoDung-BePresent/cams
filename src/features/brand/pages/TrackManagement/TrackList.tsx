@@ -29,6 +29,11 @@ import {
 } from '@/shared/modules/tracks/hooks';
 
 /**
+ * Constants
+ */
+import { PAGINATION_SIZES } from '@/shared/constants';
+
+/**
  * Types
  */
 import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
@@ -189,7 +194,7 @@ export const TrackList = () => {
           total: data?.totalItems || 0,
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} tracks`,
-          pageSizeOptions: ['10', '20', '50', '100'],
+          pageSizeOptions: PAGINATION_SIZES,
           onChange: (page, size) => {
             setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },
