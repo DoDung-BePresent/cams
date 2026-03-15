@@ -84,6 +84,7 @@ export const PlaylistDetailsDrawer = ({
 
   return (
     <Drawer
+      closeIcon={null}
       title='Playlist Details'
       placement='right'
       width={DRAWER_WIDTHS.medium}
