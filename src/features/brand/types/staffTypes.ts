@@ -33,6 +33,7 @@ export type StaffFilter = {
   pageSize?: number;
   search?: string; // Search by name, email, phone
   sortBy?: string; // 'firstname' | 'lastname' | 'email' | 'createdat'
+  role?: RoleEnum;
   isAscending?: boolean;
   status?: EntityStatusEnum;
   storeId?: string; // Filter by assigned store

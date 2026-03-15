@@ -40,6 +40,7 @@ export type AccountFilter = {
   pageSize?: number;
   search?: string;
   sortBy?: string;
+  role?: RoleEnum;
   isAscending?: boolean;
   status?: EntityStatusEnum;
   brandId?: string;

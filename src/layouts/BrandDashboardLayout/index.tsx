@@ -6,11 +6,6 @@ import { Outlet } from 'react-router';
 import { useState } from 'react';
 
 /**
- * Features
- */
-import { MusicPlayer } from '@/features/brand/components';
-
-/**
  * Components
  */
 import { AppSidebar, AppHeader, AppFooter, AppContent } from './components';

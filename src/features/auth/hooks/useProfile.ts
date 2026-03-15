@@ -26,7 +26,7 @@ export const useProfile = (enabled = true) => {
 
       // Transform to User domain type
       const user: User = {
-        id: profileData.userId,
+        userId: profileData.userId,
         email: profileData.email,
         firstName: profileData.firstName,
         lastName: profileData.lastName,

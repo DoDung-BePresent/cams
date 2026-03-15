@@ -39,11 +39,11 @@ export const accountService = {
     if (filter.role !== undefined)
       params.append('role', filter.role.toString());
     if (filter.brandId) params.append('brandId', filter.brandId);
-    if (filter.storeId) params.append('storeId', filter.storeId);
-    if (filter.joiningFrom) params.append('joiningFrom', filter.joiningFrom);
-    if (filter.joiningTo) params.append('joiningTo', filter.joiningTo);
-    if (filter.isPrimaryOwner !== undefined)
-      params.append('isPrimaryOwner', filter.isPrimaryOwner.toString());
+    // if (filter.storeId) params.append('storeId', filter.storeId);
+    // if (filter.joiningFrom) params.append('joiningFrom', filter.joiningFrom);
+    // if (filter.joiningTo) params.append('joiningTo', filter.joiningTo);
+    // if (filter.isPrimaryOwner !== undefined)
+    //   params.append('isPrimaryOwner', filter.isPrimaryOwner.toString());
 
     return api.get<PaginationResult<AccountListItem>>(
       `${ACCOUNT_ENDPOINTS.list}?${params.toString()}`,
