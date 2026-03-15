@@ -1,12 +1,4 @@
-import {
-  Drawer,
-  Descriptions,
-  Tag,
-  Spin,
-  Alert,
-  Space,
-  Typography,
-} from 'antd';
+import { Drawer, Descriptions, Tag, Spin, Alert, Space } from 'antd';
 
 /**
  * Icons
@@ -46,8 +38,6 @@ import { formatDate } from '@/shared/utils';
  * Configs
  */
 import { DRAWER_WIDTHS } from '@/config';
-
-const { Title } = Typography;
 
 interface TrackDetailsDrawerProps {
   open: boolean;

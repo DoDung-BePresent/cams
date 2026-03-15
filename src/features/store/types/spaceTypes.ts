@@ -80,5 +80,8 @@ export type SpaceFilter = {
   search?: string;
   sortBy?: string;
   isAscending?: boolean;
+  type?: SpaceTypeEnum;
   status?: EntityStatusEnum;
+  createdFrom?: string; // ISO 8601
+  createdTo?: string; // ISO 8601
 };

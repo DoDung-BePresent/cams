@@ -1,1 +1,1 @@
-export * from './VoronoiChart';
+// export * from './VoronoiChart';
