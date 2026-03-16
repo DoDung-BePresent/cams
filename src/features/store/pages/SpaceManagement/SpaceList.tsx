@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Tabs, Space, Typography } from 'antd';
+import { Button, Tabs, Space, Typography, Row, Col } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -312,13 +312,17 @@ export const SpaceList = () => {
               </Button>
             </div>
           ) : (
-            (data?.items || []).map((space) => (
-              <SpacePlayerCard
-                key={space.id}
-                space={space}
-                storeId={user?.storeId || ''}
-              />
-            ))
+            <Row gutter={[16, 16]}>
+              {(data?.items || []).map((space) => (
+                <Col span={12}>
+                  <SpacePlayerCard
+                    key={space.id}
+                    space={space}
+                    storeId={user?.storeId || ''}
+                  />
+                </Col>
+              ))}
+            </Row>
           )}
         </Space>
       )}

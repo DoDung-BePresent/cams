@@ -117,27 +117,12 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           justify='space-between'
           align='center'
         >
-          <div>
-            <Title
-              level={5}
-              style={{ margin: 0 }}
-            >
-              {space.name}
-            </Title>
-            <Text
-              type='secondary'
-              style={{ fontSize: 13 }}
-            >
-              {space.description || 'No description'}
-            </Text>
-          </div>
+          <Title level={5}>{space.name}</Title>
           <Button
             type='text'
             icon={<SettingOutlined />}
             onClick={() => setShowSettings(!showSettings)}
-          >
-            {showSettings ? 'Hide' : 'Show'} Settings
-          </Button>
+          />
         </Flex>
       }
       loading={isLoadingState}

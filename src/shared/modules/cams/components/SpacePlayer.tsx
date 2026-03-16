@@ -205,34 +205,39 @@ export const SpacePlayer = ({
         size='middle'
       >
         {/* Track Info */}
-        <div>
-          <Text
-            strong
-            style={{ fontSize: 16, display: 'block' }}
+        <Flex vertical>
+          <Flex
+            justify='space-between'
+            align='center'
           >
-            {state?.currentPlaylistName || 'No playlist playing'}
-          </Text>
+            <Text
+              strong
+              style={{ fontSize: 16, display: 'block' }}
+            >
+              {state?.currentPlaylistName || 'No playlist playing'}
+            </Text>
+            <Space>
+              {isPlaying && (
+                <Tag
+                  color='processing'
+                  icon={<PlayCircleOutlined />}
+                >
+                  Playing
+                </Tag>
+              )}
+              {isBuffering && <Tag color='warning'>Buffering...</Tag>}
+              {state?.isManualOverride && (
+                <Tag color='orange'>Manual Override</Tag>
+              )}
+            </Space>
+          </Flex>
           <Text
             type='secondary'
             style={{ fontSize: 14 }}
           >
             {state?.moodName || 'No mood'}
           </Text>
-          <Space style={{ marginTop: 8 }}>
-            {isPlaying && (
-              <Tag
-                color='processing'
-                icon={<PlayCircleOutlined />}
-              >
-                Playing
-              </Tag>
-            )}
-            {isBuffering && <Tag color='warning'>Buffering...</Tag>}
-            {state?.isManualOverride && (
-              <Tag color='orange'>Manual Override</Tag>
-            )}
-          </Space>
-        </div>
+        </Flex>
 
         {/* Progress Bar */}
         <div>
