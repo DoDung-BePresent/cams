@@ -15,8 +15,8 @@ import {
 export const PLAYBACK_COMMAND_LABELS: Record<PlaybackCommand, string> = {
   [PlaybackCommand.Pause]: 'Pause',
   [PlaybackCommand.Resume]: 'Resume',
-  [PlaybackCommand.SkipToNext]: 'Skip to Next',
-  [PlaybackCommand.SkipToPrevious]: 'Skip to Previous',
+  [PlaybackCommand.SkipNext]: 'Skip to Next',
+  [PlaybackCommand.SkipPrevious]: 'Skip to Previous',
 };
 
 /**
