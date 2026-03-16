@@ -5,11 +5,7 @@ import { useNavigate } from 'react-router';
 /**
  * Icons
  */
-import {
-  PlusOutlined,
-  TableOutlined,
-  PlayCircleOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 
 /**
  * Types
@@ -223,19 +219,11 @@ export const SpaceList = () => {
         items={[
           {
             key: 'table',
-            label: (
-              <span>
-                <TableOutlined /> Table View
-              </span>
-            ),
+            label: 'Table View',
           },
           {
             key: 'player',
-            label: (
-              <span>
-                <PlayCircleOutlined /> Player View
-              </span>
-            ),
+            label: 'Player View',
           },
         ]}
         style={{ marginBottom: 16 }}
