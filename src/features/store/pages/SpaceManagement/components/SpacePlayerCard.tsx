@@ -55,7 +55,8 @@ export const SpacePlayerCard = ({
   // Listen to SignalR events from parent
   useEffect(() => {
     if (onPlayStreamReceived) {
-      // New playlist loaded → refetch state
+      // New playlist loaded → refetch state immediately
+      console.log('🎵 PlayStream received for space:', space.id);
       queryClient.invalidateQueries({
         queryKey: ['cams-space-state', space.id],
       });
@@ -64,7 +65,8 @@ export const SpacePlayerCard = ({
 
   useEffect(() => {
     if (onPlaybackCommandReceived) {
-      // Playback command received → refetch state
+      // Playback command received → refetch state immediately
+      console.log('⏯️ PlaybackCommand received for space:', space.id);
       queryClient.invalidateQueries({
         queryKey: ['cams-space-state', space.id],
       });
@@ -87,8 +89,10 @@ export const SpacePlayerCard = ({
   const hlsUrl = spaceState?.hlsUrl || null;
   const hasPlaylist = !!spaceState?.currentPlaylistId;
 
-  // Calculate if currently playing based on time range
-  const isPlaying = spaceState ? isSpacePlaying(spaceState) : false;
+  // ✅ Calculate if currently playing - prioritize isPaused flag from server
+  const isPlaying = spaceState
+    ? !spaceState.isPaused && isSpacePlaying(spaceState)
+    : false;
 
   // Playback control handlers
   const handlePlayPause = useCallback(() => {

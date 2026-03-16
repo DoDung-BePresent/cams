@@ -91,6 +91,9 @@ export const SpaceList = () => {
       },
       onSpaceStateSync: (spaceId, state) => {
         console.log('🔄 SpaceStateSync event received:', spaceId, state);
+        // ✅ This is the source of truth - update both triggers
+        setPlayStreamTrigger((prev) => prev + 1);
+        setPlaybackCommandTrigger((prev) => prev + 1);
         refetch();
       },
     },

@@ -48,34 +48,43 @@ export enum OverrideMode {
 }
 
 /**
- * Space state DTO (from SIGNALR_STOREHUB.md § 2.3)
- * Used in SignalR events only
+ * Space state DTO (from SIGNALR_STOREHUB.md § 4)
+ * Used in SignalR SpaceStateSync event
+ * ⚠️ seekOffsetSeconds is always NULL in SignalR - client must calculate from startedAtUtc
  */
 export interface SpaceStateDto {
   spaceId: string;
+  storeId: string;
+  brandId: string;
   currentPlaylistId: string | null;
-  currentTrackId: string | null;
-  isPlaying: boolean;
-  volume: number;
-  currentPositionSeconds: number;
-  playbackMode: PlaybackMode;
-  repeatMode: RepeatMode;
-  lastUpdated: string;
+  currentPlaylistName: string | null;
+  hlsUrl: string | null;
+  moodName: string | null;
+  isManualOverride: boolean;
+  overrideMode: OverrideMode | null;
+  startedAtUtc: string | null;
+  expectedEndAtUtc: string | null;
+  seekOffsetSeconds: number | null; // Always null in SignalR
+  isPaused: boolean;
+  pausePositionSeconds: number | null;
+  pendingPlaylistId: string | null;
+  pendingOverrideReason: string | null;
 }
 
 /**
- * Play stream payload (from SIGNALR_STOREHUB.md § 1.1)
+ * Play stream payload (from SIGNALR_STOREHUB.md § 3 - PlayStream event)
  */
 export interface PlayStreamPayload {
   spaceId: string;
   hlsUrl: string;
-  currentTrackId: string;
-  currentPlaylistId: string;
   transitionType: TransitionType;
+  playlistId: string;
+  isManualOverride: boolean;
+  startedAtUtc: string;
 }
 
 /**
- * Playback state changed payload (from SIGNALR_STOREHUB.md § 1.2)
+ * Playback state changed payload (from SIGNALR_STOREHUB.md § 3 - PlaybackStateChanged event)
  */
 export interface PlaybackStateChangedPayload {
   spaceId: string;
@@ -85,17 +94,19 @@ export interface PlaybackStateChangedPayload {
 }
 
 /**
- * Override playlist request (from API_CAMS.md § 4.1)
- * Mode 1: Playlist override (provide playlistId only)
- * Mode 2: Mood override (provide moodId only)
+ * Override playlist request (from API_CAMS.md § 3.1)
+ * Mode 1: DirectPlaylist (provide playlistId only)
+ * Mode 2: MoodOverride (provide moodId only)
+ * ⚠️ Must provide exactly ONE of playlistId or moodId, not both
  */
 export interface OverridePlaylistRequest {
   playlistId?: string | null;
   moodId?: string | null;
+  reason?: string | null; // Optional reason for audit trail
 }
 
 /**
- * Playback control request (from API_CAMS.md § 4.2)
+ * Playback control request (from API_CAMS.md § 3.3)
  */
 export interface PlaybackControlRequest {
   command: PlaybackCommand;
@@ -104,11 +115,14 @@ export interface PlaybackControlRequest {
 }
 
 /**
- * Space state response (from API_CAMS.md § 4.3)
+ * Space state response (from API_CAMS.md § 3.4)
  * REST API GET /api/cams/spaces/{id}/state
+ * ⚠️ seekOffsetSeconds is calculated server-side at REST call time
  */
 export interface SpaceStateResponse {
   spaceId: string;
+  storeId: string;
+  brandId: string;
   currentPlaylistId: string | null;
   currentPlaylistName: string | null;
   hlsUrl: string | null;
@@ -117,5 +131,9 @@ export interface SpaceStateResponse {
   overrideMode: OverrideMode | null;
   startedAtUtc: string | null;
   expectedEndAtUtc: string | null;
-  seekOffsetSeconds: number | null;
+  seekOffsetSeconds: number | null; // Calculated server-side in REST
+  isPaused: boolean;
+  pausePositionSeconds: number | null;
+  pendingPlaylistId: string | null;
+  pendingOverrideReason: string | null;
 }

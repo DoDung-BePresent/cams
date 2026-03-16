@@ -18,7 +18,11 @@ import {
   SoundOutlined,
 } from '@ant-design/icons';
 import { HLS_PLAYER_CONFIG } from '../constants';
-import { formatPlaybackTime, volumeToAudioLevel } from '../utils';
+import {
+  formatPlaybackTime,
+  volumeToAudioLevel,
+  getEffectiveSeekOffset,
+} from '../utils';
 import type { SpaceStateResponse } from '../types';
 
 const { Text } = Typography;
@@ -54,6 +58,9 @@ export const SpacePlayer = ({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(75);
   const [isBuffering, setIsBuffering] = useState(false);
+
+  // ✅ Track if we're syncing from server to avoid feedback loops
+  const isSyncingRef = useRef(false);
 
   // Initialize HLS player
   useEffect(() => {
@@ -119,18 +126,46 @@ export const SpacePlayer = ({
     }
   }, [hlsUrl, isPlaying]);
 
-  // Sync audio playback state
+  // ✅ Sync audio playback state from server (SpaceStateSync)
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !state) return;
 
     const audio = audioRef.current;
+    isSyncingRef.current = true;
 
-    if (isPlaying && audio.paused) {
-      audio.play().catch(console.error);
-    } else if (!isPlaying && !audio.paused) {
-      audio.pause();
+    // Handle pause state from server
+    if (state.isPaused) {
+      if (!audio.paused) {
+        audio.pause();
+      }
+      // Sync to pause position
+      if (state.pausePositionSeconds != null) {
+        audio.currentTime = state.pausePositionSeconds;
+      }
+    } else {
+      // Handle playing state from server
+      if (audio.paused && isPlaying) {
+        audio.play().catch(console.error);
+      }
+
+      // ✅ Use getEffectiveSeekOffset helper to calculate position
+      const expectedPosition = getEffectiveSeekOffset(state);
+
+      // Only sync if difference is significant (> 2 seconds)
+      const diff = Math.abs(audio.currentTime - expectedPosition);
+      if (diff > 2) {
+        console.log(
+          `🔄 Syncing position: ${audio.currentTime.toFixed(1)}s → ${expectedPosition.toFixed(1)}s (diff: ${diff.toFixed(1)}s)`,
+        );
+        audio.currentTime = expectedPosition;
+      }
     }
-  }, [isPlaying]);
+
+    // Small delay to avoid immediate re-sync
+    setTimeout(() => {
+      isSyncingRef.current = false;
+    }, 100);
+  }, [state, isPlaying]);
 
   // Sync volume
   useEffect(() => {
