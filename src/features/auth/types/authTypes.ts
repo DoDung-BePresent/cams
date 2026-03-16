@@ -52,8 +52,7 @@ export interface User {
   phoneNumber?: string | null;
   avatarUrl?: string | null;
   roles: RoleEnum[];
-  storeId?: string | null;
-  brandId?: string | null;
+  // brandId?: string | null;
 }
 
 /**

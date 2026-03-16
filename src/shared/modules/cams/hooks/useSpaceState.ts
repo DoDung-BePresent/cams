@@ -23,7 +23,6 @@ export const useSpaceState = (spaceId?: string, enabled = true) => {
       return response.data.data;
     },
     enabled: !!spaceId && enabled,
-    staleTime: STALE_TIME.instant, // Always fresh for real-time data
-    refetchInterval: 10000, // Refetch every 10s as fallback
+    staleTime: STALE_TIME.medium,
   });
 };

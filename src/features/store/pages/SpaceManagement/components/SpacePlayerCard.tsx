@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Card,
   Button,
@@ -21,6 +21,7 @@ import {
 import { PlaybackCommand } from '@/shared/modules/cams/types';
 import { isSpacePlaying } from '@/shared/modules/cams/utils';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import type { SpaceListItem } from '@/features/store/types';
 
 const { Title, Text } = Typography;
@@ -28,16 +29,47 @@ const { Title, Text } = Typography;
 interface SpacePlayerCardProps {
   space: SpaceListItem;
   storeId: string;
+  // ✅ SignalR event handlers passed from parent
+  onPlayStreamReceived?: () => void;
+  onPlaybackCommandReceived?: () => void;
 }
 
-export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
+export const SpacePlayerCard = ({
+  space,
+  storeId,
+  onPlayStreamReceived,
+  onPlaybackCommandReceived,
+}: SpacePlayerCardProps) => {
   const [showSettings, setShowSettings] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Fetch space state from API (fallback when SignalR not connected)
+  // Fetch space state from API (initial load only)
   const { data: spaceState, isLoading: isLoadingState } = useSpaceState(
     space.id,
     true,
   );
+
+  // ✅ Use spaceState directly - no need for intermediate state
+  // The component will re-render when spaceState changes from React Query
+
+  // Listen to SignalR events from parent
+  useEffect(() => {
+    if (onPlayStreamReceived) {
+      // New playlist loaded → refetch state
+      queryClient.invalidateQueries({
+        queryKey: ['cams-space-state', space.id],
+      });
+    }
+  }, [onPlayStreamReceived, space.id, queryClient]);
+
+  useEffect(() => {
+    if (onPlaybackCommandReceived) {
+      // Playback command received → refetch state
+      queryClient.invalidateQueries({
+        queryKey: ['cams-space-state', space.id],
+      });
+    }
+  }, [onPlaybackCommandReceived, space.id, queryClient]);
 
   // Fetch available playlists for this store
   const { data: playlistsData } = usePlaylists({
@@ -51,7 +83,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const playbackControl = usePlaybackControl();
   const overridePlaylist = useOverridePlaylist();
 
-  // Get current HLS URL from state
+  // ✅ Use spaceState directly from React Query
   const hlsUrl = spaceState?.hlsUrl || null;
   const hasPlaylist = !!spaceState?.currentPlaylistId;
 
@@ -77,14 +109,14 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const handleSkipNext = useCallback(() => {
     playbackControl.mutate({
       spaceId: space.id,
-      command: PlaybackCommand.SkipToNext,
+      command: PlaybackCommand.SkipNext,
     });
   }, [space.id, playbackControl]);
 
   const handleSkipPrevious = useCallback(() => {
     playbackControl.mutate({
       spaceId: space.id,
-      command: PlaybackCommand.SkipToPrevious,
+      command: PlaybackCommand.SkipPrevious,
     });
   }, [space.id, playbackControl]);
 
@@ -117,12 +149,27 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           justify='space-between'
           align='center'
         >
-          <Title level={5}>{space.name}</Title>
+          <div>
+            <Title
+              level={5}
+              style={{ margin: 0 }}
+            >
+              {space.name}
+            </Title>
+            <Text
+              type='secondary'
+              style={{ fontSize: 13 }}
+            >
+              {space.description || 'No description'}
+            </Text>
+          </div>
           <Button
             type='text'
             icon={<SettingOutlined />}
             onClick={() => setShowSettings(!showSettings)}
-          />
+          >
+            {showSettings ? 'Hide' : 'Show'} Settings
+          </Button>
         </Flex>
       }
       loading={isLoadingState}

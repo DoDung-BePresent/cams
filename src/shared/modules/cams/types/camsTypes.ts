@@ -1,20 +1,25 @@
 /**
- * Playback command enum (from SIGNALR_STOREHUB.md § 2.1)
+ * Playback command enum (from API_CAMS.md § 2)
+ * ⚠️ Must match backend exactly!
  */
 export enum PlaybackCommand {
-  Pause = 0,
-  Resume = 1,
-  SkipToNext = 2,
-  SkipToPrevious = 3,
+  Pause = 1, // ✅ Backend definition
+  Resume = 2,
+  Seek = 3,
+  SeekForward = 4,
+  SeekBackward = 5,
+  SkipNext = 6,
+  SkipPrevious = 7,
+  SkipToTrack = 8,
 }
 
 /**
- * Transition type enum (from SIGNALR_STOREHUB.md § 2.2)
+ * Transition type enum (from SIGNALR_STOREHUB.md § 1)
  */
 export enum TransitionType {
-  Manual = 0,
-  AutoNext = 1,
-  Scheduled = 2,
+  Immediate = 1,
+  Crossfade = 2,
+  Pending = 3,
 }
 
 /**
@@ -74,8 +79,9 @@ export interface PlayStreamPayload {
  */
 export interface PlaybackStateChangedPayload {
   spaceId: string;
-  isPlaying: boolean;
-  currentPositionSeconds: number;
+  command: PlaybackCommand;
+  seekPositionSeconds: number | null;
+  targetTrackId: string | null;
 }
 
 /**
@@ -93,6 +99,8 @@ export interface OverridePlaylistRequest {
  */
 export interface PlaybackControlRequest {
   command: PlaybackCommand;
+  seekPositionSeconds?: number | null;
+  targetTrackId?: string | null;
 }
 
 /**

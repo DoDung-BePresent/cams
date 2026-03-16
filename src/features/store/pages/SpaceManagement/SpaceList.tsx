@@ -52,7 +52,7 @@ type ViewMode = 'table' | 'player';
 
 export const SpaceList = () => {
   const navigate = useNavigate();
-  const { user, accessToken } = useAuth();
+  const { accessToken } = useAuth();
 
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [filter, setFilter] = useState<SpaceFilter>({
@@ -67,6 +67,9 @@ export const SpaceList = () => {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
+  const [playStreamTrigger, setPlayStreamTrigger] = useState(0);
+  const [playbackCommandTrigger, setPlaybackCommandTrigger] = useState(0);
+
   const { data, isLoading, refetch } = useSpaces(filter);
 
   const deleteSpace = useDeleteSpace();
@@ -74,22 +77,20 @@ export const SpaceList = () => {
 
   // Connect to SignalR StoreHub for real-time updates
   const { isConnected, isConnecting } = useStoreHub(
-    user?.storeId || null,
+    '482f64a2-6b0a-43b8-a150-87f68bd7838c',
     accessToken,
     {
       onPlayStream: (payload) => {
-        console.log('PlayStream event received:', payload);
-        // Refetch space state to update UI
+        console.log('🎵 PlayStream event received:', payload);
+        setPlayStreamTrigger((prev) => prev + 1);
         refetch();
       },
       onPlaybackStateChanged: (payload) => {
-        console.log('PlaybackStateChanged event received:', payload);
-        // Refetch space state to update UI
-        refetch();
+        console.log('⏯️ PlaybackStateChanged event received:', payload);
+        setPlaybackCommandTrigger((prev) => prev + 1);
       },
       onSpaceStateSync: (spaceId, state) => {
-        console.log('SpaceStateSync event received:', spaceId, state);
-        // Refetch space state to update UI
+        console.log('🔄 SpaceStateSync event received:', spaceId, state);
         refetch();
       },
     },
@@ -294,6 +295,15 @@ export const SpaceList = () => {
               </Text>
             </div>
           )}
+          {isConnected && (
+            <div
+              style={{ padding: 16, background: '#f6ffed', borderRadius: 8 }}
+            >
+              <Text type='success'>
+                ✅ Connected to music system. Real-time sync active.
+              </Text>
+            </div>
+          )}
 
           {/* Space Players */}
           {isLoading ? (
@@ -318,7 +328,14 @@ export const SpaceList = () => {
                   <SpacePlayerCard
                     key={space.id}
                     space={space}
-                    storeId={user?.storeId || ''}
+                    storeId={'482f64a2-6b0a-43b8-a150-87f68bd7838c'}
+                    // ✅ Pass SignalR event triggers
+                    onPlayStreamReceived={
+                      playStreamTrigger > 0 ? () => {} : undefined
+                    }
+                    onPlaybackCommandReceived={
+                      playbackCommandTrigger > 0 ? () => {} : undefined
+                    }
                   />
                 </Col>
               ))}
