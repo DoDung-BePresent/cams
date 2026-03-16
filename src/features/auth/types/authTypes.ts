@@ -25,6 +25,8 @@ export type ProfileData = {
   lastName: string;
   phoneNumber?: string;
   avatarUrl?: string;
+  brandId?: string | null;
+  storeId?: string | null;
   roles: number[];
 };
 
@@ -52,7 +54,8 @@ export interface User {
   phoneNumber?: string | null;
   avatarUrl?: string | null;
   roles: RoleEnum[];
-  // brandId?: string | null;
+  brandId?: string | null;
+  storeId?: string | null;
 }
 
 /**

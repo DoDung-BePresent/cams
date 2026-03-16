@@ -52,7 +52,7 @@ type ViewMode = 'table' | 'player';
 
 export const SpaceList = () => {
   const navigate = useNavigate();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
 
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [filter, setFilter] = useState<SpaceFilter>({
@@ -77,7 +77,7 @@ export const SpaceList = () => {
 
   // Connect to SignalR StoreHub for real-time updates
   const { isConnected, isConnecting } = useStoreHub(
-    '482f64a2-6b0a-43b8-a150-87f68bd7838c',
+    user?.storeId || null,
     accessToken,
     {
       onPlayStream: (payload) => {

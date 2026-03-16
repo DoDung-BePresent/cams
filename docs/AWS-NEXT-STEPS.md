@@ -9,13 +9,13 @@ Hướng dẫn **thứ tự** tạo tài nguyên AWS và cấu hình GitHub, đ�
 
 ## Tổng quan thứ tự
 
-| Bước | Làm gì | Cấu hình ở đâu |
-|------|--------|-----------------|
-| 0 | Chuẩn bị AWS Account + IAM user (cho GitHub) | AWS Console → IAM |
-| 1 | Tạo ECR repository (chứa Docker image) | AWS Console → ECR hoặc CLI |
-| 2 | Tạo RDS PostgreSQL (database, **giữ khi Destroy**) | AWS Console → RDS |
-| 3 | (Terraform) Run workflow tạo EC2 + chạy app | GitHub Actions |
-| 4 | Mở Swagger | Browser |
+| Bước | Làm gì                                             | Cấu hình ở đâu             |
+| ---- | -------------------------------------------------- | -------------------------- |
+| 0    | Chuẩn bị AWS Account + IAM user (cho GitHub)       | AWS Console → IAM          |
+| 1    | Tạo ECR repository (chứa Docker image)             | AWS Console → ECR hoặc CLI |
+| 2    | Tạo RDS PostgreSQL (database, **giữ khi Destroy**) | AWS Console → RDS          |
+| 3    | (Terraform) Run workflow tạo EC2 + chạy app        | GitHub Actions             |
+| 4    | Mở Swagger                                         | Browser                    |
 
 ---
 
@@ -66,6 +66,7 @@ Sau khi tạo xong, lấy **Endpoint** (hostname) của DB. Connection string d�
 ## Bước 3: Run workflow dựng EC2 (Terraform)
 
 Workflow mới:
+
 - **Full Deploy (Terraform + EC2)**: `/.github/workflows/aws-ec2-full.yml`
 - **Destroy (Terraform EC2, giữ RDS)**: `/.github/workflows/aws-ec2-destroy.yml`
 
@@ -87,10 +88,12 @@ Sau khi workflow chạy xong, nó sẽ in ra link: `http://<EC2_PUBLIC_DNS>/swag
   - `JWT_KEY` (>= 32 chars)
   - `REDIS_PASSWORD`
   - (optional) `FIREBASE_CREDENTIALS_JSON`
+  - (optional, dùng khi bật seeding) `ADMIN_EMAIL`, `ADMIN_DEFAULT_PASSWORD` — email và mật khẩu admin seed lần đầu
 
 - **Variables** (repository variables):
   - `AWS_REGION` = `ap-southeast-1`
   - `ECR_REPOSITORY` = `logaicams-api`
+  - (optional) `DATA_SEEDING_ENABLED` = `true` — bật seed dữ liệu ban đầu (roles, admin, moods) **chỉ lần deploy đầu lên RDS trống**
   - (optional) `EC2_INSTANCE_TYPE` = `t3.small`
   - (optional) `EC2_SSH_KEY_NAME` = tên KeyPair nếu muốn SSH
   - (optional) `FIRESTORE_ENABLED` = `true/false`
@@ -116,14 +119,14 @@ Sau khi workflow chạy xong, nó sẽ in ra link: `http://<EC2_PUBLIC_DNS>/swag
 
 ## Tóm tắt: cấu hình ở đâu
 
-| Thứ tự | Cấu hình gì | Ở đâu (AWS) |
-|--------|-------------|-------------|
-| 1 | ECR repo | ECR → Repositories |
-| 2 | RDS PostgreSQL | RDS → Create database |
-| 3 | ECS cluster | ECS → Clusters |
-| 4 | Task Definition (image ECR + env RDS) | ECS → Task definitions |
-| 5 | Target Group + ALB | EC2 → Target Groups, Load Balancers |
-| 6 | ECS Service (gắn ALB) | ECS → Cluster → Create service |
-| 7 | GitHub Secrets/Variables | GitHub repo → Settings → Actions |
+| Thứ tự | Cấu hình gì                           | Ở đâu (AWS)                         |
+| ------ | ------------------------------------- | ----------------------------------- |
+| 1      | ECR repo                              | ECR → Repositories                  |
+| 2      | RDS PostgreSQL                        | RDS → Create database               |
+| 3      | ECS cluster                           | ECS → Clusters                      |
+| 4      | Task Definition (image ECR + env RDS) | ECS → Task definitions              |
+| 5      | Target Group + ALB                    | EC2 → Target Groups, Load Balancers |
+| 6      | ECS Service (gắn ALB)                 | ECS → Cluster → Create service      |
+| 7      | GitHub Secrets/Variables              | GitHub repo → Settings → Actions    |
 
 Khi cần dọn môi trường nhưng **giữ database**, chạy workflow **Destroy (Terraform EC2, giữ RDS)** và nhập `destroy`. RDS không bị xóa; chỉ EC2/SG/IAM profile do Terraform tạo bị xóa.
