@@ -22,6 +22,7 @@ import {
   EditBrandDrawer,
   getBrandColumns,
   BrandFilter as BrandFilterComponent,
+  BrandDetailDrawer,
 } from './components';
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
 
@@ -47,6 +48,7 @@ export const BrandList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useBrands(filter);
@@ -57,6 +59,7 @@ export const BrandList = () => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof BrandFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -80,7 +83,8 @@ export const BrandList = () => {
   };
 
   const handleView = (brandId: string) => {
-    console.log('View brand:', brandId);
+    setSelectedBrandId(brandId);
+    setDetailDrawerOpen(true);
   };
 
   const handleEdit = (brand: BrandListItem) => {
@@ -209,6 +213,14 @@ export const BrandList = () => {
           setEditDrawerOpen(false);
           setSelectedBrandId(null);
           refetch();
+        }}
+      />
+      <BrandDetailDrawer
+        open={detailDrawerOpen}
+        brandId={selectedBrandId}
+        onClose={() => {
+          setDetailDrawerOpen(false);
+          setSelectedBrandId(null);
         }}
       />
     </div>
