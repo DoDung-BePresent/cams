@@ -22,4 +22,5 @@ export const AVATAR_SIZE = {
   small: 36,
   medium: 48,
   large: 60,
-};
+  extraLarge: 80,
+} as const;

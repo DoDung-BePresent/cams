@@ -32,6 +32,7 @@ import {
   AssignStaffStoreModal,
   ResetPasswordModal,
   StaffFilter as StaffFilterComponent,
+  StaffDetailDrawer,
 } from './components';
 
 /**
@@ -52,6 +53,7 @@ export const StaffList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [assignStoreModalOpen, setAssignStoreModalOpen] = useState(false);
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export const StaffList = () => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof StaffFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -83,10 +86,6 @@ export const StaffList = () => {
       sortBy: currentSorter.field ? String(currentSorter.field) : 'createdAt',
       isAscending: currentSorter.order === 'ascend',
     }));
-  };
-
-  const handleView = (staffId: string) => {
-    console.log('View staff:', staffId);
   };
 
   const handleEdit = (staffId: string) => {
@@ -131,6 +130,11 @@ export const StaffList = () => {
       sortBy: 'createdAt',
       isAscending: false,
     });
+  };
+
+  const handleView = (staffId: string) => {
+    setSelectedStaffId(staffId);
+    setDetailDrawerOpen(true);
   };
 
   const breadcrumbs = [
@@ -228,7 +232,6 @@ export const StaffList = () => {
                   dataSource={record.children}
                   rowKey='id'
                   pagination={false}
-                  size='small'
                 />
               </div>
             );
@@ -286,6 +289,15 @@ export const StaffList = () => {
         }}
         onSuccess={() => {
           setResetPasswordModalOpen(false);
+          setSelectedStaffId(null);
+        }}
+      />
+
+      <StaffDetailDrawer
+        open={detailDrawerOpen}
+        staffId={selectedStaffId}
+        onClose={() => {
+          setDetailDrawerOpen(false);
           setSelectedStaffId(null);
         }}
       />
