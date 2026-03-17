@@ -25,6 +25,7 @@ import {
   getGroupColumns,
   getExpandedColumns,
   AccountFilter as AccountFilterComponent,
+  AccountDetailDrawer,
 } from './components';
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
 
@@ -52,6 +53,7 @@ export const AccountList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
   const [assignBrandModalOpen, setAssignBrandModalOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
@@ -67,6 +69,7 @@ export const AccountList = () => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof AccountFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -88,7 +91,8 @@ export const AccountList = () => {
   };
 
   const handleView = (accountId: string) => {
-    console.log('View account:', accountId);
+    setSelectedAccountId(accountId);
+    setDetailDrawerOpen(true);
   };
 
   const handleEdit = (account: AccountListItem) => {
@@ -237,7 +241,6 @@ export const AccountList = () => {
           rowExpandable: (record) =>
             !!record.children && record.children.length > 0,
           defaultExpandAllRows: false,
-          // ✅ Fix ghost rows: Use childrenColumnName to prevent rendering children as rows
           childrenColumnName: '__children_placeholder__',
         }}
       />
@@ -289,6 +292,15 @@ export const AccountList = () => {
           setAssignBrandModalOpen(false);
           setSelectedAccountId(null);
           refetch();
+        }}
+      />
+
+      <AccountDetailDrawer
+        open={detailDrawerOpen}
+        accountId={selectedAccountId}
+        onClose={() => {
+          setDetailDrawerOpen(false);
+          setSelectedAccountId(null);
         }}
       />
     </div>
