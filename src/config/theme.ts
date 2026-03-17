@@ -20,10 +20,16 @@ export const antTheme: ThemeConfig = {
       itemHeight: 46,
     },
     Button: {
-      fontSizeLG: 14,
+      fontSizeLG: 15,
     },
     Input: {
-      fontSizeLG: 14,
+      fontSizeLG: 15,
+    },
+    InputNumber: {
+      fontSizeLG: 15,
+    },
+    Select: {
+      fontSizeLG: 15,
     },
     Card: {
       colorBorderSecondary: '#E6EBF1',

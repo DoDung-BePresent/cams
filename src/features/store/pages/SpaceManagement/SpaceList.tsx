@@ -35,6 +35,7 @@ import {
   EditSpaceDrawer,
   SpaceFilter as SpaceFilterComponent,
   SpacePlayerCard,
+  SpaceDetailDrawer,
 } from './components';
 
 /**
@@ -61,6 +62,7 @@ export const SpaceList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
   const [playStreamTrigger, setPlayStreamTrigger] = useState(0);
@@ -120,8 +122,9 @@ export const SpaceList = () => {
     }));
   };
 
-  const handleView = (spaceId: string) => {
-    console.log('View space:', spaceId);
+  const handleView = (id: string) => {
+    setSelectedSpaceId(id);
+    setDetailsDrawerOpen(true);
   };
 
   const handleEdit = (spaceId: string) => {
@@ -357,6 +360,15 @@ export const SpaceList = () => {
           setEditDrawerOpen(false);
           setSelectedSpaceId(null);
           refetch();
+        }}
+      />
+
+      <SpaceDetailDrawer
+        open={detailsDrawerOpen}
+        spaceId={selectedSpaceId ?? undefined}
+        onClose={() => {
+          setDetailsDrawerOpen(false);
+          setSelectedSpaceId(null);
         }}
       />
     </div>
