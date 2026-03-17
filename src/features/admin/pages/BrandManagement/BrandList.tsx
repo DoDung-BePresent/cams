@@ -29,7 +29,11 @@ import { PageHeader, DataTable, AppModal } from '@/shared/components';
 /**
  * Hooks
  */
-import { useBrands, useDeleteBrand } from '@/features/admin/hooks';
+import {
+  useBrands,
+  useDeleteBrand,
+  useToggleBrandStatus,
+} from '@/features/admin/hooks';
 
 /**
  * Constants
@@ -54,6 +58,7 @@ export const BrandList = () => {
   const { data, isLoading, refetch } = useBrands(filter);
 
   const deleteBrand = useDeleteBrand();
+  const toggleBrandStatus = useToggleBrandStatus();
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
@@ -80,6 +85,29 @@ export const BrandList = () => {
         : 'createdat',
       isAscending: currentSorter.order === 'ascend',
     }));
+  };
+
+  const handleToggleStatus = (brandId: string) => {
+    const brand = data?.items.find((b) => b.id === brandId);
+
+    AppModal.confirm({
+      title: `${brand?.status === 1 ? 'Deactivate' : 'Activate'} Brand`,
+      content: (
+        <p>
+          Are you sure you want to{' '}
+          <strong>{brand?.status === 1 ? 'deactivate' : 'activate'}</strong> "
+          <strong>{brand?.name}</strong>"?
+        </p>
+      ),
+      okText: brand?.status === 1 ? 'Deactivate' : 'Activate',
+      cancelText: 'Cancel',
+      okButtonProps: {
+        danger: brand?.status === 1,
+      },
+      onOk: () => {
+        toggleBrandStatus.mutate(brandId);
+      },
+    });
   };
 
   const handleView = (brandId: string) => {
@@ -139,6 +167,7 @@ export const BrandList = () => {
   const columns = getBrandColumns({
     onView: handleView,
     onEdit: handleEdit,
+    onToggleStatus: handleToggleStatus,
     onDelete: handleDelete,
   });
 

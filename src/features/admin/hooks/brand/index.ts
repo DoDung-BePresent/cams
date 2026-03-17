@@ -3,3 +3,4 @@ export * from './useBrands';
 export * from './useCreateBrand';
 export * from './useDeleteBrand';
 export * from './useUpdateBrand';
+export * from './useToggleBrandStatus';
