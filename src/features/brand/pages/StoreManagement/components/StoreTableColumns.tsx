@@ -17,6 +17,7 @@ import {
  */
 import type { StoreListItem } from '@/features/brand/types/storeTypes';
 import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import type { ItemType } from 'antd/es/menu/interface';
 
 /**
  * Constants
@@ -38,7 +39,7 @@ export const getStoreColumns = ({
   onToggleStatus,
 }: StoreColumnsProps): ColumnsType<StoreListItem> => {
   const getActionItems = (record: StoreListItem) => {
-    const items: any[] = [
+    const items: ItemType[] = [
       {
         key: 'view',
         label: 'View Details',
@@ -88,6 +89,7 @@ export const getStoreColumns = ({
       title: 'Store Name',
       dataIndex: 'name',
       key: 'name',
+      width: 200,
       sorter: true,
       render: (name: string) => <strong>{name}</strong>,
     },
@@ -126,6 +128,7 @@ export const getStoreColumns = ({
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 140,
       sorter: true,
       render: (date: string) => new Date(date).toLocaleDateString('en-GB'),
     },

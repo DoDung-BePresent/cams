@@ -28,6 +28,7 @@ import {
   CreateStoreDrawer,
   EditStoreDrawer,
   StoreFilter as StoreFilterComponent,
+  StoreDetailDrawer,
 } from './components';
 
 /**
@@ -47,6 +48,7 @@ export const StoreList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useStores(filter);
@@ -57,6 +59,7 @@ export const StoreList = () => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof StoreFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -78,7 +81,8 @@ export const StoreList = () => {
   };
 
   const handleView = (storeId: string) => {
-    console.log('View store:', storeId);
+    setSelectedStoreId(storeId);
+    setDetailDrawerOpen(true);
   };
 
   const handleEdit = (store: StoreListItem) => {
@@ -211,6 +215,15 @@ export const StoreList = () => {
           setEditDrawerOpen(false);
           setSelectedStoreId(null);
           refetch();
+        }}
+      />
+
+      <StoreDetailDrawer
+        open={detailDrawerOpen}
+        storeId={selectedStoreId ?? undefined}
+        onClose={() => {
+          setDetailDrawerOpen(false);
+          setSelectedStoreId(null);
         }}
       />
     </div>
