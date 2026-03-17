@@ -315,9 +315,11 @@ export const SpaceList = () => {
           ) : (
             <Row gutter={[16, 16]}>
               {(data?.items || []).map((space) => (
-                <Col span={12}>
+                <Col
+                  key={space.id}
+                  span={12}
+                >
                   <SpacePlayerCard
-                    key={space.id}
                     space={space}
                     storeId={'482f64a2-6b0a-43b8-a150-87f68bd7838c'}
                     // ✅ Pass SignalR event triggers
