@@ -1,14 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Drawer, Typography, Spin } from 'antd';
-import { SpacePlayerCard } from './SpacePlayerCard';
-import { useStoreHub } from '@/shared/modules/cams/hooks';
-import { useAuth } from '@/providers';
-import { storeHubService } from '@/shared/modules/cams/services';
+import { Drawer, Spin } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSpace } from '@/features/store/hooks';
-import type { SpaceStateDto } from '@/shared/modules/cams/types';
 
-const { Title } = Typography;
+/**
+ * Components
+ */
+import { SpacePlayerCard } from './SpacePlayerCard';
+
+/**
+ * Hooks
+ */
+import { useStoreHub } from '@/shared/modules/cams/hooks';
+import { useSpace } from '@/features/store/hooks';
+import { useAuth } from '@/providers';
+
+/**
+ * Services
+ */
+import { storeHubService } from '@/shared/modules/cams/services';
+
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
 
 interface SpaceMusicDrawerProps {
   open: boolean;
@@ -36,51 +50,32 @@ export const SpaceMusicDrawer = ({
   const queryClient = useQueryClient();
   const [isJoinedSpace, setIsJoinedSpace] = useState(false);
 
-  // Fetch space data
   const { data: space, isLoading: isLoadingSpace } = useSpace(
     spaceId || undefined,
     open && !!spaceId,
   );
 
-  // Connect to StoreHub (manager room)
   const { isConnected } = useStoreHub(storeId, accessToken, {
-    onSpaceStateSync: (syncedSpaceId: string, state: SpaceStateDto) => {
-      console.log('🔄 SpaceMusicDrawer received SpaceStateSync:', {
-        syncedSpaceId,
-        currentSpaceId: spaceId,
-        isJoinedSpace,
-        state,
-      });
-
-      // Only update if this is the space we're managing
+    onSpaceStateSync: (syncedSpaceId: string) => {
       if (syncedSpaceId === spaceId) {
-        console.log('✅ Invalidating space state query to trigger refetch');
-
-        // Invalidate the query to trigger a refetch
-        // Query key must match useSpaceState: ['cams-space-state', spaceId]
         queryClient.invalidateQueries({
           queryKey: ['cams-space-state', spaceId],
-          refetchType: 'active', // Only refetch if query is currently active
+          refetchType: 'active',
         });
       }
     },
   });
 
-  // Join/leave specific space group when drawer opens/closes
   useEffect(() => {
     if (!open || !spaceId || !isConnected) {
       return;
     }
 
-    console.log('🎵 Joining space group:', spaceId);
-
     let joined = false;
 
-    // Join the specific space group
     storeHubService
       .joinSpace(spaceId)
       .then(() => {
-        console.log('✅ Joined space group successfully:', spaceId);
         joined = true;
         setIsJoinedSpace(true);
       })
@@ -88,9 +83,7 @@ export const SpaceMusicDrawer = ({
         console.error('❌ Failed to join space group:', error);
       });
 
-    // Leave space group on cleanup
     return () => {
-      console.log('👋 Leaving space group:', spaceId);
       if (joined) {
         setIsJoinedSpace(false);
       }
@@ -107,15 +100,11 @@ export const SpaceMusicDrawer = ({
 
   return (
     <Drawer
-      title={
-        <Title level={4}>
-          Manage Music -{' '}
-          {isLoadingSpace ? 'Loading...' : space?.name || 'Unknown'}
-        </Title>
-      }
+      closeIcon={null}
+      title='Manage Music'
       open={open}
       onClose={onClose}
-      width={600}
+      width={DRAWER_WIDTHS.medium}
       destroyOnClose
     >
       {isLoadingSpace ? (
