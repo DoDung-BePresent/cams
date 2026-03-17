@@ -65,9 +65,6 @@ export const SpaceList = () => {
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
-  const [playStreamTrigger, setPlayStreamTrigger] = useState(0);
-  const [playbackCommandTrigger, setPlaybackCommandTrigger] = useState(0);
-
   const { data, isLoading, refetch } = useSpaces(filter);
 
   const deleteSpace = useDeleteSpace();
@@ -79,23 +76,42 @@ export const SpaceList = () => {
     accessToken,
     {
       onPlayStream: (payload) => {
-        console.log('🎵 PlayStream event received:', payload);
-        setPlayStreamTrigger((prev) => prev + 1);
+        console.log('🎵 [SpaceList] PlayStream event received:', payload);
+        // Invalidate all space states to refetch
         refetch();
       },
       onPlaybackStateChanged: (payload) => {
-        console.log('⏯️ PlaybackStateChanged event received:', payload);
-        setPlaybackCommandTrigger((prev) => prev + 1);
+        console.log(
+          '⏯️ [SpaceList] PlaybackStateChanged event received:',
+          payload,
+        );
+        // Invalidate all space states to refetch
+        refetch();
       },
       onSpaceStateSync: (spaceId, state) => {
-        console.log('🔄 SpaceStateSync event received:', spaceId, state);
-        // ✅ This is the source of truth - update both triggers
-        setPlayStreamTrigger((prev) => prev + 1);
-        setPlaybackCommandTrigger((prev) => prev + 1);
+        console.log(
+          '🔄 [SpaceList] SpaceStateSync event received:',
+          spaceId,
+          state,
+        );
+        // This is the source of truth - refetch all space states
         refetch();
+      },
+      onConnected: () => {
+        console.log('✅ [SpaceList] SignalR connected callback triggered');
+      },
+      onDisconnected: () => {
+        console.log('❌ [SpaceList] SignalR disconnected callback triggered');
       },
     },
   );
+
+  console.log('🔍 [SpaceList] SignalR status:', {
+    isConnected,
+    isConnecting,
+    storeId: user?.storeId,
+    hasToken: !!accessToken,
+  });
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
@@ -325,13 +341,6 @@ export const SpaceList = () => {
                   <SpacePlayerCard
                     space={space}
                     storeId={'482f64a2-6b0a-43b8-a150-87f68bd7838c'}
-                    // ✅ Pass SignalR event triggers
-                    onPlayStreamReceived={
-                      playStreamTrigger > 0 ? () => {} : undefined
-                    }
-                    onPlaybackCommandReceived={
-                      playbackCommandTrigger > 0 ? () => {} : undefined
-                    }
                   />
                 </Col>
               ))}

@@ -188,13 +188,10 @@ class StoreHubService {
     );
 
     // SpaceStateSync event (full state sync)
-    this.connection.on(
-      'SpaceStateSync',
-      (spaceId: string, state: SpaceStateDto) => {
-        console.log('📡 SpaceStateSync event:', { spaceId, state });
-        this.eventHandlers.onSpaceStateSync?.(spaceId, state);
-      },
-    );
+    this.connection.on('SpaceStateSync', (state: SpaceStateDto) => {
+      console.log('📡 SpaceStateSync event:', state);
+      this.eventHandlers.onSpaceStateSync?.(state.spaceId, state);
+    });
 
     // Connection lifecycle events
     this.connection.onreconnecting(() => {

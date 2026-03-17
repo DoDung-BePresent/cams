@@ -20,10 +20,6 @@ export const useSpaceState = (spaceId?: string, enabled = true) => {
     queryFn: async () => {
       if (!spaceId) throw new Error('Space ID is required');
       const response = await camsService.getSpaceState(spaceId);
-      console.log('📡 API getSpaceState response:', {
-        spaceId,
-        data: response.data.data,
-      });
       return response.data.data;
     },
     enabled: !!spaceId && enabled,

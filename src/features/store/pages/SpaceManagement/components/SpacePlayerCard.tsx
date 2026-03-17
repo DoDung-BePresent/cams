@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Card,
   Button,
@@ -21,7 +21,6 @@ import {
 import { PlaybackCommand } from '@/shared/modules/cams/types';
 import { isSpacePlaying } from '@/shared/modules/cams/utils';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
-import { useQueryClient } from '@tanstack/react-query';
 import type { SpaceListItem } from '@/features/store/types';
 
 const { Title, Text } = Typography;
@@ -29,19 +28,10 @@ const { Title, Text } = Typography;
 interface SpacePlayerCardProps {
   space: SpaceListItem;
   storeId: string;
-  // ✅ SignalR event handlers passed from parent
-  onPlayStreamReceived?: () => void;
-  onPlaybackCommandReceived?: () => void;
 }
 
-export const SpacePlayerCard = ({
-  space,
-  storeId,
-  onPlayStreamReceived,
-  onPlaybackCommandReceived,
-}: SpacePlayerCardProps) => {
+export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const [showSettings, setShowSettings] = useState(false);
-  const queryClient = useQueryClient();
 
   // Fetch space state from API (initial load only)
   const { data: spaceState, isLoading: isLoadingState } = useSpaceState(
@@ -51,27 +41,6 @@ export const SpacePlayerCard = ({
 
   // ✅ Use spaceState directly - no need for intermediate state
   // The component will re-render when spaceState changes from React Query
-
-  // Listen to SignalR events from parent
-  useEffect(() => {
-    if (onPlayStreamReceived) {
-      // New playlist loaded → refetch state immediately
-      console.log('🎵 PlayStream received for space:', space.id, space.name);
-      queryClient.invalidateQueries({
-        queryKey: ['cams-space-state', space.id],
-      });
-    }
-  }, [onPlayStreamReceived, space.id, space.name, queryClient]);
-
-  useEffect(() => {
-    if (onPlaybackCommandReceived) {
-      // Playback command received → refetch state immediately
-      console.log('⏯️ PlaybackCommand received for space:', space.id);
-      queryClient.invalidateQueries({
-        queryKey: ['cams-space-state', space.id],
-      });
-    }
-  }, [onPlaybackCommandReceived, space.id, queryClient]);
 
   // Fetch available playlists for this store
   const { data: playlistsData } = usePlaylists({
@@ -94,20 +63,6 @@ export const SpacePlayerCard = ({
   const isPlaying = spaceState
     ? !spaceState.isPaused && isSpacePlaying(spaceState)
     : false;
-
-  // 🐛 Debug log
-  console.log('🔍 SpacePlayerCard state:', {
-    spaceId: space.id,
-    spaceName: space.name,
-    hasPlaylist,
-    isPending,
-    hlsUrl: hlsUrl?.substring(0, 50),
-    currentPlaylistId: spaceState?.currentPlaylistId,
-    currentPlaylistName: spaceState?.currentPlaylistName,
-    isPlaying,
-    isPaused: spaceState?.isPaused,
-    fullState: spaceState,
-  });
 
   // Playback control handlers
   const handlePlayPause = useCallback(() => {
