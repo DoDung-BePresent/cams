@@ -10,21 +10,24 @@ Tài liệu API Track Management cho CMS (React TypeScript & Flutter). Base path
 
 ## 1. Authorization Matrix
 
-| Endpoint                                    | SystemAdmin | BrandManager (own brand) | StoreManager (own brand) |
-|--------------------------------------------|:-----------:|:------------------------:|:------------------------:|
-| `GET /api/tracks`                           | ✅          | ✅                       | ✅                       |
-| `GET /api/tracks/{id}`                      | ✅          | ✅                       | ✅                       |
-| `POST /api/tracks`                          | ❌          | ✅                       | ❌                       |
-| `PUT /api/tracks/{id}`                      | ❌          | ✅                       | ❌                       |
-| `DELETE /api/tracks/{id}`                   | ❌          | ✅                       | ❌                       |
-| `PUT /api/tracks/{id}/toggle-status`        | ❌          | ✅                       | ❌                       |
+| Endpoint                             | SystemAdmin | BrandManager (own brand) | StoreManager (own brand) | PlaybackDevice (scope = Brand của Store session) |
+| ------------------------------------ | :---------: | :----------------------: | :----------------------: | :----------------------------------------------: |
+| `GET /api/tracks`                    |     ✅      |            ✅            |            ✅            |  ✅ (chỉ tracks thuộc Brand của Store session)   |
+| `GET /api/tracks/{id}`               |     ✅      |            ✅            |            ✅            |    ✅ (chỉ khi track.BrandId = Brand session)    |
+| `POST /api/tracks`                   |     ❌      |            ✅            |            ❌            |                        ❌                        |
+| `PUT /api/tracks/{id}`               |     ❌      |            ✅            |            ❌            |                        ❌                        |
+| `DELETE /api/tracks/{id}`            |     ❌      |            ✅            |            ❌            |                        ❌                        |
+| `PUT /api/tracks/{id}/toggle-status` |     ❌      |            ✅            |            ❌            |                        ❌                        |
 
 > **GET — Ownership scoping:**
+>
 > - **BrandManager:** `filter.BrandId` luôn bị override về `user.BrandId`.
 > - **StoreManager:** `filter.BrandId` luôn bị override về `user.BrandId` (track thuộc brand, không thuộc store).
 > - **SystemAdmin:** lọc tự do; không có ownership filter.
+> - **PlaybackDevice:** scope = BrandId của Store mà device session gắn với; chỉ được **đọc** (GET list, GET by id).
 >
 > **Write — BrandManager only:**
+>
 > - **Ownership check:** `track.BrandId == user.BrandId` → **403** nếu không thuộc brand.
 >
 > ⚠️ **StoreManager** có quyền **read-only** — không thể tạo, sửa, xóa track.
@@ -44,6 +47,7 @@ Accept-Language: vi-VN
 ```
 
 **Supported Languages:**
+
 - `en-US` hoặc `en` — English (default)
 - `vi-VN` hoặc `vi` — Tiếng Việt
 
@@ -68,6 +72,7 @@ public abstract class BaseResponse
 ```
 
 **Response hierarchy (Track):**
+
 ```
 TrackDetailResponse : TrackListItem : BaseResponse
 ```
@@ -94,19 +99,19 @@ public class BasePaginationFilter
 
 ### 4.1 `TrackRequest` (Create / Update — `multipart/form-data`)
 
-| Field            | Type               | Required (Create) | Required (Update) | Validation                                          |
-|------------------|--------------------|:-----------------:|:-----------------:|-----------------------------------------------------|
-| `title`          | string?            | ✅                | ❌ (partial)      | NotEmpty; max 255 chars; unique per brand           |
-| `artist`         | string?            | ❌                | ❌                | max 255 chars                                       |
-| `moodId`         | Guid?              | ❌                | ❌                | Tùy chọn                                            |
-| `durationSec`    | int?               | ❌                | ❌                | > 0 nếu được cung cấp                              |
-| `bpm`            | int?               | ❌                | ❌                | Trong khoảng 20–300 nếu được cung cấp              |
-| `genre`          | string?            | ❌                | ❌                | Tùy chọn                                            |
-| `energyLevel`    | decimal?           | ❌                | ❌                | 0.0–1.0 nếu được cung cấp                          |
-| `valence`        | decimal?           | ❌                | ❌                | 0.0–1.0 nếu được cung cấp                          |
-| `provider`       | MusicProviderEnum? | ❌                | ❌                | Default: `Custom` khi create                        |
-| `audioFile`      | IFormFile?         | ✅                | ❌ (keep existing) | `.mp3`, `.wav`, `.aac`, `.flac`, `.ogg`, `.m4a`; max **50 MB** |
-| `coverImageFile` | IFormFile?         | ❌                | ❌ (keep existing) | `.jpg`, `.jpeg`, `.png`, `.webp`; max **5 MB**      |
+| Field            | Type               | Required (Create) | Required (Update)  | Validation                                                     |
+| ---------------- | ------------------ | :---------------: | :----------------: | -------------------------------------------------------------- |
+| `title`          | string?            |        ✅         |    ❌ (partial)    | NotEmpty; max 255 chars; unique per brand                      |
+| `artist`         | string?            |        ❌         |         ❌         | max 255 chars                                                  |
+| `moodId`         | Guid?              |        ❌         |         ❌         | Tùy chọn                                                       |
+| `durationSec`    | int?               |        ❌         |         ❌         | > 0 nếu được cung cấp                                          |
+| `bpm`            | int?               |        ❌         |         ❌         | Trong khoảng 20–300 nếu được cung cấp                          |
+| `genre`          | string?            |        ❌         |         ❌         | Tùy chọn                                                       |
+| `energyLevel`    | decimal?           |        ❌         |         ❌         | 0.0–1.0 nếu được cung cấp                                      |
+| `valence`        | decimal?           |        ❌         |         ❌         | 0.0–1.0 nếu được cung cấp                                      |
+| `provider`       | MusicProviderEnum? |        ❌         |         ❌         | Default: `Custom` khi create                                   |
+| `audioFile`      | IFormFile?         |        ✅         | ❌ (keep existing) | `.mp3`, `.wav`, `.aac`, `.flac`, `.ogg`, `.m4a`; max **50 MB** |
+| `coverImageFile` | IFormFile?         |        ❌         | ❌ (keep existing) | `.jpg`, `.jpeg`, `.png`, `.webp`; max **5 MB**                 |
 
 > **Partial update semantics (UPDATE):** Chỉ field non-null mới được áp dụng. `audioFile = null` → giữ nguyên file cũ. Tương tự cho `coverImageFile`.
 
@@ -114,28 +119,28 @@ public class BasePaginationFilter
 
 **Kế thừa từ `BasePaginationFilter`** (§3.2) + thêm các filter riêng:
 
-| Param          | Type               | Default        | Mô tả                                                                         |
-|----------------|--------------------|----------------|-------------------------------------------------------------------------------|
-| `page`         | number             | 1              | Trang hiện tại                                                                |
-| `pageSize`     | number             | 10             | Số phần tử mỗi trang (max 500)                                                |
-| `search`       | string?            | —              | Tìm kiếm (title, artist, genre)                                               |
-| `sortBy`       | string?            | —              | Trường sắp xếp                                                                |
-| `isAscending`  | boolean?           | `false`        | Chiều sắp xếp (default: **false** = mới nhất trước)                           |
-| `status`       | EntityStatusEnum?  | —              | Lọc theo trạng thái (0=Inactive, 1=Active)                                    |
-| `brandId`      | Guid?              | —              | ⚠️ BM/SM: luôn bị override về brand của mình. SA: lọc tự do                  |
-| `moodId`       | Guid?              | —              | Lọc theo mood                                                                 |
-| `genre`        | string?            | —              | Lọc theo genre (partial match)                                                |
-| `provider`     | MusicProviderEnum? | —              | Lọc theo nguồn nhạc (0=Custom, …)                                             |
-| `isAiGenerated`| boolean?           | —              | `true` = AI-generated; `false` = manual upload                                |
-| `createdFrom`  | datetime? (ISO 8601) | —            | Lọc track tạo từ ngày này                                                     |
-| `createdTo`    | datetime? (ISO 8601) | —            | Lọc track tạo đến ngày này                                                    |
+| Param           | Type                 | Default | Mô tả                                                       |
+| --------------- | -------------------- | ------- | ----------------------------------------------------------- |
+| `page`          | number               | 1       | Trang hiện tại                                              |
+| `pageSize`      | number               | 10      | Số phần tử mỗi trang (max 500)                              |
+| `search`        | string?              | —       | Tìm kiếm (title, artist, genre)                             |
+| `sortBy`        | string?              | —       | Trường sắp xếp                                              |
+| `isAscending`   | boolean?             | `false` | Chiều sắp xếp (default: **false** = mới nhất trước)         |
+| `status`        | EntityStatusEnum?    | —       | Lọc theo trạng thái (0=Inactive, 1=Active)                  |
+| `brandId`       | Guid?                | —       | ⚠️ BM/SM: luôn bị override về brand của mình. SA: lọc tự do |
+| `moodId`        | Guid?                | —       | Lọc theo mood                                               |
+| `genre`         | string?              | —       | Lọc theo genre (partial match)                              |
+| `provider`      | MusicProviderEnum?   | —       | Lọc theo nguồn nhạc (0=Custom, …)                           |
+| `isAiGenerated` | boolean?             | —       | `true` = AI-generated; `false` = manual upload              |
+| `createdFrom`   | datetime? (ISO 8601) | —       | Lọc track tạo từ ngày này                                   |
+| `createdTo`     | datetime? (ISO 8601) | —       | Lọc track tạo đến ngày này                                  |
 
 ### 4.3 `TrackListItem` (trong `PaginationResult<TrackListItem>`)
 
 **Kế thừa từ `BaseResponse`** (§3.1) + thêm:
 
 | Field           | Type               | Mô tả                                                              |
-|-----------------|--------------------|--------------------------------------------------------------------|
+| --------------- | ------------------ | ------------------------------------------------------------------ |
 | (inherited)     | BaseResponse       | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
 | `brandId`       | Guid?              | ID brand sở hữu track                                              |
 | `title`         | string             | Tên track                                                          |
@@ -145,7 +150,7 @@ public class BasePaginationFilter
 | `genre`         | string?            | Thể loại nhạc                                                      |
 | `provider`      | MusicProviderEnum? | Nguồn nhạc (integer)                                               |
 | `durationSec`   | int?               | Thời lượng (giây, từ metadata)                                     |
-| `audioUrl`      | string?            | S3 URL file audio; có thể `null` nếu upload thất bại              |
+| `audioUrl`      | string?            | S3 URL file audio; có thể `null` nếu upload thất bại               |
 | `coverImageUrl` | string?            | S3 URL ảnh bìa                                                     |
 | `playCount`     | int                | Số lần phát                                                        |
 | `isAiGenerated` | bool?              | Track do AI tạo hay do người dùng upload                           |
@@ -154,57 +159,58 @@ public class BasePaginationFilter
 
 **Kế thừa từ `TrackListItem`** (→ kế thừa gián tiếp từ `BaseResponse`) + thêm:
 
-| Field              | Type      | Mô tả                                                                  |
-|--------------------|-----------|------------------------------------------------------------------------|
-| `bpm`              | int?      | Beats per minute (20–300)                                              |
-| `energyLevel`      | decimal?  | Mức năng lượng (0.0–1.0)                                               |
-| `valence`          | decimal?  | Valence âm nhạc (0.0–1.0, từ buồn → vui)                              |
-| `sunoClipId`       | string?   | ID clip Suno (AI generation only)                                      |
-| `generationPrompt` | string?   | Prompt đã dùng để generate (AI generation only)                        |
-| `generatedAt`      | DateTime? | Thời điểm AI generate track                                            |
-| `lyricsUrl`        | string?   | URL file lời bài hát (AI generation only)                              |
-| `lastPlayedAt`     | DateTime? | Thời điểm phát gần nhất                                                |
+| Field              | Type      | Mô tả                                           |
+| ------------------ | --------- | ----------------------------------------------- |
+| `bpm`              | int?      | Beats per minute (20–300)                       |
+| `energyLevel`      | decimal?  | Mức năng lượng (0.0–1.0)                        |
+| `valence`          | decimal?  | Valence âm nhạc (0.0–1.0, từ buồn → vui)        |
+| `sunoClipId`       | string?   | ID clip Suno (AI generation only)               |
+| `generationPrompt` | string?   | Prompt đã dùng để generate (AI generation only) |
+| `generatedAt`      | DateTime? | Thời điểm AI generate track                     |
+| `lyricsUrl`        | string?   | URL file lời bài hát (AI generation only)       |
+| `lastPlayedAt`     | DateTime? | Thời điểm phát gần nhất                         |
 
 ### 4.5 `MusicProviderEnum`
 
-| Số JSON | Tên      | Mô tả                          |
-|---------|----------|--------------------------------|
-| `0`     | Custom   | Upload thủ công (mặc định)     |
-| `1`     | Suno     | AI generate từ Suno            |
-| *(...)* | *...*    | Xem thêm tại enum definition   |
+| Số JSON | Tên    | Mô tả                        |
+| ------- | ------ | ---------------------------- |
+| `0`     | Custom | Upload thủ công (mặc định)   |
+| `1`     | Suno   | AI generate từ Suno          |
+| _(...)_ | _..._  | Xem thêm tại enum definition |
 
 ### 4.6 `EntityStatusEnum`
 
-| Số JSON | Mô tả           |
-|---------|-----------------|
-| `0`     | Inactive        |
-| `1`     | Active          |
-| `2`     | Pending         |
-| `3`     | Rejected        |
+| Số JSON | Mô tả    |
+| ------- | -------- |
+| `0`     | Inactive |
+| `1`     | Active   |
+| `2`     | Pending  |
+| `3`     | Rejected |
 
 ---
 
 ### 4.7 Validation Rules Detail (Backend — `SharedTrackRequestValidator`)
 
 > **Quy tắc chung:**
+>
 > - **CREATE** (`isPartialUpdate = false`): `title` và `audioFile` là **bắt buộc**; các field khác tùy chọn.
 > - **UPDATE** (`isPartialUpdate = true`): tất cả field đều tùy chọn; chỉ field non-null mới được validate và áp dụng.
 
-| Field            | Rule                        | Chi tiết                                                            |
-|------------------|-----------------------------|---------------------------------------------------------------------|
-| `title`          | Required (create)           | NotEmpty() — không được rỗng/null khi tạo mới                      |
-| `title`          | MaxLength(255)              | Tối đa 255 ký tự (khi được cung cấp)                               |
-| `title`          | Unique per brand            | Không được trùng title với track khác trong **cùng brand** (handler) |
-| `artist`         | MaxLength(255)              | Tối đa 255 ký tự                                                    |
-| `durationSec`    | GreaterThan(0)              | Phải > 0 nếu được cung cấp                                         |
-| `bpm`            | InclusiveBetween(20, 300)   | Khoảng cho phép: 20–300                                             |
-| `energyLevel`    | InclusiveBetween(0.0, 1.0)  | Khoảng cho phép: 0.0–1.0                                            |
-| `valence`        | InclusiveBetween(0.0, 1.0)  | Khoảng cho phép: 0.0–1.0                                            |
-| `audioFile`      | Required (create)           | NotNull() — bắt buộc khi tạo mới                                   |
-| `audioFile`      | Extension                   | Phải là `.mp3`, `.wav`, `.aac`, `.flac`, `.ogg`, `.m4a`            |
-| `audioFile`      | MaxSize(50 MB)              | Tối đa 50 MB                                                        |
-| `coverImageFile` | Extension (khi có)          | Phải là `.jpg`, `.jpeg`, `.png`, `.webp`                            |
-| `coverImageFile` | MaxSize(5 MB)               | Tối đa 5 MB                                                         |
+| Field            | Rule                       | Chi tiết                                                             |
+| ---------------- | -------------------------- | -------------------------------------------------------------------- |
+| `title`          | Required (create)          | NotEmpty() — không được rỗng/null khi tạo mới                        |
+| `title`          | MaxLength(255)             | Tối đa 255 ký tự (khi được cung cấp)                                 |
+| `title`          | Unique per brand           | Không được trùng title với track khác trong **cùng brand** (handler) |
+| `artist`         | MaxLength(255)             | Tối đa 255 ký tự                                                     |
+| `durationSec`    | GreaterThan(0)             | Phải > 0 nếu được cung cấp                                           |
+| `bpm`            | InclusiveBetween(20, 300)  | Khoảng cho phép: 20–300                                              |
+| `energyLevel`    | InclusiveBetween(0.0, 1.0) | Khoảng cho phép: 0.0–1.0                                             |
+| `valence`        | InclusiveBetween(0.0, 1.0) | Khoảng cho phép: 0.0–1.0                                             |
+| `audioFile`      | Required (create)          | NotNull() — bắt buộc khi tạo mới                                     |
+| `audioFile`      | Extension                  | Phải là `.mp3`, `.wav`, `.aac`, `.flac`, `.ogg`, `.m4a`              |
+| `audioFile`      | MaxSize(50 MB)             | Tối đa 50 MB                                                         |
+| `coverImageFile` | Extension (khi có)         | Phải là `.jpg`, `.jpeg`, `.png`, `.webp`                             |
+| `coverImageFile` | MaxSize(5 MB)              | Tối đa 5 MB                                                          |
 
 ---
 
@@ -212,11 +218,12 @@ public class BasePaginationFilter
 
 ### 5.1 `GET /api/tracks` — Danh sách track (có phân trang)
 
-- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own brand, read-only)
+- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own brand, read-only), PlaybackDevice (scope = Brand của Store session)
 - **Query params:** `TrackFilter` (§4.2)
 - **Notes:**
   - **BrandManager:** `brandId` luôn bị override về brand của họ.
   - **StoreManager:** `brandId` luôn bị override về brand của họ (track thuộc brand, không thuộc store).
+  - **PlaybackDevice:** `brandId` lấy từ Store của device session — chỉ thấy tracks thuộc Brand đó.
   - **SystemAdmin:** có thể truyền `brandId` để lọc.
   - Default sort: **mới nhất trước** (`isAscending = false`).
 
@@ -266,12 +273,13 @@ public class BasePaginationFilter
 
 ### 5.2 `GET /api/tracks/{id}` — Chi tiết track
 
-- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own brand)
+- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own brand), PlaybackDevice (chỉ khi track.BrandId = Brand của Store session)
 - **Path param:** `id` (Guid)
 - **Includes:** Mood navigation (để lấy `moodName`)
 - **Authorization flow:**
   1. Track phải tồn tại → **404** nếu không tìm thấy
   2. BrandManager / StoreManager: `track.BrandId != user.BrandId` → **403 Forbidden**
+  3. PlaybackDevice: `track.BrandId != session.BrandId` (từ Store session) → **403 Forbidden**
 
 - **Response 200 (`Result<TrackDetailResponse>`):**
 
@@ -477,15 +485,15 @@ coverImageFile: [binary .jpg file]
 
 ## 6. Error Response Reference
 
-| HTTP Status | ErrorCode              | Khi nào xảy ra                                              |
-|-------------|------------------------|-------------------------------------------------------------|
-| 200 / 201   | `null`                 | Thành công                                                  |
-| 400         | `ValidationFailed`     | Input không hợp lệ (format, required fields)               |
-| 401         | `Unauthorized`         | Chưa đăng nhập hoặc session không hợp lệ                   |
-| 403         | `Forbidden`            | Không đủ quyền hoặc track không thuộc brand của user        |
-| 404         | `NotFound`             | Track không tồn tại                                         |
-| 409 / 422   | `BusinessRuleViolation`| Title trùng; hoặc track đang dùng trong playlist (xóa)     |
-| 500         | `InternalServerError`  | Lỗi server không mong đợi                                   |
+| HTTP Status | ErrorCode               | Khi nào xảy ra                                         |
+| ----------- | ----------------------- | ------------------------------------------------------ |
+| 200 / 201   | `null`                  | Thành công                                             |
+| 400         | `ValidationFailed`      | Input không hợp lệ (format, required fields)           |
+| 401         | `Unauthorized`          | Chưa đăng nhập hoặc session không hợp lệ               |
+| 403         | `Forbidden`             | Không đủ quyền hoặc track không thuộc brand của user   |
+| 404         | `NotFound`              | Track không tồn tại                                    |
+| 409 / 422   | `BusinessRuleViolation` | Title trùng; hoặc track đang dùng trong playlist (xóa) |
+| 500         | `InternalServerError`   | Lỗi server không mong đợi                              |
 
 ---
 

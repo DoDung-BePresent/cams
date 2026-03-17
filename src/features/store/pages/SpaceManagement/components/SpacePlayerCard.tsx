@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Card,
   Button,
@@ -21,6 +21,7 @@ import {
 import { PlaybackCommand } from '@/shared/modules/cams/types';
 import { isSpacePlaying } from '@/shared/modules/cams/utils';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import type { SpaceListItem } from '@/features/store/types';
 
 const { Title, Text } = Typography;
@@ -28,16 +29,49 @@ const { Title, Text } = Typography;
 interface SpacePlayerCardProps {
   space: SpaceListItem;
   storeId: string;
+  // ✅ SignalR event handlers passed from parent
+  onPlayStreamReceived?: () => void;
+  onPlaybackCommandReceived?: () => void;
 }
 
-export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
+export const SpacePlayerCard = ({
+  space,
+  storeId,
+  onPlayStreamReceived,
+  onPlaybackCommandReceived,
+}: SpacePlayerCardProps) => {
   const [showSettings, setShowSettings] = useState(false);
+  const queryClient = useQueryClient();
 
-  // Fetch space state from API (fallback when SignalR not connected)
+  // Fetch space state from API (initial load only)
   const { data: spaceState, isLoading: isLoadingState } = useSpaceState(
     space.id,
     true,
   );
+
+  // ✅ Use spaceState directly - no need for intermediate state
+  // The component will re-render when spaceState changes from React Query
+
+  // Listen to SignalR events from parent
+  useEffect(() => {
+    if (onPlayStreamReceived) {
+      // New playlist loaded → refetch state immediately
+      console.log('🎵 PlayStream received for space:', space.id, space.name);
+      queryClient.invalidateQueries({
+        queryKey: ['cams-space-state', space.id],
+      });
+    }
+  }, [onPlayStreamReceived, space.id, space.name, queryClient]);
+
+  useEffect(() => {
+    if (onPlaybackCommandReceived) {
+      // Playback command received → refetch state immediately
+      console.log('⏯️ PlaybackCommand received for space:', space.id);
+      queryClient.invalidateQueries({
+        queryKey: ['cams-space-state', space.id],
+      });
+    }
+  }, [onPlaybackCommandReceived, space.id, queryClient]);
 
   // Fetch available playlists for this store
   const { data: playlistsData } = usePlaylists({
@@ -51,17 +85,39 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const playbackControl = usePlaybackControl();
   const overridePlaylist = useOverridePlaylist();
 
-  // Get current HLS URL from state
+  // ✅ Use spaceState directly from React Query
   const hlsUrl = spaceState?.hlsUrl || null;
   const hasPlaylist = !!spaceState?.currentPlaylistId;
+  const isPending = !!spaceState?.pendingPlaylistId;
 
-  // Calculate if currently playing based on time range
-  const isPlaying = spaceState ? isSpacePlaying(spaceState) : false;
+  // ✅ Calculate if currently playing - prioritize isPaused flag from server
+  const isPlaying = spaceState
+    ? !spaceState.isPaused && isSpacePlaying(spaceState)
+    : false;
+
+  // 🐛 Debug log
+  console.log('🔍 SpacePlayerCard state:', {
+    spaceId: space.id,
+    spaceName: space.name,
+    hasPlaylist,
+    isPending,
+    hlsUrl: hlsUrl?.substring(0, 50),
+    currentPlaylistId: spaceState?.currentPlaylistId,
+    currentPlaylistName: spaceState?.currentPlaylistName,
+    isPlaying,
+    isPaused: spaceState?.isPaused,
+    fullState: spaceState,
+  });
 
   // Playback control handlers
   const handlePlayPause = useCallback(() => {
     if (!hasPlaylist) {
       message.warning('Please select a playlist first');
+      return;
+    }
+
+    if (isPending) {
+      message.info('Playlist is being prepared. Please wait...');
       return;
     }
 
@@ -72,21 +128,29 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       spaceId: space.id,
       command,
     });
-  }, [space.id, isPlaying, hasPlaylist, playbackControl]);
+  }, [space.id, isPlaying, hasPlaylist, isPending, playbackControl]);
 
   const handleSkipNext = useCallback(() => {
+    if (isPending) {
+      message.info('Playlist is being prepared. Please wait...');
+      return;
+    }
     playbackControl.mutate({
       spaceId: space.id,
-      command: PlaybackCommand.SkipToNext,
+      command: PlaybackCommand.SkipNext,
     });
-  }, [space.id, playbackControl]);
+  }, [space.id, isPending, playbackControl]);
 
   const handleSkipPrevious = useCallback(() => {
+    if (isPending) {
+      message.info('Playlist is being prepared. Please wait...');
+      return;
+    }
     playbackControl.mutate({
       spaceId: space.id,
-      command: PlaybackCommand.SkipToPrevious,
+      command: PlaybackCommand.SkipPrevious,
     });
-  }, [space.id, playbackControl]);
+  }, [space.id, isPending, playbackControl]);
 
   // Override playlist handler (Mode 1: Playlist)
   const handlePlaylistChange = useCallback(
@@ -117,27 +181,12 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           justify='space-between'
           align='center'
         >
-          <div>
-            <Title
-              level={5}
-              style={{ margin: 0 }}
-            >
-              {space.name}
-            </Title>
-            <Text
-              type='secondary'
-              style={{ fontSize: 13 }}
-            >
-              {space.description || 'No description'}
-            </Text>
-          </div>
+          <Title level={5}>{space.name}</Title>
           <Button
             type='text'
             icon={<SettingOutlined />}
             onClick={() => setShowSettings(!showSettings)}
-          >
-            {showSettings ? 'Hide' : 'Show'} Settings
-          </Button>
+          />
         </Flex>
       }
       loading={isLoadingState}
@@ -210,6 +259,26 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 >
                   Select Playlist
                 </Button>
+              </Space>
+            }
+            style={{ padding: '40px 0' }}
+          />
+        ) : isPending ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <Space
+                direction='vertical'
+                size='small'
+              >
+                <Text type='secondary'>⏳ Đang chuẩn bị...</Text>
+                <Text
+                  type='secondary'
+                  style={{ fontSize: 12 }}
+                >
+                  {spaceState?.pendingOverrideReason ||
+                    'Playlist is being transcoded'}
+                </Text>
               </Space>
             }
             style={{ padding: '40px 0' }}

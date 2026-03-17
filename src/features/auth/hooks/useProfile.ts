@@ -33,6 +33,8 @@ export const useProfile = (enabled = true) => {
         phoneNumber: profileData.phoneNumber,
         avatarUrl: profileData.avatarUrl,
         roles: profileData.roles,
+        brandId: profileData.brandId,
+        storeId: profileData.storeId,
       };
 
       return user;

@@ -1,15 +1,11 @@
 import { useState } from 'react';
-import { Button, Tabs, Space, Typography } from 'antd';
+import { Button, Tabs, Space, Typography, Row, Col } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
  * Icons
  */
-import {
-  PlusOutlined,
-  TableOutlined,
-  PlayCircleOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 
 /**
  * Types
@@ -39,6 +35,7 @@ import {
   EditSpaceDrawer,
   SpaceFilter as SpaceFilterComponent,
   SpacePlayerCard,
+  SpaceDetailDrawer,
 } from './components';
 
 /**
@@ -52,7 +49,7 @@ type ViewMode = 'table' | 'player';
 
 export const SpaceList = () => {
   const navigate = useNavigate();
-  const { user, accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
 
   const [viewMode, setViewMode] = useState<ViewMode>('table');
   const [filter, setFilter] = useState<SpaceFilter>({
@@ -65,7 +62,11 @@ export const SpaceList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+
+  const [playStreamTrigger, setPlayStreamTrigger] = useState(0);
+  const [playbackCommandTrigger, setPlaybackCommandTrigger] = useState(0);
 
   const { data, isLoading, refetch } = useSpaces(filter);
 
@@ -78,18 +79,19 @@ export const SpaceList = () => {
     accessToken,
     {
       onPlayStream: (payload) => {
-        console.log('PlayStream event received:', payload);
-        // Refetch space state to update UI
+        console.log('🎵 PlayStream event received:', payload);
+        setPlayStreamTrigger((prev) => prev + 1);
         refetch();
       },
       onPlaybackStateChanged: (payload) => {
-        console.log('PlaybackStateChanged event received:', payload);
-        // Refetch space state to update UI
-        refetch();
+        console.log('⏯️ PlaybackStateChanged event received:', payload);
+        setPlaybackCommandTrigger((prev) => prev + 1);
       },
       onSpaceStateSync: (spaceId, state) => {
-        console.log('SpaceStateSync event received:', spaceId, state);
-        // Refetch space state to update UI
+        console.log('🔄 SpaceStateSync event received:', spaceId, state);
+        // ✅ This is the source of truth - update both triggers
+        setPlayStreamTrigger((prev) => prev + 1);
+        setPlaybackCommandTrigger((prev) => prev + 1);
         refetch();
       },
     },
@@ -120,8 +122,9 @@ export const SpaceList = () => {
     }));
   };
 
-  const handleView = (spaceId: string) => {
-    console.log('View space:', spaceId);
+  const handleView = (id: string) => {
+    setSelectedSpaceId(id);
+    setDetailsDrawerOpen(true);
   };
 
   const handleEdit = (spaceId: string) => {
@@ -219,19 +222,11 @@ export const SpaceList = () => {
         items={[
           {
             key: 'table',
-            label: (
-              <span>
-                <TableOutlined /> Table View
-              </span>
-            ),
+            label: 'Table View',
           },
           {
             key: 'player',
-            label: (
-              <span>
-                <PlayCircleOutlined /> Player View
-              </span>
-            ),
+            label: 'Player View',
           },
         ]}
         style={{ marginBottom: 16 }}
@@ -294,6 +289,15 @@ export const SpaceList = () => {
               </Text>
             </div>
           )}
+          {isConnected && (
+            <div
+              style={{ padding: 16, background: '#f6ffed', borderRadius: 8 }}
+            >
+              <Text type='success'>
+                ✅ Connected to music system. Real-time sync active.
+              </Text>
+            </div>
+          )}
 
           {/* Space Players */}
           {isLoading ? (
@@ -312,13 +316,26 @@ export const SpaceList = () => {
               </Button>
             </div>
           ) : (
-            (data?.items || []).map((space) => (
-              <SpacePlayerCard
-                key={space.id}
-                space={space}
-                storeId={user?.storeId || ''}
-              />
-            ))
+            <Row gutter={[16, 16]}>
+              {(data?.items || []).map((space) => (
+                <Col
+                  key={space.id}
+                  span={12}
+                >
+                  <SpacePlayerCard
+                    space={space}
+                    storeId={'482f64a2-6b0a-43b8-a150-87f68bd7838c'}
+                    // ✅ Pass SignalR event triggers
+                    onPlayStreamReceived={
+                      playStreamTrigger > 0 ? () => {} : undefined
+                    }
+                    onPlaybackCommandReceived={
+                      playbackCommandTrigger > 0 ? () => {} : undefined
+                    }
+                  />
+                </Col>
+              ))}
+            </Row>
           )}
         </Space>
       )}
@@ -343,6 +360,15 @@ export const SpaceList = () => {
           setEditDrawerOpen(false);
           setSelectedSpaceId(null);
           refetch();
+        }}
+      />
+
+      <SpaceDetailDrawer
+        open={detailsDrawerOpen}
+        spaceId={selectedSpaceId ?? undefined}
+        onClose={() => {
+          setDetailsDrawerOpen(false);
+          setSelectedSpaceId(null);
         }}
       />
     </div>

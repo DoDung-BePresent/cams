@@ -20,10 +20,13 @@ export const useSpaceState = (spaceId?: string, enabled = true) => {
     queryFn: async () => {
       if (!spaceId) throw new Error('Space ID is required');
       const response = await camsService.getSpaceState(spaceId);
+      console.log('📡 API getSpaceState response:', {
+        spaceId,
+        data: response.data.data,
+      });
       return response.data.data;
     },
     enabled: !!spaceId && enabled,
-    staleTime: STALE_TIME.instant, // Always fresh for real-time data
-    refetchInterval: 10000, // Refetch every 10s as fallback
+    staleTime: STALE_TIME.medium,
   });
 };
