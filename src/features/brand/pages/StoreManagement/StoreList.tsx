@@ -17,7 +17,11 @@ import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 /**
  * Hooks
  */
-import { useStores, useToggleStoreStatus } from '@/features/brand/hooks';
+import {
+  useDeleteStore,
+  useStores,
+  useToggleStoreStatus,
+} from '@/features/brand/hooks';
 
 /**
  * Components
@@ -54,6 +58,7 @@ export const StoreList = () => {
   const { data, isLoading, refetch } = useStores(filter);
 
   const toggleStatus = useToggleStoreStatus();
+  const deleteStore = useDeleteStore();
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
@@ -107,6 +112,23 @@ export const StoreList = () => {
     });
   };
 
+  const handleDelete = (storeId: string) => {
+    const store = data?.items.find((s) => s.id === storeId);
+
+    AppModal.confirm({
+      title: 'Delete Store',
+      content: `Are you sure you want to delete "${store?.name}"? This action cannot be undone.`,
+      okText: 'Delete',
+      cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
+      onOk: () => {
+        deleteStore.mutate(storeId);
+      },
+    });
+  };
+
   const handleReset = () => {
     setFilter({
       page: 1,
@@ -131,6 +153,7 @@ export const StoreList = () => {
     onView: handleView,
     onEdit: handleEdit,
     onToggleStatus: handleToggleStatus,
+    onDelete: handleDelete,
   });
 
   // Extract unique cities from data

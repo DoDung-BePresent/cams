@@ -10,6 +10,7 @@ import {
   MoreOutlined,
   PoweroffOutlined,
   CheckCircleOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -31,12 +32,14 @@ type StoreColumnsProps = {
   onView: (id: string) => void;
   onEdit: (store: StoreListItem) => void;
   onToggleStatus: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
 export const getStoreColumns = ({
   onView,
   onEdit,
   onToggleStatus,
+  onDelete,
 }: StoreColumnsProps): ColumnsType<StoreListItem> => {
   const getActionItems = (record: StoreListItem) => {
     const items: ItemType[] = [
@@ -51,6 +54,16 @@ export const getStoreColumns = ({
         label: 'Edit',
         icon: <EditOutlined />,
         onClick: () => onEdit(record),
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        icon: <DeleteOutlined />,
+        onClick: () => onDelete(record.id),
+        danger: true,
       },
       {
         type: 'divider',
