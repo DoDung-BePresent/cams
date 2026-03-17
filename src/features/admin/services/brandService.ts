@@ -12,6 +12,7 @@ const BRAND_ENDPOINTS = {
   create: '/api/brands',
   update: (id: string) => `/api/brands/${id}`,
   delete: (id: string) => `/api/brands/${id}`,
+  toggleStatus: (id: string) => `/api/brands/${id}/toggle-status`,
 };
 
 export const brandService = {
@@ -52,4 +53,7 @@ export const brandService = {
 
   // DELETE /api/brands/{id}
   delete: (id: string) => api.delete<Result>(BRAND_ENDPOINTS.delete(id)),
+
+  toggleStatus: (id: string) =>
+    api.put<Result>(BRAND_ENDPOINTS.toggleStatus(id)),
 };

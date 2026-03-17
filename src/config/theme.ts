@@ -20,22 +20,25 @@ export const antTheme: ThemeConfig = {
       itemHeight: 46,
     },
     Button: {
-      fontSizeLG: 15,
+      fontSizeLG: 14,
     },
     Input: {
-      fontSizeLG: 15,
+      fontSizeLG: 14,
     },
     InputNumber: {
-      fontSizeLG: 15,
+      fontSizeLG: 14,
     },
     Select: {
-      fontSizeLG: 15,
+      fontSizeLG: 14,
     },
     Card: {
       colorBorderSecondary: '#E6EBF1',
     },
     Tabs: {
       horizontalItemPadding: '0px 0px 12px 0px',
+    },
+    DatePicker: {
+      fontSizeLG: 14,
     },
   },
 };

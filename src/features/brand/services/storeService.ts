@@ -16,6 +16,7 @@ const STORE_ENDPOINTS = {
   detail: (id: string) => `/api/stores/${id}`,
   create: '/api/stores',
   update: (id: string) => `/api/stores/${id}`,
+  delete: (id: string) => `/api/stores/${id}`,
   toggleStatus: (id: string) => `/api/stores/${id}/toggle-status`,
 } as const;
 
@@ -54,4 +55,6 @@ export const storeService = {
   // PUT /api/stores/{id}/toggle-status
   toggleStatus: (id: string) =>
     api.put<Result>(STORE_ENDPOINTS.toggleStatus(id)),
+
+  delete: (id: string) => api.delete<Result>(STORE_ENDPOINTS.delete(id)),
 };
