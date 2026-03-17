@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Tabs, Space, Typography, Row, Col } from 'antd';
+import { Button } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -22,7 +22,6 @@ import {
   useDeleteSpace,
   useToggleSpaceStatus,
 } from '@/features/store/hooks';
-import { useStoreHub } from '@/shared/modules/cams/hooks';
 import { useAuth } from '@/providers';
 
 /**
@@ -34,8 +33,8 @@ import {
   CreateSpaceDrawer,
   EditSpaceDrawer,
   SpaceFilter as SpaceFilterComponent,
-  SpacePlayerCard,
   SpaceDetailDrawer,
+  SpaceMusicDrawer,
 } from './components';
 
 /**
@@ -43,15 +42,9 @@ import {
  */
 import { PAGINATION_SIZES } from '@/shared/constants';
 
-const { Title, Text } = Typography;
-
-type ViewMode = 'table' | 'player';
-
 export const SpaceList = () => {
   const navigate = useNavigate();
-  const { accessToken, user } = useAuth();
-
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const { user } = useAuth();
   const [filter, setFilter] = useState<SpaceFilter>({
     page: 1,
     pageSize: 10,
@@ -63,55 +56,13 @@ export const SpaceList = () => {
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [musicDrawerOpen, setMusicDrawerOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useSpaces(filter);
 
   const deleteSpace = useDeleteSpace();
   const toggleStatus = useToggleSpaceStatus();
-
-  // Connect to SignalR StoreHub for real-time updates
-  const { isConnected, isConnecting } = useStoreHub(
-    user?.storeId || null,
-    accessToken,
-    {
-      onPlayStream: (payload) => {
-        console.log('🎵 [SpaceList] PlayStream event received:', payload);
-        // Invalidate all space states to refetch
-        refetch();
-      },
-      onPlaybackStateChanged: (payload) => {
-        console.log(
-          '⏯️ [SpaceList] PlaybackStateChanged event received:',
-          payload,
-        );
-        // Invalidate all space states to refetch
-        refetch();
-      },
-      onSpaceStateSync: (spaceId, state) => {
-        console.log(
-          '🔄 [SpaceList] SpaceStateSync event received:',
-          spaceId,
-          state,
-        );
-        // This is the source of truth - refetch all space states
-        refetch();
-      },
-      onConnected: () => {
-        console.log('✅ [SpaceList] SignalR connected callback triggered');
-      },
-      onDisconnected: () => {
-        console.log('❌ [SpaceList] SignalR disconnected callback triggered');
-      },
-    },
-  );
-
-  console.log('🔍 [SpaceList] SignalR status:', {
-    isConnected,
-    isConnecting,
-    storeId: user?.storeId,
-    hasToken: !!accessToken,
-  });
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
@@ -141,6 +92,11 @@ export const SpaceList = () => {
   const handleView = (id: string) => {
     setSelectedSpaceId(id);
     setDetailsDrawerOpen(true);
+  };
+
+  const handleManageMusic = (id: string) => {
+    setSelectedSpaceId(id);
+    setMusicDrawerOpen(true);
   };
 
   const handleEdit = (spaceId: string) => {
@@ -205,6 +161,7 @@ export const SpaceList = () => {
 
   const columns = getSpaceColumns({
     onView: handleView,
+    onManageMusic: handleManageMusic,
     onEdit: handleEdit,
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
@@ -231,123 +188,35 @@ export const SpaceList = () => {
         }
       />
 
-      {/* View Mode Tabs */}
-      <Tabs
-        activeKey={viewMode}
-        onChange={(key) => setViewMode(key as ViewMode)}
-        items={[
-          {
-            key: 'table',
-            label: 'Table View',
+      <DataTable<SpaceListItem>
+        filter={
+          <SpaceFilterComponent
+            filter={filter}
+            showAdvanced={showFilters}
+            onSearch={handleSearch}
+            onFilterChange={handleFilterChange}
+            onToggleAdvanced={() => setShowFilters(!showFilters)}
+            onRefresh={() => refetch()}
+            onReset={handleReset}
+          />
+        }
+        columns={columns}
+        dataSource={data?.items || []}
+        rowKey='id'
+        loading={isLoading}
+        pagination={{
+          current: filter.page,
+          pageSize: filter.pageSize,
+          total: data?.totalItems || 0,
+          showSizeChanger: true,
+          showTotal: (total) => `Total ${total} spaces`,
+          pageSizeOptions: PAGINATION_SIZES,
+          onChange: (page, size) => {
+            setFilter((prev) => ({ ...prev, page, pageSize: size }));
           },
-          {
-            key: 'player',
-            label: 'Player View',
-          },
-        ]}
-        style={{ marginBottom: 16 }}
+        }}
+        onChange={handleTableChange}
       />
-
-      {/* Table View */}
-      {viewMode === 'table' && (
-        <DataTable<SpaceListItem>
-          filter={
-            <SpaceFilterComponent
-              filter={filter}
-              showAdvanced={showFilters}
-              onSearch={handleSearch}
-              onFilterChange={handleFilterChange}
-              onToggleAdvanced={() => setShowFilters(!showFilters)}
-              onRefresh={() => refetch()}
-              onReset={handleReset}
-            />
-          }
-          columns={columns}
-          dataSource={data?.items || []}
-          rowKey='id'
-          loading={isLoading}
-          pagination={{
-            current: filter.page,
-            pageSize: filter.pageSize,
-            total: data?.totalItems || 0,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} spaces`,
-            pageSizeOptions: PAGINATION_SIZES,
-            onChange: (page, size) => {
-              setFilter((prev) => ({ ...prev, page, pageSize: size }));
-            },
-          }}
-          onChange={handleTableChange}
-        />
-      )}
-
-      {/* Player View */}
-      {viewMode === 'player' && (
-        <Space
-          direction='vertical'
-          size='large'
-          style={{ width: '100%' }}
-        >
-          {/* Connection Status */}
-          {isConnecting && (
-            <div
-              style={{ padding: 16, background: '#e6f7ff', borderRadius: 8 }}
-            >
-              <Text>Connecting to music system...</Text>
-            </div>
-          )}
-          {!isConnected && !isConnecting && (
-            <div
-              style={{ padding: 16, background: '#fff7e6', borderRadius: 8 }}
-            >
-              <Text type='warning'>
-                Not connected to music system. Real-time updates disabled.
-              </Text>
-            </div>
-          )}
-          {isConnected && (
-            <div
-              style={{ padding: 16, background: '#f6ffed', borderRadius: 8 }}
-            >
-              <Text type='success'>
-                ✅ Connected to music system. Real-time sync active.
-              </Text>
-            </div>
-          )}
-
-          {/* Space Players */}
-          {isLoading ? (
-            <div style={{ textAlign: 'center', padding: 48 }}>
-              <Title level={4}>Loading spaces...</Title>
-            </div>
-          ) : data?.items.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 48 }}>
-              <Title level={4}>No spaces found</Title>
-              <Button
-                type='primary'
-                icon={<PlusOutlined />}
-                onClick={() => setCreateDrawerOpen(true)}
-              >
-                Create Your First Space
-              </Button>
-            </div>
-          ) : (
-            <Row gutter={[16, 16]}>
-              {(data?.items || []).map((space) => (
-                <Col
-                  key={space.id}
-                  span={12}
-                >
-                  <SpacePlayerCard
-                    space={space}
-                    storeId={'482f64a2-6b0a-43b8-a150-87f68bd7838c'}
-                  />
-                </Col>
-              ))}
-            </Row>
-          )}
-        </Space>
-      )}
 
       <CreateSpaceDrawer
         open={createDrawerOpen}
@@ -377,6 +246,16 @@ export const SpaceList = () => {
         spaceId={selectedSpaceId ?? undefined}
         onClose={() => {
           setDetailsDrawerOpen(false);
+          setSelectedSpaceId(null);
+        }}
+      />
+
+      <SpaceMusicDrawer
+        open={musicDrawerOpen}
+        spaceId={selectedSpaceId}
+        storeId={user?.storeId || ''}
+        onClose={() => {
+          setMusicDrawerOpen(false);
           setSelectedSpaceId(null);
         }}
       />
