@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Drawer, Typography, Table, Button, Space, Tag, Empty } from 'antd';
-import { SoundOutlined } from '@ant-design/icons';
+import { SoundOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { useSpaces } from '@/shared/modules/spaces/hooks';
 import { SpaceMusicDrawer } from '@/features/store/pages/SpaceManagement/components';
+import { PairDeviceModal } from '@/shared/modules/cams/components';
 import type { SpaceListItem, SpaceFilter } from '@/shared/modules/spaces/types';
 import { EntityStatusEnum } from '@/shared/types';
 import { DRAWER_WIDTHS } from '@/config';
@@ -26,6 +27,7 @@ export const StoreSpacesDrawer = ({
   onClose,
 }: StoreSpacesDrawerProps) => {
   const [musicDrawerOpen, setMusicDrawerOpen] = useState(false);
+  const [pairDeviceModalOpen, setPairDeviceModalOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
   // Fetch spaces for this store
@@ -41,6 +43,11 @@ export const StoreSpacesDrawer = ({
   const handleManageMusic = (spaceId: string) => {
     setSelectedSpaceId(spaceId);
     setMusicDrawerOpen(true);
+  };
+
+  const handlePairDevice = (spaceId: string) => {
+    setSelectedSpaceId(spaceId);
+    setPairDeviceModalOpen(true);
   };
 
   const columns = [
@@ -82,15 +89,23 @@ export const StoreSpacesDrawer = ({
     {
       title: 'Actions',
       key: 'actions',
-      width: 150,
+      width: 200,
       render: (_: unknown, record: SpaceListItem) => (
-        <Button
-          type='primary'
-          icon={<SoundOutlined />}
-          onClick={() => handleManageMusic(record.id)}
-        >
-          Manage Music
-        </Button>
+        <Space>
+          <Button
+            type='primary'
+            icon={<SoundOutlined />}
+            onClick={() => handleManageMusic(record.id)}
+          >
+            Manage Music
+          </Button>
+          <Button
+            icon={<QrcodeOutlined />}
+            onClick={() => handlePairDevice(record.id)}
+          >
+            Pair Device
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -133,6 +148,15 @@ export const StoreSpacesDrawer = ({
         storeId={storeId || ''}
         onClose={() => {
           setMusicDrawerOpen(false);
+          setSelectedSpaceId(null);
+        }}
+      />
+
+      <PairDeviceModal
+        open={pairDeviceModalOpen}
+        spaceId={selectedSpaceId}
+        onClose={() => {
+          setPairDeviceModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />

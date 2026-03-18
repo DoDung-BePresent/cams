@@ -137,3 +137,35 @@ export interface SpaceStateResponse {
   pendingPlaylistId: string | null;
   pendingOverrideReason: string | null;
 }
+
+/**
+ * Pair code response (from API_CAMS.md § 4.1)
+ * POST /api/cams/spaces/{spaceId}/pair-code
+ */
+export interface PairCodeResponse {
+  code: string; // 6-character code (plain)
+  displayCode: string; // Code with dash (e.g., "ABC-123")
+  spaceId: string;
+  spaceName: string;
+  expiresAt: string; // ISO 8601 UTC
+  expiresInSeconds: number;
+}
+
+/**
+ * Pair device info response (from API_CAMS.md § 3.5)
+ * GET /api/cams/spaces/{spaceId}/pair-device
+ */
+export interface PairDeviceInfoResponse {
+  spaceId: string;
+  storeId: string;
+  brandId: string;
+  deviceSessionId: string | null;
+  isPlaybackDeviceCaller: boolean;
+  manufacturer: string | null;
+  model: string | null;
+  osVersion: string | null;
+  appVersion: string | null;
+  deviceId: string | null;
+  pairedAtUtc: string | null; // ISO 8601 UTC
+  lastActiveAtUtc: string | null; // ISO 8601 UTC
+}

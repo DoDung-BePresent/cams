@@ -40,5 +40,8 @@ export const antTheme: ThemeConfig = {
     DatePicker: {
       fontSizeLG: 14,
     },
+    Divider: {
+      marginLG: 0,
+    },
   },
 };
