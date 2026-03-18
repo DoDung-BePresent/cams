@@ -16,6 +16,7 @@ export const SIDEBAR_WIDTHS = {
 
 export const MODAL_WIDTHS = {
   medium: 500,
+  large: 720,
 };
 
 export const AVATAR_SIZE = {

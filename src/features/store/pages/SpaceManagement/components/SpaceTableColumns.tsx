@@ -7,6 +7,7 @@ import {
   PoweroffOutlined,
   MoreOutlined,
   SoundOutlined,
+  QrcodeOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -29,6 +30,7 @@ import {
 type SpaceColumnActions = {
   onView: (id: string) => void;
   onManageMusic: (id: string) => void;
+  onPairDevice: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string) => void;
@@ -37,6 +39,7 @@ type SpaceColumnActions = {
 export const getSpaceColumns = ({
   onView,
   onManageMusic,
+  onPairDevice,
   onEdit,
   onDelete,
   onToggleStatus,
@@ -117,6 +120,12 @@ export const getSpaceColumns = ({
           icon: <SoundOutlined />,
           label: 'Manage Music',
           onClick: () => onManageMusic(record.id),
+        },
+        {
+          key: 'pair-device',
+          icon: <QrcodeOutlined />,
+          label: 'Pair Device',
+          onClick: () => onPairDevice(record.id),
         },
         {
           key: 'edit',

@@ -4,6 +4,8 @@ import type {
   SpaceStateResponse,
   OverridePlaylistRequest,
   PlaybackControlRequest,
+  PairCodeResponse,
+  PairDeviceInfoResponse,
 } from '../types';
 
 /**
@@ -13,6 +15,9 @@ const CAMS_ENDPOINTS = {
   spaceState: (spaceId: string) => `/api/cams/spaces/${spaceId}/state`,
   overridePlaylist: (spaceId: string) => `/api/cams/spaces/${spaceId}/override`,
   playbackControl: (spaceId: string) => `/api/cams/spaces/${spaceId}/playback`,
+  pairCode: (spaceId: string) => `/api/cams/spaces/${spaceId}/pair-code`,
+  pairDevice: (spaceId: string) => `/api/cams/spaces/${spaceId}/pair-device`,
+  unpair: (spaceId: string) => `/api/cams/spaces/${spaceId}/unpair`,
 } as const;
 
 /**
@@ -43,4 +48,36 @@ export const camsService = {
    */
   controlPlayback: (spaceId: string, data: PlaybackControlRequest) =>
     api.post<Result>(CAMS_ENDPOINTS.playbackControl(spaceId), data),
+
+  /**
+   * Generate pair code (§ 4.1)
+   * POST /api/cams/spaces/{spaceId}/pair-code
+   * Auth: BrandManager, StoreManager
+   */
+  generatePairCode: (spaceId: string) =>
+    api.post<Result<PairCodeResponse>>(CAMS_ENDPOINTS.pairCode(spaceId)),
+
+  /**
+   * Revoke pair code (§ 4.2)
+   * DELETE /api/cams/spaces/{spaceId}/pair-code
+   * Auth: BrandManager, StoreManager
+   */
+  revokePairCode: (spaceId: string) =>
+    api.delete<Result>(CAMS_ENDPOINTS.pairCode(spaceId)),
+
+  /**
+   * Get pair device info (§ 3.5)
+   * GET /api/cams/spaces/{spaceId}/pair-device
+   * Auth: BrandManager, StoreManager, PlaybackDevice
+   */
+  getPairDeviceInfo: (spaceId: string) =>
+    api.get<Result<PairDeviceInfoResponse>>(CAMS_ENDPOINTS.pairDevice(spaceId)),
+
+  /**
+   * Unpair device (§ 4.3)
+   * DELETE /api/cams/spaces/{spaceId}/unpair
+   * Auth: BrandManager, StoreManager, PlaybackDevice
+   */
+  unpairDevice: (spaceId: string) =>
+    api.delete<Result>(CAMS_ENDPOINTS.unpair(spaceId)),
 };

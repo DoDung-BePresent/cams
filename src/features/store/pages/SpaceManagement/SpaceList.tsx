@@ -36,6 +36,7 @@ import {
   SpaceDetailDrawer,
   SpaceMusicDrawer,
 } from './components';
+import { PairDeviceModal } from '@/shared/modules/cams/components';
 
 /**
  * Constants
@@ -57,6 +58,7 @@ export const SpaceList = () => {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [musicDrawerOpen, setMusicDrawerOpen] = useState(false);
+  const [pairDeviceModalOpen, setPairDeviceModalOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useSpaces(filter);
@@ -97,6 +99,11 @@ export const SpaceList = () => {
   const handleManageMusic = (id: string) => {
     setSelectedSpaceId(id);
     setMusicDrawerOpen(true);
+  };
+
+  const handlePairDevice = (id: string) => {
+    setSelectedSpaceId(id);
+    setPairDeviceModalOpen(true);
   };
 
   const handleEdit = (spaceId: string) => {
@@ -162,6 +169,7 @@ export const SpaceList = () => {
   const columns = getSpaceColumns({
     onView: handleView,
     onManageMusic: handleManageMusic,
+    onPairDevice: handlePairDevice,
     onEdit: handleEdit,
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
@@ -256,6 +264,15 @@ export const SpaceList = () => {
         storeId={user?.storeId || ''}
         onClose={() => {
           setMusicDrawerOpen(false);
+          setSelectedSpaceId(null);
+        }}
+      />
+
+      <PairDeviceModal
+        open={pairDeviceModalOpen}
+        spaceId={selectedSpaceId}
+        onClose={() => {
+          setPairDeviceModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />
