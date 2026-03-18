@@ -4,12 +4,12 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { spaceService } from '../services';
+import { spaceService } from '@/shared/modules/spaces/services';
 
 /**
  * Types
  */
-import type { CreateSpaceRequest } from '../types';
+import type { CreateSpaceRequest } from '@/shared/modules/spaces/types';
 
 /**
  * Utils
@@ -29,6 +29,7 @@ export const useCreateSpace = () => {
       queryClient.invalidateQueries({ queryKey: ['spaces'] });
       message.success(response.data.message || 'Space created successfully');
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       showErrorMessage(error, 'Failed to create space');
     },

@@ -12,7 +12,7 @@ import {
 /**
  * Types
  */
-import type { SpaceFilter as SpaceFilterType } from '@/features/store/types';
+import type { SpaceFilter as SpaceFilterType } from '@/shared/modules/spaces/types';
 
 /**
  * Constants
@@ -23,6 +23,7 @@ type SpaceFilterProps = {
   filter: SpaceFilterType;
   showAdvanced: boolean;
   onSearch: (value: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFilterChange: (key: keyof SpaceFilterType, value: any) => void;
   onToggleAdvanced: () => void;
   onRefresh: () => void;

@@ -33,6 +33,7 @@ import {
   EditStoreDrawer,
   StoreFilter as StoreFilterComponent,
   StoreDetailDrawer,
+  StoreSpacesDrawer,
 } from './components';
 
 /**
@@ -53,6 +54,7 @@ export const StoreList = () => {
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [spacesDrawerOpen, setSpacesDrawerOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useStores(filter);
@@ -88,6 +90,11 @@ export const StoreList = () => {
   const handleView = (storeId: string) => {
     setSelectedStoreId(storeId);
     setDetailDrawerOpen(true);
+  };
+
+  const handleViewSpaces = (storeId: string) => {
+    setSelectedStoreId(storeId);
+    setSpacesDrawerOpen(true);
   };
 
   const handleEdit = (store: StoreListItem) => {
@@ -151,6 +158,7 @@ export const StoreList = () => {
 
   const columns = getStoreColumns({
     onView: handleView,
+    onViewSpaces: handleViewSpaces,
     onEdit: handleEdit,
     onToggleStatus: handleToggleStatus,
     onDelete: handleDelete,
@@ -246,6 +254,15 @@ export const StoreList = () => {
         storeId={selectedStoreId ?? undefined}
         onClose={() => {
           setDetailDrawerOpen(false);
+          setSelectedStoreId(null);
+        }}
+      />
+
+      <StoreSpacesDrawer
+        open={spacesDrawerOpen}
+        storeId={selectedStoreId}
+        onClose={() => {
+          setSpacesDrawerOpen(false);
           setSelectedStoreId(null);
         }}
       />

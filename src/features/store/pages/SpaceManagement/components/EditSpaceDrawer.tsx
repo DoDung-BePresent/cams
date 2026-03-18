@@ -15,12 +15,12 @@ import {
 /**
  * Hooks
  */
-import { useSpace, useUpdateSpace } from '@/features/store/hooks';
+import { useSpace, useUpdateSpace } from '@/shared/modules/spaces/hooks';
 
 /**
  * Types
  */
-import type { UpdateSpaceRequest } from '@/features/store/types';
+import type { UpdateSpaceRequest } from '@/shared/modules/spaces/types';
 
 /**
  * Constants
@@ -30,7 +30,7 @@ import { SPACE_TYPE_OPTIONS } from '@/features/store/constants';
 /**
  * Validations
  */
-import { updateSpaceValidation } from '@/features/store/validations';
+import { updateSpaceValidation } from '@/shared/modules/spaces/validations';
 
 /**
  * Utils

@@ -11,6 +11,7 @@ import {
   PoweroffOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -30,6 +31,7 @@ import {
 
 type StoreColumnsProps = {
   onView: (id: string) => void;
+  onViewSpaces: (id: string) => void;
   onEdit: (store: StoreListItem) => void;
   onToggleStatus: (id: string) => void;
   onDelete: (id: string) => void;
@@ -37,6 +39,7 @@ type StoreColumnsProps = {
 
 export const getStoreColumns = ({
   onView,
+  onViewSpaces,
   onEdit,
   onToggleStatus,
   onDelete,
@@ -48,6 +51,12 @@ export const getStoreColumns = ({
         label: 'View Details',
         icon: <EyeOutlined />,
         onClick: () => onView(record.id),
+      },
+      {
+        key: 'view-spaces',
+        label: 'View Spaces',
+        icon: <AppstoreOutlined />,
+        onClick: () => onViewSpaces(record.id),
       },
       {
         key: 'edit',

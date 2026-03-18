@@ -4,7 +4,7 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { spaceService } from '../services';
+import { spaceService } from '@/shared/modules/spaces/services';
 
 /**
  * Utils
@@ -23,6 +23,7 @@ export const useDeleteSpace = () => {
       queryClient.invalidateQueries({ queryKey: ['spaces'] });
       message.success(response.data.message || 'Space deleted successfully');
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       showErrorMessage(error, 'Failed to delete space');
     },
