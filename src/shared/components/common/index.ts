@@ -14,3 +14,4 @@ export * from './AudioDragger';
 export * from './Loadable';
 export * from './PageHeader';
 export * from './NavCard';
+export * from './WelcomeBanner';
