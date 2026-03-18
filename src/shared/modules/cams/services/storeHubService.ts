@@ -167,6 +167,53 @@ class StoreHubService {
   }
 
   /**
+   * Join a specific space group to receive real-time updates
+   */
+  public async joinSpace(spaceId: string): Promise<void> {
+    if (!this.connection) {
+      throw new Error('Connection not initialized');
+    }
+
+    if (this.connection.state !== HubConnectionState.Connected) {
+      throw new Error(
+        `Cannot join space: Connection state is ${this.connection.state}`,
+      );
+    }
+
+    try {
+      console.log('🎵 Joining space group:', spaceId);
+      await this.connection.invoke('JoinSpaceAsync', spaceId);
+      console.log('✅ Joined space group successfully:', spaceId);
+    } catch (error) {
+      console.error('❌ Failed to join space group:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Leave a specific space group
+   */
+  public async leaveSpace(spaceId: string): Promise<void> {
+    if (!this.connection) {
+      return;
+    }
+
+    if (this.connection.state !== HubConnectionState.Connected) {
+      console.log('⏭️ Connection not active, skipping leave space');
+      return;
+    }
+
+    try {
+      console.log('👋 Leaving space group:', spaceId);
+      await this.connection.invoke('LeaveSpaceAsync', spaceId);
+      console.log('✅ Left space group successfully:', spaceId);
+    } catch (error) {
+      console.error('❌ Failed to leave space group:', error);
+      // Don't throw - just log
+    }
+  }
+
+  /**
    * Register SignalR event listeners
    */
   private registerEventListeners(): void {
@@ -188,13 +235,10 @@ class StoreHubService {
     );
 
     // SpaceStateSync event (full state sync)
-    this.connection.on(
-      'SpaceStateSync',
-      (spaceId: string, state: SpaceStateDto) => {
-        console.log('📡 SpaceStateSync event:', { spaceId, state });
-        this.eventHandlers.onSpaceStateSync?.(spaceId, state);
-      },
-    );
+    this.connection.on('SpaceStateSync', (state: SpaceStateDto) => {
+      console.log('📡 SpaceStateSync event:', state);
+      this.eventHandlers.onSpaceStateSync?.(state.spaceId, state);
+    });
 
     // Connection lifecycle events
     this.connection.onreconnecting(() => {

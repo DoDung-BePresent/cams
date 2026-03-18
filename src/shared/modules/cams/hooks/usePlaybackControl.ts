@@ -43,13 +43,20 @@ export const usePlaybackControl = () => {
       return camsService.controlPlayback(spaceId, data);
     },
     onSuccess: (_, variables) => {
-      const commandLabel = PLAYBACK_COMMAND_LABELS[variables.command];
-      message.success(`${commandLabel} command sent`);
+      // Only show success message for Skip commands, not Pause/Resume
+      if (
+        variables.command !== 1 && // Pause
+        variables.command !== 2 // Resume
+      ) {
+        const commandLabel = PLAYBACK_COMMAND_LABELS[variables.command];
+        message.success(`${commandLabel} command sent`);
+      }
       // Invalidate space state
       queryClient.invalidateQueries({
         queryKey: ['cams-space-state', variables.spaceId],
       });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       handleApiError(
         error,
