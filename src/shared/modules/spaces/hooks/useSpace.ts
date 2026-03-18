@@ -3,7 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { spaceService } from '../services';
+import { spaceService } from '@/shared/modules/spaces/services';
+
+/**
+ * Configs
+ */
 import { STALE_TIME } from '@/config';
 
 export const useSpace = (id?: string, enabled = true) => {

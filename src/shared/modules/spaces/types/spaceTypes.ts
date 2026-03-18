@@ -82,6 +82,7 @@ export type SpaceFilter = {
   isAscending?: boolean;
   type?: SpaceTypeEnum;
   status?: EntityStatusEnum;
+  storeId?: string; // For Brand role to filter spaces by store
   createdFrom?: string; // ISO 8601
   createdTo?: string; // ISO 8601
 };

@@ -10,7 +10,7 @@ import { PlusOutlined } from '@ant-design/icons';
 /**
  * Types
  */
-import type { SpaceListItem, SpaceFilter } from '@/features/store/types';
+import type { SpaceListItem, SpaceFilter } from '@/shared/modules/spaces/types';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
@@ -21,7 +21,7 @@ import {
   useSpaces,
   useDeleteSpace,
   useToggleSpaceStatus,
-} from '@/features/store/hooks';
+} from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
 
 /**

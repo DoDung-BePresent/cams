@@ -13,12 +13,12 @@ import {
 /**
  * Hooks
  */
-import { useCreateSpace } from '@/features/store/hooks';
+import { useCreateSpace } from '@/shared/modules/spaces/hooks';
 
 /**
  * Types
  */
-import type { CreateSpaceRequest } from '@/features/store/types';
+import type { CreateSpaceRequest } from '@/shared/modules/spaces/types';
 
 /**
  * Constants
@@ -28,7 +28,7 @@ import { SPACE_TYPE_OPTIONS } from '@/features/store/constants';
 /**
  * Validations
  */
-import { createSpaceValidation } from '@/features/store/validations';
+import { createSpaceValidation } from '@/shared/modules/spaces/validations';
 
 /**
  * Configs

@@ -11,7 +11,7 @@ import { SpacePlayerCard } from './SpacePlayerCard';
  * Hooks
  */
 import { useStoreHub } from '@/shared/modules/cams/hooks';
-import { useSpace } from '@/features/store/hooks';
+import { useSpace } from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
 
 /**

@@ -1,6 +1,6 @@
 import { WelcomeBanner } from '@/shared/components';
 
-export const AdminDashboard = () => {
+export const StoreDashboard = () => {
   return (
     <div>
       <WelcomeBanner />

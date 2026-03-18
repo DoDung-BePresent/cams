@@ -9,7 +9,7 @@ import type {
   CreateSpaceRequest,
   UpdateSpaceRequest,
   SpaceListItem,
-} from '../types';
+} from '@/shared/modules/spaces/types';
 import type { PaginationResult, Result } from '@/shared/types';
 
 /**
@@ -54,6 +54,7 @@ export const spaceService = {
     // Space-specific filters
     if (filter.type !== undefined)
       params.append('type', filter.type.toString());
+    if (filter.storeId) params.append('storeId', filter.storeId); // For Brand role
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
 

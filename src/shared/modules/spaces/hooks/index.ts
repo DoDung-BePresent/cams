@@ -1,4 +1,3 @@
-// Space hooks
 export * from './useSpaces';
 export * from './useSpace';
 export * from './useCreateSpace';

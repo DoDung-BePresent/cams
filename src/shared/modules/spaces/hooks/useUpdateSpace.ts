@@ -4,12 +4,12 @@ import { message } from 'antd';
 /**
  * Services
  */
-import { spaceService } from '../services';
+import { spaceService } from '@/shared/modules/spaces/services';
 
 /**
  * Types
  */
-import type { UpdateSpaceRequest } from '../types';
+import type { UpdateSpaceRequest } from '@/shared/modules/spaces/types';
 
 /**
  * Utils
@@ -27,6 +27,7 @@ export const useUpdateSpace = () => {
       queryClient.invalidateQueries({ queryKey: ['space', id] });
       message.success(response.data.message || 'Space updated successfully');
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       showErrorMessage(error, 'Failed to update space');
     },

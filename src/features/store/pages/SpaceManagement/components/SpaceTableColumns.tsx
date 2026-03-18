@@ -14,9 +14,9 @@ import dayjs from 'dayjs';
 /**
  * Types
  */
-import type { SpaceListItem } from '@/features/store/types';
+import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { EntityStatusEnum } from '@/shared/types';
-import { SpaceTypeEnum } from '@/features/store/types';
+import { SpaceTypeEnum } from '@/shared/modules/spaces/types';
 
 /**
  * Constants

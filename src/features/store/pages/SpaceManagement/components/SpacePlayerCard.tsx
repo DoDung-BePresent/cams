@@ -21,7 +21,7 @@ import {
 import { PlaybackCommand } from '@/shared/modules/cams/types';
 import { isSpacePlaying } from '@/shared/modules/cams/utils';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
-import type { SpaceListItem } from '@/features/store/types';
+import type { SpaceListItem } from '@/shared/modules/spaces/types';
 
 const { Title, Text } = Typography;
 

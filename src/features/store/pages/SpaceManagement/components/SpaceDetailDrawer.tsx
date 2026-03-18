@@ -14,7 +14,7 @@ import {
 /**
  * Hooks
  */
-import { useSpace } from '@/features/store/hooks';
+import { useSpace } from '@/shared/modules/spaces/hooks';
 import { useSpaceState } from '@/shared/modules/cams/hooks';
 
 /**
