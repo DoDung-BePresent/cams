@@ -7,12 +7,12 @@ import { createStyles } from 'antd-style';
 import type { AnyObject } from 'antd/es/_util/type';
 import type { ReactNode } from 'react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DataTableProps<T extends AnyObject = any> = TableProps<T> & {
   filter?: ReactNode;
 };
 
 const useStyle = createStyles(({ css, prefixCls }) => {
-  console.log(prefixCls);
   return {
     customTable: css`
       .${prefixCls}-table {
@@ -35,6 +35,7 @@ const useStyle = createStyles(({ css, prefixCls }) => {
   };
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DataTable = <T extends AnyObject = any>({
   pagination,
   className,

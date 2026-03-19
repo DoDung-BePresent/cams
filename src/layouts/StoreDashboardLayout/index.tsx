@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Layout } from 'antd';
+import { Outlet } from 'react-router';
 
 /**
  * Components
  */
-import { AppHeader, AppSidebar, AppContent, AppFooter } from './components';
-import { Outlet } from 'react-router';
+import { AppSidebar, AppContent, AppFooter } from './components';
+import { AppHeader } from '@/shared/components/layout';
 
 export const StoreDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
