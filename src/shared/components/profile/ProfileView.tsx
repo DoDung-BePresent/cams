@@ -53,6 +53,7 @@ import { EntityStatusEnum, type RoleEnum } from '@/shared/types';
  * Utils
  */
 import { formatDate } from '@/shared/utils';
+import { Banner } from './components/Banner';
 
 const { Title, Text } = Typography;
 
@@ -79,54 +80,7 @@ export const ProfileView = ({ breadcrumbs }: ProfileViewProps) => {
       />
 
       {/* Banner */}
-      <div
-        className='mb-6 rounded-lg'
-        style={{
-          background:
-            'linear-gradient(250.38deg, #e6f4ff 2.39%, #69b1ff 34.42%, #1677ff 60.95%, #0958d9 84.83%, #002c8c 104.37%)',
-          padding: '24px 32px',
-          position: 'relative',
-          overflow: 'hidden',
-          minHeight: 100,
-        }}
-      >
-        <Flex
-          align='center'
-          gap='large'
-        >
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              border: '3px solid rgba(255,255,255,0.6)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <Avatar
-              size={58}
-              src={profile?.avatarUrl}
-              icon={<UserOutlined />}
-            />
-          </div>
-          <Flex vertical>
-            <Title
-              level={4}
-              style={{ margin: 0, color: 'white' }}
-            >
-              {profile?.fullName ?? '—'}
-            </Title>
-            <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13 }}>
-              {profile?.roles
-                ?.map((r: RoleEnum) => ROLE_LABELS[r])
-                .join(', ') ?? '—'}
-            </Text>
-          </Flex>
-        </Flex>
-      </div>
+      <Banner className='mb-5' />
 
       <Row gutter={[24, 24]}>
         {/* Left sidebar */}
@@ -146,19 +100,20 @@ export const ProfileView = ({ breadcrumbs }: ProfileViewProps) => {
             >
               <div
                 style={{
-                  width: 100,
-                  height: 100,
+                  width: 120,
+                  height: 120,
                   borderRadius: '50%',
-                  border: '3px dashed #d9d9d9',
+                  border: '2px dashed var(--ant-blue-4)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
                 <Avatar
-                  size={90}
+                  size={110}
                   src={profile?.avatarUrl}
-                  icon={<UserOutlined />}
+                  icon={<UserOutlined className='text-blue-600!' />}
+                  className='bg-blue-50!'
                 />
               </div>
               <Flex
@@ -240,6 +195,7 @@ export const ProfileView = ({ breadcrumbs }: ProfileViewProps) => {
                 <Flex
                   align='center'
                   gap='small'
+                  justify='center'
                 >
                   <SafetyCertificateOutlined style={{ color: '#722ed1' }} />
                   <Text
