@@ -44,19 +44,28 @@ shared/services/
   └── authService.ts    ← Nhưng service lại ở shared?
 ```
 
-**Giải pháp đã áp dụng:**
+**Giải pháp đã áp dụng (Updated March 2026):**
 
 ```
-shared/
+shared/modules/auth/
 ├── services/
-│   └── authService.ts     ← ✅ Kept here
+│   ├── authService.ts     ← ✅ Moved to module
+│   └── index.ts
 ├── hooks/
-│   └── auth/
-│       ├── useProfile.ts      ← ✅ Moved from features
-│       ├── useMyProfile.ts    ← ✅ Moved from features
-│       └── index.ts
+│   ├── useProfile.ts      ← ✅ Moved to module
+│   ├── useMyProfile.ts    ← ✅ Moved to module
+│   └── index.ts
 └── types/
-    └── authTypes.ts       ← ✅ Moved from features
+    ├── authTypes.ts       ← ✅ Moved to module
+    └── index.ts
+
+shared/modules/users/
+├── services/
+│   ├── userService.ts     ← ✅ Moved to module
+│   └── index.ts
+└── types/
+    ├── userTypes.ts       ← ✅ Moved to module
+    └── index.ts
 
 features/auth/
 ├── pages/
@@ -67,13 +76,26 @@ features/auth/
     └── authValidation.ts
 ```
 
+**Rationale:**
+
+- Auth and Users are domain entities → belong in `shared/modules/`
+- Consistent with other modules (spaces, tracks, playlists)
+- Each module has services, hooks, types structure
+- Backward compatibility via re-exports in `shared/services/`, `shared/hooks/`, `shared/types/`
+
 **Tasks:**
 
-- [x] Move `features/auth/hooks/` → `shared/hooks/auth/`
-- [x] Move `features/auth/types/` → `shared/types/authTypes.ts`
+- [x] Create `shared/modules/auth/` structure
+- [x] Move authService → `modules/auth/services/`
+- [x] Move auth hooks → `modules/auth/hooks/`
+- [x] Move auth types → `modules/auth/types/`
+- [x] Create `shared/modules/users/` structure
+- [x] Move userService → `modules/users/services/`
+- [x] Move user types → `modules/users/types/`
+- [x] Add re-exports for backward compatibility
 - [x] Update all imports
 - [x] Delete old files
-- [ ] Update ARCHITECTURE.md (next)
+- [x] Update ARCHITECTURE_MINDSET.md
 - [ ] Test thoroughly (next)
 
 ---

@@ -4,6 +4,10 @@ import { useQuery } from '@tanstack/react-query';
  * Services
  */
 import { trackService } from '@/shared/modules/tracks/services';
+
+/**
+ * Configs
+ */
 import { STALE_TIME } from '@/config';
 
 export const useTrack = (id?: string, enabled = true) => {

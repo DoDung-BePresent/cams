@@ -1,7 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import { authService, userService } from '@/shared/services';
+
+/**
+ * Configs
+ */
 import { STALE_TIME, QUERY_KEYS } from '@/config';
-import type { User } from '@/shared/types';
+
+/**
+ * Services
+ */
+import { authService } from '@/shared/modules/auth/services';
+import { userService } from '@/shared/modules/users/services';
+
+/**
+ * Types
+ */
+import type { User } from '@/shared/modules/auth/types';
 
 /**
  * Hook to get current user's full profile

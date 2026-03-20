@@ -1,6 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
-import { authService } from '@/shared/services';
-import type { User } from '@/shared/types';
+
+/**
+ * Services
+ */
+import { authService } from '@/shared/modules/auth/services';
+
+/**
+ * Types
+ */
+import type { User } from '@/shared/modules/auth/types';
+
+/**
+ * Configs
+ */
 import { STALE_TIME, QUERY_KEYS } from '@/config';
 
 /**

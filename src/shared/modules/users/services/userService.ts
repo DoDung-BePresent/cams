@@ -3,7 +3,8 @@ import { api } from '@/config';
 /**
  * Types
  */
-import type { Result, UserDetail } from '@/shared/types';
+import type { Result } from '@/shared/types';
+import type { UserDetail } from '@/shared/modules/users/types';
 
 const USER_ENDPOINTS = {
   detail: (id: string) => `/api/users/${id}`,

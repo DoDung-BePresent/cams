@@ -86,6 +86,8 @@ shared/
 
 ```
 shared/modules/
+├── auth/           ← Authentication domain
+├── users/          ← User entity
 ├── spaces/         ← Space entity
 ├── tracks/         ← Track entity
 ├── playlists/      ← Playlist entity
@@ -96,6 +98,17 @@ shared/modules/
 **Mỗi module có cấu trúc:**
 
 ```
+auth/
+├── services/       ← API calls cho Auth (login, logout, profile)
+├── hooks/          ← React hooks cho Auth (useProfile, useMyProfile)
+├── types/          ← Types cho Auth (User, LoginPayload, etc.)
+└── constants/      ← Constants cho Auth (nếu cần)
+
+users/
+├── services/       ← API calls cho User (getById)
+├── types/          ← Types cho User (UserDetail)
+└── hooks/          ← React hooks cho User (nếu cần)
+
 spaces/
 ├── services/       ← API calls cho Space
 ├── hooks/          ← React Query hooks

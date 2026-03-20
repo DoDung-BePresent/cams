@@ -27,7 +27,7 @@ import {
 /**
  * Hooks
  */
-import { useMyProfile } from '@/shared/hooks';
+import { useMyProfile } from '@/shared/modules/auth/hooks';
 
 /**
  * Components

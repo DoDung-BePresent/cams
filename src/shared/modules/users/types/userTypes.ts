@@ -1,4 +1,4 @@
-import type { EntityStatusEnum, RoleEnum } from './commonTypes';
+import type { EntityStatusEnum, RoleEnum } from '@/shared/types';
 
 /**
  * User Detail Response
