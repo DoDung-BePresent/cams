@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 interface FeatureErrorFallbackProps {
   featureName?: string;
   onReset?: () => void;
+  error?: Error;
 }
 
 /**
@@ -13,6 +14,7 @@ interface FeatureErrorFallbackProps {
 export const FeatureErrorFallback = ({
   featureName = 'this feature',
   onReset,
+  error,
 }: FeatureErrorFallbackProps) => {
   const navigate = useNavigate();
 
@@ -57,6 +59,27 @@ export const FeatureErrorFallback = ({
           ),
         ]}
       />
+      {import.meta.env.DEV && error && (
+        <details
+          style={{
+            marginTop: 24,
+            padding: 16,
+            background: '#f5f5f5',
+            borderRadius: 4,
+          }}
+        >
+          <summary
+            style={{ cursor: 'pointer', fontWeight: 600, marginBottom: 8 }}
+          >
+            Error Details (Dev Only)
+          </summary>
+          <pre style={{ fontSize: 12, overflow: 'auto' }}>
+            {error.message}
+            {'\n\n'}
+            {error.stack}
+          </pre>
+        </details>
+      )}
     </div>
   );
 };

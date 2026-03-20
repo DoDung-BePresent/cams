@@ -12,23 +12,6 @@ interface State {
   error?: Error;
 }
 
-/**
- * ErrorBoundary - Catches React errors and displays fallback UI
- *
- * Usage:
- * ```tsx
- * <ErrorBoundary>
- *   <YourComponent />
- * </ErrorBoundary>
- * ```
- *
- * With custom fallback:
- * ```tsx
- * <ErrorBoundary fallback={<CustomErrorUI />}>
- *   <YourComponent />
- * </ErrorBoundary>
- * ```
- */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -59,11 +42,36 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
+        // If fallback is a React element, clone it and inject error prop
+        if (
+          typeof this.props.fallback === 'object' &&
+          this.props.fallback !== null
+        ) {
+          return (
+            <>
+              {this.props.fallback}
+              {import.meta.env.DEV && this.state.error && (
+                <div className='mx-auto max-w-7xl px-6'>
+                  <details className='mt-6 rounded-sm border border-[var(--ant-color-error)] bg-[var(--ant-red-1)] p-4'>
+                    <summary className='cursor-pointer font-semibold'>
+                      Error Details (Dev Only)
+                    </summary>
+                    <pre className='mt-2 overflow-auto text-xs'>
+                      {this.state.error.message}
+                      {'\n\n'}
+                      {this.state.error.stack}
+                    </pre>
+                  </details>
+                </div>
+              )}
+            </>
+          );
+        }
         return this.props.fallback;
       }
 
       return (
-        <div style={{ padding: '48px 24px', maxWidth: 600, margin: '0 auto' }}>
+        <div style={{ padding: '48px 24px', maxWidth: 1200, margin: '0 auto' }}>
           <Result
             status='error'
             title='Something went wrong'
@@ -87,25 +95,18 @@ export class ErrorBoundary extends Component<Props, State> {
             ]}
           />
           {import.meta.env.DEV && this.state.error && (
-            <details
-              style={{
-                marginTop: 24,
-                padding: 16,
-                background: '#f5f5f5',
-                borderRadius: 4,
-              }}
-            >
-              <summary
-                style={{ cursor: 'pointer', fontWeight: 600, marginBottom: 8 }}
-              >
-                Error Details (Dev Only)
-              </summary>
-              <pre style={{ fontSize: 12, overflow: 'auto' }}>
-                {this.state.error.message}
-                {'\n\n'}
-                {this.state.error.stack}
-              </pre>
-            </details>
+            <div className='mx-auto max-w-7xl px-6'>
+              <details className='mt-6 rounded-sm border border-[var(--ant-color-error)] bg-[var(--ant-red-1)] p-4'>
+                <summary className='cursor-pointer font-semibold'>
+                  Error Details (Dev Only)
+                </summary>
+                <pre className='mt-2 overflow-auto text-xs'>
+                  {this.state.error.message}
+                  {'\n\n'}
+                  {this.state.error.stack}
+                </pre>
+              </details>
+            </div>
           )}
         </div>
       );
