@@ -1,7 +1,4 @@
-import type {
-  BaseResponse,
-  EntityStatusEnum,
-} from '@/shared/types/commonTypes';
+import type { BaseResponse, EntityStatusEnum } from '@/shared/types';
 
 /**
  * Space Type Enum (from API_Spaces.md §4.5)

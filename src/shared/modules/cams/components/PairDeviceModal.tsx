@@ -1,31 +1,46 @@
 import { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import {
   Button,
   Space,
   Typography,
-  Divider,
   Card,
   Tag,
   Descriptions,
   Spin,
   Alert,
 } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   QrcodeOutlined,
   ReloadOutlined,
   DisconnectOutlined,
   CloseCircleOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Hooks
+ */
 import {
   useGeneratePairCode,
   useRevokePairCode,
   useUnpairDevice,
   usePairDeviceInfo,
 } from '../hooks';
+
+/**
+ * Components
+ */
 import { AppModal } from '@/shared/components';
+
+/**
+ * Configs
+ */
 import { MODAL_WIDTHS } from '@/config';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
@@ -216,8 +231,6 @@ export const PairDeviceModal = ({
               showIcon
             />
           )}
-
-          <Divider />
 
           {/* Pair Code Section */}
           <div>

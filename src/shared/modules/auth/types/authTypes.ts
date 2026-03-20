@@ -1,4 +1,4 @@
-import type { Result, RoleEnum } from '@/shared/types/commonTypes';
+import type { Result, RoleEnum } from '@/shared/types';
 
 /**
  * Request Payloads

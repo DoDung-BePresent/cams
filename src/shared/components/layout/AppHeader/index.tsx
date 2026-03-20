@@ -1,31 +1,21 @@
 /**
  * Node modules
  */
-import {
-  Avatar,
-  Badge,
-  Button,
-  Dropdown,
-  Flex,
-  Layout,
-  Tag,
-  Typography,
-} from 'antd';
-import { useNavigate } from 'react-router';
+import { useState } from 'react';
+import { Avatar, Badge, Button, Dropdown, Flex, Layout, Tag } from 'antd';
 
 /**
  * Icons
  */
 import {
   BellOutlined,
+  DisconnectOutlined,
   FullscreenExitOutlined,
   FullscreenOutlined,
-  LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MessageOutlined,
   UserOutlined,
-  DisconnectOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -35,9 +25,9 @@ import { useAuth } from '@/providers';
 import { useFullscreen, useNetworkStatus } from '@/shared/hooks';
 
 /**
- * Types
+ * Components
  */
-import type { MenuProps } from 'antd';
+import { UserDropdownContent } from './UserDropdownContent';
 
 /**
  * Configs
@@ -50,7 +40,6 @@ type AppHeaderProps = {
 };
 
 const { Header } = Layout;
-const { Text } = Typography;
 
 const headerStyle: React.CSSProperties = {
   background: 'white',
@@ -67,36 +56,10 @@ const headerStyle: React.CSSProperties = {
 
 export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const { isOnline } = useNetworkStatus();
 
-  const handleLogout = () => {
-    logout.mutate(undefined, {
-      onSuccess: () => {
-        navigate('/login', { replace: true });
-      },
-    });
-  };
-
-  const userMenuItems: MenuProps['items'] = [
-    {
-      key: 'profile',
-      label: (
-        <Flex vertical>
-          <Text strong>{`${user?.firstName} ${user?.lastName}`}</Text>
-          <Text type='secondary'>{user?.email}</Text>
-        </Flex>
-      ),
-    },
-    { type: 'divider' },
-    {
-      key: 'logout',
-      label: 'Logout',
-      icon: <LogoutOutlined />,
-      onClick: handleLogout,
-    },
-  ];
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
     <Header style={headerStyle}>
@@ -105,6 +68,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
         justify='space-between'
         className='w-full'
       >
+        {/* Left */}
         <Flex
           gap='small'
           align='center'
@@ -113,11 +77,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             type='text'
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={onClick}
-            style={{
-              fontSize: '16px',
-              width: 36,
-              height: 36,
-            }}
+            // style={{ , width: 36, height: 36 }}
           />
           {!isOnline && (
             <Tag
@@ -128,6 +88,8 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             </Tag>
           )}
         </Flex>
+
+        {/* Right */}
         <Flex gap='small'>
           <Button
             type='text'
@@ -137,40 +99,41 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
                 color='blue'
                 count={5}
               >
-                <BellOutlined style={{ fontSize: '16px' }} />
+                <BellOutlined />
               </Badge>
             }
-            style={{
-              width: 36,
-              height: 36,
-            }}
+            style={{ width: 36, height: 36 }}
           />
           <Button
             type='text'
-            icon={<MessageOutlined style={{ fontSize: '16px' }} />}
-            style={{
-              width: 36,
-              height: 36,
-            }}
+            icon={<MessageOutlined />}
+            style={{ width: 36, height: 36 }}
           />
           <Button
             type='text'
             onClick={toggleFullscreen}
             icon={
-              isFullscreen ? (
-                <FullscreenExitOutlined style={{ fontSize: '16px' }} />
-              ) : (
-                <FullscreenOutlined style={{ fontSize: '16px' }} />
-              )
+              isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
             }
-            style={{
-              width: 36,
-              height: 36,
-            }}
+            style={{ width: 36, height: 36 }}
           />
+
           <Dropdown
-            menu={{ items: userMenuItems }}
+            open={dropdownOpen}
+            onOpenChange={(open, info) => {
+              if (!open && info?.source === 'menu') return;
+              setDropdownOpen(open);
+            }}
+            trigger={['click']}
             placement='bottomRight'
+            dropdownRender={() => (
+              <div
+                className='overflow-hidden rounded-sm bg-white shadow-md'
+                onClick={(e) => e.stopPropagation()}
+              >
+                <UserDropdownContent />
+              </div>
+            )}
           >
             <Avatar
               size={AVATAR_SIZE.small}

@@ -106,6 +106,10 @@
     margin-top: 3px !important;
   }
 
+  .ant-btn.ant-btn-icon-only .anticon {
+    font-size: 16px !important;
+  }
+
   .custom-breadcrumb ol li:last-child {
     font-weight: 500;
   }
