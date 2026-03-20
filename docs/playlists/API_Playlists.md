@@ -10,22 +10,23 @@ Tài liệu API Playlist Management cho CMS (React TypeScript & Flutter). Base p
 
 ## 1. Authorization Matrix
 
-| Endpoint                                          | SystemAdmin | BrandManager (own brand) | StoreManager (own store) |
-|--------------------------------------------------|:-----------:|:------------------------:|:------------------------:|
-| `GET /api/playlists`                              | ✅          | ✅                       | ✅                       |
-| `GET /api/playlists/{id}`                         | ✅          | ✅                       | ✅                       |
-| `POST /api/playlists`                             | ❌          | ✅ ¹                     | ✅ ²                     |
-| `PUT /api/playlists/{id}`                         | ❌          | ✅                       | ✅                       |
-| `DELETE /api/playlists/{id}`                      | ❌          | ✅                       | ✅                       |
-| `PUT /api/playlists/{id}/toggle-status`           | ❌          | ✅                       | ✅                       |
-| `POST /api/playlists/{id}/tracks`                 | ❌          | ✅                       | ✅                       |
-| `DELETE /api/playlists/{id}/tracks/{trackId}`     | ❌          | ✅                       | ✅                       |
-| `POST /api/playlists/{id}/retranscode`            | ❌          | ✅                       | ✅                       |
+| Endpoint                                      | SystemAdmin | BrandManager (own brand) | StoreManager (own store) | PlaybackDevice (scope = Store của session) |
+| --------------------------------------------- | :---------: | :----------------------: | :----------------------: | :----------------------------------------: |
+| `GET /api/playlists`                          |     ✅      |            ✅            |            ✅            |   ✅ (chỉ playlists thuộc Store session)   |
+| `GET /api/playlists/{id}`                     |     ✅      |            ✅            |            ✅            |  ✅ (chỉ khi playlist.StoreId = session)   |
+| `POST /api/playlists`                         |     ❌      |           ✅ ¹           |           ✅ ²           |                     ❌                     |
+| `PUT /api/playlists/{id}`                     |     ❌      |            ✅            |            ✅            |                     ❌                     |
+| `DELETE /api/playlists/{id}`                  |     ❌      |            ✅            |            ✅            |                     ❌                     |
+| `PUT /api/playlists/{id}/toggle-status`       |     ❌      |            ✅            |            ✅            |                     ❌                     |
+| `POST /api/playlists/{id}/tracks`             |     ❌      |            ✅            |            ✅            |                     ❌                     |
+| `DELETE /api/playlists/{id}/tracks/{trackId}` |     ❌      |            ✅            |            ✅            |                     ❌                     |
+| `POST /api/playlists/{id}/retranscode`        |     ❌      |            ✅            |            ✅            |                     ❌                     |
 
 > **¹ POST — BrandManager:** `storeId` **bắt buộc** — phải cung cấp và phải thuộc brand của BM.  
 > **² POST — StoreManager:** `storeId` trong body **bị bỏ qua** — luôn dùng `user.StoreId`. StoreManager với `user.StoreId == null` → **403**.  
 > **"own brand"** = `playlist.Store.BrandId == user.BrandId`.  
 > **"own store"** = `playlist.StoreId == user.StoreId`.  
+> **PlaybackDevice** — tablet đã pair với một Space; scope = Store của session. Chỉ được **đọc** (GET list, GET by id); không được tạo/sửa/xóa playlist hay thêm/xóa track.  
 > ⚠️ **Playlist không có BrandId trực tiếp** — brand được xác định thông qua `playlist.Store.BrandId`.  
 > ⚠️ **SystemAdmin** có quyền **read-only** — write operations giới hạn cho BrandManager và StoreManager.
 
@@ -44,6 +45,7 @@ Accept-Language: vi-VN
 ```
 
 **Supported Languages:**
+
 - `en-US` hoặc `en` — English (default)
 - `vi-VN` hoặc `vi` — Tiếng Việt
 
@@ -68,6 +70,7 @@ public abstract class BaseResponse
 ```
 
 **Response hierarchy (Playlist):**
+
 ```
 PlaylistDetailResponse : PlaylistListItem : BaseResponse
 ```
@@ -95,23 +98,25 @@ public class BasePaginationFilter
 ### 4.1 `PlaylistRequest` (Create / Update — `application/json`)
 
 | Field                  | Type        | Required (Create) | Required (Update) | Validation                                                      |
-|------------------------|-------------|:-----------------:|:-----------------:|-----------------------------------------------------------------|
-| `name`                 | string?     | ✅                | ❌ (partial)      | NotEmpty; max 255 chars; unique trong cùng store                |
-| `storeId`              | Guid?       | ✅ (BM only) ³    | ❌                | BrandManager phải cung cấp; phải thuộc brand của BM             |
-| `moodId`               | Guid?       | ❌                | ❌                | Tùy chọn; must exist nếu cung cấp                               |
-| `description`          | string?     | ❌                | ❌                | Tùy chọn; max 2000 chars                                        |
-| `isDynamic`            | bool?       | ❌                | ❌                | Playlist động hay tĩnh                                          |
-| `isDefault`            | bool?       | ❌                | ❌                | Playlist mặc định của store                                     |
-| `hlsUrl`               | string?     | ❌                | ❌                | Phải kết thúc bằng `.m3u8`; max 500 chars                       |
-| `totalDurationSeconds` | int?        | ❌                | ❌                | > 0 nếu được cung cấp                                           |
-| `trackIds`             | List<Guid>? | ❌                | ❌ ⁴              | Create: initial tracks; Update: full desired set (null = no-op) |
+| ---------------------- | ----------- | :---------------: | :---------------: | --------------------------------------------------------------- |
+| `name`                 | string?     |        ✅         |   ❌ (partial)    | NotEmpty; max 255 chars; unique trong cùng store                |
+| `storeId`              | Guid?       |  ✅ (BM only) ³   |        ❌         | BrandManager phải cung cấp; phải thuộc brand của BM             |
+| `moodId`               | Guid?       |        ❌         |        ❌         | Tùy chọn; must exist nếu cung cấp                               |
+| `description`          | string?     |        ❌         |        ❌         | Tùy chọn; max 2000 chars                                        |
+| `isDynamic`            | bool?       |        ❌         |        ❌         | Playlist động hay tĩnh                                          |
+| `isDefault`            | bool?       |        ❌         |        ❌         | Playlist mặc định của store                                     |
+| `hlsUrl`               | string?     |        ❌         |        ❌         | Phải kết thúc bằng `.m3u8`; max 500 chars                       |
+| `totalDurationSeconds` | int?        |        ❌         |        ❌         | > 0 nếu được cung cấp                                           |
+| `trackIds`             | List<Guid>? |        ❌         |       ❌ ⁴        | Create: initial tracks; Update: full desired set (null = no-op) |
 
 > **³ `storeId` theo role:**
+>
 > - **BrandManager:** `storeId` **bắt buộc** — phải cung cấp và phải là store thuộc brand của BM.
 > - **StoreManager:** `storeId` trong body **bị bỏ qua** — luôn dùng `user.StoreId` từ session.
 > - **Update:** `storeId` hoàn toàn bị bỏ qua (không thể đổi store của một playlist).
 >
 > **⁴ `trackIds` semantics trên UPDATE:**
+>
 > - `trackIds: null` → **không thay đổi** danh sách track.
 > - `trackIds: []` → **xóa tất cả** track khỏi playlist.
 > - `trackIds: [id1, id2]` → **sync** danh sách: xóa track không có trong list, thêm track mới.
@@ -120,9 +125,9 @@ public class BasePaginationFilter
 
 ### 4.2 `AddTracksToPlaylistRequest` (cho `POST /api/playlists/{id}/tracks`)
 
-| Field      | Type        | Required | Validation                                    |
-|------------|-------------|:--------:|-----------------------------------------------|
-| `trackIds` | List<Guid>  | ✅       | Duplicate IDs silently ignored                |
+| Field      | Type       | Required | Validation                     |
+| ---------- | ---------- | :------: | ------------------------------ |
+| `trackIds` | List<Guid> |    ✅    | Duplicate IDs silently ignored |
 
 > Track đã có trong playlist → **skipped** (không duplicate). TrackIds không thuộc brand → bị loại.
 
@@ -130,93 +135,94 @@ public class BasePaginationFilter
 
 **Kế thừa từ `BasePaginationFilter`** (§3.2) + thêm các filter riêng:
 
-| Param          | Type              | Default | Mô tả                                                                                              |
-|----------------|-------------------|---------|----------------------------------------------------------------------------------------------------|
-| `page`         | number            | 1       | Trang hiện tại                                                                                     |
-| `pageSize`     | number            | 10      | Số phần tử mỗi trang (max 500)                                                                     |
-| `search`       | string?           | —       | Tìm kiếm (name, description)                                                                       |
-| `sortBy`       | string?           | —       | Trường sắp xếp                                                                                     |
-| `isAscending`  | boolean?          | `false` | Chiều sắp xếp (default: **false** = mới nhất trước)                                                |
-| `status`       | EntityStatusEnum? | —       | Lọc theo trạng thái (0=Inactive, 1=Active)                                                         |
-| `brandId`      | Guid?             | —       | ⚠️ BM/SM: luôn bị override. SA: lọc tự do                                                         |
-| `storeId`      | Guid?             | —       | ⚠️ SM: luôn bị override. BM: lọc trong brand. SA: lọc tự do                                       |
-| `moodId`       | Guid?             | —       | Lọc theo mood                                                                                      |
-| `isDynamic`    | boolean?          | —       | `true` = chỉ dynamic playlist; `false` = chỉ static                                               |
-| `isDefault`    | boolean?          | —       | `true` = chỉ default playlist                                                                      |
-| `createdFrom`  | datetime? (ISO 8601) | —   | Lọc playlist tạo từ ngày này                                                                       |
-| `createdTo`    | datetime? (ISO 8601) | —   | Lọc playlist tạo đến ngày này                                                                      |
+| Param         | Type                 | Default | Mô tả                                                       |
+| ------------- | -------------------- | ------- | ----------------------------------------------------------- |
+| `page`        | number               | 1       | Trang hiện tại                                              |
+| `pageSize`    | number               | 10      | Số phần tử mỗi trang (max 500)                              |
+| `search`      | string?              | —       | Tìm kiếm (name, description)                                |
+| `sortBy`      | string?              | —       | Trường sắp xếp                                              |
+| `isAscending` | boolean?             | `false` | Chiều sắp xếp (default: **false** = mới nhất trước)         |
+| `status`      | EntityStatusEnum?    | —       | Lọc theo trạng thái (0=Inactive, 1=Active)                  |
+| `brandId`     | Guid?                | —       | ⚠️ BM/SM: luôn bị override. SA: lọc tự do                   |
+| `storeId`     | Guid?                | —       | ⚠️ SM: luôn bị override. BM: lọc trong brand. SA: lọc tự do |
+| `moodId`      | Guid?                | —       | Lọc theo mood                                               |
+| `isDynamic`   | boolean?             | —       | `true` = chỉ dynamic playlist; `false` = chỉ static         |
+| `isDefault`   | boolean?             | —       | `true` = chỉ default playlist                               |
+| `createdFrom` | datetime? (ISO 8601) | —       | Lọc playlist tạo từ ngày này                                |
+| `createdTo`   | datetime? (ISO 8601) | —       | Lọc playlist tạo đến ngày này                               |
 
 ### 4.4 `PlaylistListItem` (trong `PaginationResult<PlaylistListItem>`)
 
 **Kế thừa từ `BaseResponse`** (§3.1) + thêm:
 
-| Field                  | Type    | Mô tả                                                              |
-|------------------------|---------|--------------------------------------------------------------------|
+| Field                  | Type         | Mô tả                                                              |
+| ---------------------- | ------------ | ------------------------------------------------------------------ |
 | (inherited)            | BaseResponse | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
-| `brandId`              | Guid?   | ID brand (từ store.BrandId)                                        |
-| `storeId`              | Guid?   | ID store chứa playlist                                             |
-| `storeName`            | string? | Tên store (display)                                                |
-| `moodId`               | Guid?   | ID mood                                                            |
-| `moodName`             | string? | Tên mood (display)                                                 |
-| `name`                 | string? | Tên playlist                                                       |
-| `description`          | string? | Mô tả playlist                                                     |
-| `isDynamic`            | bool?   | Playlist động (AI-managed) hay tĩnh                                |
-| `isDefault`            | bool?   | Playlist mặc định của store                                        |
-| `hlsUrl`               | string? | Master HLS manifest URL (.m3u8)                                    |
-| `totalDurationSeconds` | int?    | Tổng thời lượng (giây)                                             |
-| `trackCount`           | int     | Số track trong playlist                                            |
+| `brandId`              | Guid?        | ID brand (từ store.BrandId)                                        |
+| `storeId`              | Guid?        | ID store chứa playlist                                             |
+| `storeName`            | string?      | Tên store (display)                                                |
+| `moodId`               | Guid?        | ID mood                                                            |
+| `moodName`             | string?      | Tên mood (display)                                                 |
+| `name`                 | string?      | Tên playlist                                                       |
+| `description`          | string?      | Mô tả playlist                                                     |
+| `isDynamic`            | bool?        | Playlist động (AI-managed) hay tĩnh                                |
+| `isDefault`            | bool?        | Playlist mặc định của store                                        |
+| `hlsUrl`               | string?      | Master HLS manifest URL (.m3u8)                                    |
+| `totalDurationSeconds` | int?         | Tổng thời lượng (giây)                                             |
+| `trackCount`           | int          | Số track trong playlist                                            |
 
 ### 4.5 `PlaylistDetailResponse` (trong `Result<PlaylistDetailResponse>`)
 
 **Kế thừa từ `PlaylistListItem`** (→ gián tiếp từ `BaseResponse`) + thêm:
 
 | Field    | Type                    | Mô tả                                                                         |
-|----------|-------------------------|-------------------------------------------------------------------------------|
+| -------- | ----------------------- | ----------------------------------------------------------------------------- |
 | `tracks` | List<PlaylistTrackItem> | Danh sách track theo thứ tự (có `seekOffsetSeconds` được tính từ phía server) |
 
 ### 4.6 `PlaylistTrackItem` (trong `PlaylistDetailResponse.tracks`)
 
-| Field               | Type    | Mô tả                                                                                        |
-|---------------------|---------|----------------------------------------------------------------------------------------------|
-| `trackId`           | Guid    | ID track                                                                                     |
-| `title`             | string? | Tên track                                                                                    |
-| `artist`            | string? | Nghệ sĩ                                                                                      |
-| `durationSec`       | int?    | Thời lượng metadata (giây)                                                                   |
-| `orderIndex`        | int?    | Thứ tự trong playlist                                                                        |
-| `coverImageUrl`     | string? | URL ảnh bìa                                                                                  |
-| `actualDurationSec` | int?    | Thời lượng thực từ MediaConvert (ưu tiên hơn `durationSec`); `null` nếu chưa transcode      |
-| `seekOffsetSeconds` | int     | Vị trí bắt đầu (giây) trong HLS stream nối tiếp — dùng cho SkipToTrack                      |
+| Field               | Type    | Mô tả                                                                                  |
+| ------------------- | ------- | -------------------------------------------------------------------------------------- |
+| `trackId`           | Guid    | ID track                                                                               |
+| `title`             | string? | Tên track                                                                              |
+| `artist`            | string? | Nghệ sĩ                                                                                |
+| `durationSec`       | int?    | Thời lượng metadata (giây)                                                             |
+| `orderIndex`        | int?    | Thứ tự trong playlist                                                                  |
+| `coverImageUrl`     | string? | URL ảnh bìa                                                                            |
+| `actualDurationSec` | int?    | Thời lượng thực từ MediaConvert (ưu tiên hơn `durationSec`); `null` nếu chưa transcode |
+| `seekOffsetSeconds` | int     | Vị trí bắt đầu (giây) trong HLS stream nối tiếp — dùng cho SkipToTrack                 |
 
 > **`seekOffsetSeconds`:** được tính server-side bằng cách cộng dồn `actualDurationSec ?? durationSec` của từng track. Client dùng giá trị này để seek HLS player khi implement tính năng "chuyển bài".
 
 ### 4.7 `EntityStatusEnum`
 
-| Số JSON | Mô tả           |
-|---------|-----------------|
-| `0`     | Inactive        |
-| `1`     | Active          |
-| `2`     | Pending         |
-| `3`     | Rejected        |
+| Số JSON | Mô tả    |
+| ------- | -------- |
+| `0`     | Inactive |
+| `1`     | Active   |
+| `2`     | Pending  |
+| `3`     | Rejected |
 
 ---
 
 ### 4.8 Validation Rules Detail (Backend — `SharedPlaylistRequestValidator`)
 
 > **Quy tắc chung:**
+>
 > - **CREATE** (`isPartialUpdate = false`): `name` là **bắt buộc**; các field khác tùy chọn.
 > - **UPDATE** (`isPartialUpdate = true`): tất cả field đều tùy chọn; chỉ field non-null mới được validate và áp dụng.
 
-| Field                  | Rule                       | Chi tiết                                                                              |
-|------------------------|----------------------------|---------------------------------------------------------------------------------------|
-| `name`                 | Required (create)          | NotEmpty() — không được rỗng/null khi tạo mới                                         |
-| `name`                 | MaxLength(255)             | Tối đa 255 ký tự (khi được cung cấp)                                                  |
-| `name`                 | Unique per store           | Không được trùng tên với playlist khác trong **cùng store** (handler check)            |
-| `hlsUrl`               | EndsWith(".m3u8")          | Phải kết thúc bằng `.m3u8` nếu được cung cấp (case-insensitive)                       |
-| `hlsUrl`               | MaxLength(500)             | Tối đa 500 ký tự                                                                      |
-| `totalDurationSeconds` | GreaterThan(0)             | Phải > 0 nếu được cung cấp                                                            |
-| `description`          | MaxLength(2000)            | Tối đa 2000 ký tự                                                                     |
-| `moodId`               | Exists in DB               | Phải tồn tại nếu cung cấp (handler check)                                              |
-| `storeId` (BM)         | Required (BrandManager)    | BrandManager phải cung cấp; phải thuộc brand của BM (handler check)                    |
+| Field                  | Rule                    | Chi tiết                                                                    |
+| ---------------------- | ----------------------- | --------------------------------------------------------------------------- |
+| `name`                 | Required (create)       | NotEmpty() — không được rỗng/null khi tạo mới                               |
+| `name`                 | MaxLength(255)          | Tối đa 255 ký tự (khi được cung cấp)                                        |
+| `name`                 | Unique per store        | Không được trùng tên với playlist khác trong **cùng store** (handler check) |
+| `hlsUrl`               | EndsWith(".m3u8")       | Phải kết thúc bằng `.m3u8` nếu được cung cấp (case-insensitive)             |
+| `hlsUrl`               | MaxLength(500)          | Tối đa 500 ký tự                                                            |
+| `totalDurationSeconds` | GreaterThan(0)          | Phải > 0 nếu được cung cấp                                                  |
+| `description`          | MaxLength(2000)         | Tối đa 2000 ký tự                                                           |
+| `moodId`               | Exists in DB            | Phải tồn tại nếu cung cấp (handler check)                                   |
+| `storeId` (BM)         | Required (BrandManager) | BrandManager phải cung cấp; phải thuộc brand của BM (handler check)         |
 
 ---
 
@@ -224,11 +230,12 @@ public class BasePaginationFilter
 
 ### 5.1 `GET /api/playlists` — Danh sách playlist (có phân trang)
 
-- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store)
+- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store), PlaybackDevice (scope = Store của session)
 - **Query params:** `PlaylistFilter` (§4.3)
 - **Notes:**
   - **BrandManager:** `brandId` luôn bị override về brand của họ.
   - **StoreManager:** `storeId` bị override về store của họ; `brandId` bị override về brand của họ.
+  - **PlaybackDevice:** `storeId`/`brandId` lấy từ device session — chỉ thấy playlists thuộc Store đó.
   - **SystemAdmin:** có thể truyền `storeId` hoặc `brandId` để lọc.
   - Includes: Mood, Store (tên display), PlaylistTracks (đếm track).
 
@@ -278,13 +285,14 @@ public class BasePaginationFilter
 
 ### 5.2 `GET /api/playlists/{id}` — Chi tiết playlist
 
-- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store)
+- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store), PlaybackDevice (chỉ khi playlist.StoreId = Store của session)
 - **Path param:** `id` (Guid)
 - **Includes:** PlaylistTracks → Track, Mood, Store
 - **Authorization flow:**
   1. Playlist phải tồn tại và không bị xóa (`!IsDeleted`) → **404** nếu không thấy
   2. BrandManager: `playlist.Store.BrandId != user.BrandId` → **403**
   3. StoreManager: `playlist.StoreId != user.StoreId` → **403**
+  4. PlaybackDevice: `playlist.StoreId != session.StoreId` → **403**
 - **Notes:**
   - `seekOffsetSeconds` trong từng track được **tính server-side** (cumulative sum).
   - Client dùng `seekOffsetSeconds` để seek HLS player khi skip track.
@@ -605,15 +613,15 @@ public class BasePaginationFilter
 
 ## 6. Error Response Reference
 
-| HTTP Status | ErrorCode               | Khi nào xảy ra                                                        |
-|-------------|-------------------------|-----------------------------------------------------------------------|
-| 200 / 201   | `null`                  | Thành công                                                            |
-| 400         | `ValidationFailed`      | Input không hợp lệ (format, required fields)                         |
-| 401         | `Unauthorized`          | Chưa đăng nhập hoặc session không hợp lệ                             |
-| 403         | `Forbidden`             | Không đủ quyền hoặc playlist không thuộc brand/store của user        |
-| 404         | `NotFound`              | Playlist, Store, hoặc Mood không tồn tại                             |
-| 409 / 422   | `BusinessRuleViolation` | Name trùng; playlist đang stream (delete/add/remove track)            |
-| 500         | `InternalServerError`   | Lỗi server không mong đợi                                            |
+| HTTP Status | ErrorCode               | Khi nào xảy ra                                                |
+| ----------- | ----------------------- | ------------------------------------------------------------- |
+| 200 / 201   | `null`                  | Thành công                                                    |
+| 400         | `ValidationFailed`      | Input không hợp lệ (format, required fields)                  |
+| 401         | `Unauthorized`          | Chưa đăng nhập hoặc session không hợp lệ                      |
+| 403         | `Forbidden`             | Không đủ quyền hoặc playlist không thuộc brand/store của user |
+| 404         | `NotFound`              | Playlist, Store, hoặc Mood không tồn tại                      |
+| 409 / 422   | `BusinessRuleViolation` | Name trùng; playlist đang stream (delete/add/remove track)    |
+| 500         | `InternalServerError`   | Lỗi server không mong đợi                                     |
 
 ---
 

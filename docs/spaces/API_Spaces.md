@@ -10,19 +10,20 @@ Tài liệu API Space Management cho CMS (React TypeScript & Flutter). Base path
 
 ## 1. Authorization Matrix
 
-| Endpoint                                   | SystemAdmin | BrandManager (own brand) | StoreManager (own store) |
-|-------------------------------------------|:-----------:|:------------------------:|:------------------------:|
-| `GET /api/spaces`                          | ✅          | ✅                       | ✅ ¹                     |
-| `GET /api/spaces/{id}`                     | ✅          | ✅                       | ✅                       |
-| `POST /api/spaces`                         | ❌          | ✅                       | ✅ ²                     |
-| `PUT /api/spaces/{id}`                     | ❌          | ✅                       | ✅                       |
-| `DELETE /api/spaces/{id}`                  | ❌          | ✅                       | ✅                       |
-| `PUT /api/spaces/{id}/toggle-status`       | ❌          | ✅                       | ✅                       |
+| Endpoint                             | SystemAdmin | BrandManager (own brand) | StoreManager (own store) | PlaybackDevice (scope = Space của session) |
+| ------------------------------------ | :---------: | :----------------------: | :----------------------: | :----------------------------------------: |
+| `GET /api/spaces`                    |     ✅      |            ✅            |           ✅ ¹           |        ❌ (không được list spaces)         |
+| `GET /api/spaces/{id}`               |     ✅      |            ✅            |            ✅            |  ✅ (chỉ khi `id` = SpaceId của session)   |
+| `POST /api/spaces`                   |     ❌      |            ✅            |           ✅ ²           |                     ❌                     |
+| `PUT /api/spaces/{id}`               |     ❌      |            ✅            |            ✅            |                     ❌                     |
+| `DELETE /api/spaces/{id}`            |     ❌      |            ✅            |            ✅            |                     ❌                     |
+| `PUT /api/spaces/{id}/toggle-status` |     ❌      |            ✅            |            ✅            |                     ❌                     |
 
 > **¹ GET /api/spaces — StoreManager:** StoreManager với `user.StoreId == null` → **403 Forbidden**.  
 > **² POST /api/spaces — StoreManager:** `storeId` trong body bị **bỏ qua** — luôn dùng `user.StoreId`. StoreManager với `user.StoreId == null` → **403**.  
 > **"own brand"** = `store.BrandId == user.BrandId`.  
 > **"own store"** = `space.StoreId == user.StoreId`.  
+> **PlaybackDevice** — mỗi Space gắn với **duy nhất một** playback device (tablet). Tablet chỉ được **GET by id** đúng SpaceId của session; **không** được gọi GET danh sách spaces.  
 > ⚠️ **SystemAdmin** có quyền **read-only** đối với space data — write operations giới hạn cho BrandManager và StoreManager.
 
 ---
@@ -40,10 +41,12 @@ Accept-Language: vi-VN
 ```
 
 **Supported Languages:**
+
 - `en-US` hoặc `en` — English (default)
 - `vi-VN` hoặc `vi` — Tiếng Việt
 
 **Cơ chế:**
+
 1. Backend đọc `Accept-Language` header từ request
 2. Nếu có, dùng ngôn ngữ được chỉ định; nếu không hỗ trợ → fallback sang English
 3. Validation messages, error messages đều localize theo ngôn ngữ này
@@ -70,6 +73,7 @@ public abstract class BaseResponse
 ```
 
 **Response hierarchy (Space):**
+
 ```
 SpaceDetailResponse : SpaceListItem : BaseResponse
 ```
@@ -97,18 +101,19 @@ public class BasePaginationFilter
 ### 4.1 `SpaceRequest` (Create / Update — `application/json`)
 
 | Field                    | Type           | Required (Create) | Required (Update) | Validation                                          |
-|--------------------------|----------------|:-----------------:|:-----------------:|-----------------------------------------------------|
-| `storeId`                | Guid?          | ✅ (BM only) ³    | ❌                | BrandManager phải cung cấp; phải thuộc brand của BM |
-| `name`                   | string?        | ✅                | ❌ (partial)      | Not empty; max 200 chars; unique trong cùng store   |
-| `type`                   | SpaceTypeEnum? | ✅                | ❌ (partial)      | Required khi create; phải là giá trị hợp lệ         |
-| `description`            | string?        | ❌                | ❌                | Tùy chọn                                            |
-| `cameraId`               | string?        | ❌                | ❌                | ID camera gắn với space                             |
-| `roiCoordinates`         | string?        | ❌                | ❌                | Tọa độ ROI cho camera (JSON string)                 |
-| `maxOccupancy`           | int?           | ❌                | ❌                | Phải `> 0` nếu được cung cấp                        |
-| `criticalQueueThreshold` | int?           | ❌                | ❌                | Phải `> 0` nếu được cung cấp                        |
-| `wiFiSensorId`           | string?        | ❌                | ❌                | ID cảm biến Wi-Fi gắn với space                     |
+| ------------------------ | -------------- | :---------------: | :---------------: | --------------------------------------------------- |
+| `storeId`                | Guid?          |  ✅ (BM only) ³   |        ❌         | BrandManager phải cung cấp; phải thuộc brand của BM |
+| `name`                   | string?        |        ✅         |   ❌ (partial)    | Not empty; max 200 chars; unique trong cùng store   |
+| `type`                   | SpaceTypeEnum? |        ✅         |   ❌ (partial)    | Required khi create; phải là giá trị hợp lệ         |
+| `description`            | string?        |        ❌         |        ❌         | Tùy chọn                                            |
+| `cameraId`               | string?        |        ❌         |        ❌         | ID camera gắn với space                             |
+| `roiCoordinates`         | string?        |        ❌         |        ❌         | Tọa độ ROI cho camera (JSON string)                 |
+| `maxOccupancy`           | int?           |        ❌         |        ❌         | Phải `> 0` nếu được cung cấp                        |
+| `criticalQueueThreshold` | int?           |        ❌         |        ❌         | Phải `> 0` nếu được cung cấp                        |
+| `wiFiSensorId`           | string?        |        ❌         |        ❌         | ID cảm biến Wi-Fi gắn với space                     |
 
 > **³ `storeId` theo role:**
+>
 > - **BrandManager:** `storeId` **bắt buộc** — phải cung cấp và phải là store thuộc brand của BM.
 > - **StoreManager:** `storeId` trong body **bị bỏ qua** — luôn dùng `user.StoreId` từ session.
 > - **Update:** `storeId` hoàn toàn bị bỏ qua (không thể đổi store của một space).
@@ -117,82 +122,83 @@ public class BasePaginationFilter
 
 **Kế thừa từ `BasePaginationFilter`** (§3.2) + thêm các filter riêng:
 
-| Param          | Type              | Default | Mô tả                                                                      |
-|----------------|-------------------|---------|----------------------------------------------------------------------------|
-| `page`         | number            | 1       | Trang hiện tại                                                             |
-| `pageSize`     | number            | 10      | Số phần tử mỗi trang (max 500)                                             |
-| `search`       | string?           | —       | Tìm kiếm (name, description)                                               |
-| `sortBy`       | string?           | —       | Trường sắp xếp                                                             |
-| `isAscending`  | boolean?          | true    | Chiều sắp xếp (default: true = tăng dần)                                  |
-| `status`       | EntityStatusEnum? | —       | Lọc theo trạng thái (0=Inactive, 1=Active, 2=Pending, 3=Rejected)         |
-| `storeId`      | Guid?             | —       | ⚠️ SM: luôn bị override. BM: không áp dụng (dùng brandId). SA: lọc tự do  |
-| `brandId`      | Guid?             | —       | ⚠️ BM: luôn bị override về brand của mình. SA: lọc theo brand             |
-| `type`         | SpaceTypeEnum?    | —       | Lọc theo loại không gian (xem §4.5)                                        |
-| `createdFrom`  | datetime? (ISO 8601) | —   | Lọc space tạo từ ngày này                                                  |
-| `createdTo`    | datetime? (ISO 8601) | —   | Lọc space tạo đến ngày này                                                 |
+| Param         | Type                 | Default | Mô tả                                                                    |
+| ------------- | -------------------- | ------- | ------------------------------------------------------------------------ |
+| `page`        | number               | 1       | Trang hiện tại                                                           |
+| `pageSize`    | number               | 10      | Số phần tử mỗi trang (max 500)                                           |
+| `search`      | string?              | —       | Tìm kiếm (name, description)                                             |
+| `sortBy`      | string?              | —       | Trường sắp xếp                                                           |
+| `isAscending` | boolean?             | true    | Chiều sắp xếp (default: true = tăng dần)                                 |
+| `status`      | EntityStatusEnum?    | —       | Lọc theo trạng thái (0=Inactive, 1=Active, 2=Pending, 3=Rejected)        |
+| `storeId`     | Guid?                | —       | ⚠️ SM: luôn bị override. BM: không áp dụng (dùng brandId). SA: lọc tự do |
+| `brandId`     | Guid?                | —       | ⚠️ BM: luôn bị override về brand của mình. SA: lọc theo brand            |
+| `type`        | SpaceTypeEnum?       | —       | Lọc theo loại không gian (xem §4.5)                                      |
+| `createdFrom` | datetime? (ISO 8601) | —       | Lọc space tạo từ ngày này                                                |
+| `createdTo`   | datetime? (ISO 8601) | —       | Lọc space tạo đến ngày này                                               |
 
 ### 4.3 `SpaceListItem` (trong `PaginationResult<SpaceListItem>`)
 
 **Kế thừa từ `BaseResponse`** (§3.1) + thêm:
 
-| Field        | Type          | Mô tả                                                              |
-|--------------|---------------|--------------------------------------------------------------------|
-| (inherited)  | BaseResponse  | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
-| `storeId`    | Guid          | ID store chứa space này                                            |
-| `name`       | string        | Tên space                                                          |
-| `type`       | SpaceTypeEnum | Loại không gian (xem §4.5)                                         |
-| `description`| string?       | Mô tả space                                                        |
+| Field         | Type          | Mô tả                                                              |
+| ------------- | ------------- | ------------------------------------------------------------------ |
+| (inherited)   | BaseResponse  | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
+| `storeId`     | Guid          | ID store chứa space này                                            |
+| `name`        | string        | Tên space                                                          |
+| `type`        | SpaceTypeEnum | Loại không gian (xem §4.5)                                         |
+| `description` | string?       | Mô tả space                                                        |
 
 ### 4.4 `SpaceDetailResponse` (trong `Result<SpaceDetailResponse>`)
 
 **Kế thừa từ `SpaceListItem`** (→ kế thừa gián tiếp từ `BaseResponse`) + thêm:
 
-| Field                    | Type           | Mô tả                                                              |
-|--------------------------|----------------|--------------------------------------------------------------------|
-| `cameraId`               | string?        | ID camera gắn với space                                            |
-| `roiCoordinates`         | string?        | Tọa độ ROI cho camera (JSON string)                                |
-| `maxOccupancy`           | int?           | Sức chứa tối đa (người)                                            |
-| `criticalQueueThreshold` | int?           | Ngưỡng cảnh báo hàng đợi                                           |
-| `wiFiSensorId`           | string?        | ID cảm biến Wi-Fi gắn với space                                    |
-| `currentPlaylistId`      | Guid?          | 🔒 Read-only. Playlist đang phát tại space (set bởi AI pipeline)   |
+| Field                    | Type    | Mô tả                                                            |
+| ------------------------ | ------- | ---------------------------------------------------------------- |
+| `cameraId`               | string? | ID camera gắn với space                                          |
+| `roiCoordinates`         | string? | Tọa độ ROI cho camera (JSON string)                              |
+| `maxOccupancy`           | int?    | Sức chứa tối đa (người)                                          |
+| `criticalQueueThreshold` | int?    | Ngưỡng cảnh báo hàng đợi                                         |
+| `wiFiSensorId`           | string? | ID cảm biến Wi-Fi gắn với space                                  |
+| `currentPlaylistId`      | Guid?   | 🔒 Read-only. Playlist đang phát tại space (set bởi AI pipeline) |
 
 ### 4.5 `SpaceTypeEnum`
 
-| Giá trị JSON | Số | Tên        | Mô tả              |
-|--------------|----|------------|--------------------|
-| `"Counter"`  | 1  | Counter    | Quầy phục vụ       |
-| `"Hall"`     | 2  | Hall       | Sảnh / phòng lớn   |
-| `"Entrance"` | 3  | Entrance   | Lối vào            |
-| `"Outdoor"`  | 4  | Outdoor    | Khu ngoài trời     |
-| `"Kitchen"`  | 5  | Kitchen    | Nhà bếp / bếp      |
-| `"Restroom"` | 6  | Restroom   | Nhà vệ sinh        |
+| Giá trị JSON | Số  | Tên      | Mô tả            |
+| ------------ | --- | -------- | ---------------- |
+| `"Counter"`  | 1   | Counter  | Quầy phục vụ     |
+| `"Hall"`     | 2   | Hall     | Sảnh / phòng lớn |
+| `"Entrance"` | 3   | Entrance | Lối vào          |
+| `"Outdoor"`  | 4   | Outdoor  | Khu ngoài trời   |
+| `"Kitchen"`  | 5   | Kitchen  | Nhà bếp / bếp    |
+| `"Restroom"` | 6   | Restroom | Nhà vệ sinh      |
 
 ### 4.6 `EntityStatusEnum`
 
-| Giá trị JSON | Số | Mô tả           |
-|--------------|----|-----------------|
-| `"Inactive"` | 0  | Không hoạt động |
-| `"Active"`   | 1  | Đang hoạt động  |
-| `"Pending"`  | 2  | Chờ duyệt       |
-| `"Rejected"` | 3  | Bị từ chối      |
+| Giá trị JSON | Số  | Mô tả           |
+| ------------ | --- | --------------- |
+| `"Inactive"` | 0   | Không hoạt động |
+| `"Active"`   | 1   | Đang hoạt động  |
+| `"Pending"`  | 2   | Chờ duyệt       |
+| `"Rejected"` | 3   | Bị từ chối      |
 
 ---
 
 ### 4.7 Validation Rules Detail (Backend — `SharedSpaceRequestValidator`)
 
 > **Quy tắc chung:**
+>
 > - **CREATE** (`isPartialUpdate = false`): `name` và `type` là **bắt buộc**; các field khác tùy chọn, nếu cung cấp thì phải đúng format.
 > - **UPDATE** (`isPartialUpdate = true`): tất cả field đều tùy chọn; chỉ field được gửi lên (non-null/non-empty) mới được validate và áp dụng.
 
-| Field                    | Rule               | Chi tiết                                                           |
-|--------------------------|--------------------|--------------------------------------------------------------------|
-| `name`                   | Required (create)  | `NotEmpty()` — không được rỗng/null khi tạo mới                    |
-| `name`                   | MaxLength          | Tối đa 200 ký tự (khi được cung cấp)                               |
-| `name`                   | Unique             | Không được trùng tên với space khác trong **cùng store**            |
-| `type`                   | Required (create)  | `NotNull()` — bắt buộc khi tạo mới                                 |
-| `type`                   | IsInEnum           | Phải là giá trị hợp lệ trong `SpaceTypeEnum`                        |
-| `maxOccupancy`           | GreaterThan(0)     | Phải `> 0` nếu được cung cấp                                       |
-| `criticalQueueThreshold` | GreaterThan(0)     | Phải `> 0` nếu được cung cấp                                       |
+| Field                    | Rule              | Chi tiết                                                 |
+| ------------------------ | ----------------- | -------------------------------------------------------- |
+| `name`                   | Required (create) | `NotEmpty()` — không được rỗng/null khi tạo mới          |
+| `name`                   | MaxLength         | Tối đa 200 ký tự (khi được cung cấp)                     |
+| `name`                   | Unique            | Không được trùng tên với space khác trong **cùng store** |
+| `type`                   | Required (create) | `NotNull()` — bắt buộc khi tạo mới                       |
+| `type`                   | IsInEnum          | Phải là giá trị hợp lệ trong `SpaceTypeEnum`             |
+| `maxOccupancy`           | GreaterThan(0)    | Phải `> 0` nếu được cung cấp                             |
+| `criticalQueueThreshold` | GreaterThan(0)    | Phải `> 0` nếu được cung cấp                             |
 
 ---
 
@@ -200,7 +206,7 @@ public class BasePaginationFilter
 
 ### 5.1 `GET /api/spaces` — Danh sách space (có phân trang)
 
-- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store ⚠️)
+- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store ⚠️). **PlaybackDevice:** ❌ không được phép — mỗi Space gắn duy nhất một tablet; device dùng `GET /api/spaces/{id}` với `id` = SpaceId của session.
 - **Query params:** `SpaceFilter` (§4.2)
 - **Notes:**
   - **BrandManager:** `brandId` luôn bị override về brand của họ.
@@ -266,12 +272,14 @@ public class BasePaginationFilter
 
 ### 5.2 `GET /api/spaces/{id}` — Chi tiết space
 
-- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store)
-- **Path param:** `id` (Guid)
+- **Auth:** SystemAdmin, BrandManager (own brand), StoreManager (own store), PlaybackDevice (chỉ khi `id` = SpaceId của device session)
+- **Path param:** `id` (Guid).
+  - **PlaybackDevice:** có thể bỏ qua `id` ở handler level, nhưng trong thực tế FE luôn truyền `id = SpaceId` (ví dụ: lấy từ PairDeviceInfo / DeviceSession). Nếu `id` khác SpaceId session → 403.
 - **Authorization flow:**
   1. Space phải tồn tại → **404** nếu không tìm thấy (kiểm tra trước auth ownership)
   2. BrandManager: `store.BrandId != user.BrandId` → **403 Forbidden**
   3. StoreManager: `space.StoreId != user.StoreId` → **403 Forbidden**
+  4. PlaybackDevice: `id != session.SpaceId` → **403 Forbidden**
 
 - **Response 200 (`Result<SpaceDetailResponse>`):**
 
@@ -487,11 +495,11 @@ Tất cả error responses tuân theo cấu trúc `Result`:
 }
 ```
 
-| HTTP Status | `errorCode`            | Khi nào                                                          |
-|-------------|------------------------|------------------------------------------------------------------|
-| 400         | `ValidationFailed`     | FluentValidation thất bại                                        |
-| 401         | `Unauthorized`         | Chưa đăng nhập / token hết hạn                                   |
-| 403         | `Forbidden`            | Đúng role nhưng không có quyền trên resource cụ thể              |
-| 404         | `NotFound`             | Space / Store không tìm thấy                                     |
-| 422         | `BusinessRuleViolation`| Vi phạm business rule (trùng tên, v.v.)                          |
-| 500         | `InternalError`        | Lỗi server không mong đợi                                        |
+| HTTP Status | `errorCode`             | Khi nào                                             |
+| ----------- | ----------------------- | --------------------------------------------------- |
+| 400         | `ValidationFailed`      | FluentValidation thất bại                           |
+| 401         | `Unauthorized`          | Chưa đăng nhập / token hết hạn                      |
+| 403         | `Forbidden`             | Đúng role nhưng không có quyền trên resource cụ thể |
+| 404         | `NotFound`              | Space / Store không tìm thấy                        |
+| 422         | `BusinessRuleViolation` | Vi phạm business rule (trùng tên, v.v.)             |
+| 500         | `InternalError`         | Lỗi server không mong đợi                           |

@@ -55,6 +55,7 @@ export const TrackDetailsDrawer = ({
 
   return (
     <Drawer
+      closeIcon={null}
       title='Track Details'
       placement='right'
       width={DRAWER_WIDTHS.medium}

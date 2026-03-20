@@ -17,7 +17,11 @@ import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 /**
  * Hooks
  */
-import { useStores, useToggleStoreStatus } from '@/features/brand/hooks';
+import {
+  useDeleteStore,
+  useStores,
+  useToggleStoreStatus,
+} from '@/features/brand/hooks';
 
 /**
  * Components
@@ -28,6 +32,8 @@ import {
   CreateStoreDrawer,
   EditStoreDrawer,
   StoreFilter as StoreFilterComponent,
+  StoreDetailDrawer,
+  StoreSpacesDrawer,
 } from './components';
 
 /**
@@ -47,16 +53,20 @@ export const StoreList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [spacesDrawerOpen, setSpacesDrawerOpen] = useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useStores(filter);
 
   const toggleStatus = useToggleStoreStatus();
+  const deleteStore = useDeleteStore();
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof StoreFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -78,7 +88,13 @@ export const StoreList = () => {
   };
 
   const handleView = (storeId: string) => {
-    console.log('View store:', storeId);
+    setSelectedStoreId(storeId);
+    setDetailDrawerOpen(true);
+  };
+
+  const handleViewSpaces = (storeId: string) => {
+    setSelectedStoreId(storeId);
+    setSpacesDrawerOpen(true);
   };
 
   const handleEdit = (store: StoreListItem) => {
@@ -99,6 +115,23 @@ export const StoreList = () => {
       },
       onOk: () => {
         toggleStatus.mutate(storeId);
+      },
+    });
+  };
+
+  const handleDelete = (storeId: string) => {
+    const store = data?.items.find((s) => s.id === storeId);
+
+    AppModal.confirm({
+      title: 'Delete Store',
+      content: `Are you sure you want to delete "${store?.name}"? This action cannot be undone.`,
+      okText: 'Delete',
+      cancelText: 'Cancel',
+      okButtonProps: {
+        danger: true,
+      },
+      onOk: () => {
+        deleteStore.mutate(storeId);
       },
     });
   };
@@ -125,8 +158,10 @@ export const StoreList = () => {
 
   const columns = getStoreColumns({
     onView: handleView,
+    onViewSpaces: handleViewSpaces,
     onEdit: handleEdit,
     onToggleStatus: handleToggleStatus,
+    onDelete: handleDelete,
   });
 
   // Extract unique cities from data
@@ -211,6 +246,24 @@ export const StoreList = () => {
           setEditDrawerOpen(false);
           setSelectedStoreId(null);
           refetch();
+        }}
+      />
+
+      <StoreDetailDrawer
+        open={detailDrawerOpen}
+        storeId={selectedStoreId ?? undefined}
+        onClose={() => {
+          setDetailDrawerOpen(false);
+          setSelectedStoreId(null);
+        }}
+      />
+
+      <StoreSpacesDrawer
+        open={spacesDrawerOpen}
+        storeId={selectedStoreId}
+        onClose={() => {
+          setSpacesDrawerOpen(false);
+          setSelectedStoreId(null);
         }}
       />
     </div>

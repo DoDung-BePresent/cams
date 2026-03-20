@@ -24,13 +24,13 @@ Dùng cho Login, RefreshToken, GetProfile.
 }
 ```
 
-| Field       | Type     | Mô tả |
-|------------|----------|--------|
-| `isSuccess` | boolean  | Thành công hay thất bại |
-| `message`   | string?  | Thông báo (success/error) |
-| `data`      | T?       | Payload khi thành công; có thể vắng khi fail |
-| `errors`    | string[]?| Danh sách lỗi chi tiết (validation, v.v.) |
-| `errorCode` | string?  | Mã lỗi enum từ backend (xem ErrorCodeEnum) |
+| Field       | Type      | Mô tả                                        |
+| ----------- | --------- | -------------------------------------------- |
+| `isSuccess` | boolean   | Thành công hay thất bại                      |
+| `message`   | string?   | Thông báo (success/error)                    |
+| `data`      | T?        | Payload khi thành công; có thể vắng khi fail |
+| `errors`    | string[]? | Danh sách lỗi chi tiết (validation, v.v.)    |
+| `errorCode` | string?   | Mã lỗi enum từ backend (xem ErrorCodeEnum)   |
 
 - **Success:** `isSuccess === true`, dùng `data`.
 - **Failure:** `isSuccess === false`, dùng `message`, `errorCode`, (và `errors` nếu có). HTTP status có thể 400/401/403/404/422/500 tùy `errorCode`.
@@ -70,19 +70,19 @@ Dùng cho các API trả về danh sách có phân trang (Auth không dùng; ghi
 }
 ```
 
-| Field         | Type        | Mô tả |
-|---------------|-------------|--------|
-| `currentPage` | number      | Trang hiện tại |
-| `pageSize`    | number      | Số phần tử mỗi trang |
-| `totalItems`  | number      | Tổng số phần tử |
-| `totalPages`  | number      | Tổng số trang |
-| `hasPrevious` | boolean     | Có trang trước |
-| `hasNext`     | boolean     | Có trang sau |
-| `items`       | T[]         | Danh sách phần tử |
-| `isSuccess`   | boolean     | Thành công / thất bại |
-| `message`     | string?     | Thông báo |
-| `errors`      | string[]?   | Lỗi chi tiết |
-| `errorCode`   | string?     | Mã lỗi (ErrorCodeEnum) |
+| Field         | Type      | Mô tả                  |
+| ------------- | --------- | ---------------------- |
+| `currentPage` | number    | Trang hiện tại         |
+| `pageSize`    | number    | Số phần tử mỗi trang   |
+| `totalItems`  | number    | Tổng số phần tử        |
+| `totalPages`  | number    | Tổng số trang          |
+| `hasPrevious` | boolean   | Có trang trước         |
+| `hasNext`     | boolean   | Có trang sau           |
+| `items`       | T[]       | Danh sách phần tử      |
+| `isSuccess`   | boolean   | Thành công / thất bại  |
+| `message`     | string?   | Thông báo              |
+| `errors`      | string[]? | Lỗi chi tiết           |
+| `errorCode`   | string?   | Mã lỗi (ErrorCodeEnum) |
 
 ---
 
@@ -92,11 +92,12 @@ Dùng cho các API trả về danh sách có phân trang (Auth không dùng; ghi
 
 Dùng trong `AuthResponse.roles`, `ProfileResponse.roles`. Giá trị JSON là **tên enum** (string).
 
-| Giá trị JSON (int) | Tên             | Mô tả |
-|:-----------------:|-----------------|--------|
-| `0`               | `SystemAdmin`   | Quản trị hệ thống |
-| `1`               | `BrandManager`  | Quản lý thương hiệu |
-| `2`               | `StoreManager`  | Quản lý cửa hàng |
+| Giá trị JSON (int) | Tên              | Mô tả                                                                                                              |
+| :----------------: | ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+|        `0`         | `SystemAdmin`    | Quản trị hệ thống                                                                                                  |
+|        `1`         | `BrandManager`   | Quản lý thương hiệu                                                                                                |
+|        `2`         | `StoreManager`   | Quản lý cửa hàng                                                                                                   |
+|        `3`         | `PlaybackDevice` | Tablet đã pair với một Space; chỉ xuất hiện trong JWT của **device** (sau Pair Device), không dùng cho user login. |
 
 **TypeScript (React):**
 
@@ -128,27 +129,27 @@ enum RoleEnum {
 
 Dùng trong `Result.errorCode` / `PaginationResult.errorCode`. Frontend dùng để branch xử lý (refresh token, hiển thị lỗi, v.v.).
 
-| Enum value           | Value | HTTP thường dùng |
-|----------------------|-------|-------------------|
-| `Success`            | 0     | 200 |
-| `Unauthorized`       | 1001  | 401 |
-| `Forbidden`          | 1002  | 403 |
-| `InvalidCredentials`| 1003  | 401 |
-| `TokenExpired`       | 1004  | 401 |
-| `InvalidToken`       | 1005  | 401 |
-| `ValidationFailed`   | 2001  | 400 |
-| `InvalidInput`       | 2002  | 400 |
-| `DuplicateEntry`     | 2003  | 400 |
-| `InvalidOperation`   | 2004  | 400 |
-| `TooManyRequests`    | 2005  | 429 |
-| `NotFound`           | 3001  | 404 |
-| `BusinessRuleViolation` | 4001 | 422 |
-| `InsufficientPermissions` | 4002 | 403 |
-| `ResourceConflict`   | 4003  | 422 |
-| `InternalError`      | 5001  | 500 |
-| `DatabaseError`      | 5002  | 500 |
-| `ExternalServiceError` | 5003 | 500 |
-| ... (File, AI, Email) | 6xxx, 7xxx, 8xxx | 400/403/500/502/503 |
+| Enum value                | Value            | HTTP thường dùng    |
+| ------------------------- | ---------------- | ------------------- |
+| `Success`                 | 0                | 200                 |
+| `Unauthorized`            | 1001             | 401                 |
+| `Forbidden`               | 1002             | 403                 |
+| `InvalidCredentials`      | 1003             | 401                 |
+| `TokenExpired`            | 1004             | 401                 |
+| `InvalidToken`            | 1005             | 401                 |
+| `ValidationFailed`        | 2001             | 400                 |
+| `InvalidInput`            | 2002             | 400                 |
+| `DuplicateEntry`          | 2003             | 400                 |
+| `InvalidOperation`        | 2004             | 400                 |
+| `TooManyRequests`         | 2005             | 429                 |
+| `NotFound`                | 3001             | 404                 |
+| `BusinessRuleViolation`   | 4001             | 422                 |
+| `InsufficientPermissions` | 4002             | 403                 |
+| `ResourceConflict`        | 4003             | 422                 |
+| `InternalError`           | 5001             | 500                 |
+| `DatabaseError`           | 5002             | 500                 |
+| `ExternalServiceError`    | 5003             | 500                 |
+| ... (File, AI, Email)     | 6xxx, 7xxx, 8xxx | 400/403/500/502/503 |
 
 Backend trả `errorCode` dạng **string** (tên enum), ví dụ: `"InvalidCredentials"`, `"Unauthorized"`.
 
@@ -177,41 +178,41 @@ export enum ErrorCodeEnum {
 
 #### `LoginRequest`
 
-| Field       | Type    | Required | Mô tả |
-|------------|---------|----------|--------|
-| `email`    | string  | ✓        | Email đăng nhập |
-| `password` | string  | ✓        | Mật khẩu |
+| Field        | Type    | Required            | Mô tả                                     |
+| ------------ | ------- | ------------------- | ----------------------------------------- |
+| `email`      | string  | ✓                   | Email đăng nhập                           |
+| `password`   | string  | ✓                   | Mật khẩu                                  |
 | `rememberMe` | boolean | No (default: false) | True = refresh token dài hạn (vd 30 ngày) |
 
 #### `ChangePasswordRequest`
 
-| Field             | Type   | Required | Mô tả |
-|-------------------|--------|----------|--------|
-| `currentPassword` | string | ✓        | Mật khẩu hiện tại |
-| `newPassword`     | string | ✓        | Mật khẩu mới (theo policy, vd min 6 ký tự) |
+| Field             | Type   | Required | Mô tả                                          |
+| ----------------- | ------ | -------- | ---------------------------------------------- |
+| `currentPassword` | string | ✓        | Mật khẩu hiện tại                              |
+| `newPassword`     | string | ✓        | Mật khẩu mới (theo policy, vd min 6 ký tự)     |
 | `confirmPassword` | string | ✓        | Xác nhận mật khẩu mới (phải trùng newPassword) |
 
 ### 3.2 Response
 
 #### `AuthResponse` (Login, RefreshToken)
 
-| Field         | Type     | Mô tả |
-|---------------|----------|--------|
-| `accessToken` | string   | JWT access token |
-| `expiresAt`   | string   | ISO 8601 (UTC) thời điểm hết hạn access token |
+| Field         | Type                    | Mô tả                                                                           |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------- |
+| `accessToken` | string                  | JWT access token                                                                |
+| `expiresAt`   | string                  | ISO 8601 (UTC) thời điểm hết hạn access token                                   |
 | `roles`       | RoleEnum[] (`number[]`) | Danh sách role (int: `0` = SystemAdmin, `1` = BrandManager, `2` = StoreManager) |
 
 #### `ProfileResponse` (GetProfile)
 
-| Field        | Type       | Mô tả |
-|-------------|------------|--------|
-| `email`     | string     | Email |
-| `userId`    | string     | Guid user |
-| `firstName` | string     | Tên |
-| `lastName`  | string     | Họ |
-| `phoneNumber` | string?  | SĐT (optional) |
-| `avatarPath`  | string?  | Đường dẫn avatar (optional) |
-| `roles`     | RoleEnum[] (`number[]`) | Danh sách role (int: `0` = SystemAdmin, `1` = BrandManager, `2` = StoreManager) |
+| Field         | Type                    | Mô tả                                                                           |
+| ------------- | ----------------------- | ------------------------------------------------------------------------------- |
+| `email`       | string                  | Email                                                                           |
+| `userId`      | string                  | Guid user                                                                       |
+| `firstName`   | string                  | Tên                                                                             |
+| `lastName`    | string                  | Họ                                                                              |
+| `phoneNumber` | string?                 | SĐT (optional)                                                                  |
+| `avatarPath`  | string?                 | Đường dẫn avatar (optional)                                                     |
+| `roles`       | RoleEnum[] (`number[]`) | Danh sách role (int: `0` = SystemAdmin, `1` = BrandManager, `2` = StoreManager) |
 
 ---
 
@@ -357,6 +358,75 @@ Backend cho phép **access token hết hạn** khi gọi refresh (để client r
 - **Response 400:** Validation (newPassword/confirmPassword không khớp, hoặc quá ngắn) hoặc currentPassword sai → `errorCode`: `InvalidCredentials` / `ValidationFailed`.
 - **Response 401:** Thiếu hoặc sai token.
 - **Response 403:** Không phải CMS member.
+
+---
+
+### 4.6 Pair Device (tablet / playback device)
+
+- **Method:** `POST`
+- **URL:** `{{baseUrl}}/api/auth/pair`
+- **Headers:** `Content-Type: application/json`
+- **Auth:** Không cần — endpoint công khai; mã pair 6 ký tự thay thế.
+
+Manager tạo mã pair tại màn hình setup (CAMS: `POST /api/cams/spaces/{spaceId}/pair-code`). Tablet nhập mã này để nhận device access token và refresh token. Request body theo DTO **PairDeviceRequest**.
+
+- **Body (JSON):**
+
+| Field          | Type   | Required | Mô tả                                                                                                                       |
+| -------------- | ------ | -------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `code`         | string | Có       | Mã pair 6 ký tự (chữ/số) hiển thị trên màn hình setup. Server tự bỏ dấu gạch ngang/khoảng trắng (vd. `EDV-SHT` → `EDVSHT`). |
+| `manufacturer` | string | Không    | Hãng thiết bị (vd. "Samsung", "Xiaomi").                                                                                    |
+| `model`        | string | Không    | Model thiết bị (vd. "SM-T510").                                                                                             |
+| `osVersion`    | string | Không    | Phiên bản OS (vd. "Android 14", "iOS 17.4").                                                                                |
+| `appVersion`   | string | Không    | Phiên bản app (vd. "1.0.0").                                                                                                |
+| `deviceId`     | string | Không    | Định danh phần cứng ổn định (Android: ANDROID_ID, iOS: identifierForVendor).                                                |
+
+```json
+{
+  "code": "ABC123",
+  "manufacturer": "Samsung",
+  "model": "SM-T510",
+  "osVersion": "Android 14",
+  "appVersion": "1.0.0",
+  "deviceId": "android-id-from-device"
+}
+```
+
+- **Response 200 (`Result<DeviceAuthResponse>`):**
+
+| Field                  | Type           | Mô tả                                                                       |
+| ---------------------- | -------------- | --------------------------------------------------------------------------- |
+| `deviceAccessToken`    | string         | JWT ngắn hạn (15 phút), role PlaybackDevice, dùng Bearer cho API + SignalR. |
+| `deviceRefreshToken`   | string         | Token opaque dài hạn; lưu (vd. SecureStorage) để gọi Refresh Device Token.  |
+| `spaceId`              | Guid           | Space đã pair.                                                              |
+| `spaceName`            | string         | Tên space.                                                                  |
+| `storeId`              | Guid           | Store của space.                                                            |
+| `storeName`            | string         | Tên store.                                                                  |
+| `accessTokenExpiresAt` | DateTime (UTC) | Thời điểm hết hạn device access token.                                      |
+
+Client lưu `deviceAccessToken` (Bearer) và `deviceRefreshToken` để gọi CAMS, Playlists, Spaces, Tracks theo scope session.
+
+- **Response 400/404:** Mã pair sai hoặc hết hạn, hoặc Space/Store/Brand inactive → message từ server (xem [API_CAMS.md](../cams/API_CAMS.md) cho flow pair/unpair).
+- **Response 400 (BusinessRule):** Space đã có thiết bị pair đang active → cần unpair trước rồi mới pair lại.
+
+---
+
+### 4.7 Refresh Device Token (Chỉ cho playback device (Role=PlaybackDevice))
+
+- **Method:** `POST`
+- **URL:** `{{baseUrl}}/api/auth/device/refresh-token`
+- **Headers:** `Content-Type: application/json`, `Authorization: Bearer <device_access_token>` (có thể hết hạn)
+- **Body (JSON):** Theo **RefreshDeviceTokenRequest** — field `deviceRefreshToken` (plain-text token đã lưu khi pair).
+
+```json
+{
+  "deviceRefreshToken": "device-refresh-token-from-storage"
+}
+```
+
+- **Response 200 (`Result<DeviceAccessTokenResponse>`):** Trả `deviceAccessToken` (JWT mới), `expiresAt` (UTC). Role vẫn là PlaybackDevice.
+
+- **Response 401:** Session đã bị revoke (manager hoặc device đã unpair) hoặc refresh token không khớp → tablet cần màn hình re-pair.
 
 ---
 

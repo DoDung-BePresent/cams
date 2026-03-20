@@ -10,17 +10,18 @@ Tài liệu API Store Management cho CMS (React TypeScript & Flutter). Base path
 
 ## 1. Authorization Matrix
 
-| Endpoint                                  | SystemAdmin | BrandManager (own brand) | StoreManager (own store) |
-|------------------------------------------|:-----------:|:------------------------:|:------------------------:|
-| `GET /api/stores`                         | ✅          | ✅                       | ❌                       |
-| `GET /api/stores/{id}`                    | ✅          | ✅                       | ✅                       |
-| `POST /api/stores`                        | ❌          | ✅                       | ❌                       |
-| `PUT /api/stores/{id}`                    | ❌          | ✅                       | ❌                       |
-| `DELETE /api/stores/{id}`                 | ❌          | ✅                       | ❌                       |
-| `PUT /api/stores/{id}/toggle-status`      | ❌          | ✅                       | ❌                       |
+| Endpoint                             | SystemAdmin | BrandManager (own brand) | StoreManager (own store) | PlaybackDevice |
+| ------------------------------------ | :---------: | :----------------------: | :----------------------: | :------------: |
+| `GET /api/stores`                    |     ✅      |            ✅            |            ❌            |       ❌       |
+| `GET /api/stores/{id}`               |     ✅      |            ✅            |            ✅            |       ❌       |
+| `POST /api/stores`                   |     ❌      |            ✅            |            ❌            |       ❌       |
+| `PUT /api/stores/{id}`               |     ❌      |            ✅            |            ❌            |       ❌       |
+| `DELETE /api/stores/{id}`            |     ❌      |            ✅            |            ❌            |       ❌       |
+| `PUT /api/stores/{id}/toggle-status` |     ❌      |            ✅            |            ❌            |       ❌       |
 
 > **"own brand"** = `store.BrandId == user.BrandId`.  
 > **"own store"** = `store.Id == user.StoreId`.  
+> **PlaybackDevice** — không có quyền truy cập Store API; tablet dùng StoreId/SpaceId từ device session (CAMS, Playlists, Spaces, Tracks).  
 > ⚠️ **SystemAdmin** có quyền **read-only** đối với store data — write operations được giới hạn cho BrandManager.
 
 ---
@@ -38,11 +39,13 @@ Accept-Language: vi-VN
 ```
 
 **Supported Languages:**
+
 - `en-US` hoặc `en` — English (default)
 - `vi-VN` hoặc `vi` — Tiếng Việt
 - Các ngôn ngữ khác nếu có cấu hình backend
 
 **Cơ chế:**
+
 1. Backend đọc `Accept-Language` header từ request
 2. Nếu có, dùng ngôn ngữ được chỉ định; nếu không hỗ trợ → fallback sang English
 3. Validation messages, error messages đều localize theo ngôn ngữ này
@@ -69,6 +72,7 @@ public abstract class BaseResponse
 ```
 
 **Response hierarchy (Store):**
+
 ```
 StoreDetailResponse : StoreListItem : BaseResponse
 ```
@@ -95,21 +99,22 @@ public class BasePaginationFilter
 
 ### 4.1 `StoreRequest` (Create / Update — `application/json`)
 
-| Field               | Type     | Required (Create) | Required (Update) | Validation                                                    |
-|---------------------|----------|:-----------------:|:-----------------:|---------------------------------------------------------------|
-| `name`              | string   | ✅                | ❌ (partial)      | Not empty; max 200 chars                                      |
-| `address`           | string   | ❌                | ❌                | Max 500 chars                                                 |
-| `city`              | string   | ❌                | ❌                | Max 100 chars                                                 |
-| `district`          | string   | ❌                | ❌                | Max 100 chars                                                 |
-| `contactNumber`     | string   | ❌                | ❌                | Valid phone: 7–15 digits; supports `+`, `()`, `-`, spaces     |
-| `latitude`          | float    | ❌                | ❌                | Range: `-90` đến `90`                                         |
-| `longitude`         | float    | ❌                | ❌                | Range: `-180` đến `180`                                       |
-| `mapUrl`            | string   | ❌                | ❌                | Valid absolute URL với scheme `http` hoặc `https`             |
-| `timeZone`          | string   | ❌                | ❌                | IANA timezone ID hợp lệ (e.g. `"Asia/Ho_Chi_Minh"`)          |
-| `areaSquareMeters`  | float    | ❌                | ❌                | Phải `> 0` nếu được cung cấp                                 |
-| `maxCapacity`       | int      | ❌                | ❌                | Phải `> 0` nếu được cung cấp                                 |
+| Field              | Type   | Required (Create) | Required (Update) | Validation                                                |
+| ------------------ | ------ | :---------------: | :---------------: | --------------------------------------------------------- |
+| `name`             | string |        ✅         |   ❌ (partial)    | Not empty; max 200 chars                                  |
+| `address`          | string |        ❌         |        ❌         | Max 500 chars                                             |
+| `city`             | string |        ❌         |        ❌         | Max 100 chars                                             |
+| `district`         | string |        ❌         |        ❌         | Max 100 chars                                             |
+| `contactNumber`    | string |        ❌         |        ❌         | Valid phone: 7–15 digits; supports `+`, `()`, `-`, spaces |
+| `latitude`         | float  |        ❌         |        ❌         | Range: `-90` đến `90`                                     |
+| `longitude`        | float  |        ❌         |        ❌         | Range: `-180` đến `180`                                   |
+| `mapUrl`           | string |        ❌         |        ❌         | Valid absolute URL với scheme `http` hoặc `https`         |
+| `timeZone`         | string |        ❌         |        ❌         | IANA timezone ID hợp lệ (e.g. `"Asia/Ho_Chi_Minh"`)       |
+| `areaSquareMeters` | float  |        ❌         |        ❌         | Phải `> 0` nếu được cung cấp                              |
+| `maxCapacity`      | int    |        ❌         |        ❌         | Phải `> 0` nếu được cung cấp                              |
 
 > **Lưu ý quan trọng:**
+>
 > - **`brandId`** được **loại trừ khỏi request** — luôn lấy từ session BrandManager đang đăng nhập (chống cross-brand injection).
 > - **`firestoreCollectionPath`** được **loại trừ khỏi request** — được quản lý độc quyền bởi AI/IoT pipeline.
 > - **Update** dùng patch semantics: chỉ field được gửi lên (non-null) mới được áp dụng. Field bỏ qua hoặc null giữ nguyên.
@@ -118,59 +123,59 @@ public class BasePaginationFilter
 
 **Kế thừa từ `BasePaginationFilter`** (§3.2) + thêm các filter riêng:
 
-| Param              | Type              | Default | Mô tả                                                                       |
-|--------------------|-------------------|---------|-----------------------------------------------------------------------------|
-| `page`             | number            | 1       | Trang hiện tại                                                              |
-| `pageSize`         | number            | 10      | Số phần tử mỗi trang (max 500)                                              |
-| `search`           | string?           | —       | Tìm kiếm toàn văn (name, address, city, district, contact number)           |
-| `sortBy`           | string?           | —       | Trường sắp xếp (xem docs cụ thể)                                            |
-| `isAscending`      | boolean?          | true    | Chiều sắp xếp (default: true = tăng dần)                                   |
-| `status`           | EntityStatusEnum? | —       | Lọc theo trạng thái (0=Inactive, 1=Active, 2=Pending, 3=Rejected)          |
-| `brandId`          | Guid?             | —       | ⚠️ SystemAdmin only — BrandManager luôn bị override bởi handler về brand của mình |
-| `city`             | string?           | —       | Lọc theo thành phố                                                          |
-| `district`         | string?           | —       | Lọc theo quận/huyện                                                         |
-| `createdFrom`      | datetime? (ISO 8601) | —    | Lọc store tạo từ ngày này                                                   |
-| `createdTo`        | datetime? (ISO 8601) | —    | Lọc store tạo đến ngày này                                                  |
-| `storeManagerName` | string?           | —       | Tìm theo tên Store Manager (first name, last name, email — partial match)   |
+| Param              | Type                 | Default | Mô tả                                                                             |
+| ------------------ | -------------------- | ------- | --------------------------------------------------------------------------------- |
+| `page`             | number               | 1       | Trang hiện tại                                                                    |
+| `pageSize`         | number               | 10      | Số phần tử mỗi trang (max 500)                                                    |
+| `search`           | string?              | —       | Tìm kiếm toàn văn (name, address, city, district, contact number)                 |
+| `sortBy`           | string?              | —       | Trường sắp xếp (xem docs cụ thể)                                                  |
+| `isAscending`      | boolean?             | true    | Chiều sắp xếp (default: true = tăng dần)                                          |
+| `status`           | EntityStatusEnum?    | —       | Lọc theo trạng thái (0=Inactive, 1=Active, 2=Pending, 3=Rejected)                 |
+| `brandId`          | Guid?                | —       | ⚠️ SystemAdmin only — BrandManager luôn bị override bởi handler về brand của mình |
+| `city`             | string?              | —       | Lọc theo thành phố                                                                |
+| `district`         | string?              | —       | Lọc theo quận/huyện                                                               |
+| `createdFrom`      | datetime? (ISO 8601) | —       | Lọc store tạo từ ngày này                                                         |
+| `createdTo`        | datetime? (ISO 8601) | —       | Lọc store tạo đến ngày này                                                        |
+| `storeManagerName` | string?              | —       | Tìm theo tên Store Manager (first name, last name, email — partial match)         |
 
 ### 4.3 `StoreListItem` (trong `PaginationResult<StoreListItem>`)
 
 **Kế thừa từ `BaseResponse`** (§3.1) + thêm các field:
 
-| Field           | Type       | Mô tả                                     |
-|-----------------|------------|-------------------------------------------|
+| Field           | Type         | Mô tả                                                              |
+| --------------- | ------------ | ------------------------------------------------------------------ |
 | (inherited)     | BaseResponse | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
-| `brandId`       | Guid       | ID brand sở hữu store                     |
-| `name`          | string     | Tên store                                 |
-| `contactNumber` | string?    | SĐT liên hệ của store                    |
-| `address`       | string?    | Địa chỉ đầy đủ                            |
-| `city`          | string?    | Thành phố                                 |
-| `district`      | string?    | Quận/huyện                                |
+| `brandId`       | Guid         | ID brand sở hữu store                                              |
+| `name`          | string       | Tên store                                                          |
+| `contactNumber` | string?      | SĐT liên hệ của store                                              |
+| `address`       | string?      | Địa chỉ đầy đủ                                                     |
+| `city`          | string?      | Thành phố                                                          |
+| `district`      | string?      | Quận/huyện                                                         |
 
 ### 4.4 `StoreDetailResponse` (trong `Result<StoreDetailResponse>`)
 
 **Kế thừa từ `StoreListItem`** (→ kế thừa gián tiếp từ `BaseResponse`) + thêm:
 
-| Field                   | Type           | Mô tả                                                           |
-|-------------------------|----------------|-----------------------------------------------------------------|
-| `latitude`              | float?         | Vĩ độ (decimal degrees, -90 đến 90)                             |
-| `longitude`             | float?         | Kinh độ (decimal degrees, -180 đến 180)                         |
-| `mapUrl`                | string?        | URL Google Maps / embed                                         |
-| `timeZone`              | string?        | IANA timezone ID (e.g. `"Asia/Ho_Chi_Minh"`)                    |
-| `areaSquareMeters`      | float?         | Diện tích sàn (m²)                                              |
-| `maxCapacity`           | int?           | Sức chứa tối đa (người)                                         |
-| `firestoreCollectionPath` | string?      | 🔒 Read-only. Được set bởi AI/IoT pipeline, không ghi qua API   |
-| `currentMood`           | MoodTypeEnum?  | 🔒 Read-only. Mood hiện tại (set bởi AI pipeline)               |
-| `lastMoodUpdateAt`      | datetime?      | 🔒 Read-only. Thời điểm cập nhật mood lần cuối (UTC)            |
+| Field                     | Type          | Mô tả                                                         |
+| ------------------------- | ------------- | ------------------------------------------------------------- |
+| `latitude`                | float?        | Vĩ độ (decimal degrees, -90 đến 90)                           |
+| `longitude`               | float?        | Kinh độ (decimal degrees, -180 đến 180)                       |
+| `mapUrl`                  | string?       | URL Google Maps / embed                                       |
+| `timeZone`                | string?       | IANA timezone ID (e.g. `"Asia/Ho_Chi_Minh"`)                  |
+| `areaSquareMeters`        | float?        | Diện tích sàn (m²)                                            |
+| `maxCapacity`             | int?          | Sức chứa tối đa (người)                                       |
+| `firestoreCollectionPath` | string?       | 🔒 Read-only. Được set bởi AI/IoT pipeline, không ghi qua API |
+| `currentMood`             | MoodTypeEnum? | 🔒 Read-only. Mood hiện tại (set bởi AI pipeline)             |
+| `lastMoodUpdateAt`        | datetime?     | 🔒 Read-only. Thời điểm cập nhật mood lần cuối (UTC)          |
 
 ### 4.5 `EntityStatusEnum`
 
-| Giá trị JSON | Số | Mô tả      |
-|--------------|----|------------|
-| `"Inactive"` | 0  | Không hoạt động |
-| `"Active"`   | 1  | Đang hoạt động  |
-| `"Pending"`  | 2  | Chờ duyệt       |
-| `"Rejected"` | 3  | Bị từ chối      |
+| Giá trị JSON | Số  | Mô tả           |
+| ------------ | --- | --------------- |
+| `"Inactive"` | 0   | Không hoạt động |
+| `"Active"`   | 1   | Đang hoạt động  |
+| `"Pending"`  | 2   | Chờ duyệt       |
+| `"Rejected"` | 3   | Bị từ chối      |
 
 ### 4.6 `MoodTypeEnum` (read-only, set bởi AI pipeline)
 
@@ -181,37 +186,38 @@ Giá trị cụ thể tùy theo cấu hình AI của hệ thống. Trường nà
 ### 4.7 Validation Rules Detail (Backend — `SharedStoreRequestValidator`)
 
 > **Quy tắc chung:**
+>
 > - **CREATE** (`isPartialUpdate = false`): `name` là bắt buộc; tất cả field khác tùy chọn, nếu cung cấp thì phải đúng format.
 > - **UPDATE** (`isPartialUpdate = true`): tất cả field đều tùy chọn; chỉ field được gửi lên (non-null/non-empty) mới được validate và áp dụng.
 
-| Field              | Rule                   | Chi tiết                                                                           |
-|--------------------|------------------------|------------------------------------------------------------------------------------|
-| `name`             | Required (create)      | `NotEmpty()` — không được rỗng/null khi tạo mới                                    |
-| `name`             | MaxLength              | Tối đa 200 ký tự                                                                   |
-| `address`          | MaxLength              | Tối đa 500 ký tự                                                                   |
-| `city`             | MaxLength              | Tối đa 100 ký tự                                                                   |
-| `district`         | MaxLength              | Tối đa 100 ký tự                                                                   |
-| `contactNumber`    | Phone format           | 7–15 chữ số; cho phép `+`, `(`, `)`, `-`, khoảng trắng. VD: `+84901234567`        |
-| `latitude`         | Range                  | Phải trong khoảng `[-90, 90]`                                                      |
-| `longitude`        | Range                  | Phải trong khoảng `[-180, 180]`                                                    |
-| `mapUrl`           | URL format             | Phải là URL tuyệt đối với scheme `http` hoặc `https`                               |
-| `timeZone`         | Timezone ID            | IANA timezone ID hợp lệ (`TimeZoneInfo.FindSystemTimeZoneById()`)                  |
-| `areaSquareMeters` | GreaterThan(0)         | Phải `> 0` nếu được cung cấp                                                      |
-| `maxCapacity`      | GreaterThan(0)         | Phải `> 0` nếu được cung cấp                                                      |
+| Field              | Rule              | Chi tiết                                                                   |
+| ------------------ | ----------------- | -------------------------------------------------------------------------- |
+| `name`             | Required (create) | `NotEmpty()` — không được rỗng/null khi tạo mới                            |
+| `name`             | MaxLength         | Tối đa 200 ký tự                                                           |
+| `address`          | MaxLength         | Tối đa 500 ký tự                                                           |
+| `city`             | MaxLength         | Tối đa 100 ký tự                                                           |
+| `district`         | MaxLength         | Tối đa 100 ký tự                                                           |
+| `contactNumber`    | Phone format      | 7–15 chữ số; cho phép `+`, `(`, `)`, `-`, khoảng trắng. VD: `+84901234567` |
+| `latitude`         | Range             | Phải trong khoảng `[-90, 90]`                                              |
+| `longitude`        | Range             | Phải trong khoảng `[-180, 180]`                                            |
+| `mapUrl`           | URL format        | Phải là URL tuyệt đối với scheme `http` hoặc `https`                       |
+| `timeZone`         | Timezone ID       | IANA timezone ID hợp lệ (`TimeZoneInfo.FindSystemTimeZoneById()`)          |
+| `areaSquareMeters` | GreaterThan(0)    | Phải `> 0` nếu được cung cấp                                               |
+| `maxCapacity`      | GreaterThan(0)    | Phải `> 0` nếu được cung cấp                                               |
 
 #### Timezone ID (`timeZone`)
 
 Backend dùng `TimeZoneInfo.FindSystemTimeZoneById()`. Hỗ trợ cả **IANA IDs** (Linux/macOS) và **Windows IDs** (Windows server). Ưu tiên dùng IANA IDs vì server thường chạy trên Linux (Docker).
 
-| IANA ID                   | Windows tương đương           | UTC Offset |
-|---------------------------|-------------------------------|------------|
-| `Asia/Ho_Chi_Minh`        | `SE Asia Standard Time`       | UTC+7      |
-| `Asia/Bangkok`            | `SE Asia Standard Time`       | UTC+7      |
-| `Asia/Singapore`          | `Singapore Standard Time`     | UTC+8      |
-| `Asia/Tokyo`              | `Tokyo Standard Time`         | UTC+9      |
-| `Asia/Shanghai`           | `China Standard Time`         | UTC+8      |
-| `Asia/Kolkata`            | `India Standard Time`         | UTC+5:30   |
-| `UTC`                     | `UTC`                         | UTC+0      |
+| IANA ID            | Windows tương đương       | UTC Offset |
+| ------------------ | ------------------------- | ---------- |
+| `Asia/Ho_Chi_Minh` | `SE Asia Standard Time`   | UTC+7      |
+| `Asia/Bangkok`     | `SE Asia Standard Time`   | UTC+7      |
+| `Asia/Singapore`   | `Singapore Standard Time` | UTC+8      |
+| `Asia/Tokyo`       | `Tokyo Standard Time`     | UTC+9      |
+| `Asia/Shanghai`    | `China Standard Time`     | UTC+8      |
+| `Asia/Kolkata`     | `India Standard Time`     | UTC+5:30   |
+| `UTC`              | `UTC`                     | UTC+0      |
 
 ---
 
@@ -515,10 +521,10 @@ export type MoodTypeEnum = string | number;
 // ---- Base Types ----
 export interface BaseResponse {
   id: string;
-  createdAt: string;         // ISO 8601
-  updatedAt: string | null;  // ISO 8601, null nếu chưa cập nhật
-  createdBy: string | null;  // User ID (Guid)
-  updatedBy: string | null;  // User ID (Guid)
+  createdAt: string; // ISO 8601
+  updatedAt: string | null; // ISO 8601, null nếu chưa cập nhật
+  createdBy: string | null; // User ID (Guid)
+  updatedBy: string | null; // User ID (Guid)
   status: EntityStatusEnum;
 }
 
@@ -572,9 +578,9 @@ export interface StoreFilter {
   brandId?: string;
   city?: string;
   district?: string;
-  createdFrom?: string;        // ISO 8601
-  createdTo?: string;          // ISO 8601
-  storeManagerName?: string;   // Partial match on first/last name or email
+  createdFrom?: string; // ISO 8601
+  createdTo?: string; // ISO 8601
+  storeManagerName?: string; // Partial match on first/last name or email
 }
 
 // ---- Responses ----
@@ -632,7 +638,9 @@ export interface ResultData<T> extends Result {
 // ---- Usage examples ----
 
 // Get stores list
-const getStores = async (filter: StoreFilter): Promise<PaginationResult<StoreListItem>> => {
+const getStores = async (
+  filter: StoreFilter,
+): Promise<PaginationResult<StoreListItem>> => {
   const params = new URLSearchParams();
   if (filter.page) params.set('page', String(filter.page));
   if (filter.pageSize) params.set('pageSize', String(filter.pageSize));

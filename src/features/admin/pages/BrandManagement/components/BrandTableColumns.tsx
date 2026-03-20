@@ -8,6 +8,8 @@ import {
   DeleteOutlined,
   MoreOutlined,
   EyeOutlined,
+  PoweroffOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -16,7 +18,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import type { BrandListItem } from '@/features/admin/types';
-import type { EntityStatusEnum } from '@/shared/types';
+import { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Constants
@@ -34,12 +36,14 @@ import { AVATAR_SIZE } from '@/config';
 type GetColumnsProps = {
   onView: (brandId: string) => void;
   onEdit: (brand: BrandListItem) => void;
+  onToggleStatus: (brandId: string) => void;
   onDelete: (brandId: string) => void;
 };
 
 export const getBrandColumns = ({
   onView,
   onEdit,
+  onToggleStatus,
   onDelete,
 }: GetColumnsProps): ColumnsType<BrandListItem> => {
   const getActionMenuItems = (record: BrandListItem): MenuProps['items'] => [
@@ -57,6 +61,19 @@ export const getBrandColumns = ({
       label: 'Edit',
       icon: <EditOutlined />,
       onClick: () => onEdit(record),
+    },
+    {
+      key: 'toggle-status',
+      label:
+        record.status === EntityStatusEnum.Active ? 'Deactivate' : 'Activate',
+      icon:
+        record.status === EntityStatusEnum.Active ? (
+          <PoweroffOutlined />
+        ) : (
+          <CheckCircleOutlined />
+        ),
+      onClick: () => onToggleStatus(record.id),
+      danger: record.status === EntityStatusEnum.Active,
     },
     {
       key: 'delete',

@@ -10,6 +10,8 @@ import {
   MoreOutlined,
   PoweroffOutlined,
   CheckCircleOutlined,
+  DeleteOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -17,6 +19,7 @@ import {
  */
 import type { StoreListItem } from '@/features/brand/types/storeTypes';
 import { EntityStatusEnum } from '@/shared/types/commonTypes';
+import type { ItemType } from 'antd/es/menu/interface';
 
 /**
  * Constants
@@ -28,17 +31,21 @@ import {
 
 type StoreColumnsProps = {
   onView: (id: string) => void;
+  onViewSpaces: (id: string) => void;
   onEdit: (store: StoreListItem) => void;
   onToggleStatus: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
 export const getStoreColumns = ({
   onView,
+  onViewSpaces,
   onEdit,
   onToggleStatus,
+  onDelete,
 }: StoreColumnsProps): ColumnsType<StoreListItem> => {
   const getActionItems = (record: StoreListItem) => {
-    const items: any[] = [
+    const items: ItemType[] = [
       {
         key: 'view',
         label: 'View Details',
@@ -46,10 +53,26 @@ export const getStoreColumns = ({
         onClick: () => onView(record.id),
       },
       {
+        key: 'view-spaces',
+        label: 'View Spaces',
+        icon: <AppstoreOutlined />,
+        onClick: () => onViewSpaces(record.id),
+      },
+      {
         key: 'edit',
         label: 'Edit',
         icon: <EditOutlined />,
         onClick: () => onEdit(record),
+      },
+      {
+        type: 'divider',
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        icon: <DeleteOutlined />,
+        onClick: () => onDelete(record.id),
+        danger: true,
       },
       {
         type: 'divider',
@@ -88,6 +111,7 @@ export const getStoreColumns = ({
       title: 'Store Name',
       dataIndex: 'name',
       key: 'name',
+      width: 200,
       sorter: true,
       render: (name: string) => <strong>{name}</strong>,
     },
@@ -126,6 +150,7 @@ export const getStoreColumns = ({
       title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
+      width: 140,
       sorter: true,
       render: (date: string) => new Date(date).toLocaleDateString('en-GB'),
     },

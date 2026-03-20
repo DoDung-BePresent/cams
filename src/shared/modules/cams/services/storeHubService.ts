@@ -1,16 +1,17 @@
-import * as signalR from '@microsoft/signalr';
-import { getSignalRUrl } from '@/config';
-import { STORE_HUB_URL, STORE_HUB_EVENTS } from '../constants';
+import {
+  HubConnection,
+  HubConnectionBuilder,
+  LogLevel,
+  HubConnectionState,
+} from '@microsoft/signalr';
+import { env } from '@/config';
 import type {
   PlayStreamPayload,
   PlaybackStateChangedPayload,
   SpaceStateDto,
 } from '../types';
 
-/**
- * Event handlers type
- */
-type EventHandlers = {
+type StoreHubEventHandlers = {
   onPlayStream?: (payload: PlayStreamPayload) => void;
   onPlaybackStateChanged?: (payload: PlaybackStateChangedPayload) => void;
   onSpaceStateSync?: (spaceId: string, state: SpaceStateDto) => void;
@@ -20,243 +21,274 @@ type EventHandlers = {
   onReconnected?: () => void;
 };
 
-/**
- * SignalR StoreHub Service
- * Handles real-time communication with backend for CAMS
- */
 class StoreHubService {
-  private connection: signalR.HubConnection | null = null;
-  private handlers: EventHandlers = {};
-  private storeId: string | null = null;
+  private connection: HubConnection | null = null;
+  private currentStoreId: string | null = null;
+  private eventHandlers: StoreHubEventHandlers = {};
 
   /**
-   * Initialize connection
+   * Check if connection is active
    */
-  async connect(storeId: string, token: string, handlers: EventHandlers = {}) {
-    if (this.connection?.state === signalR.HubConnectionState.Connected) {
-      console.warn('⚠️ StoreHub already connected');
+  public isConnected(): boolean {
+    return (
+      this.connection !== null &&
+      this.connection.state === HubConnectionState.Connected
+    );
+  }
+
+  /**
+   * Connect to StoreHub and join manager room
+   */
+  public async connect(
+    storeId: string,
+    token: string,
+    handlers: StoreHubEventHandlers = {},
+  ): Promise<void> {
+    // ✅ Prevent double-connect
+    if (this.isConnected() && this.currentStoreId === storeId) {
+      console.log('⏭️ Already connected to this store');
       return;
     }
 
-    this.storeId = storeId;
-    this.handlers = handlers;
-
-    // Build full Hub URL
-    const baseUrl = getSignalRUrl();
-    const hubUrl = `${baseUrl}${STORE_HUB_URL}`;
-
-    console.log('🔌 Connecting to StoreHub:', {
-      baseUrl,
-      hubUrl,
-      storeId,
-      hasToken: !!token,
-    });
-
-    // Build connection
-    this.connection = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        accessTokenFactory: () => token,
-      })
-      .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: (retryContext) => {
-          // Exponential backoff: 0s, 2s, 10s, 30s
-          if (retryContext.previousRetryCount === 0) return 0;
-          if (retryContext.previousRetryCount === 1) return 2000;
-          if (retryContext.previousRetryCount === 2) return 10000;
-          return 30000;
-        },
-      })
-      .configureLogging(signalR.LogLevel.Information)
-      .build();
-
-    // Register event handlers
-    this.registerEventHandlers();
-
-    // Connection lifecycle events
-    this.connection.onreconnecting((error) => {
-      console.log('🔄 StoreHub reconnecting...', error);
-      this.handlers.onReconnecting?.();
-    });
-
-    this.connection.onreconnected(async (connectionId) => {
-      console.log('✅ StoreHub reconnected:', connectionId);
-      // Rejoin store group
-      if (this.storeId) {
-        await this.joinStore(this.storeId);
-      }
-      this.handlers.onReconnected?.();
-    });
-
-    this.connection.onclose((error) => {
-      console.log('❌ StoreHub disconnected', error);
-      this.handlers.onDisconnected?.();
-    });
-
-    // Start connection
     try {
+      // ✅ Disconnect existing connection first
+      if (this.connection) {
+        console.log('🔄 Disconnecting existing connection...');
+        await this.disconnect();
+      }
+
+      this.eventHandlers = handlers;
+      this.currentStoreId = storeId;
+
+      const hubUrl = `${env.baseUrl}/hubs/store`;
+
+      console.log('🔌 Connecting to StoreHub:', {
+        baseUrl: env.baseUrl,
+        hubUrl,
+        storeId,
+        hasToken: !!token,
+      });
+
+      // Build connection
+      this.connection = new HubConnectionBuilder()
+        .withUrl(hubUrl, {
+          accessTokenFactory: () => token,
+        })
+        .withAutomaticReconnect({
+          nextRetryDelayInMilliseconds: (retryContext) => {
+            // Exponential backoff: 2s, 4s, 8s, 16s, then 30s max
+            const delay = Math.min(
+              2000 * Math.pow(2, retryContext.previousRetryCount),
+              30000,
+            );
+            console.log(
+              `⏰ Retry ${retryContext.previousRetryCount + 1} in ${delay}ms`,
+            );
+            return delay;
+          },
+        })
+        .configureLogging(LogLevel.Information)
+        .build();
+
+      // Register event listeners
+      this.registerEventListeners();
+
+      // Start connection
       await this.connection.start();
+
       console.log('✅ StoreHub connected successfully');
 
-      // Join store group
+      // ✅ Wait a bit before joining to ensure connection is stable
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Join manager room
       await this.joinStore(storeId);
 
-      this.handlers.onConnected?.();
+      // Trigger connected callback
+      this.eventHandlers.onConnected?.();
     } catch (error) {
       console.error('❌ Failed to connect to StoreHub:', error);
+      this.connection = null;
+      this.currentStoreId = null;
       throw error;
     }
   }
 
   /**
-   * Register SignalR event handlers
+   * Join manager room for a store
    */
-  private registerEventHandlers() {
-    if (!this.connection) return;
+  private async joinStore(storeId: string): Promise<void> {
+    if (!this.connection) {
+      throw new Error('Connection not initialized');
+    }
 
-    // PlayStream event (§ 1.1)
-    this.connection.on(
-      STORE_HUB_EVENTS.PLAY_STREAM,
-      (payload: PlayStreamPayload) => {
-        console.log('🎵 PlayStream event:', payload);
-        this.handlers.onPlayStream?.(payload);
-      },
-    );
-
-    // PlaybackStateChanged event (§ 1.2)
-    this.connection.on(
-      STORE_HUB_EVENTS.PLAYBACK_STATE_CHANGED,
-      (payload: PlaybackStateChangedPayload) => {
-        console.log('⏯️ PlaybackStateChanged event:', payload);
-        this.handlers.onPlaybackStateChanged?.(payload);
-      },
-    );
-
-    // SpaceStateSync event (§ 1.3)
-    this.connection.on(
-      STORE_HUB_EVENTS.SPACE_STATE_SYNC,
-      (spaceId: string, state: SpaceStateDto) => {
-        console.log('🔄 SpaceStateSync event:', spaceId, state);
-        this.handlers.onSpaceStateSync?.(spaceId, state);
-      },
-    );
-  }
-
-  /**
-   * Join store group (§ 2.1)
-   */
-  private async joinStore(storeId: string) {
-    if (!this.connection) throw new Error('Connection not initialized');
+    // ✅ Check connection state before invoking
+    if (this.connection.state !== HubConnectionState.Connected) {
+      throw new Error(
+        `Cannot join store: Connection state is ${this.connection.state}`,
+      );
+    }
 
     try {
-      await this.connection.invoke(STORE_HUB_EVENTS.JOIN_STORE, storeId);
-      console.log(`✅ Joined store group: ${storeId}`);
+      console.log('🚪 Joining manager room for store:', storeId);
+      await this.connection.invoke('JoinManagerRoomAsync', storeId);
+      console.log('✅ Joined manager room successfully');
     } catch (error) {
-      console.error('❌ Failed to join store:', error);
+      console.error('❌ Failed to join manager room:', error);
       throw error;
     }
   }
 
   /**
-   * Leave store group (§ 2.2)
+   * Leave current store's manager room
    */
-  async leaveStore() {
-    if (!this.connection || !this.storeId) return;
+  private async leaveStore(): Promise<void> {
+    if (!this.connection || !this.currentStoreId) {
+      return;
+    }
+
+    // ✅ Only try to leave if connected
+    if (this.connection.state !== HubConnectionState.Connected) {
+      console.log('⏭️ Connection not active, skipping leave');
+      return;
+    }
 
     try {
-      await this.connection.invoke(STORE_HUB_EVENTS.LEAVE_STORE, this.storeId);
-      console.log(`👋 Left store group: ${this.storeId}`);
+      console.log('🚪 Leaving manager room for store:', this.currentStoreId);
+      await this.connection.invoke(
+        'LeaveManagerRoomAsync',
+        this.currentStoreId,
+      );
+      console.log('✅ Left manager room successfully');
     } catch (error) {
       console.error('❌ Failed to leave store:', error);
+      // Don't throw - just log
     }
   }
 
   /**
-   * Update space music state (§ 2.3)
+   * Join a specific space group to receive real-time updates
    */
-  async updateSpaceMusicState(state: SpaceStateDto) {
-    if (!this.connection) throw new Error('Connection not initialized');
+  public async joinSpace(spaceId: string): Promise<void> {
+    if (!this.connection) {
+      throw new Error('Connection not initialized');
+    }
+
+    if (this.connection.state !== HubConnectionState.Connected) {
+      throw new Error(
+        `Cannot join space: Connection state is ${this.connection.state}`,
+      );
+    }
 
     try {
-      await this.connection.invoke(
-        STORE_HUB_EVENTS.UPDATE_SPACE_MUSIC_STATE,
-        state,
-      );
-      console.log('✅ Updated space music state:', state);
+      console.log('🎵 Joining space group:', spaceId);
+      await this.connection.invoke('JoinSpaceAsync', spaceId);
+      console.log('✅ Joined space group successfully:', spaceId);
     } catch (error) {
-      console.error('❌ Failed to update space music state:', error);
+      console.error('❌ Failed to join space group:', error);
       throw error;
     }
   }
 
   /**
-   * Get space current state (§ 2.4)
+   * Leave a specific space group
    */
-  async getSpaceCurrentState(spaceId: string): Promise<SpaceStateDto | null> {
-    if (!this.connection) throw new Error('Connection not initialized');
+  public async leaveSpace(spaceId: string): Promise<void> {
+    if (!this.connection) {
+      return;
+    }
+
+    if (this.connection.state !== HubConnectionState.Connected) {
+      console.log('⏭️ Connection not active, skipping leave space');
+      return;
+    }
 
     try {
-      const state = await this.connection.invoke<SpaceStateDto | null>(
-        STORE_HUB_EVENTS.GET_SPACE_CURRENT_STATE,
-        spaceId,
-      );
-      console.log('📊 Got space state:', state);
-      return state;
+      console.log('👋 Leaving space group:', spaceId);
+      await this.connection.invoke('LeaveSpaceAsync', spaceId);
+      console.log('✅ Left space group successfully:', spaceId);
     } catch (error) {
-      console.error('❌ Failed to get space state:', error);
-      throw error;
+      console.error('❌ Failed to leave space group:', error);
+      // Don't throw - just log
     }
   }
 
   /**
-   * Get all spaces state in store (§ 2.5)
+   * Register SignalR event listeners
    */
-  async getStoreSpacesState(): Promise<SpaceStateDto[]> {
-    if (!this.connection) throw new Error('Connection not initialized');
-
-    try {
-      const states = await this.connection.invoke<SpaceStateDto[]>(
-        STORE_HUB_EVENTS.GET_STORE_SPACES_STATE,
-      );
-      console.log('📊 Got store spaces state:', states);
-      return states;
-    } catch (error) {
-      console.error('❌ Failed to get store spaces state:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Disconnect from hub
-   */
-  async disconnect() {
+  private registerEventListeners(): void {
     if (!this.connection) return;
 
+    // PlayStream event (new track/playlist)
+    this.connection.on('PlayStream', (payload: PlayStreamPayload) => {
+      console.log('📡 PlayStream event:', payload);
+      this.eventHandlers.onPlayStream?.(payload);
+    });
+
+    // PlaybackStateChanged event (pause/resume/skip)
+    this.connection.on(
+      'PlaybackStateChanged',
+      (payload: PlaybackStateChangedPayload) => {
+        console.log('📡 PlaybackStateChanged event:', payload);
+        this.eventHandlers.onPlaybackStateChanged?.(payload);
+      },
+    );
+
+    // SpaceStateSync event (full state sync)
+    this.connection.on('SpaceStateSync', (state: SpaceStateDto) => {
+      console.log('📡 SpaceStateSync event:', state);
+      this.eventHandlers.onSpaceStateSync?.(state.spaceId, state);
+    });
+
+    // Connection lifecycle events
+    this.connection.onreconnecting(() => {
+      console.log('🔄 SignalR reconnecting...');
+      this.eventHandlers.onReconnecting?.();
+    });
+
+    this.connection.onreconnected(() => {
+      console.log('✅ SignalR reconnected');
+      this.eventHandlers.onReconnected?.();
+
+      // Rejoin manager room after reconnect
+      if (this.currentStoreId) {
+        this.joinStore(this.currentStoreId).catch((err) => {
+          console.error('❌ Failed to rejoin after reconnect:', err);
+        });
+      }
+    });
+
+    this.connection.onclose(() => {
+      console.log('❌ SignalR connection closed');
+      this.eventHandlers.onDisconnected?.();
+    });
+  }
+
+  /**
+   * Disconnect from StoreHub
+   */
+  public async disconnect(): Promise<void> {
+    if (!this.connection) {
+      return;
+    }
+
     try {
+      // Leave manager room
       await this.leaveStore();
+
+      // Stop connection
       await this.connection.stop();
+
       console.log('👋 StoreHub disconnected gracefully');
     } catch (error) {
-      console.error('❌ Failed to disconnect from StoreHub:', error);
+      console.error('❌ Error during disconnect:', error);
     } finally {
       this.connection = null;
-      this.storeId = null;
+      this.currentStoreId = null;
+      this.eventHandlers = {};
     }
-  }
-
-  /**
-   * Get connection state
-   */
-  getState(): signalR.HubConnectionState {
-    return this.connection?.state ?? signalR.HubConnectionState.Disconnected;
-  }
-
-  /**
-   * Check if connected
-   */
-  isConnected(): boolean {
-    return this.connection?.state === signalR.HubConnectionState.Connected;
   }
 }
 
-// Export singleton instance
+// Singleton instance
 export const storeHubService = new StoreHubService();

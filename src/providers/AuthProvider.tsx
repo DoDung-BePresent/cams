@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState } from 'react';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { message } from 'antd';
 
@@ -15,18 +15,18 @@ import { isTokenExpired } from '@/shared/utils';
 /**
  * Hooks
  */
-import { useProfile } from '@/features/auth/hooks';
+import { useProfile } from '@/shared/modules/auth/hooks';
 
 /**
  * Services
  */
-import { authService } from '@/features/auth/services';
+import { authService } from '@/shared/modules/auth/services';
 
 /**
  * Types
  */
-import type { LoginPayload, User } from '@/features/auth/types';
 import type { UseMutationResult } from '@tanstack/react-query';
+import type { LoginPayload, User } from '@/shared/modules/auth/types';
 
 type AuthContextType = {
   user: User | null;
@@ -36,22 +36,23 @@ type AuthContextType = {
   logout: UseMutationResult<void, Error, void>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+/* eslint-disable react-refresh/only-export-components */
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(true);
-
-  useEffect(() => {
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
     const token = getAccessToken();
     if (token && !isTokenExpired(token)) {
-      setAccessToken(token);
-    } else if (token) {
+      return token;
+    }
+    if (token) {
       clearTokens();
     }
-    setIsInitializing(false);
-  }, []);
+    return null;
+  });
 
   const { data: user, isLoading: isLoadingProfile } = useProfile(!!accessToken);
 
@@ -86,12 +87,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     onSuccess: () => {
       clearTokens();
       setAccessToken(null);
-      queryClient.setQueryData(['profile'], null);
-      queryClient.removeQueries({ queryKey: ['profile'] });
+      // queryClient.setQueryData(['profile'], null);
+      queryClient.clear();
     },
   });
 
-  if (isInitializing || (accessToken && isLoadingProfile)) {
+  if (accessToken && isLoadingProfile) {
     return null;
   }
 
@@ -108,10 +109,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
 };

@@ -1,5 +1,9 @@
 import { Navigate } from 'react-router';
-import { Loadable } from '@/shared/components/common/Loadable';
+
+/**
+ * Components
+ */
+import { Loadable } from '@/shared/components/common';
 
 /**
  * Pages
@@ -19,13 +23,23 @@ const PlaylistList = Loadable(
   'PlaylistList',
 );
 
-const StoreDashboard = () => <div>Store Dashboard (Coming Soon)</div>;
+const Dashboard = Loadable(
+  () => import('@/features/store/pages/Dashboard'),
+  'StoreDashboard',
+);
+
+const StoreProfile = Loadable(
+  () => import('@/features/store/pages/Profile/StoreProfile'),
+  'StoreProfile',
+);
+
+/* eslint-disable react-refresh/only-export-components */
 const StoreSettings = () => <div>Settings (Coming Soon)</div>;
 
 export const storeRoutes = [
   {
     path: 'dashboard',
-    element: <StoreDashboard />,
+    element: <Dashboard />,
   },
   {
     path: 'spaces',
@@ -42,6 +56,10 @@ export const storeRoutes = [
   {
     path: 'playlists',
     element: <PlaylistList />,
+  },
+  {
+    path: 'profile',
+    element: <StoreProfile />,
   },
   {
     path: '*',

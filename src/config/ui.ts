@@ -16,10 +16,12 @@ export const SIDEBAR_WIDTHS = {
 
 export const MODAL_WIDTHS = {
   medium: 500,
+  large: 720,
 };
 
 export const AVATAR_SIZE = {
   small: 36,
   medium: 48,
   large: 60,
-};
+  extraLarge: 80,
+} as const;

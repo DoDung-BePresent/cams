@@ -1,13 +1,9 @@
-import { Typography } from 'antd';
-import { MusicScheduleCalendar } from '@/features/brand/components/MusicScheduleCalendar';
-
-const { Title } = Typography;
+import { WelcomeBanner } from '@/shared/components';
 
 export const AdminDashboard = () => {
   return (
     <div>
-      <Title level={2}>Admin Dashboard</Title>
-      <MusicScheduleCalendar />
+      <WelcomeBanner />
     </div>
   );
 };

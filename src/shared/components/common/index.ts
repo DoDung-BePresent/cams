@@ -1,5 +1,6 @@
 export * from './DataTable';
 export * from './ErrorBoundary';
+export * from './FeatureErrorFallback';
 export * from './LinearProgress';
 export * from './Loadable';
 export * from './Loader';
@@ -14,3 +15,4 @@ export * from './AudioDragger';
 export * from './Loadable';
 export * from './PageHeader';
 export * from './NavCard';
+export * from './WelcomeBanner';

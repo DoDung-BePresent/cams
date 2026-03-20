@@ -22,13 +22,18 @@ import {
   EditBrandDrawer,
   getBrandColumns,
   BrandFilter as BrandFilterComponent,
+  BrandDetailDrawer,
 } from './components';
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
 
 /**
  * Hooks
  */
-import { useBrands, useDeleteBrand } from '@/features/admin/hooks';
+import {
+  useBrands,
+  useDeleteBrand,
+  useToggleBrandStatus,
+} from '@/features/admin/hooks';
 
 /**
  * Constants
@@ -47,16 +52,19 @@ export const BrandList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useBrands(filter);
 
   const deleteBrand = useDeleteBrand();
+  const toggleBrandStatus = useToggleBrandStatus();
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof BrandFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -79,8 +87,32 @@ export const BrandList = () => {
     }));
   };
 
+  const handleToggleStatus = (brandId: string) => {
+    const brand = data?.items.find((b) => b.id === brandId);
+
+    AppModal.confirm({
+      title: `${brand?.status === 1 ? 'Deactivate' : 'Activate'} Brand`,
+      content: (
+        <p>
+          Are you sure you want to{' '}
+          <strong>{brand?.status === 1 ? 'deactivate' : 'activate'}</strong> "
+          <strong>{brand?.name}</strong>"?
+        </p>
+      ),
+      okText: brand?.status === 1 ? 'Deactivate' : 'Activate',
+      cancelText: 'Cancel',
+      okButtonProps: {
+        danger: brand?.status === 1,
+      },
+      onOk: () => {
+        toggleBrandStatus.mutate(brandId);
+      },
+    });
+  };
+
   const handleView = (brandId: string) => {
-    console.log('View brand:', brandId);
+    setSelectedBrandId(brandId);
+    setDetailDrawerOpen(true);
   };
 
   const handleEdit = (brand: BrandListItem) => {
@@ -135,6 +167,7 @@ export const BrandList = () => {
   const columns = getBrandColumns({
     onView: handleView,
     onEdit: handleEdit,
+    onToggleStatus: handleToggleStatus,
     onDelete: handleDelete,
   });
 
@@ -209,6 +242,14 @@ export const BrandList = () => {
           setEditDrawerOpen(false);
           setSelectedBrandId(null);
           refetch();
+        }}
+      />
+      <BrandDetailDrawer
+        open={detailDrawerOpen}
+        brandId={selectedBrandId}
+        onClose={() => {
+          setDetailDrawerOpen(false);
+          setSelectedBrandId(null);
         }}
       />
     </div>

@@ -5,6 +5,12 @@ import {
   UserOutlined,
   CrownOutlined,
   ShopOutlined,
+  EyeOutlined,
+  EditOutlined,
+  PoweroffOutlined,
+  CheckCircleOutlined,
+  SwapOutlined,
+  LockOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -54,7 +60,7 @@ export const getGroupColumns = (): ColumnsType<StaffListItem> => [
           shape='square'
         />
         <div>
-          <div style={{ fontWeight: 500, fontSize: 16 }}>
+          <div style={{ fontWeight: 500 }}>
             {record.storeName || 'Unassigned Staff'}
           </div>
           <div style={{ fontSize: 12, color: '#8c8c8c' }}>
@@ -148,21 +154,25 @@ export const getExpandedColumns = ({
             {
               key: 'view',
               label: 'View Details',
+              icon: <EyeOutlined />,
               onClick: () => onView(record.id),
             },
             {
               key: 'edit',
               label: 'Edit',
+              icon: <EditOutlined />,
               onClick: () => onEdit(record.id),
             },
             {
               key: 'assign-store',
               label: 'Assign Store',
+              icon: <SwapOutlined />,
               onClick: () => onAssignStore(record.id),
             },
             {
               key: 'reset-password',
               label: 'Reset Password',
+              icon: <LockOutlined />,
               onClick: () => onResetPassword(record.id),
             },
             {
@@ -171,6 +181,12 @@ export const getExpandedColumns = ({
             {
               key: 'toggle-status',
               label: record.status === 1 ? 'Deactivate' : 'Activate',
+              icon:
+                record.status === 1 ? (
+                  <PoweroffOutlined />
+                ) : (
+                  <CheckCircleOutlined />
+                ),
               onClick: () => onToggleStatus(record.id),
               danger: record.status === 1,
             },

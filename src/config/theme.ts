@@ -25,11 +25,23 @@ export const antTheme: ThemeConfig = {
     Input: {
       fontSizeLG: 14,
     },
+    InputNumber: {
+      fontSizeLG: 14,
+    },
+    Select: {
+      fontSizeLG: 14,
+    },
     Card: {
       colorBorderSecondary: '#E6EBF1',
     },
     Tabs: {
-      horizontalItemPadding: '0px 0px 12px 0px',
+      horizontalItemGutter: 0,
+    },
+    DatePicker: {
+      fontSizeLG: 14,
+    },
+    Divider: {
+      marginLG: 0,
     },
   },
 };

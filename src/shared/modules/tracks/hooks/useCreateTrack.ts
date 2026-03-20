@@ -25,18 +25,11 @@ export const useCreateTrack = () => {
       if (response.data.isSuccess) {
         queryClient.invalidateQueries({ queryKey: ['tracks'] });
 
-        if (!response.data.data?.audioUrl) {
-          message.warning(
-            'Track created but audio upload failed. Please try uploading again.',
-            5,
-          );
-        } else {
-          message.success(
-            response.data.message || 'Track created successfully!',
-          );
-        }
+        message.success(response.data.message || 'Track created successfully!');
       }
     },
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       showErrorMessage(error, 'Failed to create track.');
     },

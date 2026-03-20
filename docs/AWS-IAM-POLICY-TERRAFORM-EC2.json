@@ -32,13 +32,17 @@
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy",
         "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "iam:ListInstanceProfilesForRole",
         "iam:CreateInstanceProfile",
         "iam:DeleteInstanceProfile",
         "iam:GetInstanceProfile",
         "iam:AddRoleToInstanceProfile",
         "iam:RemoveRoleFromInstanceProfile",
         "iam:TagRole",
-        "iam:TagInstanceProfile"
+        "iam:UntagRole",
+        "iam:TagInstanceProfile",
+        "iam:UntagInstanceProfile"
       ],
       "Resource": "*"
     },
@@ -52,10 +56,7 @@
         "s3:PutObject",
         "s3:DeleteObject"
       ],
-      "Resource": [
-        "arn:aws:s3:::*",
-        "arn:aws:s3:::*/*"
-      ]
+      "Resource": ["arn:aws:s3:::*", "arn:aws:s3:::*/*"]
     },
     {
       "Sid": "TerraformStateLockDynamoDB",
@@ -72,9 +73,7 @@
     {
       "Sid": "ECRLoginForBuildPush",
       "Effect": "Allow",
-      "Action": [
-        "ecr:GetAuthorizationToken"
-      ],
+      "Action": ["ecr:GetAuthorizationToken"],
       "Resource": "*"
     },
     {
@@ -93,4 +92,3 @@
     }
   ]
 }
-

@@ -1,3 +1,9 @@
+import { WelcomeBanner } from '@/shared/components';
+
 export const BrandDashboard = () => {
-  return <div>Hello</div>;
+  return (
+    <div>
+      <WelcomeBanner />
+    </div>
+  );
 };
