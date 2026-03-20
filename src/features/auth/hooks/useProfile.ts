@@ -3,17 +3,21 @@ import { useQuery } from '@tanstack/react-query';
 /**
  * Services
  */
-import { authService } from '@/features/auth/services';
+import { authService } from '@/shared/services';
 
 /**
  * Types
  */
 import type { User } from '@/features/auth/types';
-import { STALE_TIME } from '@/config';
+
+/**
+ * Configs
+ */
+import { STALE_TIME, QUERY_KEYS } from '@/config';
 
 export const useProfile = (enabled = true) => {
   return useQuery({
-    queryKey: ['profile'],
+    queryKey: QUERY_KEYS.auth.profile,
     queryFn: async () => {
       const response = await authService.getProfile();
 

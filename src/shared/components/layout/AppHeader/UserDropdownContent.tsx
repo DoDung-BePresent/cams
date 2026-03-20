@@ -61,6 +61,12 @@ export const UserDropdownContent = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
 
+  const basePath = location.pathname.startsWith('/admin')
+    ? '/admin'
+    : location.pathname.startsWith('/brand')
+      ? '/brand'
+      : '/store';
+
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSuccess: () => {
@@ -74,6 +80,7 @@ export const UserDropdownContent = () => {
       key: 'edit-profile',
       label: 'Edit Profile',
       icon: <EditOutlined style={{ fontSize: 14 }} />,
+      onClick: () => navigate(`${basePath}/profile`),
     },
     {
       key: 'view-profile',

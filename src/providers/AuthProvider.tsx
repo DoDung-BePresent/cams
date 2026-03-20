@@ -20,7 +20,7 @@ import { useProfile } from '@/features/auth/hooks';
 /**
  * Services
  */
-import { authService } from '@/features/auth/services';
+import { authService } from '@/shared/services';
 
 /**
  * Types

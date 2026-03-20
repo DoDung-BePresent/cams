@@ -1,4 +1,8 @@
 import { api } from '@/config';
+
+/**
+ * Types
+ */
 import type {
   LoginPayload,
   LoginResponse,

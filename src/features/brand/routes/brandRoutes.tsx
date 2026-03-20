@@ -1,4 +1,9 @@
-import { Loadable } from '@/shared/components/common/Loadable';
+import { Navigate } from 'react-router';
+
+/**
+ * Components
+ */
+import { Loadable } from '@/shared/components/common';
 
 /**
  * Pages
@@ -28,6 +33,11 @@ const PlaylistList = Loadable(
   'PlaylistList',
 );
 
+const BrandProfile = Loadable(
+  () => import('@/features/brand/pages/Profile/BrandProfile'),
+  'BrandProfile',
+);
+
 export const brandRoutes = [
   {
     path: 'dashboard',
@@ -48,5 +58,18 @@ export const brandRoutes = [
   {
     path: 'playlists',
     element: <PlaylistList />,
+  },
+  {
+    path: 'profile',
+    element: <BrandProfile />,
+  },
+  {
+    path: '*',
+    element: (
+      <Navigate
+        to='/store/dashboard'
+        replace
+      />
+    ),
   },
 ];
