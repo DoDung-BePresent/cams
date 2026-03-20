@@ -1,5 +1,6 @@
 export * from './DataTable';
 export * from './ErrorBoundary';
+export * from './FeatureErrorFallback';
 export * from './LinearProgress';
 export * from './Loadable';
 export * from './Loader';

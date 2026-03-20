@@ -1,15 +1,11 @@
 import { api } from '@/config';
-
-/**
- * Types
- */
 import type {
   LoginPayload,
   LoginResponse,
   ProfileResponse,
   RefreshTokenResponse,
-} from '@/features/auth/types';
-import type { Result } from '@/shared/types';
+  Result,
+} from '@/shared/types';
 
 const AUTH_ENDPOINTS = {
   login: '/api/auth/login',

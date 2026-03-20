@@ -1,20 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-
-/**
- * Services
- */
 import { authService } from '@/shared/services';
-
-/**
- * Types
- */
-import type { User } from '@/features/auth/types';
-
-/**
- * Configs
- */
+import type { User } from '@/shared/types';
 import { STALE_TIME, QUERY_KEYS } from '@/config';
 
+/**
+ * Hook to get current user's basic profile
+ * Returns User type with basic auth information
+ */
 export const useProfile = (enabled = true) => {
   return useQuery({
     queryKey: QUERY_KEYS.auth.profile,

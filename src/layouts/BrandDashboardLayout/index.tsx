@@ -10,6 +10,7 @@ import { useState } from 'react';
  */
 import { AppSidebar, AppFooter, AppContent } from './components';
 import { AppHeader } from '@/shared/components/layout';
+import { ErrorBoundary, FeatureErrorFallback } from '@/shared/components';
 
 export const BrandDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -27,7 +28,11 @@ export const BrandDashboardLayout = () => {
           onClick={handleCollapsed}
         />
         <AppContent>
-          <Outlet />
+          <ErrorBoundary
+            fallback={<FeatureErrorFallback featureName='Brand Dashboard' />}
+          >
+            <Outlet />
+          </ErrorBoundary>
         </AppContent>
         <AppFooter />
         {/* <MusicPlayer sidebarCollapsed={collapsed} /> */}

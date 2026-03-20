@@ -1,11 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { authService, userService } from '@/shared/services';
 import { STALE_TIME, QUERY_KEYS } from '@/config';
-import type { User } from '@/features/auth/types';
+import type { User } from '@/shared/types';
 
 /**
  * Hook to get current user's full profile
- * Combines auth profile (basic info) with user detail (full info)
+ * Combines auth profile (basic info) with user detail (full info including brandName, storeName, etc.)
+ *
+ * @returns {Object} Query result with UserDetail data
  */
 export const useMyProfile = () => {
   // Step 1: Get basic auth profile (userId, roles, etc.)

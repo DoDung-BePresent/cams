@@ -7,6 +7,7 @@ import { Outlet } from 'react-router';
  */
 import { AppSidebar, AppContent, AppFooter } from './components';
 import { AppHeader } from '@/shared/components/layout';
+import { ErrorBoundary, FeatureErrorFallback } from '@/shared/components';
 
 export const StoreDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -24,7 +25,11 @@ export const StoreDashboardLayout = () => {
           onClick={toggleCollapsed}
         />
         <AppContent>
-          <Outlet />
+          <ErrorBoundary
+            fallback={<FeatureErrorFallback featureName='Store Dashboard' />}
+          >
+            <Outlet />
+          </ErrorBoundary>
         </AppContent>
         <AppFooter />
       </Layout>

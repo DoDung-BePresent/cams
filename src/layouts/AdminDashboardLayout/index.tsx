@@ -10,6 +10,7 @@ import { useState } from 'react';
  */
 import { AppSidebar, AppFooter, AppContent } from './components';
 import { AppHeader } from '@/shared/components/layout';
+import { ErrorBoundary, FeatureErrorFallback } from '@/shared/components';
 
 export const AdminDashboardLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -26,7 +27,11 @@ export const AdminDashboardLayout = () => {
           onClick={handleCollapsed}
         />
         <AppContent>
-          <Outlet />
+          <ErrorBoundary
+            fallback={<FeatureErrorFallback featureName='Admin Dashboard' />}
+          >
+            <Outlet />
+          </ErrorBoundary>
         </AppContent>
         <AppFooter />
       </Layout>

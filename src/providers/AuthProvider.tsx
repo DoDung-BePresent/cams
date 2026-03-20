@@ -15,7 +15,7 @@ import { isTokenExpired } from '@/shared/utils';
 /**
  * Hooks
  */
-import { useProfile } from '@/features/auth/hooks';
+import { useProfile } from '@/shared/hooks';
 
 /**
  * Services
@@ -25,7 +25,7 @@ import { authService } from '@/shared/services';
 /**
  * Types
  */
-import type { LoginPayload, User } from '@/features/auth/types';
+import type { LoginPayload, User } from '@/shared/types';
 import type { UseMutationResult } from '@tanstack/react-query';
 
 type AuthContextType = {
