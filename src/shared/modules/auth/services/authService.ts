@@ -8,7 +8,8 @@ import type {
   LoginResponse,
   ProfileResponse,
   RefreshTokenResponse,
-} from '@/shared/modules/auth/types';
+  ChangePasswordRequest,
+} from '../types';
 import type { Result } from '@/shared/types';
 
 const AUTH_ENDPOINTS = {
@@ -16,6 +17,7 @@ const AUTH_ENDPOINTS = {
   logout: '/api/auth/logout',
   profile: '/api/auth/profile',
   refreshToken: '/api/auth/refresh-token',
+  changePassword: '/api/auth/change-password',
 } as const;
 
 export const authService = {
@@ -32,4 +34,8 @@ export const authService = {
   // POST /api/auth/refresh-token
   refreshToken: () =>
     api.post<RefreshTokenResponse>(AUTH_ENDPOINTS.refreshToken),
+
+  // POST /api/auth/change-password
+  changePassword: (data: ChangePasswordRequest) =>
+    api.post<Result>(AUTH_ENDPOINTS.changePassword, data),
 };
