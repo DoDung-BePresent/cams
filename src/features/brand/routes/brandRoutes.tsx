@@ -60,7 +60,7 @@ export const brandRoutes = [
     element: <PlaylistList />,
   },
   {
-    path: 'profile',
+    path: 'profile/*',
     element: <BrandProfile />,
   },
   {
