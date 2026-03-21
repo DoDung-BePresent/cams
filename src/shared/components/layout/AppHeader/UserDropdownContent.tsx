@@ -165,7 +165,7 @@ export const UserDropdownContent = () => {
                 align='center'
                 gap={4}
               >
-                <UserOutlined />
+                <UserOutlined className='mr-1' />
                 Profile
               </Flex>
             ),
@@ -177,7 +177,7 @@ export const UserDropdownContent = () => {
                 align='center'
                 gap={4}
               >
-                <SettingOutlined />
+                <SettingOutlined className='mr-1' />
                 Setting
               </Flex>
             ),

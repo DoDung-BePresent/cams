@@ -60,7 +60,7 @@ export const adminRoutes = [
     element: <PlaylistList />,
   },
   {
-    path: 'profile',
+    path: 'profile/*',
     element: <AdminProfile />,
   },
   {
