@@ -20,8 +20,14 @@ export const useTransferBrandOwnership = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, newOwnerId }: { id: string; newOwnerId: string }) =>
-      brandService.transferOwnership(id, { newOwnerId }),
+    mutationFn: ({
+      id,
+      newOwnerId,
+    }: {
+      id: string;
+      newOwnerId: string;
+      skipDefaultError?: boolean;
+    }) => brandService.transferOwnership(id, { newOwnerId }),
     onSuccess: (response, variables) => {
       message.success(
         response.data.message || 'Brand ownership transferred successfully!',
@@ -33,8 +39,11 @@ export const useTransferBrandOwnership = () => {
         queryKey: QUERY_KEYS.brands.detail(variables.id),
       });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error, variables) => {
+      // Skip default error handling if skipDefaultError is set in variables
+      if (variables?.skipDefaultError) {
+        return;
+      }
       handleApiError(error, {}, 'Failed to transfer brand ownership');
     },
   });

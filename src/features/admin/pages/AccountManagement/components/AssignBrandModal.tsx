@@ -70,7 +70,11 @@ export const AssignBrandModal = ({
     if (!accountId) return;
 
     assignBrand.mutate(
-      { id: accountId, data: values },
+      {
+        id: accountId,
+        data: values,
+        skipDefaultError: true,
+      },
       {
         onSuccess: () => {
           form.resetFields();
@@ -80,12 +84,10 @@ export const AssignBrandModal = ({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
           const errorCode = error.response?.data?.errorCode;
-
           if (errorCode === ErrorCodeEnum.Forbidden) {
             message.error(
               'Vui lòng chuyển nhượng quyền trước khi chuyển người dùng!',
             );
-
             return;
           }
         },
