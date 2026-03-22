@@ -12,6 +12,7 @@ const BRAND_ENDPOINTS = {
   create: '/api/brands',
   update: (id: string) => `/api/brands/${id}`,
   delete: (id: string) => `/api/brands/${id}`,
+  transferOwnership: (id: string) => `/api/brands/${id}/transfer-ownership`,
   toggleStatus: (id: string) => `/api/brands/${id}/toggle-status`,
 };
 
@@ -54,6 +55,11 @@ export const brandService = {
   // DELETE /api/brands/{id}
   delete: (id: string) => api.delete<Result>(BRAND_ENDPOINTS.delete(id)),
 
+  // PUT /api/brands/{id}/transfer-ownership
+  transferOwnership: (id: string, data: { newOwnerId: string }) =>
+    api.put<Result>(BRAND_ENDPOINTS.transferOwnership(id), data),
+
+  // PUT /api/brands/{id}/toggle-status
   toggleStatus: (id: string) =>
     api.put<Result>(BRAND_ENDPOINTS.toggleStatus(id)),
 };

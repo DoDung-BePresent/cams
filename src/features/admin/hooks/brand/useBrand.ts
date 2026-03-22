@@ -6,13 +6,13 @@ import { useQuery } from '@tanstack/react-query';
 import { brandService } from '@/features/admin/services';
 
 /**
- * Configs
+ * Config
  */
-import { STALE_TIME } from '@/config';
+import { STALE_TIME, QUERY_KEYS } from '@/config';
 
 export const useBrand = (id: string | undefined, enabled: boolean = true) => {
   return useQuery({
-    queryKey: ['brand', id],
+    queryKey: QUERY_KEYS.brands.detail(id),
     queryFn: async () => {
       if (!id) throw new Error('Brand ID is required');
       const response = await brandService.getById(id);
