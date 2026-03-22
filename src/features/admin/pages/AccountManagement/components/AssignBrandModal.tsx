@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Alert, Form, Select } from 'antd';
+import { Alert, Form, message, Select } from 'antd';
 
 /**
  * Hooks
@@ -29,6 +29,7 @@ import { assignBrandValidation } from '@/features/admin/validations';
  * Configs
  */
 import { MODAL_WIDTHS } from '@/config';
+import { ErrorCodeEnum } from '@/shared/types';
 
 type AssignBrandModalProps = {
   open: boolean;
@@ -75,6 +76,18 @@ export const AssignBrandModal = ({
           form.resetFields();
           onSuccess();
           onClose();
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onError: (error: any) => {
+          const errorCode = error.response?.data?.errorCode;
+
+          if (errorCode === ErrorCodeEnum.Forbidden) {
+            message.error(
+              'Vui lòng chuyển nhượng quyền trước khi chuyển người dùng!',
+            );
+
+            return;
+          }
         },
       },
     );
