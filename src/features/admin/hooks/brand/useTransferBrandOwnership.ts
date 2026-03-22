@@ -2,50 +2,49 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 
 /**
+ * Services
+ */
+import { brandService } from '@/features/admin/services';
+
+/**
  * Utils
  */
 import { handleApiError } from '@/shared/utils';
-
-/**
- * Services
- */
-import { accountService } from '@/features/admin/services';
-
-/**
- * Types
- */
-import type { AssignBrandRequest } from '@/features/admin/types';
 
 /**
  * Config
  */
 import { QUERY_KEYS } from '@/config';
 
-export const useAssignAccountBrand = () => {
+export const useTransferBrandOwnership = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       id,
-      data,
+      newOwnerId,
     }: {
       id: string;
-      data: AssignBrandRequest;
+      newOwnerId: string;
       skipDefaultError?: boolean;
-    }) => accountService.assignBrand(id, data),
+    }) => brandService.transferOwnership(id, { newOwnerId }),
     onSuccess: (response, variables) => {
-      message.success(response.data.message || 'Brand assigned successfully!');
+      message.success(
+        response.data.message || 'Brand ownership transferred successfully!',
+      );
+
+      // Invalidate brand detail and list
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.brands.all });
       queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.accounts.detail(variables.id),
+        queryKey: QUERY_KEYS.brands.detail(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.accounts.all });
     },
     onError: (error, variables) => {
       // Skip default error handling if skipDefaultError is set in variables
       if (variables?.skipDefaultError) {
         return;
       }
-      handleApiError(error, {}, 'Failed to assign brand');
+      handleApiError(error, {}, 'Failed to transfer brand ownership');
     },
   });
 };

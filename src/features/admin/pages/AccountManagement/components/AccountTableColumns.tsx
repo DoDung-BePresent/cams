@@ -1,4 +1,4 @@
-import { Button, Dropdown, Tag, Avatar, Space } from 'antd';
+import { Button, Dropdown, Tag, Avatar, Space, Typography } from 'antd';
 
 /**
  * Icons
@@ -36,12 +36,15 @@ import {
  */
 import { AVATAR_SIZE } from '@/config';
 
+const { Text } = Typography;
+
 type GetColumnsProps = {
   onView: (accountId: string) => void;
   onEdit: (account: AccountListItem) => void;
   onToggleStatus: (accountId: string) => void;
   onResetPassword: (accountId: string) => void;
   onAssignBrand: (accountId: string) => void;
+  onTransferOwnership: (accountId: string) => void;
 };
 
 const getActionMenuItems = (
@@ -79,6 +82,15 @@ const getActionMenuItems = (
       label: 'Assign Brand',
       icon: <SwapOutlined />,
       onClick: () => handlers.onAssignBrand(record.id),
+    });
+  }
+
+  if (record.roles.includes(RoleEnum.BrandManager) && !record.isPrimaryOwner) {
+    items.push({
+      key: 'transfer-ownership',
+      label: 'Transfer Ownership',
+      icon: <SwapOutlined />,
+      onClick: () => handlers.onTransferOwnership(record.id),
     });
   }
 
@@ -127,20 +139,23 @@ export const getGroupColumns = (): ColumnsType<AccountListItem> => [
           src={record.brandLogoUrl}
           size={AVATAR_SIZE.medium}
           shape='square'
-          style={{ borderRadius: 8 }}
         >
           {record.brandName?.charAt(0).toUpperCase() || '?'}
         </Avatar>
-        <div>
-          <div style={{ fontWeight: 500, fontSize: 16 }}>
-            {record.brandName || 'Unassigned Accounts'}
-          </div>
-          <div style={{ fontSize: 12, color: '#8c8c8c' }}>
+        <Space
+          vertical
+          size={0}
+        >
+          <Text strong>{record.brandName || 'Unassigned Accounts'}</Text>
+          <Text
+            type='secondary'
+            style={{ fontSize: 12 }}
+          >
             <TeamOutlined style={{ marginRight: 4 }} />
             {record.children?.length || 0}{' '}
             {record.children?.length === 1 ? 'manager' : 'managers'}
-          </div>
-        </div>
+          </Text>
+        </Space>
       </Space>
     ),
   },
@@ -167,13 +182,15 @@ export const getExpandedColumns = (
           src={record.avatarUrl}
           size={AVATAR_SIZE.medium}
           shape='square'
-          style={{ borderRadius: 5 }}
         >
           {record.firstName?.charAt(0).toUpperCase()}
         </Avatar>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontWeight: 500 }}>{record.fullName}</span>
+        <Space
+          vertical
+          size={0}
+        >
+          <Space>
+            <Text strong>{record.fullName}</Text>
             {record.isPrimaryOwner && (
               <Tag
                 icon={<CrownOutlined />}
@@ -182,14 +199,25 @@ export const getExpandedColumns = (
                 Primary Owner
               </Tag>
             )}
-          </div>
-          <div style={{ fontSize: 12, color: '#8c8c8c' }}>{record.email}</div>
-          {record.phoneNumber && (
-            <div style={{ fontSize: 12, color: '#8c8c8c' }}>
-              {record.phoneNumber}
-            </div>
-          )}
-        </div>
+          </Space>
+          <Space>
+            <Text
+              type='secondary'
+              style={{ fontSize: 12 }}
+            >
+              {record.email}
+            </Text>
+            <Text type='secondary'>-</Text>
+            {record.phoneNumber && (
+              <Text
+                type='secondary'
+                style={{ fontSize: 12 }}
+              >
+                {record.phoneNumber}
+              </Text>
+            )}
+          </Space>
+        </Space>
       </div>
     ),
     sorter: (a, b) => a.fullName.localeCompare(b.fullName),

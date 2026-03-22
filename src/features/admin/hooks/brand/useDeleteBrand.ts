@@ -9,7 +9,12 @@ import { brandService } from '@/features/admin/services';
 /**
  * Utils
  */
-import { showErrorMessage } from '@/shared/utils';
+import { handleApiError } from '@/shared/utils';
+
+/**
+ * Config
+ */
+import { QUERY_KEYS } from '@/config';
 
 export const useDeleteBrand = () => {
   const queryClient = useQueryClient();
@@ -18,10 +23,11 @@ export const useDeleteBrand = () => {
     mutationFn: (id: string) => brandService.delete(id),
     onSuccess: (response) => {
       message.success(response.data.message || 'Brand deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['brands'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.brands.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      showErrorMessage(error, 'Failed to delete brand!');
+      handleApiError(error, {}, 'Failed to delete brand');
     },
   });
 };
