@@ -44,6 +44,7 @@ type GetColumnsProps = {
   onToggleStatus: (accountId: string) => void;
   onResetPassword: (accountId: string) => void;
   onAssignBrand: (accountId: string) => void;
+  onTransferOwnership: (accountId: string) => void;
 };
 
 const getActionMenuItems = (
@@ -81,6 +82,15 @@ const getActionMenuItems = (
       label: 'Assign Brand',
       icon: <SwapOutlined />,
       onClick: () => handlers.onAssignBrand(record.id),
+    });
+  }
+
+  if (record.roles.includes(RoleEnum.BrandManager) && !record.isPrimaryOwner) {
+    items.push({
+      key: 'transfer-ownership',
+      label: 'Transfer Ownership',
+      icon: <SwapOutlined />,
+      onClick: () => handlers.onTransferOwnership(record.id),
     });
   }
 

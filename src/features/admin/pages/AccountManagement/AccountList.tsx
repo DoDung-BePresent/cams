@@ -32,7 +32,11 @@ import { PageHeader, DataTable, AppModal } from '@/shared/components';
 /**
  * Hooks
  */
-import { useAccounts, useToggleAccountStatus } from '@/features/admin/hooks';
+import {
+  useAccounts,
+  useToggleAccountStatus,
+  useTransferBrandOwnership,
+} from '@/features/admin/hooks';
 import { useBrands } from '@/features/admin/hooks';
 
 /**
@@ -43,6 +47,7 @@ import { PAGINATION_SIZES } from '@/shared/constants';
 
 export const AccountList = () => {
   const navigate = useNavigate();
+  const transferOwnership = useTransferBrandOwnership();
   const [filter, setFilter] = useState<AccountFilter>({
     page: 1,
     pageSize: 10,
@@ -120,6 +125,34 @@ export const AccountList = () => {
     });
   };
 
+  const handleTransferOwnership = (accountId: string) => {
+    const account = data?.items.find((a) => a.id === accountId);
+    if (!account || !account.brandId) return;
+
+    AppModal.confirm({
+      title: 'Transfer Brand Ownership',
+      content: (
+        <span>
+          Are you sure you want to transfer <b>Primary Owner</b> of brand{' '}
+          <b>{account.brandName}</b> to <b>{account.fullName}</b>?
+        </span>
+      ),
+      okText: 'Transfer',
+      cancelText: 'Cancel',
+      okButtonProps: { type: 'primary', danger: true },
+      onOk: () => {
+        transferOwnership.mutate(
+          { id: account.brandId!, newOwnerId: accountId },
+          {
+            onSuccess: () => {
+              refetch();
+            },
+          },
+        );
+      },
+    });
+  };
+
   const handleResetPassword = (accountId: string) => {
     setSelectedAccountId(accountId);
     setResetPasswordModalOpen(true);
@@ -157,6 +190,7 @@ export const AccountList = () => {
     onToggleStatus: handleToggleStatus,
     onResetPassword: handleResetPassword,
     onAssignBrand: handleAssignBrand,
+    onTransferOwnership: handleTransferOwnership,
   };
 
   // Separate columns for group and expanded rows
