@@ -19,6 +19,13 @@ export const QUERY_KEYS = {
   auth: {
     profile: ['auth', 'profile'] as const,
   },
+  // Accounts (Brand Managers)
+  accounts: {
+    all: ['accounts'] as const,
+    list: (filter?: Record<string, unknown>) =>
+      ['accounts', 'list', filter] as const,
+    detail: (id?: string) => ['accounts', 'detail', id] as const,
+  },
   // Users/Accounts
   users: {
     all: ['users'] as const,

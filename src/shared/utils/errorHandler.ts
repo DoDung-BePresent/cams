@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { message } from 'antd';
 import { ErrorCodeEnum, ERROR_MESSAGES } from '@/shared/types';
 
@@ -29,16 +30,16 @@ export const getErrorMessage = (
 
   if (!errorData) return defaultMessage;
 
-  // 1. Check if errorCode exists and map to friendly message
+  // 1. Use backend message if available
+  if (errorData.message) {
+    return errorData.message;
+  }
+
+  // 2. Check if errorCode exists and map to friendly message
   if (errorData.errorCode) {
     const errorCode = errorData.errorCode as ErrorCodeEnum;
     const friendlyMessage = ERROR_MESSAGES[errorCode];
     if (friendlyMessage) return friendlyMessage;
-  }
-
-  // 2. Use backend message if available
-  if (errorData.message) {
-    return errorData.message;
   }
 
   // 3. Format validation errors
@@ -62,10 +63,7 @@ export const getErrorMessage = (
 /**
  * Display error message using Ant Design message
  */
-export const showErrorMessage = (
-  error: any,
-  defaultMessage?: string,
-): void => {
+export const showErrorMessage = (error: any, defaultMessage?: string): void => {
   const errorMessage = getErrorMessage(error, defaultMessage);
   message.error(errorMessage);
 };
@@ -82,10 +80,10 @@ export const getValidationErrors = (
     return [];
   }
 
-  return errorData.errors
-    .filter((err): err is { field: string; message: string } => 
-      typeof err === 'object' && 'field' in err && 'message' in err
-    );
+  return errorData.errors.filter(
+    (err): err is { field: string; message: string } =>
+      typeof err === 'object' && 'field' in err && 'message' in err,
+  );
 };
 
 /**

@@ -9,6 +9,12 @@ export type LoginPayload = {
   rememberMe: boolean;
 };
 
+export type ChangePasswordRequest = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
 /**
  * Response Data Types (nested in Result<T>)
  */

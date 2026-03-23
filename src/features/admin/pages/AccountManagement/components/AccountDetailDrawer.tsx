@@ -42,7 +42,7 @@ import { formatDate } from '@/shared/utils';
 /**
  * Config
  */
-import { DRAWER_WIDTHS } from '@/config';
+import { AVATAR_SIZE, DRAWER_WIDTHS } from '@/config';
 
 const { Text, Title } = Typography;
 
@@ -103,7 +103,8 @@ export const AccountDetailDrawer = ({
             gap='large'
           >
             <Avatar
-              size={80}
+              size={AVATAR_SIZE.extraLarge}
+              shape='square'
               src={account.avatarUrl}
               icon={<UserOutlined />}
             />

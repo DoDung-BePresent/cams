@@ -58,7 +58,7 @@ export const storeRoutes = [
     element: <PlaylistList />,
   },
   {
-    path: 'profile',
+    path: 'profile/*',
     element: <StoreProfile />,
   },
   {

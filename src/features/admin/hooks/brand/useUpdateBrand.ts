@@ -9,7 +9,12 @@ import { brandService } from '@/features/admin/services';
 /**
  * Utils
  */
-import { showErrorMessage } from '@/shared/utils';
+import { handleApiError } from '@/shared/utils';
+
+/**
+ * Config
+ */
+import { QUERY_KEYS } from '@/config';
 
 export const useUpdateBrand = () => {
   const queryClient = useQueryClient();
@@ -19,11 +24,14 @@ export const useUpdateBrand = () => {
       brandService.update(id, formData),
     onSuccess: (response, variables) => {
       message.success(response.data.message || 'Brand updated successfully!');
-      queryClient.invalidateQueries({ queryKey: ['brand', variables.id] });
-      queryClient.invalidateQueries({ queryKey: ['brands'] });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.brands.detail(variables.id),
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.brands.all });
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
-      showErrorMessage(error, 'Failed to update brand!');
+      handleApiError(error, {}, 'Failed to update brand');
     },
   });
 };
