@@ -78,6 +78,7 @@ export const CreateTrackDrawer = ({
   const [valence, setValence] = useState(0.5);
 
   const { options: moodOptions, isLoading: moodsLoading } = useMoodOptions();
+  console.log(moodOptions);
 
   const imageUploadProps = createImageUploadProps<CreateTrackRequest>(
     setCoverImageFile,

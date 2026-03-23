@@ -29,7 +29,6 @@ import { usePlaylist, useRemoveTrackFromPlaylist } from '../hooks';
 /**
  * Constants
  */
-import { PLAYLIST_TYPE_LABELS, PLAYLIST_TYPE_COLORS } from '../constants';
 import { ENTITY_STATUS_LABELS } from '@/shared/constants';
 
 /**
@@ -122,11 +121,6 @@ export const PlaylistDetailsDrawer = ({
             <Descriptions.Item label='Store'>
               {playlist.storeName || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label='Type'>
-              <Tag color={PLAYLIST_TYPE_COLORS[playlist.isDynamic ? 1 : 0]}>
-                {PLAYLIST_TYPE_LABELS[playlist.isDynamic ? 1 : 0]}
-              </Tag>
-            </Descriptions.Item>
             <Descriptions.Item label='Mood'>
               {playlist.moodName ? (
                 <Tag color='blue'>{playlist.moodName}</Tag>
@@ -161,37 +155,13 @@ export const PlaylistDetailsDrawer = ({
           {/* Playlist Statistics */}
           <Descriptions
             title='Statistics'
-            column={2}
+            column={1}
             bordered
           >
             <Descriptions.Item label='Total Tracks'>
               {playlist.trackCount}
             </Descriptions.Item>
-            <Descriptions.Item label='Total Duration'>
-              {playlist.totalDurationSeconds
-                ? formatDuration(playlist.totalDurationSeconds)
-                : '—'}
-            </Descriptions.Item>
           </Descriptions>
-
-          {/* HLS Streaming Info */}
-          {playlist.hlsUrl && (
-            <Descriptions
-              title='Streaming Info'
-              column={1}
-              bordered
-            >
-              <Descriptions.Item label='HLS URL'>
-                <a
-                  href={playlist.hlsUrl}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {playlist.hlsUrl}
-                </a>
-              </Descriptions.Item>
-            </Descriptions>
-          )}
 
           {/* Track List */}
           <Descriptions

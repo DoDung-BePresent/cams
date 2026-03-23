@@ -93,6 +93,7 @@ export const EditTrackDrawer = ({
         bpm: track.bpm,
         moodId: track.moodId,
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEnergyLevel(track.energyLevel || 0.5);
       setValence(track.valence || 0.5);
     }
@@ -189,7 +190,7 @@ export const EditTrackDrawer = ({
           }}
         >
           {/* Current Audio */}
-          {track?.audioUrl && (
+          {track?.hlsUrl && (
             <div style={{ marginBottom: 24 }}>
               <Title
                 level={5}
@@ -198,7 +199,7 @@ export const EditTrackDrawer = ({
                 Current Audio
               </Title>
               <TrackAudioPlayer
-                audioUrl={track.audioUrl}
+                audioUrl={track.hlsUrl}
                 title={track.title}
                 artist={track.artist}
               />

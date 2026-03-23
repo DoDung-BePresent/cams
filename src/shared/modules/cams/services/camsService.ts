@@ -10,6 +10,7 @@ import type {
   AddPlaylistToQueueRequest,
   ReorderQueueRequest,
   UpdateAudioStateRequest,
+  SpaceQueueItemResponse,
 } from '../types';
 
 /**
@@ -30,6 +31,7 @@ const CAMS_ENDPOINTS = {
     `/api/cams/spaces/${spaceId}/queue/playlist`,
   reorderQueue: (spaceId: string) =>
     `/api/cams/spaces/${spaceId}/queue/reorder`,
+  getQueue: (spaceId: string) => `/api/cams/spaces/${spaceId}/queue`,
   clearQueue: (spaceId: string) => `/api/cams/spaces/${spaceId}/queue/all`,
   removeQueueItem: (spaceId: string, queueItemId: string) =>
     `/api/cams/spaces/${spaceId}/queue/${queueItemId}`,
@@ -121,6 +123,14 @@ export const camsService = {
    */
   reorderQueue: (spaceId: string, data: ReorderQueueRequest) =>
     api.patch<Result>(CAMS_ENDPOINTS.reorderQueue(spaceId), data),
+
+  /**
+   * Get space queue (NEW 2026-03-23)
+   * GET /api/cams/spaces/{spaceId}/queue
+   * Auth: Any authenticated user
+   */
+  getQueue: (spaceId: string) =>
+    api.get<Result<SpaceQueueItemResponse[]>>(CAMS_ENDPOINTS.getQueue(spaceId)),
 
   /**
    * Clear all queue items (NEW 2026-03-23)

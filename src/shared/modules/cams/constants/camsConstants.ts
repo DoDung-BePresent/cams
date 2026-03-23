@@ -23,6 +23,7 @@ export const PLAYBACK_COMMAND_LABELS: Record<PlaybackCommand, string> = {
   [PlaybackCommand.SkipNext]: 'Skip to Next',
   [PlaybackCommand.SkipPrevious]: 'Skip to Previous',
   [PlaybackCommand.SkipToTrack]: 'Skip to Track',
+  [PlaybackCommand.TrackEnded]: 'Track Ended',
 };
 
 /**

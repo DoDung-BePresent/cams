@@ -49,6 +49,51 @@ export enum OverrideMode {
 }
 
 /**
+ * Queue Insert Mode Enum (from API_CAMS.md § 3.3.2)
+ * ⚠️ NEW (2026-03-23): Queue insert modes
+ */
+export enum QueueInsertMode {
+  PlayNow = 1, // Switch immediately to first track if stream-ready
+  PlayNext = 2, // Insert after currently playing item
+  AddToQueue = 3, // Add to end of pending queue
+}
+
+/**
+ * Queue Item Status Enum (from API_CAMS.md § 3.3.7)
+ * ⚠️ NEW (2026-03-23): Queue item status
+ */
+export enum QueueItemStatus {
+  Pending = 0,
+  Playing = 1,
+  Played = 2,
+  Skipped = 3,
+}
+
+/**
+ * Queue Item Source Enum (from API_CAMS.md § 3.3.7)
+ * ⚠️ NEW (2026-03-23): Queue item source
+ */
+export enum QueueItemSource {
+  AI = 0,
+  Manager = 1,
+}
+
+/**
+ * Space Queue Item Response (from API_CAMS.md § 3.3.7)
+ * ⚠️ NEW (2026-03-23): Queue item in GET queue response
+ */
+export interface SpaceQueueItemResponse {
+  queueItemId: string;
+  trackId: string;
+  trackName: string;
+  position: number;
+  queueStatus: QueueItemStatus;
+  source: QueueItemSource;
+  hlsUrl: string | null;
+  isReadyToStream: boolean;
+}
+
+/**
  * Queue End Behavior Enum (from API_CAMS.md)
  * ⚠️ NEW (2026-03-23): Queue end behavior
  */
@@ -140,19 +185,25 @@ export interface OverridePlaylistRequest {
 }
 
 /**
- * Add tracks to queue request (from API_CAMS.md)
+ * Add tracks to queue request (from API_CAMS.md § 3.3.2)
  * ⚠️ NEW (2026-03-23): Queue management
  */
 export interface AddTracksToQueueRequest {
   trackIds: string[];
+  mode: QueueInsertMode; // 1=PlayNow, 2=PlayNext, 3=AddToQueue
+  isClearExistingQueue?: boolean; // Default: false
+  reason?: string | null; // Max 500 chars
 }
 
 /**
- * Add playlist to queue request (from API_CAMS.md)
+ * Add playlist to queue request (from API_CAMS.md § 3.3.3)
  * ⚠️ NEW (2026-03-23): Queue management
  */
 export interface AddPlaylistToQueueRequest {
   playlistId: string;
+  mode: QueueInsertMode; // 1=PlayNow, 2=PlayNext, 3=AddToQueue
+  isClearExistingQueue?: boolean; // Default: false
+  reason?: string | null; // Max 500 chars
 }
 
 /**

@@ -36,7 +36,10 @@ import {
   SpaceDetailDrawer,
   SpaceMusicDrawer,
 } from './components';
-import { PairDeviceModal } from '@/shared/modules/cams/components';
+import {
+  PairDeviceModal,
+  QueueManagementDrawer,
+} from '@/shared/modules/cams/components';
 
 /**
  * Constants
@@ -58,6 +61,7 @@ export const SpaceList = () => {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [musicDrawerOpen, setMusicDrawerOpen] = useState(false);
+  const [queueDrawerOpen, setQueueDrawerOpen] = useState(false);
   const [pairDeviceModalOpen, setPairDeviceModalOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
 
@@ -99,6 +103,11 @@ export const SpaceList = () => {
   const handleManageMusic = (id: string) => {
     setSelectedSpaceId(id);
     setMusicDrawerOpen(true);
+  };
+
+  const handleManageQueue = (id: string) => {
+    setSelectedSpaceId(id);
+    setQueueDrawerOpen(true);
   };
 
   const handlePairDevice = (id: string) => {
@@ -169,6 +178,7 @@ export const SpaceList = () => {
   const columns = getSpaceColumns({
     onView: handleView,
     onManageMusic: handleManageMusic,
+    onManageQueue: handleManageQueue,
     onPairDevice: handlePairDevice,
     onEdit: handleEdit,
     onDelete: handleDelete,
@@ -264,6 +274,17 @@ export const SpaceList = () => {
         storeId={user?.storeId || ''}
         onClose={() => {
           setMusicDrawerOpen(false);
+          setSelectedSpaceId(null);
+        }}
+      />
+
+      <QueueManagementDrawer
+        open={queueDrawerOpen}
+        spaceId={selectedSpaceId || ''}
+        storeId={user?.storeId || ''}
+        spaceName={data?.items.find((s) => s.id === selectedSpaceId)?.name}
+        onClose={() => {
+          setQueueDrawerOpen(false);
           setSelectedSpaceId(null);
         }}
       />

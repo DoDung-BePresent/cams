@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { QUERY_KEYS } from '@/config';
 import { handleApiError } from '@/shared/utils';
@@ -8,6 +8,22 @@ import type {
   AddPlaylistToQueueRequest,
   ReorderQueueRequest,
 } from '../types';
+
+/**
+ * Hook: Get space queue
+ * ⚠️ NEW (2026-03-23): Queue management
+ *
+ * GET /api/cams/spaces/{spaceId}/queue
+ * Auth: Any authenticated user
+ */
+export const useSpaceQueue = (spaceId: string, enabled = true) => {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.cams.queue(spaceId)],
+    queryFn: () => camsService.getQueue(spaceId),
+    enabled: !!spaceId && enabled,
+    select: (response) => response.data.data, // Unwrap AxiosResponse.data.data
+  });
+};
 
 /**
  * Hook: Add tracks to space queue
@@ -27,8 +43,10 @@ export const useAddTracksToQueue = () => {
       spaceId: string;
       data: AddTracksToQueueRequest;
     }) => camsService.addTracksToQueue(spaceId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cams.all });
+    onSuccess: (_, { spaceId }) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.queue(spaceId),
+      });
       message.success('Tracks added to queue');
     },
     onError: (error) => {
@@ -55,8 +73,10 @@ export const useAddPlaylistToQueue = () => {
       spaceId: string;
       data: AddPlaylistToQueueRequest;
     }) => camsService.addPlaylistToQueue(spaceId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cams.all });
+    onSuccess: (_, { spaceId }) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.queue(spaceId),
+      });
       message.success('Playlist added to queue');
     },
     onError: (error) => {
@@ -83,8 +103,10 @@ export const useReorderQueue = () => {
       spaceId: string;
       data: ReorderQueueRequest;
     }) => camsService.reorderQueue(spaceId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cams.all });
+    onSuccess: (_, { spaceId }) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.queue(spaceId),
+      });
       message.success('Queue reordered');
     },
     onError: (error) => {
@@ -105,8 +127,10 @@ export const useClearQueue = () => {
 
   return useMutation({
     mutationFn: (spaceId: string) => camsService.clearQueue(spaceId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cams.all });
+    onSuccess: (_, spaceId) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.queue(spaceId),
+      });
       message.success('Queue cleared');
     },
     onError: (error) => {
@@ -133,8 +157,10 @@ export const useRemoveQueueItem = () => {
       spaceId: string;
       queueItemId: string;
     }) => camsService.removeQueueItem(spaceId, queueItemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cams.all });
+    onSuccess: (_, { spaceId }) => {
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.queue(spaceId),
+      });
       message.success('Queue item removed');
     },
     onError: (error) => {

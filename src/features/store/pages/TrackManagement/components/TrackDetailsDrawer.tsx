@@ -84,7 +84,7 @@ export const TrackDetailsDrawer = ({
         >
           {/* Audio Player */}
           <TrackAudioPlayer
-            audioUrl={track.audioUrl}
+            audioUrl={track.hlsUrl}
             title={track.title}
             artist={track.artist}
             coverImageUrl={track.coverImageUrl}

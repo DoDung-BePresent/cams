@@ -77,7 +77,7 @@ export const TrackDetailsDrawer = ({
           size='large'
         >
           {/* Audio Player */}
-          {track.audioUrl && (
+          {track.hlsUrl && (
             <div>
               <Title
                 level={5}
@@ -86,7 +86,7 @@ export const TrackDetailsDrawer = ({
                 Audio Player
               </Title>
               <TrackAudioPlayer
-                audioUrl={track.audioUrl}
+                audioUrl={track.hlsUrl}
                 title={track.title}
                 artist={track.artist}
                 coverImageUrl={track.coverImageUrl}
