@@ -233,76 +233,79 @@ export const PairDeviceModal = ({
           )}
 
           {/* Pair Code Section */}
-          <div>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Pair Code
-            </Title>
-            {pairCode ? (
-              <Card>
+          {!hasPairedDevice && (
+            <div>
+              <Title
+                level={5}
+                style={{ marginBottom: 16 }}
+              >
+                Pair Code
+              </Title>
+              {pairCode ? (
+                <Card>
+                  <Space
+                    direction='vertical'
+                    style={{ width: '100%', textAlign: 'center' }}
+                    size='middle'
+                  >
+                    <Text type='secondary'>Enter this code on the tablet:</Text>
+                    <Title
+                      level={1}
+                      style={{
+                        margin: 0,
+                        fontFamily: 'monospace',
+                        letterSpacing: '0.2em',
+                      }}
+                    >
+                      {pairCode}
+                    </Title>
+                    <Space>
+                      <Tag color='warning'>
+                        Expires in: {formatCountdown(countdown)}
+                      </Tag>
+                    </Space>
+                    <Paragraph
+                      type='secondary'
+                      style={{ fontSize: 12, margin: 0 }}
+                    >
+                      The code will expire in 15 minutes. The tablet must enter
+                      this code to pair with the space.
+                    </Paragraph>
+                    <Button
+                      size='large'
+                      danger
+                      icon={<CloseCircleOutlined />}
+                      onClick={handleRevokePairCode}
+                      loading={revokePairCode.isPending}
+                    >
+                      Revoke Code
+                    </Button>
+                  </Space>
+                </Card>
+              ) : (
                 <Space
                   direction='vertical'
-                  style={{ width: '100%', textAlign: 'center' }}
-                  size='middle'
+                  style={{ width: '100%' }}
                 >
-                  <Text type='secondary'>Enter this code on the tablet:</Text>
-                  <Title
-                    level={1}
-                    style={{
-                      margin: 0,
-                      fontFamily: 'monospace',
-                      letterSpacing: '0.2em',
-                    }}
-                  >
-                    {pairCode}
-                  </Title>
-                  <Space>
-                    <Tag color='warning'>
-                      Expires in: {formatCountdown(countdown)}
-                    </Tag>
-                  </Space>
-                  <Paragraph
-                    type='secondary'
-                    style={{ fontSize: 12, margin: 0 }}
-                  >
-                    The code will expire in 15 minutes. The tablet must enter
-                    this code to pair with the space.
+                  <Paragraph type='secondary'>
+                    Generate a 6-character pair code that the tablet can use to
+                    connect to this space. The code will be valid for 15
+                    minutes.
                   </Paragraph>
                   <Button
                     size='large'
-                    danger
-                    icon={<CloseCircleOutlined />}
-                    onClick={handleRevokePairCode}
-                    loading={revokePairCode.isPending}
+                    type='primary'
+                    icon={<ReloadOutlined />}
+                    onClick={handleGeneratePairCode}
+                    loading={generatePairCode.isPending}
+                    block
                   >
-                    Revoke Code
+                    Generate Pair Code
                   </Button>
                 </Space>
-              </Card>
-            ) : (
-              <Space
-                direction='vertical'
-                style={{ width: '100%' }}
-              >
-                <Paragraph type='secondary'>
-                  Generate a 6-character pair code that the tablet can use to
-                  connect to this space. The code will be valid for 15 minutes.
-                </Paragraph>
-                <Button
-                  size='large'
-                  type='primary'
-                  icon={<ReloadOutlined />}
-                  onClick={handleGeneratePairCode}
-                  loading={generatePairCode.isPending}
-                  block
-                >
-                  Generate Pair Code
-                </Button>
-              </Space>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </Space>
       </Spin>
     </AppModal>

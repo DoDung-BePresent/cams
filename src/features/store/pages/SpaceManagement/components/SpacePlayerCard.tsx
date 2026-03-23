@@ -39,6 +39,8 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     true,
   );
 
+  console.log(spaceState);
+
   // ✅ Use spaceState directly - no need for intermediate state
   // The component will re-render when spaceState changes from React Query
 
