@@ -14,6 +14,7 @@ import type { PaginationResult, Result } from '@/shared/types';
 
 /**
  * Track API Endpoints (from API_Tracks.md)
+ * ⚠️ NEW (2026-03-23): Added retranscode endpoint
  */
 const TRACK_ENDPOINTS = {
   list: '/api/tracks',
@@ -22,6 +23,7 @@ const TRACK_ENDPOINTS = {
   update: (id: string) => `/api/tracks/${id}`,
   delete: (id: string) => `/api/tracks/${id}`,
   toggleStatus: (id: string) => `/api/tracks/${id}/toggle-status`,
+  retranscode: (id: string) => `/api/tracks/${id}/retranscode`, // NEW
 } as const;
 
 /**
@@ -195,5 +197,20 @@ export const trackService = {
    */
   toggleStatus: (id: string) => {
     return api.put<Result>(TRACK_ENDPOINTS.toggleStatus(id));
+  },
+
+  /**
+   * POST /api/tracks/{id}/retranscode - Force retranscode track to HLS
+   * Authorization: BrandManager, StoreManager
+   * ⚠️ NEW (2026-03-23): Track-level retranscode (replaces playlist-level)
+   *
+   * @param id - Track ID (Guid)
+   * @returns Promise<Result>
+   *
+   * @note Queues MediaConvert job to regenerate HLS segments
+   * @note Track hlsUrl will be updated when transcode completes
+   */
+  retranscode: (id: string) => {
+    return api.post<Result>(TRACK_ENDPOINTS.retranscode(id));
   },
 };

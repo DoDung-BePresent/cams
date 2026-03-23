@@ -6,10 +6,15 @@ import type {
   PlaybackControlRequest,
   PairCodeResponse,
   PairDeviceInfoResponse,
+  AddTracksToQueueRequest,
+  AddPlaylistToQueueRequest,
+  ReorderQueueRequest,
+  UpdateAudioStateRequest,
 } from '../types';
 
 /**
  * CAMS API endpoints
+ * ⚠️ NEW (2026-03-23): Added queue management endpoints
  */
 const CAMS_ENDPOINTS = {
   spaceState: (spaceId: string) => `/api/cams/spaces/${spaceId}/state`,
@@ -18,6 +23,18 @@ const CAMS_ENDPOINTS = {
   pairCode: (spaceId: string) => `/api/cams/spaces/${spaceId}/pair-code`,
   pairDevice: (spaceId: string) => `/api/cams/spaces/${spaceId}/pair-device`,
   unpair: (spaceId: string) => `/api/cams/spaces/${spaceId}/unpair`,
+  // NEW: Queue management endpoints
+  addTracksToQueue: (spaceId: string) =>
+    `/api/cams/spaces/${spaceId}/queue/tracks`,
+  addPlaylistToQueue: (spaceId: string) =>
+    `/api/cams/spaces/${spaceId}/queue/playlist`,
+  reorderQueue: (spaceId: string) =>
+    `/api/cams/spaces/${spaceId}/queue/reorder`,
+  clearQueue: (spaceId: string) => `/api/cams/spaces/${spaceId}/queue/all`,
+  removeQueueItem: (spaceId: string, queueItemId: string) =>
+    `/api/cams/spaces/${spaceId}/queue/${queueItemId}`,
+  updateAudioState: (spaceId: string) =>
+    `/api/cams/spaces/${spaceId}/state/audio`,
 } as const;
 
 /**
@@ -80,4 +97,52 @@ export const camsService = {
    */
   unpairDevice: (spaceId: string) =>
     api.delete<Result>(CAMS_ENDPOINTS.unpair(spaceId)),
+
+  /**
+   * Add tracks to queue (NEW 2026-03-23)
+   * POST /api/cams/spaces/{spaceId}/queue/tracks
+   * Auth: BrandManager, StoreManager
+   */
+  addTracksToQueue: (spaceId: string, data: AddTracksToQueueRequest) =>
+    api.post<Result>(CAMS_ENDPOINTS.addTracksToQueue(spaceId), data),
+
+  /**
+   * Add playlist to queue (NEW 2026-03-23)
+   * POST /api/cams/spaces/{spaceId}/queue/playlist
+   * Auth: BrandManager, StoreManager
+   */
+  addPlaylistToQueue: (spaceId: string, data: AddPlaylistToQueueRequest) =>
+    api.post<Result>(CAMS_ENDPOINTS.addPlaylistToQueue(spaceId), data),
+
+  /**
+   * Reorder queue items (NEW 2026-03-23)
+   * PATCH /api/cams/spaces/{spaceId}/queue/reorder
+   * Auth: BrandManager, StoreManager
+   */
+  reorderQueue: (spaceId: string, data: ReorderQueueRequest) =>
+    api.patch<Result>(CAMS_ENDPOINTS.reorderQueue(spaceId), data),
+
+  /**
+   * Clear all queue items (NEW 2026-03-23)
+   * DELETE /api/cams/spaces/{spaceId}/queue/all
+   * Auth: BrandManager, StoreManager
+   */
+  clearQueue: (spaceId: string) =>
+    api.delete<Result>(CAMS_ENDPOINTS.clearQueue(spaceId)),
+
+  /**
+   * Remove single queue item (NEW 2026-03-23)
+   * DELETE /api/cams/spaces/{spaceId}/queue/{queueItemId}
+   * Auth: BrandManager, StoreManager
+   */
+  removeQueueItem: (spaceId: string, queueItemId: string) =>
+    api.delete<Result>(CAMS_ENDPOINTS.removeQueueItem(spaceId, queueItemId)),
+
+  /**
+   * Update audio state (volume/mute/queueEndBehavior) (NEW 2026-03-23)
+   * PATCH /api/cams/spaces/{spaceId}/state/audio
+   * Auth: BrandManager, StoreManager
+   */
+  updateAudioState: (spaceId: string, data: UpdateAudioStateRequest) =>
+    api.patch<Result>(CAMS_ENDPOINTS.updateAudioState(spaceId), data),
 };

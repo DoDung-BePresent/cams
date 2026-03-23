@@ -14,6 +14,7 @@ export enum MusicProviderEnum {
 /**
  * Track List Item (from API_Tracks.md §4.3)
  * Used in GET /api/tracks response
+ * ⚠️ BREAKING CHANGE (2026-03-23): audioUrl → hlsUrl (.m3u8)
  */
 export interface TrackListItem extends BaseResponse {
   brandId?: string;
@@ -24,7 +25,7 @@ export interface TrackListItem extends BaseResponse {
   genre?: string;
   provider?: MusicProviderEnum;
   durationSec?: number;
-  audioUrl?: string; // Can be null if upload failed
+  hlsUrl?: string; // HLS master playlist URL (.m3u8) - can be null if transcode failed
   coverImageUrl?: string;
   playCount: number;
   isAiGenerated?: boolean;
