@@ -11,10 +11,21 @@
 > - `POST /api/cams/trigger-analysis/{spaceId}`
 > - `POST /api/cams/force-transition/{spaceId}`
 > - `GET  /api/cams/space/{spaceId}/mood`
-> - `GET  /api/cams/spaces/{spaceId}/state`
 > - `POST /api/cams/spaces/{spaceId}/override`
 > - `DELETE /api/cams/spaces/{spaceId}/override`
 > - `POST /api/cams/spaces/{spaceId}/playback`
+> - `PATCH /api/cams/spaces/{spaceId}/state/audio`
+> - `GET  /api/cams/spaces/{spaceId}/state`
+> - `GET  /api/cams/spaces/{spaceId}/queue`
+> - `POST /api/cams/spaces/{spaceId}/queue/tracks`
+> - `POST /api/cams/spaces/{spaceId}/queue/playlist`
+> - `PATCH /api/cams/spaces/{spaceId}/queue/reorder`
+> - `DELETE /api/cams/spaces/{spaceId}/queue`
+> - `DELETE /api/cams/spaces/{spaceId}/queue/all`
+> - `GET  /api/cams/spaces/{spaceId}/pair-device`
+> - `POST /api/cams/spaces/{spaceId}/pair-code`
+> - `DELETE /api/cams/spaces/{spaceId}/pair-code`
+> - `DELETE /api/cams/spaces/{spaceId}/unpair`
 
 ---
 
@@ -413,11 +424,13 @@ classDiagram
     StartSpacePlaybackCommandHandler --> ISpaceMusicStateRepository : upsert state
     StartSpacePlaybackCommandHandler --> ISignalRMusicService : push PlayStream
 
-    OverrideSpaceMoodCommandHandler --> IMusicRepository : select playlist (MoodOverride mode)
-    OverrideSpaceMoodCommandHandler --> IHlsUrlBuilderService : build CDN URL
-    OverrideSpaceMoodCommandHandler --> ISpaceMusicStateRepository : upsert state
-    OverrideSpaceMoodCommandHandler --> ISignalRMusicService : push ManualPlayStream
-    OverrideSpaceMoodCommandHandler --> IBackgroundTranscodeService : trigger immediate transcode
+    OverrideSpaceMoodCommandHandler --> IPlaybackHistoryRepository : mood cooldown filter
+    OverrideSpaceMoodCommandHandler --> IGenericRepository~Track~ : resolve source tracks
+    OverrideSpaceMoodCommandHandler --> IGenericRepository~PlaylistTrack~ : resolve playlist tracks
+    OverrideSpaceMoodCommandHandler --> IGenericRepository~SpaceQueueItem~ : clear/prepend/transition queue
+    OverrideSpaceMoodCommandHandler --> IGenericRepository~SpaceMusicState~ : upsert state
+    OverrideSpaceMoodCommandHandler --> IAuditService : log override success/failure
+    OverrideSpaceMoodCommandHandler --> ISignalRMusicService : push SpaceStateSync
 
     CancelSpaceOverrideCommandHandler --> ISpaceMusicStateRepository : clear override fields
     CancelSpaceOverrideCommandHandler --> ISignalRMusicService : push SpaceStateSync
@@ -720,9 +733,9 @@ sequenceDiagram
 
 ## 3.11.10 Sequence Diagram - Override Space Mood
 
-> Two modes: **Mode 1 DirectPlaylist** (PlaylistId provided) và **Mode 2 MoodOverride** (MoodId provided).  
-> Mode 1: nếu playlist chưa transcode → set `PendingPlaylistId`, queue immediate transcode, trả 202.  
-> Mode 2: dùng `IMusicRepository.GetHlsPlaylistAsync` (cùng logic AI, nhưng mood do manager chọn).
+> Queue-first override (latest): request phải chọn đúng 1 nguồn trong `trackIds | playlistId | moodId`.
+> Hệ thống luôn prepend danh sách track override lên đầu queue và luôn chuyển bài ngay.
+> Response chỉ trả ACK `spaceId`; client lấy state chi tiết qua GetSpaceState + SignalR.
 
 ```mermaid
 sequenceDiagram
@@ -731,12 +744,10 @@ sequenceDiagram
     participant OverrideSpaceMoodCommandHandler as OverrideHandler
     participant ICurrentUserService
     participant IUnitOfWork
-    participant ISpaceMusicStateRepository as StateRepo
-    participant IMusicRepository as MusicRepo
-    participant IHlsUrlBuilderService as HlsBuilder
-    participant IBackgroundTranscodeService as TranscodeService
-    participant ISignalRMusicService as SignalR
+    participant QueueRepo as "IGenericRepository<SpaceQueueItem>"
+    participant StateRepo as "IGenericRepository<SpaceMusicState>"
     participant IAuditService
+    participant ISignalRMusicService as SignalR
 
     Client->>CamsController: POST /api/cams/spaces/{spaceId}/override
     CamsController->>OverrideHandler: Handle(OverrideSpaceMoodCommand)
@@ -761,54 +772,28 @@ sequenceDiagram
         CamsController-->>Client: 403 Forbidden
     end
 
-    alt Mode 1 - DirectPlaylist (PlaylistId provided)
-        OverrideHandler->>IUnitOfWork: Load Playlist by PlaylistId
-        alt Playlist not found
-            OverrideHandler-->>CamsController: NotFoundException
-            CamsController-->>Client: 404 Not Found
-        end
-        alt Playlist store does not match space store
-            OverrideHandler-->>CamsController: ForbiddenAccessException
-            CamsController-->>Client: 403 Forbidden
-        end
-        alt Playlist not transcoded yet (TranscodeStatus != Ready or no HlsUrl)
-            OverrideHandler->>StateRepo: UpsertAsync (IsManualOverride=true, PendingPlaylistId)
-            OverrideHandler->>TranscodeService: CancelScheduledAndRequestImmediate(playlistId, storeId)
-            OverrideHandler->>IAuditService: LogOverrideApplied (Status=Pending)
-            OverrideHandler-->>CamsController: Result.Accepted (202)
-            CamsController-->>Client: 202 Accepted
-        end
-    else Mode 2 - MoodOverride (MoodId provided)
-        OverrideHandler->>IUnitOfWork: Load Mood entity by MoodId
-        alt Mood not found
-            OverrideHandler-->>CamsController: NotFoundException
-            CamsController-->>Client: 404 Not Found
-        end
-        OverrideHandler->>StateRepo: GetBySpaceIdAsync(spaceId) to get excludePlaylistId
-        OverrideHandler->>MusicRepo: GetHlsPlaylistAsync(camsMood, brandId, storeId, excludeId)
-        alt No playlist found for mood
-            MusicRepo-->>OverrideHandler: null
-            OverrideHandler-->>CamsController: Result.Failure
-            CamsController-->>Client: 404 Not Found
-        end
-    end
-
-    OverrideHandler->>HlsBuilder: BuildUrl(playlist.HlsUrl)
-    alt CDN URL empty
-        OverrideHandler-->>CamsController: Result.Failure
+    OverrideHandler->>OverrideHandler: ResolveSourceTrackIds(trackIds|playlistId|moodId)
+    alt Resolved track list is empty
+        OverrideHandler-->>CamsController: BusinessRuleViolationException(Cams_Error_NoOverrideProvided)
         CamsController-->>Client: 422 Unprocessable Entity
     end
 
-    HlsBuilder-->>OverrideHandler: cdnUrl
+    OverrideHandler->>StateRepo: GetBySpaceIdAsync(spaceId) or create state
+    OverrideHandler->>OverrideHandler: Set IsManualOverride, OverrideMode, OverrideReason, OverriddenByUserId
 
-    OverrideHandler->>StateRepo: UpsertAsync(IsManualOverride=true, OverrideMode, CurrentPlaylistId)
-    OverrideHandler->>IAuditService: LogOverrideApplied(mode, playlistId, reason)
+    alt isClearManagerSelectedQueues = true
+        OverrideHandler->>QueueRepo: ClearPendingQueueAsync(spaceId)
+    else isClearManagerSelectedQueues = false
+        OverrideHandler->>QueueRepo: ClearPendingQueueBySourceAsync(spaceId, AI)
+    end
 
-    OverrideHandler->>SignalR: PushManualPlayStreamAsync(spaceId, playlist, transitionType)
-    note over SignalR: Mode1=Immediate, Mode2=Crossfade
+    OverrideHandler->>QueueRepo: PrependTracksToQueueAsync(spaceId, selectedTrackIds, Manager)
+    OverrideHandler->>QueueRepo: TransitionToNextTrackAsync(stateRepo, spaceId, state)
 
-    OverrideHandler->>IPlaybackHistoryService: LogPlaybackStarted(spaceId, playlistId, Manual, now)
-    OverrideHandler-->>CamsController: Result.Success(SpaceOverrideResponse)
+    OverrideHandler->>IUnitOfWork: SaveChangesAsync (single atomic commit)
+    OverrideHandler->>IAuditService: LogOverrideApplied(success)
+    OverrideHandler->>SignalR: PushSpaceStateSyncAsync(spaceId, spaceStateDto)
+    OverrideHandler-->>CamsController: Result.Success({ spaceId })
     CamsController-->>Client: 200 OK
 ```
 
@@ -1119,7 +1104,7 @@ graph LR
 
 ## 3.11.17 Data Flow Diagram — Override Space Music
 
-> Corresponds to `POST /api/cams/spaces/{spaceId}/override`. Two execution paths: **200 OK** (HLS ready, stream starts immediately) and **202 Accepted** (playlist pending transcode, stream auto-starts when ready).
+> Corresponds to `POST /api/cams/spaces/{spaceId}/override`. Queue-first flow: Resolves tracks from the selected source, clears queues if requested, prepends new tracks, and forces an immediate transition.
 
 ```mermaid
 graph TB
@@ -1127,39 +1112,38 @@ graph TB
     TAB["Tablet Client"]
 
     P1("1.0 Validate Ownership")
-    P2("2.0 Resolve Target Playlist")
-    P3("3.0 Check Transcode Status")
-    P4a("4a. Update State and Push Stream")
-    P4b("4b. Queue Immediate Transcode")
+    P2("2.0 Resolve Tracks by Source")
+    P3("3.0 Clear Selected Queues")
+    P4("4.0 Prepend Tracks")
+    P5("5.0 Transition to Immediate Track")
 
-    DB[("D1: PostgreSQL - Space and Playlist and State")]
-    JOB[("D2: Hangfire - Job Queue")]
-    SIG[("D3: SignalR - StoreHub")]
-    AUDIT[("D4: Audit Log")]
+    DB[("D1: PostgreSQL - Space, Playlist, Mood, State, Queue")]
+    SIG[("D2: SignalR - StoreHub")]
+    AUDIT[("D3: Audit Log")]
 
-    MGR -->|"POST override with playlistId or moodId"| P1
+    MGR -->|"POST override with trackIds/playlistId/moodId"| P1
     P1 -->|"SELECT Space with Store for brand check"| DB
     DB -->|"Space entity and brand"| P1
     P1 -->|"Validated spaceId and ownership"| P2
 
-    P2 -->|"DirectPlaylist: SELECT playlist by Id"| DB
-    P2 -->|"MoodOverride: SELECT best playlist by moodId"| DB
-    DB -->|"Playlist entity with HlsUrl and TranscodeStatus"| P2
-    P2 -->|"Playlist with transcode status"| P3
+    P2 -->|"trackIds: Filter valid tracks by brand scope"| DB
+    P2 -->|"playlistId: Get track list belonging to playlist"| DB
+    P2 -->|"moodId: Pseudo-randomly select ~20 matching tracks"| DB
+    DB -->|"Resolved list of Track entities"| P2
+    P2 -->|"Track list"| P3
 
-    P3 -->|"TranscodeStatus is Ready"| P4a
-    P3 -->|"TranscodeStatus not Ready"| P4b
+    P3 -->|"DELETE prior pending queue items"| DB
+    P3 -->|"Clean queue"| P4
 
-    P4a -->|"UPDATE SpaceMusicState with playlist and HLS"| DB
-    P4a -->|"LogOverride"| AUDIT
-    P4a -->|"PlayStream event with hlsUrl"| SIG
+    P4 -->|"INSERT override tracks at top positions"| DB
+    P4 -->|"Prepend complete"| P5
+
+    P5 -->|"UPDATE SpaceMusicState to next track"| DB
+    P5 -->|"LogOverride"| AUDIT
+    P5 -->|"PlayStream and SpaceStateSync events"| SIG
     SIG -->|"PlayStream to space group"| TAB
-    P4a -->|"200 OK with SpaceStateDto"| MGR
-
-    P4b -->|"SET PendingPlaylistId on SpaceMusicState"| DB
-    P4b -->|"Enqueue immediate transcode job"| JOB
-    P4b -->|"LogOverride as pending"| AUDIT
-    P4b -->|"202 Accepted"| MGR
+    SIG -->|"SpaceStateSync to manager tabs"| MGR
+    P5 -->|"200 OK with ACK spaceId"| MGR
 ```
 
 ---
@@ -1185,7 +1169,7 @@ graph TB
     P1 -->|"SELECT SpaceMusicState"| DB
     DB -->|"Current state with IsManualOverride flag"| P1
     P1 -->|"IsManualOverride is true - proceed"| P2
-    P1 -->|"IsManualOverride is false - 422 error"| MGR
+    P1 -->|"IsManualOverride is false - early return"| MGR
 
     P2 -->|"UPDATE clear IsManualOverride and OverrideMode and Reason"| DB
     P2 -->|"LogCancelOverride"| AUDIT

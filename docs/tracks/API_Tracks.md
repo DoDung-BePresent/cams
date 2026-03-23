@@ -139,21 +139,21 @@ public class BasePaginationFilter
 
 **Kế thừa từ `BaseResponse`** (§3.1) + thêm:
 
-| Field           | Type               | Mô tả                                                              |
-| --------------- | ------------------ | ------------------------------------------------------------------ |
-| (inherited)     | BaseResponse       | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
-| `brandId`       | Guid?              | ID brand sở hữu track                                              |
-| `title`         | string             | Tên track                                                          |
-| `artist`        | string?            | Nghệ sĩ                                                            |
-| `moodId`        | Guid?              | ID mood                                                            |
-| `moodName`      | string?            | Tên mood (display)                                                 |
-| `genre`         | string?            | Thể loại nhạc                                                      |
-| `provider`      | MusicProviderEnum? | Nguồn nhạc (integer)                                               |
-| `durationSec`   | int?               | Thời lượng (giây, từ metadata)                                     |
-| `audioUrl`      | string?            | S3 URL file audio; có thể `null` nếu upload thất bại               |
-| `coverImageUrl` | string?            | S3 URL ảnh bìa                                                     |
-| `playCount`     | int                | Số lần phát                                                        |
-| `isAiGenerated` | bool?              | Track do AI tạo hay do người dùng upload                           |
+| Field           | Type               | Mô tả                                                                            |
+| --------------- | ------------------ | -------------------------------------------------------------------------------- |
+| (inherited)     | BaseResponse       | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status`               |
+| `brandId`       | Guid?              | ID brand sở hữu track                                                            |
+| `title`         | string             | Tên track                                                                        |
+| `artist`        | string?            | Nghệ sĩ                                                                          |
+| `moodId`        | Guid?              | ID mood                                                                          |
+| `moodName`      | string?            | Tên mood (display)                                                               |
+| `genre`         | string?            | Thể loại nhạc                                                                    |
+| `provider`      | MusicProviderEnum? | Nguồn nhạc (integer)                                                             |
+| `durationSec`   | int?               | Thời lượng (giây, từ metadata)                                                   |
+| `hlsUrl`        | string?            | HLS manifest URL (.m3u8) for streaming; may be `null` if transcode not completed |
+| `coverImageUrl` | string?            | S3 URL ảnh bìa                                                                   |
+| `playCount`     | int                | Số lần phát                                                                      |
+| `isAiGenerated` | bool?              | Track do AI tạo hay do người dùng upload                                         |
 
 ### 4.4 `TrackDetailResponse` (trong `Result<TrackDetailResponse>`)
 
@@ -248,7 +248,7 @@ public class BasePaginationFilter
       "genre": "Pop",
       "provider": 0,
       "durationSec": 210,
-      "audioUrl": "https://cdn.example.com/tracks/audio/summer-vibes.mp3",
+      "hlsUrl": "https://cdn.example.com/tracks/audio/summer-vibes.m3u8",
       "coverImageUrl": "https://cdn.example.com/tracks/covers/summer-vibes.jpg",
       "playCount": 42,
       "isAiGenerated": false,
@@ -297,7 +297,7 @@ public class BasePaginationFilter
     "genre": "Pop",
     "provider": 0,
     "durationSec": 210,
-    "audioUrl": "https://cdn.example.com/tracks/audio/summer-vibes.mp3",
+    "hlsUrl": "https://cdn.example.com/tracks/audio/summer-vibes.m3u8",
     "coverImageUrl": "https://cdn.example.com/tracks/covers/summer-vibes.jpg",
     "playCount": 42,
     "isAiGenerated": false,
@@ -388,6 +388,24 @@ coverImageFile: [binary .jpg file]
 
 ```json
 {
+
+### 5.5 `POST /api/tracks/{id}/retranscode` — Force re-transcode a track
+
+- **Auth:** BrandManager only
+- **Path param:** `id` (Guid)
+- **Description:** Force the background transcode pipeline to (re)generate HLS for a single track. This endpoint enqueues a background transcode request and returns an accepted/finalized result depending on current transcode state.
+
+- **Preconditions & behavior:**
+  - The track must have an existing uploaded source audio (`AudioUrl`); if `AudioUrl` is empty the request fails with `InvalidOperation`.
+  - If the track TranscodeStatus is `Pending` or `Processing` the request is rejected with a business rule error (already in progress).
+  - Retranscode is allowed when `TranscodeStatus == Failed` or when `HlsUrl` is empty/missing. The handler will enqueue an immediate transcode request.
+
+- **Response 202 (Accepted):** request accepted and transcode enqueued.
+
+- **Errors:**
+  - `400/InvalidOperation` if source audio missing.
+  - `409/BusinessRuleViolation` if transcode already in progress or other guard conditions.
+
   "isSuccess": false,
   "message": "Track with this title already exists",
   "errors": null,
@@ -432,7 +450,7 @@ coverImageFile: [binary .jpg file]
 - **Path param:** `id` (Guid)
 - **Notes:**
   - **Ownership:** `track.BrandId != user.BrandId` → **403**
-  - **Business rule:** Không thể xóa track đang được dùng trong bất kỳ playlist nào (`PlaylistTracks.Count > 0`) → **422 BusinessRuleViolation**
+  - **Business rule:** Không thể xóa track đang được dùng trong một hoặc nhiều playlists hoặc space queues → **422 BusinessRuleViolation**
   - **Soft delete:** track được đánh dấu `IsDeleted = true`, không xóa khỏi DB.
   - Files (audio + cover) chỉ bị xóa từ S3 **sau khi DB commit thành công**.
 
@@ -448,12 +466,12 @@ coverImageFile: [binary .jpg file]
 }
 ```
 
-- **Response 422:** Track đang được dùng trong playlist
+- **Response 422:** Track đang được dùng trong playlist hoặc space queue
 
 ```json
 {
   "isSuccess": false,
-  "message": "Cannot delete track that is used in a playlist",
+  "message": "Cannot delete Track because it is currently included in one or more playlists or space queues.",
   "errors": null,
   "errorCode": "BusinessRuleViolation"
 }
@@ -485,15 +503,15 @@ coverImageFile: [binary .jpg file]
 
 ## 6. Error Response Reference
 
-| HTTP Status | ErrorCode               | Khi nào xảy ra                                         |
-| ----------- | ----------------------- | ------------------------------------------------------ |
-| 200 / 201   | `null`                  | Thành công                                             |
-| 400         | `ValidationFailed`      | Input không hợp lệ (format, required fields)           |
-| 401         | `Unauthorized`          | Chưa đăng nhập hoặc session không hợp lệ               |
-| 403         | `Forbidden`             | Không đủ quyền hoặc track không thuộc brand của user   |
-| 404         | `NotFound`              | Track không tồn tại                                    |
-| 409 / 422   | `BusinessRuleViolation` | Title trùng; hoặc track đang dùng trong playlist (xóa) |
-| 500         | `InternalServerError`   | Lỗi server không mong đợi                              |
+| HTTP Status | ErrorCode               | Khi nào xảy ra                                                     |
+| ----------- | ----------------------- | ------------------------------------------------------------------ |
+| 200 / 201   | `null`                  | Thành công                                                         |
+| 400         | `ValidationFailed`      | Input không hợp lệ (format, required fields)                       |
+| 401         | `Unauthorized`          | Chưa đăng nhập hoặc session không hợp lệ                           |
+| 403         | `Forbidden`             | Không đủ quyền hoặc track không thuộc brand của user               |
+| 404         | `NotFound`              | Track không tồn tại                                                |
+| 409 / 422   | `BusinessRuleViolation` | Title trùng; hoặc track đang dùng trong playlist/space queue (xóa) |
+| 500         | `InternalServerError`   | Lỗi server không mong đợi                                          |
 
 ---
 
@@ -503,7 +521,7 @@ coverImageFile: [binary .jpg file]
 
 2. **File cleanup ordering:** Khi update, old files chỉ bị xóa từ S3 **sau DB commit** — đảm bảo không mất data khi DB fail. Khi create và DB fail → new files bị xóa.
 
-3. **Delete vs. Playlist:** Một track đang có trong bất kỳ playlist nào (kể cả playlist đã inactive) thì không thể xóa. Cần remove track ra khỏi tất cả playlist trước.
+3. **Delete vs. Playlist / Space Queue:** Một track đang có trong bất kỳ playlist nào hoặc đang tồn tại trong space queue thì không thể xóa. Cần remove track ra khỏi tất cả playlist và space queue trước.
 
 4. **BrandId implicit:** Write operations không cần gửi `brandId` — luôn lấy từ `user.BrandId` của JWT session.
 

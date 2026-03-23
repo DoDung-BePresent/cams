@@ -2,7 +2,7 @@
   "info": {
     "name": "Log.AI-CAMS — Playlists",
     "_postman_id": "d5e6f7a8-b9c0-1234-efff-456789012345",
-    "description": "Playlist Management API — CMS (React & Flutter)\n\nBase URL: {{baseUrl}}\nAuth: Bearer {{accessToken}} (user) hoặc {{deviceAccessToken}} (PlaybackDevice)\n\nEndpoints:\n  GET    /api/playlists                             SA, BM, SM, PlaybackDevice ✅ (device: scope Store session)\n  GET    /api/playlists/{id}                        SA, BM, SM, PlaybackDevice ✅ (device: playlist.StoreId = session)\n  POST   /api/playlists                             BM, SM only\n  PUT    /api/playlists/{id}                        BM, SM only\n  DELETE /api/playlists/{id}                        BM, SM only\n  PUT    /api/playlists/{id}/toggle-status           BM, SM only\n  POST   /api/playlists/{id}/tracks                 BM, SM only\n  DELETE /api/playlists/{id}/tracks/{trackId}       BM, SM only\n  POST   /api/playlists/{id}/retranscode            BM, SM only\n\nKey rules:\n- Playlist has no BrandId; brand derived from playlist.Store.BrandId\n- BrandManager must provide storeId (must belong to their brand)\n- StoreManager: storeId auto-resolved from user.StoreId\n- trackIds in UpdatePlaylist: null=no-op, []=remove all, [ids]=sync\n- Cannot modify/delete playlist that is actively streaming\n- Auto-transcode triggered (debounced 5 min) on track add/remove\n- Retranscode: force re-generate HLS, bumps TranscodeVersion, clears HlsUrl\n\nEntityStatusEnum: Inactive=0, Active=1, Pending=2, Rejected=3\n\nSee: docs/playlists/API_Playlists.md",
+    "description": "Playlist Management API — CMS (React & Flutter)\n\nBase URL: {{baseUrl}}\nAuth: Bearer {{accessToken}} (user) hoặc {{deviceAccessToken}} (PlaybackDevice)\n\nEndpoints:\n  GET    /api/playlists                             SA, BM, SM, PlaybackDevice ✅ (device: scope Store session)\n  GET    /api/playlists/{id}                        SA, BM, SM, PlaybackDevice ✅ (device: playlist.StoreId = session)\n  POST   /api/playlists                             BM, SM only\n  PUT    /api/playlists/{id}                        BM, SM only\n  DELETE /api/playlists/{id}                        BM, SM only\n  PUT    /api/playlists/{id}/toggle-status           BM, SM only\n  POST   /api/playlists/{id}/tracks                 BM, SM only\n  DELETE /api/playlists/{id}/tracks/{trackId}       BM, SM only\n  POST   /api/playlists/{id}/retranscode            BM, SM only\n\nKey rules:\n- Playlist has no BrandId; brand derived from playlist.Store.BrandId\n- BrandManager must provide storeId (must belong to their brand)\n- StoreManager: storeId auto-resolved from user.StoreId\n- trackIds in UpdatePlaylist: null=no-op, []=remove all, [ids]=sync\n- Auto-transcode triggered (debounced 5 min) on track add/remove\n- Retranscode: force re-generate HLS, bumps TranscodeVersion, clears HlsUrl\n\nEntityStatusEnum: Inactive=0, Active=1, Pending=2, Rejected=3\n\nSee: docs/playlists/API_Playlists.md",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -167,7 +167,7 @@
               "header": [
                 { "key": "Content-Type", "value": "application/json" }
               ],
-              "body": "{\n  \"currentPage\": 1,\n  \"pageSize\": 10,\n  \"totalItems\": 1,\n  \"totalPages\": 1,\n  \"hasPrevious\": false,\n  \"hasNext\": false,\n  \"items\": [\n    {\n      \"id\": \"p1000000-0000-0000-0000-000000000001\",\n      \"brandId\": \"b0000000-0000-0000-0000-000000000001\",\n      \"storeId\": \"s0000000-0000-0000-0000-000000000001\",\n      \"storeName\": \"Store Alpha\",\n      \"moodId\": \"m0000000-0000-0000-0000-000000000001\",\n      \"moodName\": \"Relaxing\",\n      \"name\": \"Afternoon Chill\",\n      \"description\": \"Soft background music for afternoon hours\",\n      \"isDynamic\": false,\n      \"isDefault\": true,\n      \"hlsUrl\": \"https://cdn.example.com/hls/p1000000/master.m3u8\",\n      \"totalDurationSeconds\": 3600,\n      \"trackCount\": 12,\n      \"createdAt\": \"2026-01-20T10:00:00Z\",\n      \"updatedAt\": null,\n      \"createdBy\": \"00000000-0000-0000-0000-000000000001\",\n      \"updatedBy\": null,\n      \"status\": 1\n    }\n  ],\n  \"isSuccess\": true,\n  \"message\": \"Playlist retrieved successfully\",\n  \"errors\": null,\n  \"errorCode\": null\n}"
+              "body": "{\n  \"currentPage\": 1,\n  \"pageSize\": 10,\n  \"totalItems\": 1,\n  \"totalPages\": 1,\n  \"hasPrevious\": false,\n  \"hasNext\": false,\n  \"items\": [\n    {\n      \"id\": \"p1000000-0000-0000-0000-000000000001\",\n      \"brandId\": \"b0000000-0000-0000-0000-000000000001\",\n      \"storeId\": \"s0000000-0000-0000-0000-000000000001\",\n      \"storeName\": \"Store Alpha\",\n      \"moodId\": \"m0000000-0000-0000-0000-000000000001\",\n      \"moodName\": \"Relaxing\",\n      \"name\": \"Afternoon Chill\",\n      \"description\": \"Soft background music for afternoon hours\",\n      \"isDefault\": true,\n      \"trackCount\": 12,\n      \"createdAt\": \"2026-01-20T10:00:00Z\",\n      \"updatedAt\": null,\n      \"createdBy\": \"00000000-0000-0000-0000-000000000001\",\n      \"updatedBy\": null,\n      \"status\": 1\n    }\n  ],\n  \"isSuccess\": true,\n  \"message\": \"Playlist retrieved successfully\",\n  \"errors\": null,\n  \"errorCode\": null\n}"
             },
             {
               "name": "401 Unauthorized",
@@ -232,7 +232,7 @@
               "header": [
                 { "key": "Content-Type", "value": "application/json" }
               ],
-              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playlist retrieved successfully\",\n  \"data\": {\n    \"id\": \"p1000000-0000-0000-0000-000000000001\",\n    \"brandId\": \"b0000000-0000-0000-0000-000000000001\",\n    \"storeId\": \"s0000000-0000-0000-0000-000000000001\",\n    \"storeName\": \"Store Alpha\",\n    \"moodId\": \"m0000000-0000-0000-0000-000000000001\",\n    \"moodName\": \"Relaxing\",\n    \"name\": \"Afternoon Chill\",\n    \"description\": \"Soft background music for afternoon hours\",\n    \"isDynamic\": false,\n    \"isDefault\": true,\n    \"hlsUrl\": \"https://cdn.example.com/hls/p1000000/master.m3u8\",\n    \"totalDurationSeconds\": 3600,\n    \"trackCount\": 2,\n    \"tracks\": [\n      {\n        \"trackId\": \"a1b2c3d4-0001-0000-0000-000000000001\",\n        \"title\": \"Summer Vibes\",\n        \"artist\": \"Studio One\",\n        \"durationSec\": 210,\n        \"orderIndex\": 1,\n        \"coverImageUrl\": \"https://cdn.example.com/tracks/covers/summer-vibes.jpg\",\n        \"actualDurationSec\": 208,\n        \"seekOffsetSeconds\": 0\n      },\n      {\n        \"trackId\": \"a1b2c3d4-0002-0000-0000-000000000002\",\n        \"title\": \"Ocean Breeze\",\n        \"artist\": \"Ambient Lab\",\n        \"durationSec\": 195,\n        \"orderIndex\": 2,\n        \"coverImageUrl\": \"https://cdn.example.com/tracks/covers/ocean-breeze.jpg\",\n        \"actualDurationSec\": 193,\n        \"seekOffsetSeconds\": 208\n      }\n    ],\n    \"createdAt\": \"2026-01-20T10:00:00Z\",\n    \"updatedAt\": null,\n    \"createdBy\": \"00000000-0000-0000-0000-000000000001\",\n    \"updatedBy\": null,\n    \"status\": 1\n  },\n  \"errors\": null,\n  \"errorCode\": null\n}"
+              "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playlist retrieved successfully\",\n  \"data\": {\n    \"id\": \"p1000000-0000-0000-0000-000000000001\",\n    \"brandId\": \"b0000000-0000-0000-0000-000000000001\",\n    \"storeId\": \"s0000000-0000-0000-0000-000000000001\",\n    \"storeName\": \"Store Alpha\",\n    \"moodId\": \"m0000000-0000-0000-0000-000000000001\",\n    \"moodName\": \"Relaxing\",\n    \"name\": \"Afternoon Chill\",\n    \"description\": \"Soft background music for afternoon hours\",\n    \"isDefault\": true,\n    \"trackCount\": 2,\n    \"tracks\": [\n      {\n        \"trackId\": \"a1b2c3d4-0001-0000-0000-000000000001\",\n        \"title\": \"Summer Vibes\",\n        \"artist\": \"Studio One\",\n        \"durationSec\": 210,\n        \"orderIndex\": 1,\n        \"hlsUrl\": \"https://cdn.example.com/tracks/audio/summer-vibes.m3u8\",\n        \"seekOffsetSeconds\": 0\n      },\n      {\n        \"trackId\": \"a1b2c3d4-0002-0000-0000-000000000002\",\n        \"title\": \"Ocean Breeze\",\n        \"artist\": \"Ambient Lab\",\n        \"durationSec\": 195,\n        \"orderIndex\": 2,\n        \"hlsUrl\": \"https://cdn.example.com/tracks/audio/ocean-breeze.m3u8\",\n        \"seekOffsetSeconds\": 210\n      }\n    ],\n    \"createdAt\": \"2026-01-20T10:00:00Z\",\n    \"updatedAt\": null,\n    \"createdBy\": \"00000000-0000-0000-0000-000000000001\",\n    \"updatedBy\": null,\n    \"status\": 1\n  },\n  \"errors\": null,\n  \"errorCode\": null\n}"
             },
             {
               "name": "404 Not Found",
@@ -313,7 +313,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Afternoon Chill\",\n  \"storeId\": \"s0000000-0000-0000-0000-000000000001\",\n  \"moodId\": null,\n  \"description\": \"Soft background music for afternoon hours\",\n  \"isDynamic\": false,\n  \"isDefault\": false,\n  \"hlsUrl\": null,\n  \"totalDurationSeconds\": null,\n  \"trackIds\": [\n    \"a1b2c3d4-0001-0000-0000-000000000001\",\n    \"a1b2c3d4-0002-0000-0000-000000000002\"\n  ]\n}",
+              "raw": "{\n  \"name\": \"Afternoon Chill\",\n  \"storeId\": \"s0000000-0000-0000-0000-000000000001\",\n  \"moodId\": null,\n  \"description\": \"Soft background music for afternoon hours\",\n  \"isDefault\": false,\n  \"trackIds\": [\n    \"a1b2c3d4-0001-0000-0000-000000000001\",\n    \"a1b2c3d4-0002-0000-0000-000000000002\"\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -453,7 +453,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Afternoon Chill (Extended)\",\n  \"description\": \"Extended version with more tracks\",\n  \"moodId\": null,\n  \"isDynamic\": null,\n  \"isDefault\": null,\n  \"hlsUrl\": null,\n  \"totalDurationSeconds\": null,\n  \"trackIds\": null\n}",
+              "raw": "{\n  \"name\": \"Afternoon Chill (Extended)\",\n  \"description\": \"Extended version with more tracks\",\n  \"moodId\": null,\n  \"isDefault\": null,\n  \"trackIds\": null\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -556,7 +556,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "playlists", "{{playlistId}}"]
             },
-            "description": "Soft-delete a playlist.\n\nAuth: BrandManager (own brand) ✅, StoreManager (own store) ✅\n\nBusinessRule: CANNOT delete playlist that is currently streaming (activeSpaceMusicState references it).\nSoft delete: IsDeleted = true.\nAfter DB commit: S3 folder cleanup enqueued for all transcode outputs."
+            "description": "Soft-delete a playlist.\n\nAuth: BrandManager (own brand) ✅, StoreManager (own store) ✅\n\nSoft delete: IsDeleted = true.\nAfter DB commit: S3 folder cleanup enqueued for all transcode outputs."
           },
           "response": [
             {
@@ -583,31 +583,6 @@
                 { "key": "Content-Type", "value": "application/json" }
               ],
               "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playlist deleted successfully\",\n  \"data\": null,\n  \"errors\": null,\n  \"errorCode\": null\n}"
-            },
-            {
-              "name": "422 Actively Streaming",
-              "originalRequest": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/api/playlists/{{playlistId}}",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "playlists", "{{playlistId}}"]
-                }
-              },
-              "status": "Unprocessable Entity",
-              "code": 422,
-              "_postman_previewlanguage": "json",
-              "header": [
-                { "key": "Content-Type", "value": "application/json" }
-              ],
-              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Cannot delete playlist that is currently streaming\",\n  \"errors\": null,\n  \"errorCode\": \"BusinessRuleViolation\"\n}"
             }
           ]
         },
@@ -692,7 +667,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "playlists", "{{playlistId}}", "tracks"]
             },
-            "description": "Add one or more tracks to a playlist.\n\nAuth: BrandManager (own brand) ✅, StoreManager (own store) ✅\n\nNotes:\n- Duplicate track IDs in request are silently deduplicated.\n- Tracks already in playlist are skipped (not duplicated).\n- Track IDs not belonging to the brand are silently ignored.\n- CANNOT add to a playlist that is actively streaming → 422.\n- After DB commit: OrderIndex reindexed in background; auto-transcode triggered (debounced 5 min)."
+            "description": "Add one or more tracks to a playlist.\n\nAuth: BrandManager (own brand) ✅, StoreManager (own store) ✅\n\nNotes:\n- Duplicate track IDs in request are silently deduplicated.\n- Tracks already in playlist are skipped (not duplicated).\n- Track IDs not belonging to the brand are silently ignored.\n- After DB commit: OrderIndex reindexed in background; auto-transcode triggered (debounced 5 min)."
           },
           "response": [
             {
@@ -769,41 +744,6 @@
                 { "key": "Content-Type", "value": "application/json" }
               ],
               "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Playlist not found\",\n  \"errors\": null,\n  \"errorCode\": \"NotFound\"\n}"
-            },
-            {
-              "name": "422 Actively Streaming",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json",
-                    "type": "text"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"trackIds\": [\"a1b2c3d4-0003-0000-0000-000000000003\"]\n}",
-                  "options": { "raw": { "language": "json" } }
-                },
-                "url": {
-                  "raw": "{{baseUrl}}/api/playlists/{{playlistId}}/tracks",
-                  "host": ["{{baseUrl}}"],
-                  "path": ["api", "playlists", "{{playlistId}}", "tracks"]
-                }
-              },
-              "status": "Unprocessable Entity",
-              "code": 422,
-              "_postman_previewlanguage": "json",
-              "header": [
-                { "key": "Content-Type", "value": "application/json" }
-              ],
-              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Cannot modify playlist while actively streaming\",\n  \"errors\": null,\n  \"errorCode\": \"BusinessRuleViolation\"\n}"
             }
           ]
         },
@@ -829,7 +769,7 @@
                 "{{trackId}}"
               ]
             },
-            "description": "Remove a single track from a playlist.\n\nAuth: BrandManager (own brand) ✅, StoreManager (own store) ✅\n\nNotes:\n- Idempotent: if track is not in playlist, succeeds anyway.\n- CANNOT remove from a playlist that is actively streaming → 422.\n- After DB commit: OrderIndex reindexed in background; auto-transcode triggered (debounced 5 min)."
+            "description": "Remove a single track from a playlist.\n\nAuth: BrandManager (own brand) ✅, StoreManager (own store) ✅\n\nNotes:\n- Idempotent: if track is not in playlist, succeeds anyway.\n- After DB commit: OrderIndex reindexed in background; auto-transcode triggered (debounced 5 min)."
           },
           "response": [
             {
@@ -862,37 +802,6 @@
                 { "key": "Content-Type", "value": "application/json" }
               ],
               "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Playlist updated successfully\",\n  \"data\": null,\n  \"errors\": null,\n  \"errorCode\": null\n}"
-            },
-            {
-              "name": "422 Actively Streaming",
-              "originalRequest": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{accessToken}}",
-                    "type": "text"
-                  }
-                ],
-                "url": {
-                  "raw": "{{baseUrl}}/api/playlists/{{playlistId}}/tracks/{{trackId}}",
-                  "host": ["{{baseUrl}}"],
-                  "path": [
-                    "api",
-                    "playlists",
-                    "{{playlistId}}",
-                    "tracks",
-                    "{{trackId}}"
-                  ]
-                }
-              },
-              "status": "Unprocessable Entity",
-              "code": 422,
-              "_postman_previewlanguage": "json",
-              "header": [
-                { "key": "Content-Type", "value": "application/json" }
-              ],
-              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Cannot modify playlist while actively streaming\",\n  \"errors\": null,\n  \"errorCode\": \"BusinessRuleViolation\"\n}"
             }
           ]
         },

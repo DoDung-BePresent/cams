@@ -652,7 +652,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["api", "tracks", "{{trackId}}"]
             },
-            "description": "Soft-delete a track.\n\nAuth: BrandManager only ✅\n\nNotes:\n- Ownership check: track.BrandId must equal user.BrandId.\n- Business rule: CANNOT delete a track that is used in any playlist (even inactive playlists). Remove the track from all playlists first.\n- Soft delete: IsDeleted = true (record stays in DB).\n- S3 files (audio + cover) deleted ONLY after successful DB commit."
+            "description": "Soft-delete a track.\n\nAuth: BrandManager only ✅\n\nNotes:\n- Ownership check: track.BrandId must equal user.BrandId.\n- Business rule: CANNOT delete a track that is included in one or more playlists or space queues. Remove the track from all playlists and space queues first.\n- Soft delete: IsDeleted = true (record stays in DB).\n- S3 files (audio + cover) deleted ONLY after successful DB commit."
           },
           "response": [
             {
@@ -681,7 +681,7 @@
               "body": "{\n  \"isSuccess\": true,\n  \"message\": \"Track deleted successfully\",\n  \"data\": null,\n  \"errors\": null,\n  \"errorCode\": null\n}"
             },
             {
-              "name": "422 Track Used in Playlist",
+              "name": "422 Track Used in Playlist or Space Queue",
               "originalRequest": {
                 "method": "DELETE",
                 "header": [
@@ -703,7 +703,7 @@
               "header": [
                 { "key": "Content-Type", "value": "application/json" }
               ],
-              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Cannot delete track that is used in a playlist\",\n  \"errors\": null,\n  \"errorCode\": \"BusinessRuleViolation\"\n}"
+              "body": "{\n  \"isSuccess\": false,\n  \"message\": \"Cannot delete Track because it is currently included in one or more playlists or space queues.\",\n  \"errors\": null,\n  \"errorCode\": \"BusinessRuleViolation\"\n}"
             }
           ]
         },
