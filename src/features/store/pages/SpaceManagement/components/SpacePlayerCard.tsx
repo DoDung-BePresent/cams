@@ -12,7 +12,10 @@ import {
   Tag,
 } from 'antd';
 import { SettingOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import { SpacePlayer } from '@/shared/modules/cams/components';
+import {
+  SpacePlayer,
+  AIExplainabilityPanel,
+} from '@/shared/modules/cams/components';
 import {
   useSpaceState,
   usePlaybackControl,
@@ -241,20 +244,30 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             style={{ padding: '40px 0' }}
           />
         ) : (
-          <SpacePlayer
-            spaceId={space.id}
-            hlsUrl={hlsUrl}
-            state={spaceState}
-            isPlaying={isPlaying}
-            isLoading={
-              isLoadingState ||
-              playbackControl.isPending ||
-              overridePlaylist.isPending
-            }
-            onPlayPause={handlePlayPause}
-            onSkipNext={handleSkipNext}
-            onSkipPrevious={handleSkipPrevious}
-          />
+          <>
+            <SpacePlayer
+              spaceId={space.id}
+              hlsUrl={hlsUrl}
+              state={spaceState}
+              isPlaying={isPlaying}
+              isLoading={
+                isLoadingState ||
+                playbackControl.isPending ||
+                overridePlaylist.isPending
+              }
+              onPlayPause={handlePlayPause}
+              onSkipNext={handleSkipNext}
+              onSkipPrevious={handleSkipPrevious}
+            />
+
+            {/* AI Explainability Panel */}
+            {spaceState && !spaceState.isManualOverride && (
+              <>
+                <Divider style={{ margin: '8px 0' }} />
+                <AIExplainabilityPanel spaceState={spaceState} />
+              </>
+            )}
+          </>
         )}
       </Space>
     </Card>

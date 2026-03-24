@@ -13,12 +13,19 @@ import {
 /**
  * Hooks
  */
-import { useTrack } from '@/shared/modules/tracks/hooks';
+import {
+  useTrack,
+  useTrackMetadataPolling,
+} from '@/shared/modules/tracks/hooks';
 
 /**
  * Components
  */
-import { HLSAudioPlayer } from '@/shared/modules/tracks/components';
+import {
+  HLSAudioPlayer,
+  MetadataStatusBadge,
+  MetadataPollingProgress,
+} from '@/shared/modules/tracks/components';
 
 /**
  * Constants
@@ -52,6 +59,14 @@ export const TrackDetailsDrawer = ({
 }: TrackDetailsDrawerProps) => {
   const { data: track, isLoading, error } = useTrack(trackId, open);
 
+  // Auto-poll metadata status for newly uploaded tracks
+  const { isPolling, attempts, maxAttempts, status } = useTrackMetadataPolling(
+    trackId,
+    {
+      enabled: open && !!trackId,
+    },
+  );
+
   return (
     <Drawer
       closeIcon={null}
@@ -82,6 +97,14 @@ export const TrackDetailsDrawer = ({
           size='large'
           style={{ width: '100%' }}
         >
+          {/* Metadata Polling Progress */}
+          <MetadataPollingProgress
+            isPolling={isPolling}
+            attempts={attempts}
+            maxAttempts={maxAttempts}
+            status={status}
+          />
+
           {/* Audio Player */}
           <HLSAudioPlayer
             hlsUrl={track.hlsUrl}
@@ -143,6 +166,12 @@ export const TrackDetailsDrawer = ({
             title='Audio Metadata'
             column={2}
             bordered
+            extra={
+              <MetadataStatusBadge
+                track={track}
+                showDetails
+              />
+            }
           >
             <Descriptions.Item label='Duration'>
               {track.durationSec

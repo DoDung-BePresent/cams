@@ -12,6 +12,18 @@ export enum MusicProviderEnum {
 }
 
 /**
+ * Track Metadata Status (FE computed)
+ * Based on presence of bpm, energyLevel, valence fields
+ * See: docs/cams/FE_IMPLEMENTATION_METADATA_TO_FUZZY_AI.md §2.3
+ */
+export enum TrackMetadataStatus {
+  Pending = 'pending', // Just uploaded, metadata extraction in progress
+  Ready = 'ready', // Has complete metadata (bpm, energyLevel, valence)
+  Partial = 'partial', // Has some metadata but not all
+  Unknown = 'unknown', // Timeout or extraction failed
+}
+
+/**
  * Track List Item (from API_Tracks.md §4.3)
  * Used in GET /api/tracks response
  * ⚠️ BREAKING CHANGE (2026-03-23): audioUrl → hlsUrl (.m3u8)

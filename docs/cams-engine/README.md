@@ -3,6 +3,7 @@
 Tài liệu kỹ thuật cho **CAMS Engine** — bộ não tự động của hệ thống CAMS (Context-Aware AI Music System).
 
 CAMS Engine chịu trách nhiệm:
+
 - Thu thập dữ liệu IoT từ cảm biến (ESP32, camera YOLO)
 - Phân tích context bằng thuật toán Fuzzy Logic (mô hình Mehrabian-Russell)
 - Tự động chọn playlist nhạc phù hợp với không gian
@@ -12,10 +13,11 @@ CAMS Engine chịu trách nhiệm:
 
 ## Nội dung tài liệu
 
-| File | Mô tả |
-|---|---|
-| [MOCK_DATA_SEED.md](MOCK_DATA_SEED.md) | Seed mock data vào PostgreSQL và chạy E2E test từ đầu đến cuối |
-| [BACKGROUND_JOBS.md](BACKGROUND_JOBS.md) | Kiến trúc 2 background jobs, flow diagram, log guide, config reference |
+| File                                                                               | Mô tả                                                                                  |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| [MOCK_DATA_SEED.md](MOCK_DATA_SEED.md)                                             | Seed mock data vào PostgreSQL và chạy E2E test từ đầu đến cuối                         |
+| [BACKGROUND_JOBS.md](BACKGROUND_JOBS.md)                                           | Kiến trúc 2 background jobs, flow diagram, log guide, config reference                 |
+| [FUZZYLOGIC_MUSIC_SELECTION_EXPLAINED.md](FUZZYLOGIC_MUSIC_SELECTION_EXPLAINED.md) | Giải thích end-to-end vì sao AI chọn bài nhạc cụ thể (rule, BPM band, fallback, guard) |
 
 ---
 
@@ -76,11 +78,11 @@ docker logs -f logaicams-api 2>&1 | grep -E "\[CAMS|FuzzyEngine|SignalR|Playlist
 
 ## Liên kết tài liệu liên quan
 
-| Tài liệu | Đường dẫn |
-|---|---|
-| CAMS API (Manager endpoints) | [docs/cams/API_CAMS.md](../cams/API_CAMS.md) |
-| SignalR StoreHub events | [docs/cams/SIGNALR_STOREHUB.md](../cams/SIGNALR_STOREHUB.md) |
-| CloudFront & MediaConvert setup | [docs/CAMS-CLOUDFRONT-SETUP.md](../CAMS-CLOUDFRONT-SETUP.md) |
-| Environment variables | [docs/ENVIRONMENT_CONFIGURATION.md](../ENVIRONMENT_CONFIGURATION.md) |
-| Hangfire Dashboard | http://localhost:5001/hangfire |
-| Swagger UI | http://localhost:5001/swagger |
+| Tài liệu                        | Đường dẫn                                                            |
+| ------------------------------- | -------------------------------------------------------------------- |
+| CAMS API (Manager endpoints)    | [docs/cams/API_CAMS.md](../cams/API_CAMS.md)                         |
+| SignalR StoreHub events         | [docs/cams/SIGNALR_STOREHUB.md](../cams/SIGNALR_STOREHUB.md)         |
+| CloudFront & MediaConvert setup | [docs/CAMS-CLOUDFRONT-SETUP.md](../CAMS-CLOUDFRONT-SETUP.md)         |
+| Environment variables           | [docs/ENVIRONMENT_CONFIGURATION.md](../ENVIRONMENT_CONFIGURATION.md) |
+| Hangfire Dashboard              | http://localhost:5001/hangfire                                       |
+| Swagger UI                      | http://localhost:5001/swagger                                        |

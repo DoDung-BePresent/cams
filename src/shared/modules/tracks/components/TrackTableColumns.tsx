@@ -19,6 +19,11 @@ import { MusicIcon } from 'lucide-react';
 import { formatDuration, formatDateTime } from '@/shared/utils';
 
 /**
+ * Components
+ */
+import { MetadataStatusBadge } from './MetadataStatusBadge';
+
+/**
  * Constants
  */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
@@ -138,6 +143,14 @@ export const getTrackColumns = ({
           {MUSIC_PROVIDER_LABELS[provider]}
         </Tag>
       ),
+  },
+  {
+    title: 'Metadata',
+    key: 'metadata',
+    width: 150,
+    render: (_: unknown, record: TrackListItem) => (
+      <MetadataStatusBadge track={record} />
+    ),
   },
   {
     title: 'Plays',
