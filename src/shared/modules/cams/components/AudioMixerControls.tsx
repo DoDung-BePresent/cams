@@ -23,6 +23,7 @@ interface AudioMixerControlsProps {
   queueEndBehavior: QueueEndBehavior;
   loading?: boolean;
   onVolumeChange: (volume: number) => void;
+  onVolumeChangeComplete: (volume: number) => void;
   onMuteToggle: (muted: boolean) => void;
   onQueueEndBehaviorChange: (behavior: QueueEndBehavior) => void;
 }
@@ -39,6 +40,7 @@ export const AudioMixerControls = ({
   queueEndBehavior,
   loading,
   onVolumeChange,
+  onVolumeChangeComplete,
   onMuteToggle,
   onQueueEndBehaviorChange,
 }: AudioMixerControlsProps) => {
@@ -71,6 +73,7 @@ export const AudioMixerControls = ({
                 max={100}
                 value={isMuted ? 0 : volumePercent}
                 onChange={onVolumeChange}
+                onAfterChange={onVolumeChangeComplete}
                 disabled={loading || isMuted}
                 style={{ margin: 0 }}
                 tooltip={{ formatter: (value) => `${value}%` }}

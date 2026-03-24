@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Drawer,
   Button,
@@ -42,6 +42,7 @@ export const QueueManagementDrawer = ({
   onClose,
 }: QueueManagementDrawerProps) => {
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [localVolume, setLocalVolume] = useState<number>(100);
 
   // Fetch queue data
   const { data: queueData, isLoading, refetch } = useSpaceQueue(spaceId, open);
@@ -58,6 +59,14 @@ export const QueueManagementDrawer = ({
   const volumePercent = spaceState?.volumePercent ?? 100;
   const isMuted = spaceState?.isMuted ?? false;
   const queueEndBehavior = spaceState?.queueEndBehavior ?? 0;
+
+  // Sync local volume with server state when spaceState changes
+  useEffect(() => {
+    if (spaceState?.volumePercent !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalVolume(spaceState.volumePercent);
+    }
+  }, [spaceState?.volumePercent]);
 
   const handleClearQueue = async () => {
     try {
@@ -78,7 +87,13 @@ export const QueueManagementDrawer = ({
     }
   };
 
-  const handleVolumeChange = async (volume: number) => {
+  // Update local state while dragging (no API call)
+  const handleVolumeChange = (volume: number) => {
+    setLocalVolume(volume);
+  };
+
+  // Only call API when user releases the slider
+  const handleVolumeChangeComplete = async (volume: number) => {
     try {
       await updateAudioState.mutateAsync({
         spaceId,
@@ -86,6 +101,8 @@ export const QueueManagementDrawer = ({
       });
     } catch (error) {
       console.error('Failed to update volume:', error);
+      // Revert to server value on error
+      setLocalVolume(volumePercent);
     }
   };
 
@@ -129,7 +146,7 @@ export const QueueManagementDrawer = ({
         }
         closeIcon={null}
         placement='right'
-        width={DRAWER_WIDTHS.large}
+        width={DRAWER_WIDTHS.medium}
         open={open}
         onClose={onClose}
         extra={
@@ -175,11 +192,12 @@ export const QueueManagementDrawer = ({
         >
           {/* Audio Mixer Controls */}
           <AudioMixerControls
-            volumePercent={volumePercent}
+            volumePercent={localVolume}
             isMuted={isMuted}
             queueEndBehavior={queueEndBehavior}
             loading={updateAudioState.isPending}
             onVolumeChange={handleVolumeChange}
+            onVolumeChangeComplete={handleVolumeChangeComplete}
             onMuteToggle={handleMuteToggle}
             onQueueEndBehaviorChange={handleQueueEndBehaviorChange}
           />
