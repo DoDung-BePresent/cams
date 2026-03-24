@@ -4,9 +4,11 @@ import {
   ClockCircleOutlined,
   ExclamationCircleOutlined,
   WarningOutlined,
+  LoadingOutlined,
+  CloseCircleOutlined,
 } from '@ant-design/icons';
 import type { TrackDetailResponse, TrackListItem } from '../types';
-import { TrackMetadataStatus } from '../types';
+import { TrackMetadataStatus, TranscodeStatusEnum } from '../types';
 import {
   getTrackMetadataStatus,
   getMetadataStatusText,
@@ -27,7 +29,13 @@ export const MetadataStatusBadge = ({
   const status = getTrackMetadataStatus(track);
   const detailTrack = track as TrackDetailResponse;
 
-  // Ready status with details
+  // Show transcode status if available (list view)
+  const transcodeStatus = track.transcodeStatus;
+  const showTranscodeInfo =
+    transcodeStatus !== undefined &&
+    transcodeStatus !== TranscodeStatusEnum.Ready;
+
+  // Ready status with details (detail view only)
   if (status === TrackMetadataStatus.Ready && showDetails) {
     return (
       <Space size='small'>
@@ -57,14 +65,49 @@ export const MetadataStatusBadge = ({
       <Tooltip title={getMetadataStatusText(status)}>
         <Badge
           status='success'
-          text='Metadata Ready'
+          text='Ready'
         />
       </Tooltip>
     );
   }
 
-  // Pending status
+  // Pending status - show transcode info if available
   if (status === TrackMetadataStatus.Pending) {
+    if (showTranscodeInfo) {
+      // Show specific transcode status
+      if (transcodeStatus === TranscodeStatusEnum.Pending) {
+        return (
+          <Tooltip title='Track is queued for transcoding'>
+            <Badge
+              status='processing'
+              text={
+                <Space size={4}>
+                  <ClockCircleOutlined />
+                  <span>Queued</span>
+                </Space>
+              }
+            />
+          </Tooltip>
+        );
+      }
+      if (transcodeStatus === TranscodeStatusEnum.Processing) {
+        return (
+          <Tooltip title='Track is being transcoded (may take 1-3 minutes)'>
+            <Badge
+              status='processing'
+              text={
+                <Space size={4}>
+                  <LoadingOutlined />
+                  <span>Transcoding...</span>
+                </Space>
+              }
+            />
+          </Tooltip>
+        );
+      }
+    }
+
+    // Generic pending message
     return (
       <Tooltip title='Metadata extraction in progress (may take 30-120 seconds)'>
         <Badge
@@ -72,7 +115,7 @@ export const MetadataStatusBadge = ({
           text={
             <Space size={4}>
               <ClockCircleOutlined />
-              <span>Extracting...</span>
+              <span>Processing...</span>
             </Space>
           }
         />
@@ -89,7 +132,7 @@ export const MetadataStatusBadge = ({
           text={
             <Space size={4}>
               <WarningOutlined />
-              <span>Partial Metadata</span>
+              <span>Partial</span>
             </Space>
           }
         />
@@ -97,15 +140,32 @@ export const MetadataStatusBadge = ({
     );
   }
 
-  // Unknown status
+  // Unknown/Failed status - check transcode status
+  if (showTranscodeInfo && transcodeStatus === TranscodeStatusEnum.Failed) {
+    return (
+      <Tooltip title='Transcode failed - metadata unavailable'>
+        <Badge
+          status='error'
+          text={
+            <Space size={4}>
+              <CloseCircleOutlined />
+              <span>Failed</span>
+            </Space>
+          }
+        />
+      </Tooltip>
+    );
+  }
+
+  // Unknown status (default)
   return (
-    <Tooltip title='Metadata extraction failed or timed out'>
+    <Tooltip title='Metadata extraction failed or not yet started'>
       <Badge
         status='error'
         text={
           <Space size={4}>
             <ExclamationCircleOutlined />
-            <span>No Metadata</span>
+            <span>Unavailable</span>
           </Space>
         }
       />

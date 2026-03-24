@@ -20,6 +20,18 @@ See: `docs/cams/FE_IMPLEMENTATION_METADATA_TO_FUZZY_AI.md`
 
 ### 1. Types (`src/shared/modules/tracks/types/trackTypes.ts`)
 
+#### Added TranscodeStatusEnum (from backend)
+
+```typescript
+export enum TranscodeStatusEnum {
+  None = 0, // Track chưa được transcode, hlsUrl = null
+  Pending = 1, // Job đã queue, đang chờ chạy
+  Processing = 2, // Đang transcode trên AWS MediaConvert
+  Ready = 3, // Transcode hoàn thành, hlsUrl sẵn sàng
+  Failed = 4, // Transcode thất bại
+}
+```
+
 #### Added TrackMetadataStatus Enum
 
 ```typescript
@@ -31,12 +43,46 @@ export enum TrackMetadataStatus {
 }
 ```
 
+#### Updated TrackListItem Interface
+
+Added fields returned by backend API:
+
+```typescript
+export interface TrackListItem extends BaseResponse {
+  // ... existing fields ...
+  actualDurationSec?: number; // Actual duration from MediaConvert
+  transcodeStatus?: TranscodeStatusEnum; // Transcode status (0-4)
+  // ... rest of fields ...
+}
+```
+
+**Key Insight:**
+
+Backend API returns different fields in list vs detail responses:
+
+- **List response:** `transcodeStatus` (0-4), `actualDurationSec` - NO metadata fields
+- **Detail response:** `bpm`, `energyLevel`, `valence` + all list fields
+
+The metadata extraction happens during the transcode process, so `transcodeStatus` serves as a proxy for metadata availability in list view.
+
 **Status Logic:**
+
+For detail view (has bpm, energyLevel, valence fields):
 
 - **Ready**: Has all three fields (bpm, energyLevel, valence)
 - **Partial**: Has some but not all fields
+
+For list view (only has transcodeStatus field):
+
+- **Ready** (transcodeStatus = 3): Transcode complete, metadata ready
+- **Pending** (transcodeStatus = 1 or 2): Queued or transcoding
+- **Failed** (transcodeStatus = 4): Transcode failed
+- **Unknown** (transcodeStatus = 0 or null): Not yet transcoded
+
+Fallback for tracks without transcodeStatus:
+
 - **Pending**: Created within last 2 minutes, no metadata yet
-- **Unknown**: Older than 2 minutes, still no metadata (extraction failed)
+- **Unknown**: Older than 2 minutes, still no metadata
 
 ---
 
@@ -46,8 +92,37 @@ export enum TrackMetadataStatus {
 
 **`getTrackMetadataStatus(track)`**
 
-- Determines metadata status based on field presence and track age
+- Determines metadata status based on field presence, transcodeStatus, and track age
+- Handles both list view (transcodeStatus only) and detail view (metadata fields)
 - Returns `TrackMetadataStatus` enum
+
+**Logic:**
+
+```typescript
+// 1. If has metadata fields (detail view) → use them
+if (hasBpm || hasEnergyLevel || hasValence) {
+  return hasBpm && hasEnergyLevel && hasValence
+    ? TrackMetadataStatus.Ready
+    : TrackMetadataStatus.Partial;
+}
+
+// 2. If has transcodeStatus (list view) → use as proxy
+switch (transcodeStatus) {
+  case TranscodeStatusEnum.Ready:
+    return TrackMetadataStatus.Ready;
+  case TranscodeStatusEnum.Pending:
+  case TranscodeStatusEnum.Processing:
+    return TrackMetadataStatus.Pending;
+  case TranscodeStatusEnum.Failed:
+    return TrackMetadataStatus.Unknown;
+}
+
+// 3. Fallback: check track age
+const ageInMinutes = (now - createdAt) / 60000;
+return ageInMinutes < 2
+  ? TrackMetadataStatus.Pending
+  : TrackMetadataStatus.Unknown;
+```
 
 **`formatBpm(bpm)`**
 
@@ -67,7 +142,12 @@ export enum TrackMetadataStatus {
 
 **`getMetadataStatusText(status)`**
 
-- Returns display text for status
+- Returns display text for metadata status
+
+**`getTranscodeStatusText(status)`** (NEW)
+
+- Returns display text for transcode status
+- Maps enum values to user-friendly text
 
 ---
 
@@ -86,7 +166,7 @@ interface MetadataStatusBadgeProps {
 
 **Behavior:**
 
-1. **Ready + showDetails=true:**
+1. **Ready + showDetails=true (detail view):**
 
    ```tsx
    <Tag icon={<CheckCircleOutlined />} color="success">BPM: 120</Tag>
@@ -94,46 +174,79 @@ interface MetadataStatusBadgeProps {
    <Tag color="cyan">Valence: 0.72</Tag>
    ```
 
-2. **Ready + showDetails=false:**
+2. **Ready + showDetails=false (list view):**
 
    ```tsx
    <Badge
      status='success'
-     text='Metadata Ready'
+     text='Ready'
    />
    ```
 
-3. **Pending:**
-
-   ```tsx
-   <Badge
-     status='processing'
-     text='Extracting...'
-   />
-   ```
-
-   - Tooltip: "Metadata extraction in progress (may take 30-120 seconds)"
+3. **Pending (list view with transcodeStatus):**
+   - **transcodeStatus = 1 (Pending):**
+     ```tsx
+     <Badge
+       status='processing'
+       text='Queued'
+     />
+     ```
+     Tooltip: "Track is queued for transcoding"
+   - **transcodeStatus = 2 (Processing):**
+     ```tsx
+     <Badge
+       status='processing'
+       text='Transcoding...'
+     />
+     ```
+     Tooltip: "Track is being transcoded (may take 1-3 minutes)"
+   - **Generic pending:**
+     ```tsx
+     <Badge
+       status='processing'
+       text='Processing...'
+     />
+     ```
+     Tooltip: "Metadata extraction in progress (may take 30-120 seconds)"
 
 4. **Partial:**
 
    ```tsx
    <Badge
      status='warning'
-     text='Partial Metadata'
+     text='Partial'
    />
    ```
 
    - Tooltip: "Some metadata fields are missing"
 
-5. **Unknown:**
+5. **Failed (transcodeStatus = 4):**
+
    ```tsx
    <Badge
      status='error'
-     text='No Metadata'
+     text='Failed'
    />
    ```
 
-   - Tooltip: "Metadata extraction failed or timed out"
+   - Tooltip: "Transcode failed - metadata unavailable"
+
+6. **Unknown:**
+   ```tsx
+   <Badge
+     status='error'
+     text='Unavailable'
+   />
+   ```
+
+   - Tooltip: "Metadata extraction failed or not yet started"
+
+**Key Features:**
+
+- Shows specific transcode status when available (Queued, Transcoding, Failed)
+- Falls back to generic metadata status when transcodeStatus not available
+- Different icons for different states (Clock, Loading, Close, Exclamation)
+- Informative tooltips explaining each status
 
 ---
 
@@ -201,15 +314,18 @@ The badge appears in the top-right corner of the Audio Metadata section with ful
 ### Track List View
 
 - New "Metadata" column shows status badge
-- 🟢 "Metadata Ready" - extraction complete
-- 🟡 "Extracting..." - in progress (animated)
-- 🟠 "Partial Metadata" - some fields missing
-- 🔴 "No Metadata" - extraction failed
+- 🟢 "Ready" - transcode & metadata extraction complete
+- � "Queued" - track queued for transcoding
+- 🔵 "Transcoding..." - AWS MediaConvert processing (animated)
+- � "Processing..." - generic processing state
+- 🟠 "Partial" - some metadata fields missing (detail view only)
+- 🔴 "Failed" - transcode failed
+- 🔴 "Unavailable" - metadata not available
 
 ### Track Details View
 
 - Badge appears in Audio Metadata section header
-- When ready: shows detailed tags with values
+- When ready: shows detailed tags with BPM, Energy, Valence values
 - Tooltips explain each status
 - Null-safe rendering for all metadata fields
 
@@ -217,9 +333,11 @@ The badge appears in the top-right corner of the Audio Metadata section with ful
 
 1. User uploads track → API returns 201
 2. UI shows success message immediately
-3. Track appears in list with "Extracting..." badge
-4. After 30-120s, badge updates to "Metadata Ready"
-5. If timeout (>2 min), badge shows "No Metadata"
+3. Track appears in list with "Queued" badge (transcodeStatus = 1)
+4. Badge updates to "Transcoding..." (transcodeStatus = 2)
+5. After 1-3 min, badge updates to "Ready" (transcodeStatus = 3)
+6. If transcode fails, badge shows "Failed" (transcodeStatus = 4)
+7. Metadata extraction happens during transcode, so Ready = metadata available
 
 ---
 
@@ -229,27 +347,45 @@ The badge appears in the top-right corner of the Audio Metadata section with ful
 
 ```typescript
 const getTrackMetadataStatus = (track) => {
+  // 1. Check if has metadata fields (detail view)
   const hasBpm = track.bpm > 0;
   const hasEnergyLevel = track.energyLevel !== null;
   const hasValence = track.valence !== null;
 
-  // Ready: all three present
-  if (hasBpm && hasEnergyLevel && hasValence) {
-    return TrackMetadataStatus.Ready;
-  }
-
-  // Partial: some present
   if (hasBpm || hasEnergyLevel || hasValence) {
+    // Ready: all three present
+    if (hasBpm && hasEnergyLevel && hasValence) {
+      return TrackMetadataStatus.Ready;
+    }
+    // Partial: some present
     return TrackMetadataStatus.Partial;
   }
 
-  // Age-based: Pending vs Unknown
+  // 2. Use transcodeStatus as proxy (list view)
+  switch (track.transcodeStatus) {
+    case TranscodeStatusEnum.Ready: // 3
+      return TrackMetadataStatus.Ready;
+    case TranscodeStatusEnum.Pending: // 1
+    case TranscodeStatusEnum.Processing: // 2
+      return TrackMetadataStatus.Pending;
+    case TranscodeStatusEnum.Failed: // 4
+      return TrackMetadataStatus.Unknown;
+  }
+
+  // 3. Fallback: age-based for tracks without transcodeStatus
   const ageInMinutes = (now - createdAt) / 60000;
   return ageInMinutes < 2
     ? TrackMetadataStatus.Pending
     : TrackMetadataStatus.Unknown;
 };
 ```
+
+**Key Points:**
+
+- Metadata fields (bpm, energyLevel, valence) only available in detail response
+- List response only has `transcodeStatus` field
+- Transcode process includes metadata extraction, so transcodeStatus = proxy for metadata
+- Three-tier fallback: metadata fields → transcodeStatus → track age
 
 ### Null Safety
 

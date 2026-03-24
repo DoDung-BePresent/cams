@@ -12,6 +12,18 @@ export enum MusicProviderEnum {
 }
 
 /**
+ * Track Transcode Status (from backend)
+ * See: docs/tracks/API_Tracks.md §5.5
+ */
+export enum TranscodeStatusEnum {
+  None = 0, // Track chưa được transcode, hlsUrl = null
+  Pending = 1, // Job đã queue, đang chờ chạy
+  Processing = 2, // Đang transcode trên AWS MediaConvert
+  Ready = 3, // Transcode hoàn thành, hlsUrl sẵn sàng
+  Failed = 4, // Transcode thất bại
+}
+
+/**
  * Track Metadata Status (FE computed)
  * Based on presence of bpm, energyLevel, valence fields
  * See: docs/cams/FE_IMPLEMENTATION_METADATA_TO_FUZZY_AI.md §2.3
@@ -37,6 +49,8 @@ export interface TrackListItem extends BaseResponse {
   genre?: string;
   provider?: MusicProviderEnum;
   durationSec?: number;
+  actualDurationSec?: number; // Actual duration from MediaConvert (priority over durationSec)
+  transcodeStatus?: TranscodeStatusEnum; // Transcode status (0-4)
   hlsUrl?: string; // HLS master playlist URL (.m3u8) - can be null if transcode failed
   coverImageUrl?: string;
   playCount: number;
