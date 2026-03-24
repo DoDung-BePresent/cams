@@ -19,7 +19,7 @@ import {
  * Components
  */
 import { ImageDragger } from '@/shared/components';
-import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
+import { HLSAudioPlayer } from '@/shared/modules/tracks/components';
 
 /**
  * Utils
@@ -94,8 +94,8 @@ export const EditTrackDrawer = ({
         moodId: track.moodId,
       });
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setEnergyLevel(track.energyLevel || 0.5);
-      setValence(track.valence || 0.5);
+      setEnergyLevel(track.energyLevel ?? 0.5);
+      setValence(track.valence ?? 0.5);
     }
   }, [track, form]);
 
@@ -198,10 +198,12 @@ export const EditTrackDrawer = ({
               >
                 Current Audio
               </Title>
-              <TrackAudioPlayer
-                audioUrl={track.hlsUrl}
+              <HLSAudioPlayer
+                hlsUrl={track.hlsUrl}
                 title={track.title}
                 artist={track.artist}
+                coverImageUrl={track.coverImageUrl}
+                shouldStop={!open}
               />
             </div>
           )}

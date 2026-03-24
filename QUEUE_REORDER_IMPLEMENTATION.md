@@ -152,3 +152,25 @@ queryClient.invalidateQueries({
 ## Implementation Date
 
 2026-03-24
+
+## Additional Updates (2026-03-24)
+
+### EditTrackDrawer Migration to HLSAudioPlayer
+
+Updated `src/features/brand/pages/TrackManagement/components/EditTrackDrawer.tsx` to use `HLSAudioPlayer` instead of deprecated `TrackAudioPlayer`:
+
+**Changes:**
+
+- Import changed from `TrackAudioPlayer` to `HLSAudioPlayer`
+- Updated props: `audioUrl` → `hlsUrl`, added `coverImageUrl` and `shouldStop`
+- Consistent with other TrackDetailsDrawer components (admin, brand, store)
+
+**Deprecated Component:**
+
+- `TrackAudioPlayer` is now deprecated (WaveSurfer.js doesn't support HLS)
+- All usages migrated to `HLSAudioPlayer` (HLS.js based)
+- Old component kept for backward compatibility but should not be used
+
+**Files Updated:**
+
+- `src/features/brand/pages/TrackManagement/components/EditTrackDrawer.tsx`

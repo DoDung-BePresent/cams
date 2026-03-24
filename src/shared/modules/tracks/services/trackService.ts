@@ -67,13 +67,14 @@ const createUpdateFormData = (data: UpdateTrackRequest): FormData => {
   if (data.title) formData.append('title', data.title);
   if (data.artist) formData.append('artist', data.artist);
   if (data.moodId) formData.append('moodId', data.moodId);
-  if (data.durationSec !== undefined)
+  if (data.durationSec !== undefined && data.durationSec !== null)
     formData.append('durationSec', data.durationSec.toString());
-  if (data.bpm !== undefined) formData.append('bpm', data.bpm.toString());
+  if (data.bpm !== undefined && data.bpm !== null)
+    formData.append('bpm', data.bpm.toString());
   if (data.genre) formData.append('genre', data.genre);
-  if (data.energyLevel !== undefined)
+  if (data.energyLevel !== undefined && data.energyLevel !== null)
     formData.append('energyLevel', data.energyLevel.toString());
-  if (data.valence !== undefined)
+  if (data.valence !== undefined && data.valence !== null)
     formData.append('valence', data.valence.toString());
 
   // Append files if provided
