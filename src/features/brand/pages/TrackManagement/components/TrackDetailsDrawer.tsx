@@ -17,7 +17,7 @@ import { useTrack } from '@/shared/modules/tracks/hooks';
 /**
  * Components
  */
-import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
+import { HLSAudioPlayer } from '@/shared/modules/tracks/components';
 
 /**
  * Utils
@@ -85,8 +85,8 @@ export const TrackDetailsDrawer = ({
               >
                 Audio Player
               </Title>
-              <TrackAudioPlayer
-                audioUrl={track.hlsUrl}
+              <HLSAudioPlayer
+                hlsUrl={track.hlsUrl}
                 title={track.title}
                 artist={track.artist}
                 coverImageUrl={track.coverImageUrl}
