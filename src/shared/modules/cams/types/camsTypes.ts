@@ -123,6 +123,7 @@ export interface SpaceQueueItemDto {
  * Used in SignalR SpaceStateSync event
  * ⚠️ BREAKING CHANGE (2026-03-23): currentPlaylistId/Name → currentQueueItemId/TrackName
  * ⚠️ seekOffsetSeconds is always NULL in SignalR - client must calculate from startedAtUtc
+ * ⚠️ NEW (2026-03-24): AI Explainability fields for fuzzy logic transparency
  */
 export interface SpaceStateDto {
   spaceId: string;
@@ -145,6 +146,14 @@ export interface SpaceStateDto {
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
+
+  // AI Explainability (NEW 2026-03-24)
+  bpmMin?: number | null; // Recommended BPM range minimum
+  bpmMax?: number | null; // Recommended BPM range maximum
+  bpmTarget?: number | null; // Target BPM within range
+  fuzzyRule?: string | null; // Triggered rule name (e.g., "RULE_1_RUSH_HOUR")
+  fuzzyReason?: string | null; // Human-readable reason (e.g., "Critical pressure detected")
+  isBpmFallback?: boolean | null; // True if using mood-only selection (not enough BPM data)
 }
 
 /**
@@ -238,6 +247,7 @@ export interface PlaybackControlRequest {
  * REST API GET /api/cams/spaces/{id}/state
  * ⚠️ BREAKING CHANGE (2026-03-23): currentPlaylistId/Name → currentQueueItemId/TrackName
  * ⚠️ seekOffsetSeconds is calculated server-side at REST call time
+ * ⚠️ NEW (2026-03-24): AI Explainability fields for fuzzy logic transparency
  */
 export interface SpaceStateResponse {
   spaceId: string;
@@ -260,6 +270,14 @@ export interface SpaceStateResponse {
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
+
+  // AI Explainability (NEW 2026-03-24)
+  bpmMin?: number | null; // Recommended BPM range minimum
+  bpmMax?: number | null; // Recommended BPM range maximum
+  bpmTarget?: number | null; // Target BPM within range
+  fuzzyRule?: string | null; // Triggered rule name (e.g., "RULE_1_RUSH_HOUR")
+  fuzzyReason?: string | null; // Human-readable reason (e.g., "Critical pressure detected")
+  isBpmFallback?: boolean | null; // True if using mood-only selection (not enough BPM data)
 }
 
 /**
