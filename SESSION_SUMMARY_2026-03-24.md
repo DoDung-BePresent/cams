@@ -39,7 +39,40 @@ Updated all mutation hooks to use specific queue key instead of broad `cams.all`
 - Better performance (fewer unnecessary refetches)
 - Cleaner separation of concerns
 
-### 3. Verification ✅
+### 3. Drag-and-Drop Queue Reordering ✅
+
+**Files:**
+
+- `src/shared/modules/cams/components/QueueList.tsx`
+- `src/shared/modules/cams/components/QueueManagementDrawer.tsx`
+
+**Dependencies Added:**
+
+```bash
+npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
+```
+
+**Implementation:**
+
+- Integrated `@dnd-kit` library for drag-and-drop functionality
+- Created `SortableItem` component for individual draggable queue items
+- Only `Pending` status items are draggable (Playing/Played/Skipped disabled)
+- Visual feedback: blue drag icon for draggable, gray for disabled
+- Cursor changes: `grab` for draggable, `not-allowed` for disabled
+- Smooth animations with opacity change during drag
+- Touch and keyboard support included
+- Added `handleReorder` function in QueueManagementDrawer
+- Calls `useReorderQueue()` hook with new order after drag
+
+**User Experience:**
+
+- Drag pending items to reorder queue
+- Non-pending items show disabled state
+- API called once after drag completes
+- Success message: "Queue reordered"
+- Error handling with console logging
+
+### 4. Verification ✅
 
 Ran diagnostics on all queue-related files:
 
@@ -48,16 +81,18 @@ Ran diagnostics on all queue-related files:
 - ✅ `src/shared/modules/cams/services/camsService.ts` — No errors
 - ✅ `src/shared/modules/cams/hooks/useQueueManagement.ts` — No errors
 - ✅ `src/shared/modules/cams/hooks/useAudioState.ts` — No errors
+- ✅ `src/shared/modules/cams/components/QueueList.tsx` — No errors
+- ✅ `src/shared/modules/cams/components/QueueManagementDrawer.tsx` — No errors
 
-### 4. Documentation Updates ✅
+### 5. Documentation Updates ✅
 
-**File:** `API_MIGRATION_CHECKLIST.md`
+**Files Created:**
 
-Updated checklist to reflect:
+- `QUEUE_REORDER_IMPLEMENTATION.md` — Complete drag-and-drop implementation guide
 
-- Query key configuration completed
-- All 6 queue management hooks implemented and verified
-- Cache invalidation strategy optimized
+**File Updated:**
+
+- `API_MIGRATION_CHECKLIST.md` — Updated completion status
 
 ## Queue Management Implementation Status
 
@@ -94,47 +129,48 @@ UpdateAudioStateRequest
 SpaceQueueItemResponse
 ```
 
-## Next Steps (Optional UI Implementation)
+## Next Steps (Optional UI Enhancements)
 
-The backend integration is complete. To use these features in the UI:
+The backend integration and core UI components are complete. Optional enhancements:
 
-1. **Queue List Component**
-   - Display `spaceQueueItems` from `useSpaceQueue(spaceId)`
-   - Show status badges (Pending/Playing/Played/Skipped)
-   - Show source badges (AI/Manager)
-   - Implement drag-and-drop reorder using `useReorderQueue()`
+1. **Advanced Queue Features**
+   - Batch selection for multi-item operations
+   - Search/filter queue items
+   - Queue history view
 
-2. **Add to Queue Buttons**
-   - Add "Play Now" / "Play Next" / "Add to Queue" dropdown
-   - Use `useAddTracksToQueue()` with appropriate `mode`
-   - Use `useAddPlaylistToQueue()` for playlist actions
+2. **Audio Visualizations**
+   - Waveform display for current track
+   - Real-time playback progress indicator
+   - Volume level meter
 
-3. **Audio Mixer Controls**
-   - Volume slider (0-100) using `useUpdateAudioState()`
-   - Mute toggle button
-   - Queue end behavior dropdown (Stop/Repeat All/Repeat One)
-
-4. **Queue Management Actions**
-   - Remove button per queue item using `useRemoveQueueItem()`
-   - Clear all button using `useClearQueue()`
+3. **Keyboard Shortcuts**
+   - Space: Play/Pause
+   - Arrow keys: Skip tracks
+   - Number keys: Quick volume control
 
 ## Files Modified This Session
 
 1. `src/config/query.ts` — Added queue query key
 2. `src/shared/modules/cams/hooks/useQueueManagement.ts` — Optimized cache invalidation
-3. `API_MIGRATION_CHECKLIST.md` — Updated completion status
+3. `src/shared/modules/cams/components/QueueList.tsx` — Added drag-and-drop reordering
+4. `src/shared/modules/cams/components/QueueManagementDrawer.tsx` — Added reorder handler
+5. `API_MIGRATION_CHECKLIST.md` — Updated completion status
+6. `QUEUE_REORDER_IMPLEMENTATION.md` — Created implementation documentation
+7. `SESSION_SUMMARY_2026-03-24.md` — Updated session summary
 
 ## Migration Status
 
-**Overall Progress:** 🟢 Backend Integration Complete
+**Overall Progress:** 🟢 Complete (Backend + Core UI)
 
 - ✅ Types defined
 - ✅ Services implemented
 - ✅ Hooks created
 - ✅ Query keys configured
 - ✅ Cache invalidation optimized
+- ✅ UI components implemented (QueueList, AudioMixerControls, AddToQueueModal, QueueManagementDrawer)
+- ✅ Drag-and-drop reordering implemented
 - ✅ All TypeScript errors resolved
-- ⏳ UI components (optional, not started)
+- ⏳ Advanced UI features (optional enhancements)
 
 **Total TypeScript Errors:** 0 ✅
 

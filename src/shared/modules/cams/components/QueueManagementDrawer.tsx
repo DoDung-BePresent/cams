@@ -20,6 +20,7 @@ import {
   useClearQueue,
   useRemoveQueueItem,
   useUpdateAudioState,
+  useReorderQueue,
 } from '../hooks';
 import { QueueList } from './QueueList';
 import { AudioMixerControls } from './AudioMixerControls';
@@ -54,6 +55,7 @@ export const QueueManagementDrawer = ({
   const clearQueue = useClearQueue();
   const removeQueueItem = useRemoveQueueItem();
   const updateAudioState = useUpdateAudioState();
+  const reorderQueue = useReorderQueue();
 
   // Get current audio state from space state or defaults
   const volumePercent = spaceState?.volumePercent ?? 100;
@@ -125,6 +127,17 @@ export const QueueManagementDrawer = ({
       });
     } catch (error) {
       console.error('Failed to update queue end behavior:', error);
+    }
+  };
+
+  const handleReorder = async (queueItemIds: string[]) => {
+    try {
+      await reorderQueue.mutateAsync({
+        spaceId,
+        data: { queueItemIds },
+      });
+    } catch (error) {
+      console.error('Failed to reorder queue:', error);
     }
   };
 
@@ -230,6 +243,7 @@ export const QueueManagementDrawer = ({
                 items={queueData || []}
                 loading={isLoading}
                 onRemove={handleRemoveItem}
+                onReorder={handleReorder}
               />
             </Space>
           </div>

@@ -7,6 +7,23 @@ import {
   ClockCircleOutlined,
   StopOutlined,
 } from '@ant-design/icons';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import type { SpaceQueueItemResponse } from '../types';
 import { QueueItemStatus, QueueItemSource } from '../types';
 
@@ -72,7 +89,132 @@ const getSourceColor = (source: QueueItemSource) => {
   return source === QueueItemSource.AI ? 'purple' : 'blue';
 };
 
-export const QueueList = ({ items, loading, onRemove }: QueueListProps) => {
+// Sortable Item Component
+interface SortableItemProps {
+  item: SpaceQueueItemResponse;
+  onRemove: (queueItemId: string) => void;
+}
+
+const SortableItem = ({ item, onRemove }: SortableItemProps) => {
+  const isDraggable = item.queueStatus === QueueItemStatus.Pending;
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: item.queueItemId,
+    disabled: !isDraggable,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    padding: '12px 16px',
+    borderBottom: '1px solid #f0f0f0',
+    backgroundColor:
+      item.queueStatus === QueueItemStatus.Playing ? '#f6ffed' : 'transparent',
+  };
+
+  return (
+    <List.Item
+      ref={setNodeRef}
+      style={style}
+      actions={[
+        <Tooltip
+          key='remove'
+          title='Remove from queue'
+        >
+          <Button
+            type='text'
+            size='small'
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => onRemove(item.queueItemId)}
+            disabled={item.queueStatus === QueueItemStatus.Playing}
+          />
+        </Tooltip>,
+      ]}
+    >
+      <List.Item.Meta
+        avatar={
+          <Space>
+            <div
+              {...attributes}
+              {...listeners}
+              style={{
+                cursor: isDraggable ? 'grab' : 'not-allowed',
+                touchAction: 'none',
+              }}
+            >
+              <DragOutlined
+                style={{
+                  color: isDraggable ? '#1890ff' : '#d9d9d9',
+                }}
+              />
+            </div>
+            <Text
+              type='secondary'
+              style={{ fontSize: 12, minWidth: 20 }}
+            >
+              #{item.position}
+            </Text>
+          </Space>
+        }
+        title={
+          <Space>
+            {getStatusIcon(item.queueStatus)}
+            <Text strong={item.queueStatus === QueueItemStatus.Playing}>
+              {item.trackName}
+            </Text>
+          </Space>
+        }
+        description={
+          <Space size='small'>
+            <Tag
+              color={getStatusColor(item.queueStatus)}
+              style={{ fontSize: 11 }}
+            >
+              {getStatusLabel(item.queueStatus)}
+            </Tag>
+            <Tag
+              color={getSourceColor(item.source)}
+              style={{ fontSize: 11 }}
+            >
+              {getSourceLabel(item.source)}
+            </Tag>
+            {!item.isReadyToStream && (
+              <Tag
+                color='warning'
+                style={{ fontSize: 11 }}
+              >
+                Transcoding...
+              </Tag>
+            )}
+          </Space>
+        }
+      />
+    </List.Item>
+  );
+};
+
+export const QueueList = ({
+  items,
+  loading,
+  onRemove,
+  onReorder,
+}: QueueListProps) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   if (!items || items.length === 0) {
     return (
       <Empty
@@ -86,84 +228,52 @@ export const QueueList = ({ items, loading, onRemove }: QueueListProps) => {
   // Sort by position
   const sortedItems = [...items].sort((a, b) => a.position - b.position);
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !onReorder) {
+      return;
+    }
+
+    const oldIndex = sortedItems.findIndex(
+      (item) => item.queueItemId === active.id,
+    );
+    const newIndex = sortedItems.findIndex(
+      (item) => item.queueItemId === over.id,
+    );
+
+    // Reorder array
+    const reorderedItems = arrayMove(sortedItems, oldIndex, newIndex);
+
+    // Extract queue item IDs in new order
+    const newOrder = reorderedItems.map((item) => item.queueItemId);
+
+    // Call onReorder callback
+    onReorder(newOrder);
+  };
+
   return (
-    <List
-      loading={loading}
-      dataSource={sortedItems}
-      renderItem={(item) => (
-        <List.Item
-          key={item.queueItemId}
-          style={{
-            padding: '12px 16px',
-            borderBottom: '1px solid #f0f0f0',
-            backgroundColor:
-              item.queueStatus === QueueItemStatus.Playing
-                ? '#f6ffed'
-                : 'transparent',
-          }}
-          actions={[
-            <Tooltip
-              key='remove'
-              title='Remove from queue'
-            >
-              <Button
-                type='text'
-                size='small'
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => onRemove(item.queueItemId)}
-                disabled={item.queueStatus === QueueItemStatus.Playing}
-              />
-            </Tooltip>,
-          ]}
-        >
-          <List.Item.Meta
-            avatar={
-              <Space>
-                <DragOutlined style={{ color: '#8c8c8c', cursor: 'move' }} />
-                <Text
-                  type='secondary'
-                  style={{ fontSize: 12, minWidth: 20 }}
-                >
-                  #{item.position}
-                </Text>
-              </Space>
-            }
-            title={
-              <Space>
-                {getStatusIcon(item.queueStatus)}
-                <Text strong={item.queueStatus === QueueItemStatus.Playing}>
-                  {item.trackName}
-                </Text>
-              </Space>
-            }
-            description={
-              <Space size='small'>
-                <Tag
-                  color={getStatusColor(item.queueStatus)}
-                  style={{ fontSize: 11 }}
-                >
-                  {getStatusLabel(item.queueStatus)}
-                </Tag>
-                <Tag
-                  color={getSourceColor(item.source)}
-                  style={{ fontSize: 11 }}
-                >
-                  {getSourceLabel(item.source)}
-                </Tag>
-                {!item.isReadyToStream && (
-                  <Tag
-                    color='warning'
-                    style={{ fontSize: 11 }}
-                  >
-                    Transcoding...
-                  </Tag>
-                )}
-              </Space>
-            }
-          />
-        </List.Item>
-      )}
-    />
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={sortedItems.map((item) => item.queueItemId)}
+        strategy={verticalListSortingStrategy}
+      >
+        <List
+          loading={loading}
+          dataSource={sortedItems}
+          renderItem={(item) => (
+            <SortableItem
+              key={item.queueItemId}
+              item={item}
+              onRemove={onRemove}
+            />
+          )}
+        />
+      </SortableContext>
+    </DndContext>
   );
 };
