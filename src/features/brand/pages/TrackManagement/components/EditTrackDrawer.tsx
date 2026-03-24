@@ -18,13 +18,17 @@ import {
 /**
  * Components
  */
-import { ImageDragger } from '@/shared/components';
+import { ImageDragger, AudioDragger } from '@/shared/components';
 import { HLSAudioPlayer } from '@/shared/modules/tracks/components';
 
 /**
  * Utils
  */
-import { createImageUploadProps } from '@/shared/utils';
+import {
+  createImageUploadProps,
+  createAudioUploadProps,
+  getAudioDuration,
+} from '@/shared/utils';
 
 /**
  * Validations
@@ -75,11 +79,31 @@ export const EditTrackDrawer = ({
   const { options: moodOptions, isLoading: moodsLoading } = useMoodOptions();
 
   const [coverImageFile, setCoverImageFile] = useState<UploadFile | null>(null);
+  const [audioFile, setAudioFile] = useState<UploadFile | null>(null);
+  const [audioDuration, setAudioDuration] = useState<number>();
   const [energyLevel, setEnergyLevel] = useState(0.5);
   const [valence, setValence] = useState(0.5);
 
   const imageUploadProps = createImageUploadProps<UpdateTrackRequest>(
     setCoverImageFile,
+    (field, value) => form.setFieldValue(field, value),
+  );
+
+  const audioUploadProps = createAudioUploadProps<UpdateTrackRequest>(
+    async (file) => {
+      setAudioFile(file);
+
+      // Auto-extract duration
+      if (file?.originFileObj) {
+        try {
+          const duration = await getAudioDuration(file.originFileObj);
+          setAudioDuration(duration);
+          form.setFieldValue('durationSec', Math.floor(duration));
+        } catch (error) {
+          console.error('Failed to get audio duration:', error);
+        }
+      }
+    },
     (field, value) => form.setFieldValue(field, value),
   );
 
@@ -96,6 +120,7 @@ export const EditTrackDrawer = ({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setEnergyLevel(track.energyLevel ?? 0.5);
       setValence(track.valence ?? 0.5);
+      setAudioDuration(track.durationSec ?? undefined);
     }
   }, [track, form]);
 
@@ -118,6 +143,7 @@ export const EditTrackDrawer = ({
       moodId: values.moodId,
       energyLevel,
       valence,
+      audioFile: audioFile?.originFileObj,
       coverImageFile: coverImageFile?.originFileObj,
     };
 
@@ -135,6 +161,8 @@ export const EditTrackDrawer = ({
   const handleCancel = () => {
     form.resetFields();
     setCoverImageFile(null);
+    setAudioFile(null);
+    setAudioDuration(undefined);
     onClose();
   };
 
@@ -190,7 +218,7 @@ export const EditTrackDrawer = ({
           }}
         >
           {/* Current Audio */}
-          {track?.hlsUrl && (
+          {track?.hlsUrl && !audioFile && (
             <div style={{ marginBottom: 24 }}>
               <Title
                 level={5}
@@ -207,6 +235,33 @@ export const EditTrackDrawer = ({
               />
             </div>
           )}
+
+          {/* New Audio File (Optional) */}
+          <div style={{ marginBottom: 24 }}>
+            <Title
+              level={5}
+              style={{ marginBottom: 16 }}
+            >
+              {audioFile ? 'New Audio File' : 'Replace Audio File (Optional)'}
+            </Title>
+
+            <Form.Item
+              label='Audio File'
+              name='audioFile'
+              valuePropName='file'
+              help={
+                audioFile
+                  ? 'New audio file will replace the current one'
+                  : 'Leave empty to keep current audio file'
+              }
+            >
+              <AudioDragger
+                audioFile={audioFile?.originFileObj}
+                uploadProps={audioUploadProps}
+                duration={audioDuration}
+              />
+            </Form.Item>
+          </div>
 
           {/* Basic Information */}
           <div style={{ marginBottom: 24 }}>
@@ -258,13 +313,14 @@ export const EditTrackDrawer = ({
               level={5}
               style={{ marginBottom: 16 }}
             >
-              Cover Image
+              Cover Image (Optional)
             </Title>
 
             <Form.Item
               label='Cover Image'
               name='coverImageFile'
               valuePropName='file'
+              help='Leave empty to keep current cover image'
             >
               <ImageDragger
                 previewUrl={getCoverPreviewUrl()}
@@ -291,8 +347,9 @@ export const EditTrackDrawer = ({
                 >
                   <InputNumber
                     min={1}
-                    placeholder='e.g., 180'
+                    placeholder={audioDuration ? 'Auto-detected' : 'e.g., 180'}
                     style={{ width: '100%' }}
+                    disabled={!!audioDuration}
                   />
                 </Form.Item>
               </Col>
