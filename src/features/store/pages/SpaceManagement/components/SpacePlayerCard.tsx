@@ -58,8 +58,8 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
 
   // ✅ Use spaceState directly from React Query
   const hlsUrl = spaceState?.hlsUrl || null;
-  const hasPlaylist = !!spaceState?.currentPlaylistId;
-  const isPending = !!spaceState?.pendingPlaylistId;
+  const hasPlaylist = !!spaceState?.currentQueueItemId;
+  const isPending = !!spaceState?.pendingQueueItemId;
 
   // ✅ Calculate if currently playing - prioritize isPaused flag from server
   const isPlaying = spaceState
@@ -175,7 +175,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 size='large'
                 placeholder='Choose a playlist'
                 options={playlistOptions}
-                value={spaceState?.currentPlaylistId || undefined}
+                value={spaceState?.currentQueueItemId || undefined}
                 onChange={handlePlaylistChange}
                 style={{ width: '100%' }}
                 loading={overridePlaylist.isPending}
@@ -184,12 +184,12 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 optionFilterProp='label'
                 allowClear={false}
               />
-              {spaceState?.currentPlaylistName && (
+              {spaceState?.currentTrackName && (
                 <Text
                   type='secondary'
                   style={{ fontSize: 12, marginTop: 4 }}
                 >
-                  Current: {spaceState.currentPlaylistName}
+                  Current: {spaceState.currentTrackName}
                   {spaceState.moodName && ` (${spaceState.moodName})`}
                 </Text>
               )}

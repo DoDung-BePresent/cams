@@ -11,6 +11,7 @@ export enum PlaybackCommand {
   SkipNext = 6,
   SkipPrevious = 7,
   SkipToTrack = 8,
+  TrackEnded = 9, // NEW (2026-03-23): Track ended event
 }
 
 /**
@@ -48,16 +49,87 @@ export enum OverrideMode {
 }
 
 /**
+ * Queue Insert Mode Enum (from API_CAMS.md § 3.3.2)
+ * ⚠️ NEW (2026-03-23): Queue insert modes
+ */
+export enum QueueInsertMode {
+  PlayNow = 1, // Switch immediately to first track if stream-ready
+  PlayNext = 2, // Insert after currently playing item
+  AddToQueue = 3, // Add to end of pending queue
+}
+
+/**
+ * Queue Item Status Enum (from API_CAMS.md § 3.3.7)
+ * ⚠️ NEW (2026-03-23): Queue item status
+ */
+export enum QueueItemStatus {
+  Pending = 0,
+  Playing = 1,
+  Played = 2,
+  Skipped = 3,
+}
+
+/**
+ * Queue Item Source Enum (from API_CAMS.md § 3.3.7)
+ * ⚠️ NEW (2026-03-23): Queue item source
+ */
+export enum QueueItemSource {
+  AI = 0,
+  Manager = 1,
+}
+
+/**
+ * Space Queue Item Response (from API_CAMS.md § 3.3.7)
+ * ⚠️ NEW (2026-03-23): Queue item in GET queue response
+ */
+export interface SpaceQueueItemResponse {
+  queueItemId: string;
+  trackId: string;
+  trackName: string;
+  position: number;
+  queueStatus: QueueItemStatus;
+  source: QueueItemSource;
+  hlsUrl: string | null;
+  isReadyToStream: boolean;
+}
+
+/**
+ * Queue End Behavior Enum (from API_CAMS.md)
+ * ⚠️ NEW (2026-03-23): Queue end behavior
+ */
+export enum QueueEndBehavior {
+  Stop = 0,
+  RepeatQueue = 1,
+  ReturnToSchedule = 2,
+}
+
+/**
+ * Space Queue Item DTO (from SIGNALR_STOREHUB.md § 4)
+ * ⚠️ NEW (2026-03-23): Queue item in space state
+ */
+export interface SpaceQueueItemDto {
+  queueItemId: string;
+  trackId: string;
+  trackName: string | null;
+  artist: string | null;
+  hlsUrl: string | null;
+  durationSec: number | null;
+  coverImageUrl: string | null;
+  orderIndex: number;
+}
+
+/**
  * Space state DTO (from SIGNALR_STOREHUB.md § 4)
  * Used in SignalR SpaceStateSync event
+ * ⚠️ BREAKING CHANGE (2026-03-23): currentPlaylistId/Name → currentQueueItemId/TrackName
  * ⚠️ seekOffsetSeconds is always NULL in SignalR - client must calculate from startedAtUtc
  */
 export interface SpaceStateDto {
   spaceId: string;
   storeId: string;
   brandId: string;
-  currentPlaylistId: string | null;
-  currentPlaylistName: string | null;
+  currentQueueItemId: string | null; // Changed from currentPlaylistId
+  currentTrackName: string | null; // Changed from currentPlaylistName
   hlsUrl: string | null;
   moodName: string | null;
   isManualOverride: boolean;
@@ -67,8 +139,12 @@ export interface SpaceStateDto {
   seekOffsetSeconds: number | null; // Always null in SignalR
   isPaused: boolean;
   pausePositionSeconds: number | null;
-  pendingPlaylistId: string | null;
+  pendingQueueItemId: string | null; // Changed from pendingPlaylistId
   pendingOverrideReason: string | null;
+  volumePercent: number; // NEW: 0-100
+  isMuted: boolean; // NEW
+  queueEndBehavior: QueueEndBehavior; // NEW
+  spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
 }
 
 /**
@@ -97,12 +173,55 @@ export interface PlaybackStateChangedPayload {
  * Override playlist request (from API_CAMS.md § 3.1)
  * Mode 1: DirectPlaylist (provide playlistId only)
  * Mode 2: MoodOverride (provide moodId only)
+ * ⚠️ BREAKING CHANGE (2026-03-23): Added trackIds and isClearManagerSelectedQueues
  * ⚠️ Must provide exactly ONE of playlistId or moodId, not both
  */
 export interface OverridePlaylistRequest {
   playlistId?: string | null;
   moodId?: string | null;
+  trackIds?: string[] | null; // NEW: Direct track selection
+  isClearManagerSelectedQueues?: boolean; // NEW: Clear existing queue
   reason?: string | null; // Optional reason for audit trail
+}
+
+/**
+ * Add tracks to queue request (from API_CAMS.md § 3.3.2)
+ * ⚠️ NEW (2026-03-23): Queue management
+ */
+export interface AddTracksToQueueRequest {
+  trackIds: string[];
+  mode: QueueInsertMode; // 1=PlayNow, 2=PlayNext, 3=AddToQueue
+  isClearExistingQueue?: boolean; // Default: false
+  reason?: string | null; // Max 500 chars
+}
+
+/**
+ * Add playlist to queue request (from API_CAMS.md § 3.3.3)
+ * ⚠️ NEW (2026-03-23): Queue management
+ */
+export interface AddPlaylistToQueueRequest {
+  playlistId: string;
+  mode: QueueInsertMode; // 1=PlayNow, 2=PlayNext, 3=AddToQueue
+  isClearExistingQueue?: boolean; // Default: false
+  reason?: string | null; // Max 500 chars
+}
+
+/**
+ * Reorder queue request (from API_CAMS.md)
+ * ⚠️ NEW (2026-03-23): Queue management
+ */
+export interface ReorderQueueRequest {
+  queueItemIds: string[]; // New order of queue item IDs
+}
+
+/**
+ * Update audio state request (from API_CAMS.md)
+ * ⚠️ NEW (2026-03-23): Volume/mute/queue end behavior control
+ */
+export interface UpdateAudioStateRequest {
+  volumePercent?: number; // 0-100
+  isMuted?: boolean;
+  queueEndBehavior?: QueueEndBehavior;
 }
 
 /**
@@ -117,14 +236,15 @@ export interface PlaybackControlRequest {
 /**
  * Space state response (from API_CAMS.md § 3.4)
  * REST API GET /api/cams/spaces/{id}/state
+ * ⚠️ BREAKING CHANGE (2026-03-23): currentPlaylistId/Name → currentQueueItemId/TrackName
  * ⚠️ seekOffsetSeconds is calculated server-side at REST call time
  */
 export interface SpaceStateResponse {
   spaceId: string;
   storeId: string;
   brandId: string;
-  currentPlaylistId: string | null;
-  currentPlaylistName: string | null;
+  currentQueueItemId: string | null; // Changed from currentPlaylistId
+  currentTrackName: string | null; // Changed from currentPlaylistName
   hlsUrl: string | null;
   moodName: string | null;
   isManualOverride: boolean;
@@ -134,8 +254,12 @@ export interface SpaceStateResponse {
   seekOffsetSeconds: number | null; // Calculated server-side in REST
   isPaused: boolean;
   pausePositionSeconds: number | null;
-  pendingPlaylistId: string | null;
+  pendingQueueItemId: string | null; // Changed from pendingPlaylistId
   pendingOverrideReason: string | null;
+  volumePercent: number; // NEW: 0-100
+  isMuted: boolean; // NEW
+  queueEndBehavior: QueueEndBehavior; // NEW
+  spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
 }
 
 /**

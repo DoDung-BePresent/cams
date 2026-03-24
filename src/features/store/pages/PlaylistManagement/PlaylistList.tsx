@@ -29,7 +29,6 @@ import {
   usePlaylists,
   useDeletePlaylist,
   useTogglePlaylistStatus,
-  useRetranscodePlaylist,
 } from '@/shared/modules/playlists/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
 
@@ -69,12 +68,12 @@ export const PlaylistList = () => {
 
   const deletePlaylist = useDeletePlaylist();
   const toggleStatus = useTogglePlaylistStatus();
-  const retranscode = useRetranscodePlaylist();
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof PlaylistFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -159,31 +158,6 @@ export const PlaylistList = () => {
     });
   };
 
-  const handleRetranscode = (id: string) => {
-    const playlist = data?.items.find((p) => p.id === id);
-
-    AppModal.confirm({
-      title: 'Re-transcode Playlist',
-      content: (
-        <div>
-          <p>
-            Re-transcode playlist <strong>"{playlist?.name}"</strong>?
-          </p>
-          <p style={{ color: '#1890ff', marginTop: 8 }}>
-            This will regenerate the HLS stream. It may take several minutes.
-          </p>
-        </div>
-      ),
-      okText: 'Re-transcode',
-      cancelText: 'Cancel',
-      onOk: () => {
-        retranscode.mutate(id, {
-          onSuccess: () => refetch(),
-        });
-      },
-    });
-  };
-
   const handleReset = () => {
     setFilter({
       page: 1,
@@ -210,7 +184,6 @@ export const PlaylistList = () => {
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
     onAddTracks: handleAddTracks,
-    onRetranscode: handleRetranscode,
   });
 
   // Transform moods data to options

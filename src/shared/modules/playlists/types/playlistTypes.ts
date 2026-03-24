@@ -13,26 +13,28 @@ export enum PlaylistTypeEnum {
 // Request DTOs
 // ============================================================================
 
+/**
+ * Create Playlist Request (from API_Playlists.md)
+ * ⚠️ BREAKING CHANGE (2026-03-23): Removed isDynamic, hlsUrl, totalDurationSeconds
+ */
 export interface CreatePlaylistRequest {
   name: string;
   storeId: string;
   moodId?: string;
   description?: string;
-  isDynamic?: boolean;
   isDefault?: boolean;
-  hlsUrl?: string;
-  totalDurationSeconds?: number;
-  trackIds?: string[];
+  trackIds?: string[]; // Initial tracks
 }
 
+/**
+ * Update Playlist Request (from API_Playlists.md)
+ * ⚠️ BREAKING CHANGE (2026-03-23): Removed isDynamic, hlsUrl, totalDurationSeconds
+ */
 export interface UpdatePlaylistRequest {
   name?: string;
   moodId?: string;
   description?: string;
-  isDynamic?: boolean;
   isDefault?: boolean;
-  hlsUrl?: string;
-  totalDurationSeconds?: number;
   trackIds?: string[] | null; // null = no change; [] = clear all; [...] = sync
 }
 
@@ -44,6 +46,10 @@ export interface AddTracksToPlaylistRequest {
 // Filter
 // ============================================================================
 
+/**
+ * Playlist Filter (from API_Playlists.md)
+ * ⚠️ BREAKING CHANGE (2026-03-23): Removed isDynamic filter
+ */
 export interface PlaylistFilter {
   page?: number;
   pageSize?: number;
@@ -54,7 +60,6 @@ export interface PlaylistFilter {
   brandId?: string;
   storeId?: string;
   moodId?: string;
-  isDynamic?: boolean;
   isDefault?: boolean;
   createdFrom?: string;
   createdTo?: string;
@@ -64,6 +69,10 @@ export interface PlaylistFilter {
 // Response DTOs
 // ============================================================================
 
+/**
+ * Playlist List Item (from API_Playlists.md)
+ * ⚠️ BREAKING CHANGE (2026-03-23): Removed isDynamic, hlsUrl, totalDurationSeconds
+ */
 export interface PlaylistListItem extends BaseResponse {
   brandId?: string;
   storeId?: string;
@@ -72,13 +81,14 @@ export interface PlaylistListItem extends BaseResponse {
   moodName?: string;
   name?: string;
   description?: string;
-  isDynamic?: boolean;
   isDefault?: boolean;
-  hlsUrl?: string;
-  totalDurationSeconds?: number;
   trackCount: number;
 }
 
+/**
+ * Playlist Track Item (from API_Playlists.md)
+ * ⚠️ BREAKING CHANGE (2026-03-23): Each track now has hlsUrl + seekOffsetSeconds
+ */
 export interface PlaylistTrackItem {
   trackId: string;
   title?: string;
@@ -87,7 +97,8 @@ export interface PlaylistTrackItem {
   orderIndex?: number;
   coverImageUrl?: string;
   actualDurationSec?: number;
-  seekOffsetSeconds: number; // Server-calculated cumulative offset
+  hlsUrl?: string; // HLS URL per track (.m3u8)
+  seekOffsetSeconds: number; // Server-calculated cumulative offset for SkipToTrack
 }
 
 export interface PlaylistDetailResponse extends PlaylistListItem {

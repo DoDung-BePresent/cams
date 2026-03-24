@@ -77,7 +77,9 @@ export const QUERY_KEYS = {
   },
   // CAMS
   cams: {
+    all: ['cams'] as const, // NEW (2026-03-23): For queue management invalidation
     spaceState: (spaceId?: string) => ['cams-space-state', spaceId] as const,
     pairDeviceInfo: (spaceId?: string) => ['pairDeviceInfo', spaceId] as const,
+    queue: (spaceId: string) => ['cams', 'queue', spaceId] as const, // NEW (2026-03-23): Queue management
   },
 } as const;

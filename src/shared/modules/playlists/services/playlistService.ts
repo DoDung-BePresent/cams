@@ -13,6 +13,10 @@ import type {
 } from '@/shared/modules/playlists/types';
 import type { Result } from '@/shared/types';
 
+/**
+ * Playlist API Endpoints (from API_Playlists.md)
+ * ⚠️ BREAKING CHANGE (2026-03-23): Removed retranscode endpoint (moved to track-level)
+ */
 const PLAYLIST_ENDPOINTS = {
   list: '/api/playlists',
   create: '/api/playlists',
@@ -23,12 +27,12 @@ const PLAYLIST_ENDPOINTS = {
   addTracks: (id: string) => `/api/playlists/${id}/tracks`,
   removeTrack: (id: string, trackId: string) =>
     `/api/playlists/${id}/tracks/${trackId}`,
-  retranscode: (id: string) => `/api/playlists/${id}/retranscode`,
 } as const;
 
 export const playlistService = {
   /**
    * Get paginated playlist list
+   * ⚠️ BREAKING CHANGE (2026-03-23): Removed isDynamic filter
    */
   getList: (filter: PlaylistFilter = {}) => {
     const params = new URLSearchParams();
@@ -43,8 +47,6 @@ export const playlistService = {
       params.append('status', filter.status.toString());
     if (filter.storeId) params.append('storeId', filter.storeId);
     if (filter.moodId) params.append('moodId', filter.moodId);
-    if (filter.isDynamic !== undefined)
-      params.append('isDynamic', filter.isDynamic.toString());
     if (filter.isDefault !== undefined)
       params.append('isDefault', filter.isDefault.toString());
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
@@ -104,12 +106,5 @@ export const playlistService = {
    */
   removeTrack: (id: string, trackId: string) => {
     return api.delete<Result>(PLAYLIST_ENDPOINTS.removeTrack(id, trackId));
-  },
-
-  /**
-   * Force re-transcode playlist
-   */
-  retranscode: (id: string) => {
-    return api.post<Result>(PLAYLIST_ENDPOINTS.retranscode(id));
   },
 };

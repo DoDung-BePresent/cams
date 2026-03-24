@@ -55,13 +55,10 @@ export const CreatePlaylistDrawer = ({
 
   const { data: moodsData } = useMoods();
 
-  const isDynamic = Form.useWatch('isDynamic', form);
-
   useEffect(() => {
     if (open) {
       form.resetFields();
       form.setFieldsValue({
-        isDynamic: false,
         isDefault: false,
       });
     }
@@ -189,36 +186,13 @@ export const CreatePlaylistDrawer = ({
         </div>
 
         {/* Configuration */}
-        <div style={{ marginBottom: 24 }}>
+        <div>
           <Title
             level={5}
             style={{ marginBottom: 16 }}
           >
             Configuration
           </Title>
-
-          <Form.Item
-            label='Playlist Type'
-            name='isDynamic'
-            valuePropName='checked'
-            tooltip='Dynamic playlists automatically manage tracks based on mood'
-          >
-            <Switch
-              checkedChildren='Dynamic'
-              unCheckedChildren='Static'
-            />
-          </Form.Item>
-
-          {isDynamic && (
-            <Alert
-              message='Dynamic Playlist'
-              description='Dynamic playlists automatically select tracks based on the assigned mood. You cannot manually add/remove tracks.'
-              type='info'
-              icon={<InfoCircleOutlined />}
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
-          )}
 
           <Form.Item
             label='Default Playlist'
@@ -229,38 +203,6 @@ export const CreatePlaylistDrawer = ({
             <Switch
               checkedChildren='Yes'
               unCheckedChildren='No'
-            />
-          </Form.Item>
-        </div>
-
-        {/* Advanced Settings */}
-        <div>
-          <Title
-            level={5}
-            style={{ marginBottom: 16 }}
-          >
-            Advanced Settings
-          </Title>
-
-          <Form.Item
-            label='HLS URL'
-            name='hlsUrl'
-            rules={createPlaylistValidation.hlsUrl}
-            tooltip='Optional: Provide a custom HLS stream URL'
-          >
-            <Input placeholder='https://example.com/playlist.m3u8' />
-          </Form.Item>
-
-          <Form.Item
-            label='Total Duration (seconds)'
-            name='totalDurationSeconds'
-            rules={createPlaylistValidation.totalDurationSeconds}
-            tooltip='Optional: Manually set total duration'
-          >
-            <Input
-              type='number'
-              placeholder='e.g., 3600'
-              min={1}
             />
           </Form.Item>
         </div>

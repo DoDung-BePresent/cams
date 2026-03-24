@@ -369,7 +369,7 @@ export const SpacePlayer = ({
               strong
               style={{ fontSize: 16, display: 'block' }}
             >
-              {state?.currentPlaylistName || 'No playlist playing'}
+              {state?.currentTrackName || 'No track playing'}
             </Text>
             <Space>
               {isPlaying && (
@@ -434,7 +434,7 @@ export const SpacePlayer = ({
             type='text'
             icon={<StepBackwardOutlined />}
             onClick={onSkipPrevious}
-            disabled={!state?.currentPlaylistId || isLoading}
+            disabled={!state?.currentQueueItemId || isLoading}
           />
           <Button
             type='primary'
@@ -457,7 +457,7 @@ export const SpacePlayer = ({
             type='text'
             icon={<StepForwardOutlined />}
             onClick={onSkipNext}
-            disabled={!state?.currentPlaylistId || isLoading}
+            disabled={!state?.currentQueueItemId || isLoading}
           />
         </Flex>
 

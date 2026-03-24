@@ -9,23 +9,18 @@ import {
   EditOutlined,
   DeleteOutlined,
   PoweroffOutlined,
-  ReloadOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
 
 /**
  * Utils
  */
-import { formatDuration, formatDateTime } from '@/shared/utils';
+import { formatDateTime } from '@/shared/utils';
 
 /**
  * Constants
  */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
-import {
-  PLAYLIST_TYPE_LABELS,
-  PLAYLIST_TYPE_COLORS,
-} from '@/shared/modules/playlists/constants';
 
 /**
  * Types
@@ -40,7 +35,6 @@ interface PlaylistColumnActions {
   onDelete?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
   onAddTracks?: (id: string) => void;
-  onRetranscode?: (id: string) => void;
 }
 
 export const getPlaylistColumns = ({
@@ -49,7 +43,6 @@ export const getPlaylistColumns = ({
   onDelete,
   onToggleStatus,
   onAddTracks,
-  onRetranscode,
 }: PlaylistColumnActions): ColumnsType<PlaylistListItem> => [
   {
     title: 'No.',
@@ -78,17 +71,6 @@ export const getPlaylistColumns = ({
     ),
   },
   {
-    title: 'Type',
-    dataIndex: 'isDynamic',
-    key: 'isDynamic',
-    width: 120,
-    render: (isDynamic: boolean) => (
-      <Tag color={PLAYLIST_TYPE_COLORS[isDynamic ? 1 : 0]}>
-        {PLAYLIST_TYPE_LABELS[isDynamic ? 1 : 0]}
-      </Tag>
-    ),
-  },
-  {
     title: 'Mood',
     dataIndex: 'moodName',
     key: 'moodName',
@@ -106,14 +88,6 @@ export const getPlaylistColumns = ({
     render: (count: number) => (
       <Tag color={count > 0 ? 'success' : 'default'}>{count}</Tag>
     ),
-  },
-  {
-    title: 'Duration',
-    dataIndex: 'totalDurationSeconds',
-    key: 'totalDurationSeconds',
-    width: 120,
-    sorter: true,
-    render: (duration: number) => (duration ? formatDuration(duration) : '—'),
   },
   {
     title: 'Default',
@@ -159,13 +133,7 @@ export const getPlaylistColumns = ({
       ];
 
       // Add management actions if handlers provided
-      if (
-        onEdit ||
-        onAddTracks ||
-        onToggleStatus ||
-        onRetranscode ||
-        onDelete
-      ) {
+      if (onEdit || onAddTracks || onToggleStatus || onDelete) {
         menuItems.push({ type: 'divider' });
       }
 
@@ -193,15 +161,6 @@ export const getPlaylistColumns = ({
           icon: <PoweroffOutlined />,
           label: record.status === 1 ? 'Deactivate' : 'Activate',
           onClick: () => onToggleStatus(record.id),
-        });
-      }
-
-      if (onRetranscode) {
-        menuItems.push({
-          key: 'retranscode',
-          icon: <ReloadOutlined />,
-          label: 'Re-transcode',
-          onClick: () => onRetranscode(record.id),
         });
       }
 

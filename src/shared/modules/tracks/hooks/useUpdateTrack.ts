@@ -29,6 +29,7 @@ export const useUpdateTrack = () => {
         message.success(response.data.message || 'Track updated successfully!');
       }
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       showErrorMessage(error, 'Failed to update track.');
     },
