@@ -32,7 +32,6 @@ interface QueueManagementDrawerProps {
   open: boolean;
   spaceId: string;
   storeId: string;
-  spaceName?: string;
   onClose: () => void;
 }
 
@@ -40,7 +39,6 @@ export const QueueManagementDrawer = ({
   open,
   spaceId,
   storeId,
-  spaceName,
   onClose,
 }: QueueManagementDrawerProps) => {
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -127,16 +125,9 @@ export const QueueManagementDrawer = ({
             >
               Queue Management
             </Title>
-            {spaceName && (
-              <Text
-                type='secondary'
-                style={{ fontSize: 14 }}
-              >
-                {spaceName}
-              </Text>
-            )}
           </Space>
         }
+        closeIcon={null}
         placement='right'
         width={DRAWER_WIDTHS.large}
         open={open}

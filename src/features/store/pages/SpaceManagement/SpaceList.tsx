@@ -282,7 +282,6 @@ export const SpaceList = () => {
         open={queueDrawerOpen}
         spaceId={selectedSpaceId || ''}
         storeId={user?.storeId || ''}
-        spaceName={data?.items.find((s) => s.id === selectedSpaceId)?.name}
         onClose={() => {
           setQueueDrawerOpen(false);
           setSelectedSpaceId(null);

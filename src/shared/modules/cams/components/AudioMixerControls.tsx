@@ -56,34 +56,37 @@ export const AudioMixerControls = ({
         <div>
           <Row
             align='middle'
-            gutter={16}
+            gutter={12}
           >
+            <Col flex='none'>
+              {isMuted ? (
+                <MutedOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
+              ) : (
+                <SoundOutlined style={{ fontSize: 16 }} />
+              )}
+            </Col>
             <Col flex='auto'>
-              <Space
-                align='center'
-                style={{ width: '100%' }}
+              <Slider
+                min={0}
+                max={100}
+                value={isMuted ? 0 : volumePercent}
+                onChange={onVolumeChange}
+                disabled={loading || isMuted}
+                style={{ margin: 0 }}
+                tooltip={{ formatter: (value) => `${value}%` }}
+              />
+            </Col>
+            <Col flex='none'>
+              <Text
+                type='secondary'
+                style={{
+                  minWidth: 45,
+                  display: 'inline-block',
+                  textAlign: 'right',
+                }}
               >
-                {isMuted ? (
-                  <MutedOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
-                ) : (
-                  <SoundOutlined style={{ fontSize: 16 }} />
-                )}
-                <Slider
-                  min={0}
-                  max={100}
-                  value={isMuted ? 0 : volumePercent}
-                  onChange={onVolumeChange}
-                  disabled={loading || isMuted}
-                  style={{ flex: 1, margin: 0 }}
-                  tooltip={{ formatter: (value) => `${value}%` }}
-                />
-                <Text
-                  type='secondary'
-                  style={{ minWidth: 40, textAlign: 'right' }}
-                >
-                  {isMuted ? '0%' : `${volumePercent}%`}
-                </Text>
-              </Space>
+                {isMuted ? '0%' : `${volumePercent}%`}
+              </Text>
             </Col>
           </Row>
         </div>
