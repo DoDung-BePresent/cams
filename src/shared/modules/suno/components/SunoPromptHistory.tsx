@@ -39,7 +39,7 @@ export const SunoPromptHistory = ({
 
   return (
     <>
-      <Divider orientation='left'>Prompt History</Divider>
+      <Divider orientation='start'>Prompt History</Divider>
       <div
         style={{
           display: 'grid',

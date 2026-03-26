@@ -62,13 +62,11 @@ export const useSunoGenerationHistory = (
   return useQuery({
     queryKey: ['suno', 'generations', 'history', page, pageSize],
     queryFn: async () => {
-      const response = await getSunoGenerationHistory(page, pageSize);
-      if (!response.isSuccess) {
-        throw new Error(
-          response.message || 'Failed to load generation history',
-        );
-      }
-      return response as PaginationResult<SunoGenerationStatusDto>;
+      // Service returns PaginationResult directly (no Result wrapper)
+      return (await getSunoGenerationHistory(
+        page,
+        pageSize,
+      )) as PaginationResult<SunoGenerationStatusDto>;
     },
     staleTime: STALE_TIME.medium,
   });
