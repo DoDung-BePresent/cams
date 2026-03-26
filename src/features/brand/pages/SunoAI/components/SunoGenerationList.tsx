@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Row, Col, Empty, Spin } from 'antd';
 import { SoundOutlined } from '@ant-design/icons';
 import { SunoGenerationCard } from '@/shared/modules/suno/components';
 import {
   useCancelSunoGeneration,
   useUpdateGenerationFromSignalR,
+  useSunoGenerationStatus,
+  useSunoGenerationHistory,
 } from '@/shared/modules/suno/hooks';
 import type {
   SunoGenerationRealtimeDto,
@@ -12,13 +14,30 @@ import type {
 } from '@/shared/modules/suno/types';
 import { useAuth } from '@/providers';
 import { useSignalR } from '@/shared/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 
-export const SunoGenerationList = () => {
+interface SunoGenerationListProps {
+  generationId?: string;
+}
+
+export const SunoGenerationList = ({
+  generationId,
+}: SunoGenerationListProps) => {
   const { user } = useAuth();
-  const [generations, setGenerations] = useState<SunoGenerationStatusDto[]>([]);
+  const queryClient = useQueryClient();
 
   const cancelGeneration = useCancelSunoGeneration();
   const updateFromSignalR = useUpdateGenerationFromSignalR();
+
+  const { data: historyResponse, isLoading: isHistoryLoading } =
+    useSunoGenerationHistory(1, 20);
+
+  // Poll fallback for the latest created generation.
+  // This makes History tab usable even if SignalR is slow/missed.
+  const { data: polledGeneration } = useSunoGenerationStatus(generationId, {
+    enabled: !!generationId,
+    refetchInterval: 5000,
+  });
 
   // SignalR connection
   const { connection, isConnected } = useSignalR('/hubs/store');
@@ -39,20 +58,13 @@ export const SunoGenerationList = () => {
     const handleStatusChanged = (data: SunoGenerationRealtimeDto) => {
       console.log('Suno generation status changed:', data);
 
-      // Update local state
-      setGenerations((prev) => {
-        const index = prev.findIndex((g) => g.id === data.id);
-        if (index >= 0) {
-          const updated = [...prev];
-          updated[index] = { ...updated[index], ...data };
-          return updated;
-        }
-        // If not found, it's a new generation - will be fetched by polling
-        return prev;
-      });
-
       // Update React Query cache
       updateFromSignalR(data as SunoGenerationStatusDto);
+
+      // Also refresh history list so cards update on reload/poll.
+      queryClient.invalidateQueries({
+        queryKey: ['suno', 'generations', 'history'],
+      });
     };
 
     connection.on('SunoGenerationStatusChanged', handleStatusChanged);
@@ -60,7 +72,22 @@ export const SunoGenerationList = () => {
     return () => {
       connection.off('SunoGenerationStatusChanged', handleStatusChanged);
     };
-  }, [connection, updateFromSignalR]);
+  }, [connection, updateFromSignalR, queryClient]);
+
+  const generations = useMemo(() => {
+    const base = historyResponse?.items ? [...historyResponse.items] : [];
+
+    if (!polledGeneration) return base.slice(0, 10);
+
+    const index = base.findIndex((g) => g.id === polledGeneration.id);
+    if (index >= 0) {
+      base[index] = { ...base[index], ...polledGeneration };
+    } else {
+      base.unshift(polledGeneration);
+    }
+
+    return base.slice(0, 10);
+  }, [historyResponse, polledGeneration]);
 
   const handleCancel = async (id: string) => {
     await cancelGeneration.mutateAsync(id);
@@ -76,11 +103,7 @@ export const SunoGenerationList = () => {
     console.log('Retry generation');
   };
 
-  // TODO: Implement actual generation list fetching
-  // For now, showing empty state
-  const isLoading = false;
-
-  if (isLoading) {
+  if (isHistoryLoading && generations.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: 48 }}>
         <Spin size='large' />

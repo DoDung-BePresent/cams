@@ -1,15 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { STALE_TIME } from '@/config';
+import { getErrorMessage } from '@/shared/utils/errorHandler';
 import {
   createSunoGeneration,
   getSunoGenerationStatus,
+  getSunoGenerationHistory,
   cancelSunoGeneration,
 } from '../services';
 import type {
   SunoGenerationCreateRequest,
   SunoGenerationStatusDto,
 } from '../types';
+import type { PaginationResult } from '@/shared/types';
 
 /**
  * Query key factory for Suno generations
@@ -49,6 +52,29 @@ export const useSunoGenerationStatus = (
 };
 
 /**
+ * Hook to fetch generation history (prompt history) by brand
+ * Used by History tab on page reload.
+ */
+export const useSunoGenerationHistory = (
+  page: number = 1,
+  pageSize: number = 20,
+) => {
+  return useQuery({
+    queryKey: ['suno', 'generations', 'history', page, pageSize],
+    queryFn: async () => {
+      const response = await getSunoGenerationHistory(page, pageSize);
+      if (!response.isSuccess) {
+        throw new Error(
+          response.message || 'Failed to load generation history',
+        );
+      }
+      return response as PaginationResult<SunoGenerationStatusDto>;
+    },
+    staleTime: STALE_TIME.medium,
+  });
+};
+
+/**
  * Hook to create new Suno generation
  */
 export const useCreateSunoGeneration = () => {
@@ -65,10 +91,15 @@ export const useCreateSunoGeneration = () => {
     onSuccess: (data) => {
       // Cache the new generation
       queryClient.setQueryData(sunoGenerationKeys.detail(data.id), data);
+      // Refresh history lists (prompt history + history tab) so new generation appears instantly
+      queryClient.invalidateQueries({
+        queryKey: ['suno', 'generations', 'history'],
+      });
       message.success('Music generation started! This may take 1-2 minutes.');
     },
-    onError: (error: Error) => {
-      message.error(error.message || 'Failed to start music generation');
+    onError: (error: unknown) => {
+      // Prefer backend message (including ValidationFailed errors)
+      message.error(getErrorMessage(error, 'Failed to start music generation'));
     },
   });
 };
@@ -94,8 +125,8 @@ export const useCancelSunoGeneration = () => {
       });
       message.success('Generation cancelled');
     },
-    onError: (error: Error) => {
-      message.error(error.message || 'Failed to cancel generation');
+    onError: (error: unknown) => {
+      message.error(getErrorMessage(error, 'Failed to cancel generation'));
     },
   });
 };

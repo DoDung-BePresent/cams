@@ -81,9 +81,11 @@ export const buildPromptFromTemplate = (
   variables: Record<string, string>,
 ): string => {
   let result = template;
+  const escapeRegExp = (value: string): string =>
+    value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   Object.entries(variables).forEach(([key, value]) => {
     const placeholder = `{${key}}`;
-    result = result.replace(new RegExp(placeholder, 'g'), value);
+    result = result.replace(new RegExp(escapeRegExp(placeholder), 'g'), value);
   });
   return result;
 };

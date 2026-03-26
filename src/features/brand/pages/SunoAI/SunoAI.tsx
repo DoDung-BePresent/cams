@@ -10,6 +10,7 @@ import { PageHeader } from '@/shared/components';
 import {
   SunoConfigForm,
   SunoGenerationForm,
+  SunoPromptHistory,
 } from '@/shared/modules/suno/components';
 import { SunoGenerationList } from './components/SunoGenerationList';
 
@@ -17,6 +18,9 @@ export const SunoAI = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('generate');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [lastGenerationId, setLastGenerationId] = useState<string | undefined>(
+    undefined,
+  );
 
   const breadcrumbs = [
     {
@@ -29,8 +33,9 @@ export const SunoAI = () => {
     },
   ];
 
-  const handleGenerationSuccess = () => {
+  const handleGenerationSuccess = (generationId: string) => {
     // Switch to history tab to show the new generation
+    setLastGenerationId(generationId);
     setActiveTab('history');
     setRefreshKey((prev) => prev + 1);
   };
@@ -52,6 +57,12 @@ export const SunoAI = () => {
           >
             <SunoGenerationForm onSuccess={handleGenerationSuccess} />
           </Col>
+          <Col
+            xs={24}
+            lg={8}
+          >
+            <SunoPromptHistory pageSize={10} />
+          </Col>
         </Row>
       ),
     },
@@ -63,7 +74,12 @@ export const SunoAI = () => {
           Generation History
         </Space>
       ),
-      children: <SunoGenerationList key={refreshKey} />,
+      children: (
+        <SunoGenerationList
+          key={refreshKey}
+          generationId={lastGenerationId}
+        />
+      ),
     },
     {
       key: 'config',

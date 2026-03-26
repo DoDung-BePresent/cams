@@ -1,5 +1,6 @@
 import { api } from '@/config';
 import type { Result } from '@/shared/types';
+import type { PaginationResult } from '@/shared/types';
 import type {
   SunoConfigResponse,
   SunoConfigUpdateRequest,
@@ -67,6 +68,24 @@ export const getSunoGenerationStatus = async (
 ): Promise<Result<SunoGenerationStatusDto>> => {
   const response = await api.get<Result<SunoGenerationStatusDto>>(
     SUNO_ENDPOINTS.generationDetail(id),
+  );
+  return response.data;
+};
+
+/**
+ * Get generation history (prompt history) for current brand
+ * GET /api/cms/suno/generations?page=&pageSize=
+ */
+export const getSunoGenerationHistory = async (
+  page: number = 1,
+  pageSize: number = 20,
+): Promise<PaginationResult<SunoGenerationStatusDto>> => {
+  // NOTE: backend returns PaginationResult directly (not wrapped by Result<T>)
+  const response = await api.get<PaginationResult<SunoGenerationStatusDto>>(
+    SUNO_ENDPOINTS.generations,
+    {
+      params: { page, pageSize },
+    },
   );
   return response.data;
 };

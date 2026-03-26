@@ -90,7 +90,7 @@ export const SunoConfigForm = () => {
           <TextArea
             rows={6}
             placeholder='Example: Create a {mood} {genre} track titled "{title}" by {artist}'
-            maxLength={1000}
+            maxLength={4000}
             showCount
           />
         </Form.Item>
