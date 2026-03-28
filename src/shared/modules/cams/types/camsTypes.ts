@@ -91,6 +91,7 @@ export interface SpaceQueueItemResponse {
   source: QueueItemSource;
   hlsUrl: string | null;
   isReadyToStream: boolean;
+  coverImageUrl?: string | null; // Optional cover image URL for display
 }
 
 /**

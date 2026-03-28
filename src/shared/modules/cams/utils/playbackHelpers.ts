@@ -84,18 +84,29 @@ export const getEffectiveSeekOffset = (state: {
   pausePositionSeconds: number | null;
   seekOffsetSeconds: number | null;
   startedAtUtc: string | null;
+  expectedEndAtUtc?: string | null;
 }): number => {
   // Priority 1: If paused, use pause position
   if (state.isPaused) {
     return state.pausePositionSeconds ?? 0;
   }
 
-  // Priority 2: If REST response has seekOffsetSeconds, use it
+  // Priority 2: If both startedAtUtc and expectedEndAtUtc are provided, derive current offset to minimize drift.
+  if (state.startedAtUtc && state.expectedEndAtUtc) {
+    const now = Date.now();
+    const startedAt = new Date(state.startedAtUtc).getTime();
+    const expectedEndAt = new Date(state.expectedEndAtUtc).getTime();
+    const totalDuration = Math.max(0, (expectedEndAt - startedAt) / 1000);
+    const elapsed = Math.max(0, (now - startedAt) / 1000);
+    return Math.min(elapsed, totalDuration);
+  }
+
+  // Priority 3: If REST response has seekOffsetSeconds, use it as fallback (precomputed value)
   if (state.seekOffsetSeconds != null) {
     return state.seekOffsetSeconds;
   }
 
-  // Priority 3: Calculate from startedAtUtc (SignalR case)
+  // Priority 4: Fallback to startedAtUtc only
   if (!state.startedAtUtc) {
     return 0;
   }
