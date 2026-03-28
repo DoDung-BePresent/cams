@@ -4,12 +4,18 @@ import { env } from './env';
 
 const ACCESS_TOKEN_KEY = 'access_token';
 let isRefreshing = false;
+
+type RefreshQueueError = AxiosError | Error | null;
+
 let failedQueue: Array<{
   resolve: (token: string) => void;
-  reject: (error: any) => void;
+  reject: (error: RefreshQueueError) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (
+  error: RefreshQueueError,
+  token: string | null = null,
+) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -26,6 +32,7 @@ export const api = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'x-ngrok-skip-browser-warning': '1',
   },
 });
 
@@ -88,11 +95,16 @@ api.interceptors.response.use(
         }
 
         return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
+      } catch (refreshError: unknown) {
+        const normalizedError: RefreshQueueError =
+          refreshError instanceof Error
+            ? refreshError
+            : new Error('Refresh token process failed');
+
+        processQueue(normalizedError, null);
         clearTokens();
         window.location.href = '/login';
-        return Promise.reject(refreshError);
+        return Promise.reject(normalizedError);
       } finally {
         isRefreshing = false;
       }

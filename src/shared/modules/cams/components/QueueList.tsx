@@ -34,6 +34,7 @@ interface QueueListProps {
   loading?: boolean;
   onRemove: (queueItemId: string) => void;
   onReorder?: (queueItemIds: string[]) => void;
+  onSkipToTrack?: (queueItemId: string, trackId?: string) => void;
 }
 
 const getStatusIcon = (status: QueueItemStatus) => {
@@ -93,9 +94,10 @@ const getSourceColor = (source: QueueItemSource) => {
 interface SortableItemProps {
   item: SpaceQueueItemResponse;
   onRemove: (queueItemId: string) => void;
+  onSkipToTrack?: (queueItemId: string, trackId?: string) => void;
 }
 
-const SortableItem = ({ item, onRemove }: SortableItemProps) => {
+const SortableItem = ({ item, onRemove, onSkipToTrack }: SortableItemProps) => {
   const isDraggable = item.queueStatus === QueueItemStatus.Pending;
 
   const {
@@ -125,6 +127,20 @@ const SortableItem = ({ item, onRemove }: SortableItemProps) => {
       ref={setNodeRef}
       style={style}
       actions={[
+        // Only show Play button when the item is not currently playing
+        item.queueStatus !== QueueItemStatus.Playing && (
+          <Tooltip
+            key='play'
+            title='Play this track'
+          >
+            <Button
+              type='text'
+              size='small'
+              icon={<PlayCircleOutlined />}
+              onClick={() => onSkipToTrack?.(item.queueItemId, item.trackId)}
+            />
+          </Tooltip>
+        ),
         <Tooltip
           key='remove'
           title='Remove from queue'
@@ -143,12 +159,38 @@ const SortableItem = ({ item, onRemove }: SortableItemProps) => {
       <List.Item.Meta
         avatar={
           <Space>
+            {/* Cover image if available */}
+            {item.coverImageUrl ? (
+              <img
+                src={item.coverImageUrl}
+                alt={item.trackName}
+                style={{
+                  width: 40,
+                  height: 40,
+                  objectFit: 'cover',
+                  borderRadius: 4,
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  background: '#fafafa',
+                  borderRadius: 4,
+                }}
+              />
+            )}
+
             <div
               {...attributes}
               {...listeners}
               style={{
                 cursor: isDraggable ? 'grab' : 'not-allowed',
                 touchAction: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                paddingLeft: 8,
               }}
             >
               <DragOutlined
@@ -207,6 +249,7 @@ export const QueueList = ({
   loading,
   onRemove,
   onReorder,
+  onSkipToTrack,
 }: QueueListProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -270,6 +313,7 @@ export const QueueList = ({
               key={item.queueItemId}
               item={item}
               onRemove={onRemove}
+              onSkipToTrack={onSkipToTrack}
             />
           )}
         />
