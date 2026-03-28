@@ -33,6 +33,7 @@ export const antTheme: ThemeConfig = {
     },
     Card: {
       colorBorderSecondary: '#E6EBF1',
+      headerFontSize: 14,
     },
     Tabs: {
       horizontalItemGutter: 0,

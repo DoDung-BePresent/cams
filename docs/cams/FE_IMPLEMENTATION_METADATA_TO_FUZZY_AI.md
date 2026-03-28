@@ -247,7 +247,52 @@ Noi cach khac, FE co the tai su dung 80-90% luong da implement tu tai lieu nay.
 
 ---
 
-## 10) Definition of Done (Frontend)
+## 10) Suno Async API Contract (Brand-level)
+
+Route base: `POST/GET /api/cms/suno`
+
+1. Tao request generate:
+   - `POST /api/cms/suno/generations`
+   - Body:
+     - `prompt` (neu bo trong thi backend lay tu brand config)
+     - `title`, `artist`, `moodId`
+     - `targetPlaylistId`
+     - `autoAddToTargetPlaylist`
+   - Response: `202 Accepted` + `data.id` (requestId)
+
+2. Lay trang thai request:
+   - `GET /api/cms/suno/generations/{id}`
+   - Tra ve: `generationStatus`, `progressPercent`, `errorMessage`, `generatedTrackId`
+
+3. Huy request:
+   - `POST /api/cms/suno/generations/{id}/cancel`
+
+4. Brand config prompt:
+   - `GET /api/cms/suno/config`
+   - `PUT /api/cms/suno/config`
+   - Fields:
+     - `sunoPromptTemplate`
+     - `sunoDefaultPlaylistId`
+
+### Realtime event cho Suno
+
+- Event: `SunoGenerationStatusChanged`
+- Group: `brand-{brandId}`
+- FE manager nen join group qua hub method:
+  - `JoinBrandManagerRoomAsync(brandId)`
+
+Payload toi thieu:
+
+- `id`
+- `brandId`
+- `generationStatus` (`Queued|Generating|Completed|Failed|Cancelled`)
+- `progressPercent`
+- `errorMessage`
+- `generatedTrackId`
+
+---
+
+## 11) Definition of Done (Frontend)
 
 Task duoc xem la done khi:
 
