@@ -54,6 +54,12 @@ export const SunoConfigForm = () => {
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        size='large'
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Alert
           message='Prompt Template Variables'

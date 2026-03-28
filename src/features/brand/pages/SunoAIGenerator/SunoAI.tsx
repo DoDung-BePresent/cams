@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Row, Col, Tabs, Space, Card } from 'antd';
+import { Tabs, Space, Card } from 'antd';
 import { createStyles } from 'antd-style';
 import { useNavigate } from 'react-router';
 
@@ -16,12 +16,7 @@ import {
  * Components
  */
 import { PageHeader } from '@/shared/components';
-import {
-  SunoConfigForm,
-  SunoGenerationForm,
-  SunoPromptHistory,
-} from '@/shared/modules/suno/components';
-import { SunoGenerationList } from './components/SunoGenerationList';
+import { SunoGenerationList, GenerateTab, ConfigTab } from './components';
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
@@ -81,22 +76,7 @@ export const SunoAI = () => {
           Generate Music
         </Space>
       ),
-      children: (
-        <Row gutter={[24, 24]}>
-          <Col
-            xs={24}
-            lg={16}
-          >
-            <SunoGenerationForm onSuccess={handleGenerationSuccess} />
-          </Col>
-          <Col
-            xs={24}
-            lg={8}
-          >
-            <SunoPromptHistory pageSize={10} />
-          </Col>
-        </Row>
-      ),
+      children: <GenerateTab onSuccess={handleGenerationSuccess} />,
     },
     {
       key: 'history',
@@ -121,16 +101,7 @@ export const SunoAI = () => {
           Configuration
         </Space>
       ),
-      children: (
-        <Row gutter={[24, 24]}>
-          <Col
-            xs={24}
-            lg={16}
-          >
-            <SunoConfigForm />
-          </Col>
-        </Row>
-      ),
+      children: <ConfigTab />,
     },
   ];
 

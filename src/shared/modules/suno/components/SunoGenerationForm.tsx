@@ -12,15 +12,27 @@ import {
   message,
   Typography,
 } from 'antd';
-import {
-  ThunderboltOutlined,
-  StarOutlined,
-  CopyOutlined,
-} from '@ant-design/icons';
+
+/**
+ * Icons
+ */
+import { ThunderboltOutlined, CopyOutlined } from '@ant-design/icons';
+
+/**
+ * Hooks
+ */
 import { useSunoConfig, useCreateSunoGeneration } from '../hooks';
 import { useMoodOptions } from '@/shared/modules/moods/hooks';
 import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
+
+/**
+ * Utils
+ */
 import { buildPromptFromTemplate } from '../utils';
+
+/**
+ * Types
+ */
 import type { SunoGenerationCreateRequest } from '../types';
 
 const { TextArea } = Input;
@@ -112,19 +124,18 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const hasTemplate = !!config?.sunoPromptTemplate;
 
   return (
-    <Card
-      title={
-        <Space>
-          <StarOutlined />
-          Generate AI Music
-        </Space>
-      }
-    >
+    <Card title='Generate AI Music'>
       <Form
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
         onValuesChange={handleFieldsChange}
+        size='large'
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         {hasTemplate && (
           <>

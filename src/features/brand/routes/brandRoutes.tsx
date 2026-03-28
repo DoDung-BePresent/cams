@@ -39,7 +39,7 @@ const BrandProfile = Loadable(
 );
 
 const SunoAI = Loadable(
-  () => import('@/features/brand/pages/SunoAIGenerator/SunoAI'),
+  () => import('@/features/brand/pages/SunoAIGenerator'),
   'SunoAI',
 );
 
