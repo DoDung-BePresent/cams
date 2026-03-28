@@ -1,8 +1,24 @@
 import { useMemo } from 'react';
 import { Empty, Spin, Divider } from 'antd';
-import { SoundOutlined } from '@ant-design/icons';
+
+/**
+ * Assets
+ */
+import EmptyMedia from '@/assets/svg/image.svg?react';
+
+/**
+ * Components
+ */
 import { SunoGenerationCard } from './SunoGenerationCard';
+
+/**
+ * Hooks
+ */
 import { useSunoGenerationHistory } from '../hooks';
+
+/**
+ * Types
+ */
 import type { SunoGenerationStatusDto } from '../types';
 
 interface SunoPromptHistoryProps {
@@ -30,7 +46,7 @@ export const SunoPromptHistory = ({
       <>
         <Divider />
         <Empty
-          image={<SoundOutlined style={{ fontSize: 64, color: '#999' }} />}
+          image={<EmptyMedia />}
           description='No generations yet.'
         />
       </>

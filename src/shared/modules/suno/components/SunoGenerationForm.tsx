@@ -6,9 +6,7 @@ import {
   Button,
   Card,
   Space,
-  Switch,
   Alert,
-  Divider,
   message,
   Typography,
 } from 'antd';
@@ -17,6 +15,11 @@ import {
  * Icons
  */
 import { ThunderboltOutlined, CopyOutlined } from '@ant-design/icons';
+
+/**
+ * Components
+ */
+import { SettingSwitch } from '@/shared/components';
 
 /**
  * Hooks
@@ -139,24 +142,44 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       >
         {hasTemplate && (
           <>
-            <Form.Item label='Prompt Mode'>
-              <Space>
-                <Switch
-                  checked={useTemplate}
-                  onChange={setUseTemplate}
-                  checkedChildren='Use Template'
-                  unCheckedChildren='Manual Prompt'
-                />
-                <span style={{ color: '#999', fontSize: 12 }}>
-                  {useTemplate
-                    ? 'Using configured template'
-                    : 'Write custom prompt'}
-                </span>
-              </Space>
-            </Form.Item>
-            <Divider style={{ margin: '12px 0' }} />
+            <SettingSwitch
+              label='Prompt Mode'
+              description={
+                useTemplate
+                  ? 'Using configured template - fill fields to generate prompt'
+                  : 'Write custom prompt manually'
+              }
+              value={useTemplate}
+              onChange={setUseTemplate}
+              className='pt-0!'
+            />
           </>
         )}
+        <SettingSwitch
+          label='Auto-add to Playlist'
+          description='Automatically add generated track to the selected playlist'
+          value={form.getFieldValue('autoAddToTargetPlaylist') ?? true}
+          onChange={(checked) =>
+            form.setFieldValue('autoAddToTargetPlaylist', checked)
+          }
+          className='pb-5!'
+        />
+
+        <Form.Item
+          name='targetPlaylistId'
+          label='Target Playlist'
+          tooltip='Generated track will be added to this playlist'
+        >
+          <Select
+            placeholder='Select playlist (optional)'
+            options={playlistOptions}
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+          />
+        </Form.Item>
 
         {useTemplate && hasTemplate ? (
           <>
@@ -289,28 +312,11 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
         )}
 
         <Form.Item
-          name='targetPlaylistId'
-          label='Target Playlist'
-          tooltip='Generated track will be added to this playlist'
-        >
-          <Select
-            placeholder='Select playlist (optional)'
-            options={playlistOptions}
-            allowClear
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-          />
-        </Form.Item>
-
-        <Form.Item
           name='autoAddToTargetPlaylist'
-          label='Auto-add to Playlist'
-          valuePropName='checked'
+          hidden
           initialValue={true}
         >
-          <Switch />
+          <input type='hidden' />
         </Form.Item>
 
         <Form.Item>
@@ -325,13 +331,6 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
             Generate Music
           </Button>
         </Form.Item>
-
-        <Alert
-          message='Generation takes 1-2 minutes'
-          description='You will be notified when the music is ready. You can continue working while generation is in progress.'
-          type='info'
-          showIcon
-        />
       </Form>
     </Card>
   );

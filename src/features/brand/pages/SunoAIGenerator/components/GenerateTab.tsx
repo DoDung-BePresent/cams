@@ -17,13 +17,13 @@ export const GenerateTab = ({ onSuccess }: GenerateTabProps) => {
     <Row gutter={[24, 24]}>
       <Col
         xs={24}
-        lg={16}
+        lg={12}
       >
         <SunoGenerationForm onSuccess={onSuccess} />
       </Col>
       <Col
         xs={24}
-        lg={8}
+        lg={12}
       >
         <SunoPromptHistory pageSize={10} />
       </Col>
