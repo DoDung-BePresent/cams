@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import {
-  Modal,
   Tabs,
   Select,
   Radio,
   Space,
   Typography,
   Form,
-  Switch,
   Input,
   message,
 } from 'antd';
@@ -15,11 +13,17 @@ import {
   PlayCircleOutlined,
   OrderedListOutlined,
   PlusOutlined,
+  ThunderboltOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
+import { AppModal } from '@/shared/components/ui';
+import { SettingSwitch } from '@/shared/components';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useTracks } from '@/shared/modules/tracks/hooks';
 import { useAddTracksToQueue, useAddPlaylistToQueue } from '../hooks';
 import { QueueInsertMode } from '../types';
+import { MODAL_WIDTHS } from '@/config';
+import { createStyles } from 'antd-style';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -31,6 +35,38 @@ interface AddToQueueModalProps {
   onClose: () => void;
   onSuccess?: () => void;
 }
+
+const useStyle = createStyles(({ css, prefixCls }) => {
+  return {
+    customTabs: css`
+      .${prefixCls}-tabs-nav {
+        margin-bottom: 0;
+        .${prefixCls}-tabs-nav-wrap {
+          .${prefixCls}-tabs-nav-list {
+            width: 100%;
+            .${prefixCls}-tabs-tab {
+              justify-content: center;
+              &:hover {
+                background-color: var(--ant-blue-1);
+                color: var(--ant-tabs-item-selected-color);
+              }
+            }
+          }
+        }
+      }
+    `,
+    queueModeRadio: css`
+      .${prefixCls}-radio-button-wrapper-checked {
+        .${prefixCls}-typography {
+          color: #fff !important;
+        }
+        .anticon {
+          color: #fff !important;
+        }
+      }
+    `,
+  };
+});
 
 const queueModeOptions = [
   {
@@ -61,6 +97,7 @@ export const AddToQueueModal = ({
   onSuccess,
 }: AddToQueueModalProps) => {
   const [form] = Form.useForm();
+  const { styles } = useStyle();
   const [activeTab, setActiveTab] = useState<'tracks' | 'playlist'>('tracks');
 
   // Fetch data
@@ -142,13 +179,14 @@ export const AddToQueueModal = ({
   }));
 
   return (
-    <Modal
+    <AppModal
       title='Add to Queue'
+      size='large'
       open={open}
       onOk={handleSubmit}
       onCancel={handleCancel}
       confirmLoading={addTracks.isPending || addPlaylist.isPending}
-      width={600}
+      width={MODAL_WIDTHS.large}
       okText='Add to Queue'
     >
       <Form
@@ -158,14 +196,35 @@ export const AddToQueueModal = ({
           mode: QueueInsertMode.AddToQueue,
           isClearExistingQueue: false,
         }}
+        size='large'
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Tabs
+          className={styles.customTabs}
+          styles={{
+            item: {
+              width: 'fit-content',
+              paddingInline: 20,
+            },
+            content: {
+              paddingTop: 20,
+            },
+          }}
           activeKey={activeTab}
           onChange={(key) => setActiveTab(key as 'tracks' | 'playlist')}
           items={[
             {
               key: 'tracks',
-              label: 'Tracks',
+              label: (
+                <Space>
+                  <ThunderboltOutlined />
+                  Tracks
+                </Space>
+              ),
               children: (
                 <Form.Item
                   name='trackIds'
@@ -191,7 +250,12 @@ export const AddToQueueModal = ({
             },
             {
               key: 'playlist',
-              label: 'Playlist',
+              label: (
+                <Space>
+                  <UnorderedListOutlined />
+                  Playlists
+                </Space>
+              ),
               children: (
                 <Form.Item
                   name='playlistId'
@@ -214,6 +278,7 @@ export const AddToQueueModal = ({
               ),
             },
           ]}
+          size='small'
         />
 
         <Form.Item
@@ -221,19 +286,12 @@ export const AddToQueueModal = ({
           label='Queue Mode'
         >
           <Radio.Group
+            className={styles.queueModeRadio}
             options={queueModeOptions.map((option) => ({
               label: (
-                <Space direction='vertical'>
-                  <Space>
-                    {option.icon}
-                    <Text strong>{option.label}</Text>
-                  </Space>
-                  <Text
-                    type='secondary'
-                    style={{ fontSize: 12 }}
-                  >
-                    {option.description}
-                  </Text>
+                <Space>
+                  {option.icon}
+                  <Text>{option.label}</Text>
                 </Space>
               ),
               value: option.value,
@@ -243,14 +301,22 @@ export const AddToQueueModal = ({
           />
         </Form.Item>
 
+        <SettingSwitch
+          label='Clear existing queue before adding'
+          description='Remove all current tracks from the queue before adding new ones'
+          value={form.getFieldValue('isClearExistingQueue') ?? false}
+          onChange={(checked) =>
+            form.setFieldValue('isClearExistingQueue', checked)
+          }
+          className='mb-2! pt-0!'
+        />
+
         <Form.Item
           name='isClearExistingQueue'
-          valuePropName='checked'
+          hidden
+          initialValue={false}
         >
-          <Space>
-            <Switch />
-            <Text>Clear existing queue before adding</Text>
-          </Space>
+          <input type='hidden' />
         </Form.Item>
 
         <Form.Item
@@ -265,6 +331,6 @@ export const AddToQueueModal = ({
           />
         </Form.Item>
       </Form>
-    </Modal>
+    </AppModal>
   );
 };
