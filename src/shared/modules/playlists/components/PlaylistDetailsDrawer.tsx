@@ -18,8 +18,12 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
-  PlayCircleOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Components
+ */
+import { MiniAudioPlayer } from '@/shared/components';
 
 /**
  * Hooks
@@ -202,32 +206,11 @@ export const PlaylistDetailsDrawer = ({
                     >
                       <List.Item.Meta
                         avatar={
-                          track.coverImageUrl ? (
-                            <img
-                              src={track.coverImageUrl}
-                              alt={track.title}
-                              style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: 4,
-                                objectFit: 'cover',
-                              }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: 48,
-                                height: 48,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: '#f0f0f0',
-                                borderRadius: 4,
-                              }}
-                            >
-                              <PlayCircleOutlined style={{ fontSize: 20 }} />
-                            </div>
-                          )
+                          <MiniAudioPlayer
+                            hlsUrl={track.hlsUrl}
+                            coverImageUrl={track.coverImageUrl}
+                            size={48}
+                          />
                         }
                         title={
                           <Space>

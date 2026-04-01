@@ -144,19 +144,7 @@ export const QueueManagementDrawer = ({
   return (
     <>
       <Drawer
-        title={
-          <Space
-            direction='vertical'
-            size={0}
-          >
-            <Title
-              level={4}
-              style={{ margin: 0 }}
-            >
-              Queue Management
-            </Title>
-          </Space>
-        }
+        title='Queue Management'
         closeIcon={null}
         placement='right'
         width={DRAWER_WIDTHS.medium}

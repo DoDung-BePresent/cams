@@ -135,6 +135,17 @@ Server thêm connection vào group `mgr-{storeId}`.
 
 ---
 
+### `JoinBrandManagerRoomAsync(brandId: string)`
+
+Manager browser tab gọi để nhận update realtime cho Suno generation jobs theo cấp Brand.
+Server thêm connection vào group `brand-{brandId}`.
+
+| Param     | Type            | Mô tả                |
+| --------- | --------------- | -------------------- |
+| `brandId` | `string` (GUID) | ID Brand của manager |
+
+---
+
 ### `ReportPlaybackStateAsync(report)`
 
 Tablet báo cáo trạng thái phát nhạc (analytics / health monitoring). Fire-and-forget.
@@ -286,6 +297,23 @@ Lỗi validation tại Hub (ví dụ: `spaceId` không hợp lệ).
 
 ```json
 "spaceId cannot be empty."
+```
+
+---
+
+### `SunoGenerationStatusChanged`
+
+Realtime update cho async Suno generation flow.
+
+```json
+{
+  "id": "uuid-request",
+  "brandId": "uuid-brand",
+  "generationStatus": 1,
+  "progressPercent": 46,
+  "errorMessage": null,
+  "generatedTrackId": null
+}
 ```
 
 ---
@@ -1251,6 +1279,7 @@ async function setupManagerHub(
 | ------------------ | ----------------------------------------------- | ------------------------------------------------------------ |
 | `{spaceId}` (GUID) | Tablet của Space đó + manager đang xem Space đó | `PlayStream`, `PlaybackStateChanged`, `StopPlayback`         |
 | `mgr-{storeId}`    | Tất cả manager tabs/sessions của Store          | `SpaceStateSync`, `OverrideActivated`\*, `OverrideCleared`\* |
+| `brand-{brandId}`  | Tất cả manager tabs của Brand                   | `SunoGenerationStatusChanged`                                |
 
 > \* Chưa implement, dự kiến Phase 14.
 

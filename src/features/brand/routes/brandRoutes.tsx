@@ -38,6 +38,11 @@ const BrandProfile = Loadable(
   'BrandProfile',
 );
 
+const SunoAI = Loadable(
+  () => import('@/features/brand/pages/SunoAIGenerator'),
+  'SunoAI',
+);
+
 export const brandRoutes = [
   {
     path: 'dashboard',
@@ -58,6 +63,10 @@ export const brandRoutes = [
   {
     path: 'playlists',
     element: <PlaylistList />,
+  },
+  {
+    path: 'suno-ai',
+    element: <SunoAI />,
   },
   {
     path: 'profile/*',
