@@ -192,12 +192,12 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       .filter((it) => it.position < currentPos)
       .sort((a, b) => b.position - a.position)[0];
 
-    if (previous && previous.trackId) {
-      // Use SkipToTrack to explicitly jump to previous track
+    if (previous && previous.queueItemId) {
+      // Use SkipToTrack to explicitly jump to previous queue item
       playbackControl.mutate({
         spaceId: space.id,
         command: PlaybackCommand.SkipToTrack,
-        targetTrackId: previous.trackId,
+        targetQueueItemId: previous.queueItemId,
       });
       return;
     }
@@ -224,7 +224,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       playbackControl.mutate({
         spaceId: space.id,
         command: PlaybackCommand.SkipToTrack,
-        targetTrackId: trackId,
+        targetQueueItemId: _queueItemId,
       });
     },
     [space.id, isPending, playbackControl],

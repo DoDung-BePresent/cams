@@ -240,7 +240,7 @@ export interface UpdateAudioStateRequest {
 export interface PlaybackControlRequest {
   command: PlaybackCommand;
   seekPositionSeconds?: number | null;
-  targetTrackId?: string | null;
+  targetQueueItemId?: string | null;
 }
 
 /**
