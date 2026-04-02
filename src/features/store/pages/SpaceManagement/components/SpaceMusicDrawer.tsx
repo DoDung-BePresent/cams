@@ -55,23 +55,10 @@ export const SpaceMusicDrawer = ({
     open && !!spaceId,
   );
 
-  // Force refetch space state when opening drawer to avoid stale cached playback position
-  useEffect(() => {
-    if (open && spaceId) {
-      queryClient.invalidateQueries({
-        queryKey: ['cams-space-state', spaceId],
-        refetchType: 'active',
-      });
-    }
-  }, [open, spaceId, queryClient]);
-
   const { isConnected } = useStoreHub(storeId, accessToken, {
-    onSpaceStateSync: (syncedSpaceId: string) => {
+    onSpaceStateSync: (syncedSpaceId: string, state) => {
       if (syncedSpaceId === spaceId) {
-        queryClient.invalidateQueries({
-          queryKey: ['cams-space-state', spaceId],
-          refetchType: 'active',
-        });
+        queryClient.setQueryData(['cams-space-state', spaceId], state);
       }
     },
   });

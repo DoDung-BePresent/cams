@@ -250,6 +250,14 @@ export interface ReorderQueueRequest {
 }
 
 /**
+ * Remove queue items request (from API_CAMS.md)
+ * DELETE /api/cams/spaces/{spaceId}/queue
+ */
+export interface RemoveQueueItemsRequest {
+  queueItemIds: string[];
+}
+
+/**
  * Update audio state request (from API_CAMS.md)
  * ⚠️ NEW (2026-03-23): Volume/mute/queue end behavior control
  */
@@ -265,7 +273,7 @@ export interface UpdateAudioStateRequest {
 export interface PlaybackControlRequest {
   command: PlaybackCommand;
   seekPositionSeconds?: number | null;
-  targetTrackId?: string | null;
+  targetQueueItemId?: string | null;
 }
 
 /**

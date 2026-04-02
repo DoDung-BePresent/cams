@@ -1,4 +1,15 @@
-import { List, Tag, Button, Space, Typography, Empty, Tooltip } from 'antd';
+import { useMemo, useState } from 'react';
+import {
+  List,
+  Tag,
+  Button,
+  Space,
+  Typography,
+  Empty,
+  Tooltip,
+  Checkbox,
+  Popconfirm,
+} from 'antd';
 import {
   DeleteOutlined,
   DragOutlined,
@@ -33,6 +44,7 @@ interface QueueListProps {
   items: SpaceQueueItemResponse[];
   loading?: boolean;
   onRemove: (queueItemId: string) => void;
+  onRemoveMany?: (queueItemIds: string[]) => Promise<void> | void;
   onReorder?: (queueItemIds: string[]) => void;
   onSkipToTrack?: (queueItemId: string, trackId?: string) => void;
 }
@@ -93,11 +105,19 @@ const getSourceColor = (source: QueueItemSource) => {
 // Sortable Item Component
 interface SortableItemProps {
   item: SpaceQueueItemResponse;
+  selected: boolean;
+  onSelectChange: (queueItemId: string, checked: boolean) => void;
   onRemove: (queueItemId: string) => void;
   onSkipToTrack?: (queueItemId: string, trackId?: string) => void;
 }
 
-const SortableItem = ({ item, onRemove, onSkipToTrack }: SortableItemProps) => {
+const SortableItem = ({
+  item,
+  selected,
+  onSelectChange,
+  onRemove,
+  onSkipToTrack,
+}: SortableItemProps) => {
   const isDraggable = item.queueStatus === QueueItemStatus.Pending;
 
   const {
@@ -118,8 +138,11 @@ const SortableItem = ({ item, onRemove, onSkipToTrack }: SortableItemProps) => {
     opacity: isDragging ? 0.5 : 1,
     padding: '12px 16px',
     borderBottom: '1px solid #f0f0f0',
-    backgroundColor:
-      item.queueStatus === QueueItemStatus.Playing ? '#f6ffed' : 'transparent',
+    backgroundColor: selected
+      ? '#e6f4ff'
+      : item.queueStatus === QueueItemStatus.Playing
+        ? '#f6ffed'
+        : 'transparent',
   };
 
   return (
@@ -143,7 +166,11 @@ const SortableItem = ({ item, onRemove, onSkipToTrack }: SortableItemProps) => {
         ),
         <Tooltip
           key='remove'
-          title='Remove from queue'
+          title={
+            item.queueStatus === QueueItemStatus.Playing
+              ? 'Remove current track and transition to next'
+              : 'Remove from queue'
+          }
         >
           <Button
             type='text'
@@ -151,7 +178,6 @@ const SortableItem = ({ item, onRemove, onSkipToTrack }: SortableItemProps) => {
             danger
             icon={<DeleteOutlined />}
             onClick={() => onRemove(item.queueItemId)}
-            disabled={item.queueStatus === QueueItemStatus.Playing}
           />
         </Tooltip>,
       ]}
@@ -181,6 +207,14 @@ const SortableItem = ({ item, onRemove, onSkipToTrack }: SortableItemProps) => {
                 }}
               />
             )}
+
+            <Checkbox
+              checked={selected}
+              onChange={(e) =>
+                onSelectChange(item.queueItemId, e.target.checked)
+              }
+              onClick={(e) => e.stopPropagation()}
+            />
 
             <div
               {...attributes}
@@ -229,6 +263,15 @@ const SortableItem = ({ item, onRemove, onSkipToTrack }: SortableItemProps) => {
             >
               {getSourceLabel(item.source)}
             </Tag>
+            {item.coverImageUrl && (
+              <Text
+                type='secondary'
+                style={{ maxWidth: 240, display: 'inline-block' }}
+                ellipsis={{ tooltip: item.coverImageUrl }}
+              >
+                Cover: {item.coverImageUrl}
+              </Text>
+            )}
             {!item.isReadyToStream && (
               <Tag
                 color='warning'
@@ -248,14 +291,34 @@ export const QueueList = ({
   items,
   loading,
   onRemove,
+  onRemoveMany,
   onReorder,
   onSkipToTrack,
 }: QueueListProps) => {
+  const [selectedQueueItemIds, setSelectedQueueItemIds] = useState<string[]>(
+    [],
+  );
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
+  );
+
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => a.position - b.position),
+    [items],
+  );
+
+  const visibleQueueItemIdSet = useMemo(
+    () => new Set(sortedItems.map((item) => item.queueItemId)),
+    [sortedItems],
+  );
+
+  const effectiveSelectedQueueItemIds = useMemo(
+    () => selectedQueueItemIds.filter((id) => visibleQueueItemIdSet.has(id)),
+    [selectedQueueItemIds, visibleQueueItemIdSet],
   );
 
   if (!items || items.length === 0) {
@@ -268,8 +331,34 @@ export const QueueList = ({
     );
   }
 
-  // Sort by position
-  const sortedItems = [...items].sort((a, b) => a.position - b.position);
+  const allSelected =
+    sortedItems.length > 0 &&
+    effectiveSelectedQueueItemIds.length === sortedItems.length;
+
+  const handleSelectItem = (queueItemId: string, checked: boolean) => {
+    setSelectedQueueItemIds((prev) => {
+      if (checked) {
+        return prev.includes(queueItemId) ? prev : [...prev, queueItemId];
+      }
+
+      return prev.filter((id) => id !== queueItemId);
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedQueueItemIds(
+      checked ? sortedItems.map((item) => item.queueItemId) : [],
+    );
+  };
+
+  const handleRemoveSelected = async () => {
+    if (!onRemoveMany || effectiveSelectedQueueItemIds.length === 0) {
+      return;
+    }
+
+    await onRemoveMany(effectiveSelectedQueueItemIds);
+    setSelectedQueueItemIds([]);
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -296,28 +385,69 @@ export const QueueList = ({
   };
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
+    <Space
+      direction='vertical'
+      size='small'
+      style={{ width: '100%' }}
     >
-      <SortableContext
-        items={sortedItems.map((item) => item.queueItemId)}
-        strategy={verticalListSortingStrategy}
+      <Space
+        align='center'
+        style={{ width: '100%', justifyContent: 'space-between' }}
       >
-        <List
-          loading={loading}
-          dataSource={sortedItems}
-          renderItem={(item) => (
-            <SortableItem
-              key={item.queueItemId}
-              item={item}
-              onRemove={onRemove}
-              onSkipToTrack={onSkipToTrack}
-            />
-          )}
-        />
-      </SortableContext>
-    </DndContext>
+        <Checkbox
+          checked={allSelected}
+          onChange={(e) => handleSelectAll(e.target.checked)}
+        >
+          Select all
+        </Checkbox>
+
+        {effectiveSelectedQueueItemIds.length > 0 && onRemoveMany && (
+          <Popconfirm
+            title='Remove selected tracks'
+            description={`Remove ${effectiveSelectedQueueItemIds.length} selected track(s) from queue?`}
+            onConfirm={handleRemoveSelected}
+            okText='Remove'
+            cancelText='Cancel'
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              danger
+              size='small'
+              icon={<DeleteOutlined />}
+            >
+              Remove selected ({effectiveSelectedQueueItemIds.length})
+            </Button>
+          </Popconfirm>
+        )}
+      </Space>
+
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={sortedItems.map((item) => item.queueItemId)}
+          strategy={verticalListSortingStrategy}
+        >
+          <List
+            loading={loading}
+            dataSource={sortedItems}
+            renderItem={(item) => (
+              <SortableItem
+                key={item.queueItemId}
+                item={item}
+                selected={effectiveSelectedQueueItemIds.includes(
+                  item.queueItemId,
+                )}
+                onSelectChange={handleSelectItem}
+                onRemove={onRemove}
+                onSkipToTrack={onSkipToTrack}
+              />
+            )}
+          />
+        </SortableContext>
+      </DndContext>
+    </Space>
   );
 };
