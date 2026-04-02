@@ -37,12 +37,15 @@ import { brandValidation } from '@/features/admin/validations';
 /**
  * Utils
  */
+import { appendBrandMusicPolicyToFormData } from '@/features/admin/utils/appendBrandMusicPolicyToFormData';
 import { createImageUploadProps, handleApiError } from '@/shared/utils';
 
 /**
  * Components
  */
 import { ImageDragger } from '@/shared/components';
+
+import { BrandMusicPolicyFields } from './BrandMusicPolicyFields';
 
 /**
  * Configs
@@ -56,6 +59,18 @@ type AddBrandDrawerProps = {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+};
+
+type ApiErrorResponse = {
+  errorCode?: string;
+  message?: string;
+  errors?: Array<{ field: string; message: string }>;
+};
+
+type ApiError = {
+  response?: {
+    data?: ApiErrorResponse;
+  };
 };
 
 export const AddBrandDrawer = ({
@@ -93,21 +108,25 @@ export const AddBrandDrawer = ({
     if (values.defaultTimeZone)
       formData.append('defaultTimeZone', values.defaultTimeZone);
 
+    appendBrandMusicPolicyToFormData(formData, values, false);
+
     createBrand.mutate(formData, {
       onSuccess: () => {
         handleCancel();
         onSuccess();
       },
-      onError: (error: any) => {
-        const errorCode = error.response?.data?.errorCode;
-        const errorMessage = error.response?.data?.message;
-        const fieldErrors = error.response?.data?.errors;
+      onError: (error: unknown) => {
+        const apiError = error as ApiError;
+        const errorCode = apiError.response?.data?.errorCode;
+        const errorMessage = apiError.response?.data?.message;
+        const fieldErrors = apiError.response?.data?.errors;
 
         // Handle ValidationFailed - show field errors only (no toast)
         if (errorCode === ErrorCodeEnum.ValidationFailed && fieldErrors) {
           form.setFields(
             fieldErrors.map((err: { field: string; message: string }) => ({
-              name: err.field.charAt(0).toLowerCase() + err.field.slice(1),
+              name: (err.field.charAt(0).toLowerCase() +
+                err.field.slice(1)) as keyof BrandRequest,
               errors: [err.message],
             })),
           );
@@ -192,6 +211,7 @@ export const AddBrandDrawer = ({
         onFinish={handleSubmit}
         initialValues={{
           defaultTimeZone: 'SE Asia Standard Time',
+          fuzzyProfileTemplate: 'Cafe',
         }}
         styles={{
           label: {
@@ -355,6 +375,8 @@ export const AddBrandDrawer = ({
             />
           </Form.Item>
         </div>
+
+        <BrandMusicPolicyFields variant='create' />
       </Form>
     </Drawer>
   );

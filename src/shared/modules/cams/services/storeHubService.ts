@@ -219,6 +219,9 @@ class StoreHubService {
   private registerEventListeners(): void {
     if (!this.connection) return;
 
+    // Server ack after JoinSpaceAsync / JoinManagerRoomAsync (camelCase over the wire)
+    this.connection.on('connectionconfirmed', () => {});
+
     // PlayStream event (new track/playlist)
     this.connection.on('PlayStream', (payload: PlayStreamPayload) => {
       console.log('📡 PlayStream event:', payload);

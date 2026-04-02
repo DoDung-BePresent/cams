@@ -22,6 +22,7 @@ export type StoreRequest = {
   timeZone?: string; // IANA timezone ID (e.g., "Asia/Ho_Chi_Minh")
   areaSquareMeters?: number; // Must be > 0
   maxCapacity?: number; // Must be > 0
+  fuzzyOverrideLevel?: number; // 1=BrandLock, 2=ThresholdOnly, 3=FullOverride
 };
 
 // Filter
@@ -59,4 +60,25 @@ export type StoreDetailResponse = StoreListItem & {
   firestoreCollectionPath: string | null; // Read-only, managed by AI/IoT
   currentMood: MoodTypeEnum | null; // Read-only, set by AI pipeline
   lastMoodUpdateAt: string | null; // Read-only, UTC timestamp
+  fuzzyOverrideLevel: number;
+};
+
+/** POST /api/stores/{id}/fuzzy-profiles */
+export type StoreFuzzyOverrideProfileRequest = {
+  name?: string;
+  chillBpmMin?: number;
+  chillBpmMax?: number;
+  focusBpmMin?: number;
+  focusBpmMax?: number;
+  energeticBpmMin?: number;
+  energeticBpmMax?: number;
+  pressureLowMax?: number;
+  pressureCriticalMin?: number;
+  stressComfortableMax?: number;
+  stressHighMin?: number;
+  densitySparseMax?: number;
+  densityCrowdedMin?: number;
+  spaceCapacity?: number;
+  defaultDensityRatioWhenNull?: number;
+  allowedPlaylistIds?: string[];
 };

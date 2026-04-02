@@ -59,6 +59,19 @@ export const createStoreValidation = {
       message: 'Max capacity must be at least 1!',
     },
   ] as Rule[],
+  fuzzyOverrideLevel: [
+    { required: true, message: 'Please select a store policy level!' },
+    {
+      validator: (_, value) => {
+        if (value === undefined || value === null) return Promise.resolve();
+        return [1, 2, 3].includes(value)
+          ? Promise.resolve()
+          : Promise.reject(
+              new Error('Invalid policy level. Must be 1, 2 or 3.'),
+            );
+      },
+    },
+  ] as Rule[],
 };
 
 export const updateStoreValidation = {
@@ -66,4 +79,16 @@ export const updateStoreValidation = {
   name: [
     { max: 200, message: 'Store name must not exceed 200 characters!' },
   ] as Rule[], // Optional for update
+  fuzzyOverrideLevel: [
+    {
+      validator: (_, value) => {
+        if (value === undefined || value === null) return Promise.resolve();
+        return [1, 2, 3].includes(value)
+          ? Promise.resolve()
+          : Promise.reject(
+              new Error('Invalid policy level. Must be 1, 2 or 3.'),
+            );
+      },
+    },
+  ] as Rule[],
 };

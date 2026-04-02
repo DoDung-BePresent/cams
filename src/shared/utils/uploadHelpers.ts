@@ -32,7 +32,11 @@ export const IMAGE_ACCEPT = ALLOWED_IMAGE_TYPES.join(',');
  * Validate image file type
  */
 export const validateImageType = (file: File): boolean => {
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type as any)) {
+  if (
+    !ALLOWED_IMAGE_TYPES.includes(
+      file.type as (typeof ALLOWED_IMAGE_TYPES)[number],
+    )
+  ) {
     message.error(
       'File must be an image (jpg, jpeg, png, gif, webp, bmp, svg)',
     );
@@ -65,9 +69,9 @@ export const validateImageFile = (file: File): boolean => {
 /**
  * Create upload props for image dragger
  */
-export const createImageUploadProps = <T extends Record<string, any>>(
+export const createImageUploadProps = <T extends object>(
   onFileChange: (file: UploadFile | null) => void,
-  onFormFieldChange?: (fieldName: keyof T, value: any) => void, // ✅ Keep generic string type
+  onFormFieldChange?: (fieldName: keyof T, value: unknown) => void,
 ): UploadProps => ({
   maxCount: 1,
   beforeUpload: (file: RcFile) => {
@@ -88,7 +92,7 @@ export const createImageUploadProps = <T extends Record<string, any>>(
   onRemove: () => {
     onFileChange(null);
     if (onFormFieldChange) {
-      onFormFieldChange('logo', undefined);
+      onFormFieldChange('logo' as keyof T, undefined);
     }
   },
   accept: IMAGE_ACCEPT,
@@ -119,9 +123,9 @@ export const validateAudioFile = (file: File): boolean => {
 /**
  * Create audio upload props with validation
  */
-export const createAudioUploadProps = <T extends Record<string, any>>(
+export const createAudioUploadProps = <T extends object>(
   setFile: (file: UploadFile | null) => void,
-  setFieldValue: (field: keyof T, value: any) => void,
+  setFieldValue: (field: keyof T, value: unknown) => void,
 ): UploadProps => ({
   name: 'audioFile',
   accept: AUDIO_FILE_EXTENSIONS.join(','),
@@ -149,7 +153,7 @@ export const createAudioUploadProps = <T extends Record<string, any>>(
  * Format audio duration (seconds to mm:ss)
  */
 export const formatDuration = (seconds?: number): string => {
-  if (!seconds) return '--:--';
+  if (seconds == null || Number.isNaN(seconds)) return '--:--';
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;

@@ -10,6 +10,7 @@ import {
   DashboardOutlined,
   UserOutlined,
   ShopOutlined,
+  SlidersOutlined,
   CustomerServiceOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
@@ -29,6 +30,11 @@ export const ADMIN_MENU_ITEMS: ItemType[] = [
     key: 'brands',
     icon: <ShopOutlined />,
     label: 'Brand Management',
+  },
+  {
+    key: 'ai-fuzzy-templates',
+    icon: <SlidersOutlined />,
+    label: 'AI fuzzy management',
   },
   {
     key: 'tracks',

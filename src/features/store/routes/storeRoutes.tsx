@@ -33,8 +33,10 @@ const StoreProfile = Loadable(
   'StoreProfile',
 );
 
-/* eslint-disable react-refresh/only-export-components */
-const StoreSettings = () => <div>Settings (Coming Soon)</div>;
+const StoreSettings = Loadable(
+  () => import('@/features/store/pages/StoreSettings'),
+  'StoreSettings',
+);
 
 export const storeRoutes = [
   {

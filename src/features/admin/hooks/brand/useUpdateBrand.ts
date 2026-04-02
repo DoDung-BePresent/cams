@@ -28,6 +28,8 @@ export const useUpdateBrand = () => {
         queryKey: QUERY_KEYS.brands.detail(variables.id),
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.brands.all });
+      // Suno form reads CAMS profile via GET suno/config snapshot
+      queryClient.invalidateQueries({ queryKey: ['suno', 'config'] });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {

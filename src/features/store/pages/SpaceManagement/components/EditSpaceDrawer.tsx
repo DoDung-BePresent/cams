@@ -10,17 +10,26 @@ import {
   Spin,
   Row,
   Col,
+  Divider,
+  Typography,
 } from 'antd';
 
 /**
  * Hooks
  */
-import { useSpace, useUpdateSpace } from '@/shared/modules/spaces/hooks';
+import {
+  useSpace,
+  useUpdateSpace,
+  useCreateSpaceFuzzyOverrideProfile,
+} from '@/shared/modules/spaces/hooks';
 
 /**
  * Types
  */
-import type { UpdateSpaceRequest } from '@/shared/modules/spaces/types';
+import type {
+  UpdateSpaceRequest,
+  SpaceFuzzyOverrideProfileRequest,
+} from '@/shared/modules/spaces/types';
 
 /**
  * Constants
@@ -36,6 +45,8 @@ import { updateSpaceValidation } from '@/shared/modules/spaces/validations';
  * Utils
  */
 import { nullToUndefined } from '@/shared/utils/formHelpers';
+import { SpaceFuzzyOverrideFields } from './SpaceFuzzyOverrideFields';
+import { pickSpaceFuzzyOverrideBody } from './spaceFuzzyOverrideUtils';
 
 /**
  * Configs
@@ -49,15 +60,20 @@ type EditSpaceDrawerProps = {
   onSuccess: () => void;
 };
 
+type EditSpaceFormValues = UpdateSpaceRequest & {
+  fuzzy?: Partial<SpaceFuzzyOverrideProfileRequest>;
+};
+
 export const EditSpaceDrawer = ({
   open,
   spaceId,
   onClose,
   onSuccess,
 }: EditSpaceDrawerProps) => {
-  const [form] = Form.useForm<UpdateSpaceRequest>();
+  const [form] = Form.useForm<EditSpaceFormValues>();
   const { data: space, isLoading } = useSpace(spaceId || undefined, open);
   const updateSpace = useUpdateSpace();
+  const createFuzzyProfile = useCreateSpaceFuzzyOverrideProfile();
 
   // Pre-fill form when space data is loaded
   useEffect(() => {
@@ -71,15 +87,20 @@ export const EditSpaceDrawer = ({
         cameraId: nullToUndefined(space.cameraId),
         roiCoordinates: nullToUndefined(space.roiCoordinates),
         wiFiSensorId: nullToUndefined(space.wiFiSensorId),
+        ioTDeviceId: nullToUndefined(space.ioTDeviceId),
+        fuzzy: {},
       });
     }
   }, [space, open, form]);
 
-  const handleSubmit = async (values: UpdateSpaceRequest) => {
+  const handleSubmit = async (values: EditSpaceFormValues) => {
     if (!spaceId) return;
 
+    const { fuzzy, ...spacePayload } = values;
+    void fuzzy;
+
     updateSpace.mutate(
-      { id: spaceId, data: values },
+      { id: spaceId, data: spacePayload },
       {
         onSuccess: () => {
           handleCancel();
@@ -87,6 +108,15 @@ export const EditSpaceDrawer = ({
         },
       },
     );
+  };
+
+  const handleCreateFuzzyOverride = () => {
+    if (!spaceId) return;
+    const fuzzy = form.getFieldValue('fuzzy') as
+      | Partial<SpaceFuzzyOverrideProfileRequest>
+      | undefined;
+    const body = pickSpaceFuzzyOverrideBody(fuzzy);
+    createFuzzyProfile.mutate({ spaceId, body });
   };
 
   const handleCancel = () => {
@@ -199,6 +229,41 @@ export const EditSpaceDrawer = ({
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item
+            label='IoT Device ID'
+            name='ioTDeviceId'
+            tooltip='Device identifier used by CAMS telemetry query for this space'
+          >
+            <Input placeholder='e.g., esp32-people-counter' />
+          </Form.Item>
+
+          <Divider />
+
+          <Typography.Title
+            level={5}
+            style={{ marginBottom: 8 }}
+          >
+            Space fuzzy override
+          </Typography.Title>
+          <Typography.Paragraph type='secondary'>
+            Creates and activates a profile via{' '}
+            <Typography.Text code>
+              POST /api/spaces/:id/fuzzy-profiles
+            </Typography.Text>
+            .
+          </Typography.Paragraph>
+
+          <SpaceFuzzyOverrideFields storeIdForPlaylists={space?.storeId} />
+
+          <Button
+            size='large'
+            type='primary'
+            onClick={handleCreateFuzzyOverride}
+            loading={createFuzzyProfile.isPending}
+          >
+            Create &amp; Activate Space Profile
+          </Button>
         </Form>
       )}
     </Drawer>

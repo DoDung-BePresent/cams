@@ -37,12 +37,15 @@ import { brandValidation } from '@/features/admin/validations';
 /**
  * Utils
  */
+import { appendBrandMusicPolicyToFormData } from '@/features/admin/utils/appendBrandMusicPolicyToFormData';
 import { nullToUndefined, createImageUploadProps } from '@/shared/utils';
 
 /**
  * Components
  */
 import { ImageDragger } from '@/shared/components';
+
+import { BrandMusicPolicyFields } from './BrandMusicPolicyFields';
 
 /**
  * Configs
@@ -67,7 +70,6 @@ export const EditBrandDrawer = ({
 }: EditBrandDrawerProps) => {
   const [form] = Form.useForm<BrandRequest>();
   const [logoFile, setLogoFile] = useState<UploadFile | null>(null);
-  const [existingLogoUrl, setExistingLogoUrl] = useState<string | null>(null);
 
   const { data: brand, isLoading: isFetching } = useBrand(
     brandId || undefined,
@@ -90,8 +92,29 @@ export const EditBrandDrawer = ({
         legalName: nullToUndefined(brand.legalName),
         taxCode: nullToUndefined(brand.taxCode),
         billingAddress: nullToUndefined(brand.billingAddress),
+        fuzzyProfileTemplate: nullToUndefined(
+          brand.fuzzyProfileTemplate ?? null,
+        ),
+        storeOverrideLevel: brand.storeOverrideLevel ?? undefined,
+        chillBpmMin: brand.chillBpmMin ?? undefined,
+        chillBpmMax: brand.chillBpmMax ?? undefined,
+        focusBpmMin: brand.focusBpmMin ?? undefined,
+        focusBpmMax: brand.focusBpmMax ?? undefined,
+        energeticBpmMin: brand.energeticBpmMin ?? undefined,
+        energeticBpmMax: brand.energeticBpmMax ?? undefined,
+        pressureLowMax: brand.pressureLowMax ?? undefined,
+        pressureCriticalMin: brand.pressureCriticalMin ?? undefined,
+        stressComfortableMax: brand.stressComfortableMax ?? undefined,
+        stressHighMin: brand.stressHighMin ?? undefined,
+        densitySparseMax: brand.densitySparseMax ?? undefined,
+        densityCrowdedMin: brand.densityCrowdedMin ?? undefined,
+        spaceCapacity: brand.spaceCapacity ?? undefined,
+        defaultDensityRatioWhenNull:
+          brand.defaultDensityRatioWhenNull ?? undefined,
+        allowedPlaylistIds: brand.allowedPlaylistIds?.length
+          ? brand.allowedPlaylistIds
+          : undefined,
       });
-      setExistingLogoUrl(brand.logoUrl);
     }
   }, [brand, open, form]);
 
@@ -122,6 +145,8 @@ export const EditBrandDrawer = ({
     if (values.defaultTimeZone)
       formData.append('defaultTimeZone', values.defaultTimeZone);
 
+    appendBrandMusicPolicyToFormData(formData, values);
+
     updateBrand.mutate(
       { id: brandId, formData },
       {
@@ -140,7 +165,6 @@ export const EditBrandDrawer = ({
   const handleCancel = () => {
     form.resetFields();
     setLogoFile(null);
-    setExistingLogoUrl(null);
     onClose();
   };
 
@@ -153,7 +177,7 @@ export const EditBrandDrawer = ({
     if (logoFile?.originFileObj) {
       return URL.createObjectURL(logoFile.originFileObj);
     }
-    return existingLogoUrl;
+    return brand?.logoUrl ?? null;
   };
 
   return (
@@ -363,6 +387,8 @@ export const EditBrandDrawer = ({
               />
             </Form.Item>
           </div>
+
+          <BrandMusicPolicyFields variant='edit' />
         </Form>
       )}
     </Drawer>
