@@ -125,7 +125,8 @@ export const AddBrandDrawer = ({
         if (errorCode === ErrorCodeEnum.ValidationFailed && fieldErrors) {
           form.setFields(
             fieldErrors.map((err: { field: string; message: string }) => ({
-              name: err.field.charAt(0).toLowerCase() + err.field.slice(1),
+              name: (err.field.charAt(0).toLowerCase() +
+                err.field.slice(1)) as keyof BrandRequest,
               errors: [err.message],
             })),
           );

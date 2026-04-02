@@ -69,7 +69,7 @@ export const validateImageFile = (file: File): boolean => {
 /**
  * Create upload props for image dragger
  */
-export const createImageUploadProps = <T extends Record<string, unknown>>(
+export const createImageUploadProps = <T extends object>(
   onFileChange: (file: UploadFile | null) => void,
   onFormFieldChange?: (fieldName: keyof T, value: unknown) => void,
 ): UploadProps => ({
@@ -123,7 +123,7 @@ export const validateAudioFile = (file: File): boolean => {
 /**
  * Create audio upload props with validation
  */
-export const createAudioUploadProps = <T extends Record<string, unknown>>(
+export const createAudioUploadProps = <T extends object>(
   setFile: (file: UploadFile | null) => void,
   setFieldValue: (field: keyof T, value: unknown) => void,
 ): UploadProps => ({

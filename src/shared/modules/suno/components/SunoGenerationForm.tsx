@@ -72,7 +72,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
 
   const musicSnapshot = useMemo(() => {
     if (hasBrandMusicProfileData(profileFromConfig ?? undefined)) {
-      return profileFromConfig;
+      return profileFromConfig ?? undefined;
     }
     if (brand && hasBrandMusicProfileData(brand)) {
       return brand;
@@ -84,7 +84,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const { options: moodOptions } = useMoodOptions();
   const { data: playlistOptions } = usePlaylistOptions();
 
-  const hasProfile = hasBrandMusicProfileData(musicSnapshot);
+  const hasProfile = hasBrandMusicProfileData(musicSnapshot ?? undefined);
   const isResolvingProfile =
     isConfigLoading ||
     (!!brandId && isConfigReady && !hasFromConfig && isBrandLoading);
@@ -164,7 +164,9 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       profileMood: 'focus',
     });
     setPromptMode(
-      hasBrandMusicProfileData(musicSnapshot) ? 'brandProfile' : 'manual',
+      hasBrandMusicProfileData(musicSnapshot ?? undefined)
+        ? 'brandProfile'
+        : 'manual',
     );
   };
 
