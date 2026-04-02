@@ -35,11 +35,20 @@ export const usePlaybackControl = () => {
     mutationFn: ({
       spaceId,
       command,
+      targetQueueItemId,
+      seekPositionSeconds,
     }: {
       spaceId: string;
       command: PlaybackCommand;
+      targetQueueItemId?: string | null;
+      seekPositionSeconds?: number | null;
     }) => {
-      const data: PlaybackControlRequest = { command };
+      const data: PlaybackControlRequest = {
+        command,
+      } as PlaybackControlRequest;
+      if (targetQueueItemId) data.targetQueueItemId = targetQueueItemId;
+      if (typeof seekPositionSeconds === 'number')
+        data.seekPositionSeconds = seekPositionSeconds;
       return camsService.controlPlayback(spaceId, data);
     },
     onSuccess: (_, variables) => {

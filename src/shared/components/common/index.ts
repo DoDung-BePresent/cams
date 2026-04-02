@@ -16,3 +16,5 @@ export * from './Loadable';
 export * from './PageHeader';
 export * from './NavCard';
 export * from './WelcomeBanner';
+export * from './SettingSwitch';
+export * from './MiniAudioPlayer';

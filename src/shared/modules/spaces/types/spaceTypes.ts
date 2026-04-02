@@ -33,6 +33,7 @@ export interface SpaceDetailResponse extends SpaceListItem {
   maxOccupancy?: number;
   criticalQueueThreshold?: number;
   wiFiSensorId?: string;
+  ioTDeviceId?: string;
   currentPlaylistId?: string; // 🔒 Read-only (set by AI pipeline)
 }
 
@@ -49,6 +50,7 @@ export interface CreateSpaceRequest {
   maxOccupancy?: number;
   criticalQueueThreshold?: number;
   wiFiSensorId?: string;
+  ioTDeviceId?: string;
 }
 
 /**
@@ -64,6 +66,27 @@ export interface UpdateSpaceRequest {
   maxOccupancy?: number;
   criticalQueueThreshold?: number;
   wiFiSensorId?: string;
+  ioTDeviceId?: string;
+}
+
+/** POST /api/spaces/{id}/fuzzy-profiles */
+export interface SpaceFuzzyOverrideProfileRequest {
+  name?: string;
+  chillBpmMin?: number;
+  chillBpmMax?: number;
+  focusBpmMin?: number;
+  focusBpmMax?: number;
+  energeticBpmMin?: number;
+  energeticBpmMax?: number;
+  pressureLowMax?: number;
+  pressureCriticalMin?: number;
+  stressComfortableMax?: number;
+  stressHighMin?: number;
+  densitySparseMax?: number;
+  densityCrowdedMin?: number;
+  spaceCapacity?: number;
+  defaultDensityRatioWhenNull?: number;
+  allowedPlaylistIds?: string[];
 }
 
 /**

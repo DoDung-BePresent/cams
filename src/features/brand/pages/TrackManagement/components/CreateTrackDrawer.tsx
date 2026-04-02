@@ -151,6 +151,7 @@ export const CreateTrackDrawer = ({
       title='Upload New Track'
       placement='right'
       width={DRAWER_WIDTHS.medium}
+      forceRender
       open={open}
       onClose={handleCancel}
       closeIcon={null}

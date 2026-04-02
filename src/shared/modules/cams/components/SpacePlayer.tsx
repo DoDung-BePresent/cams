@@ -16,7 +16,10 @@ import {
   StepBackwardOutlined,
   StepForwardOutlined,
   SoundOutlined,
+  MutedOutlined,
 } from '@ant-design/icons';
+import { FastForwardOutlined, FastBackwardOutlined } from '@ant-design/icons';
+import RepeatButton from '@/shared/modules/cams/components/RepeatButton';
 import { HLS_PLAYER_CONFIG } from '../constants';
 import {
   formatPlaybackTime,
@@ -38,6 +41,13 @@ interface SpacePlayerProps {
   onSkipPrevious: () => void;
   onSeek?: (seconds: number) => void;
   onVolumeChange?: (volume: number) => void;
+  onVolumeChangeComplete?: (volume: number) => void;
+  onToggleMute?: () => void;
+  onRewind10?: () => void;
+  onForward10?: () => void;
+  isPreviousDisabled?: boolean;
+  isNextDisabled?: boolean;
+  onQueueEndBehaviorChange?: (next: number) => void;
 }
 
 export const SpacePlayer = ({
@@ -50,14 +60,31 @@ export const SpacePlayer = ({
   onSkipPrevious,
   onSeek,
   onVolumeChange,
+  onVolumeChangeComplete,
+  onToggleMute,
+  onRewind10,
+  onForward10,
+  isPreviousDisabled,
+  isNextDisabled,
+  onQueueEndBehaviorChange,
 }: SpacePlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(75);
+  const [volume, setVolume] = useState<number>(() =>
+    typeof state?.volumePercent === 'number'
+      ? Math.max(0, Math.min(100, Math.floor(state!.volumePercent)))
+      : 75,
+  );
   const [isBuffering, setIsBuffering] = useState(false);
+  const [isMuted, setIsMuted] = useState<boolean>(() =>
+    typeof state?.isMuted === 'boolean' ? state!.isMuted : false,
+  );
+  // Track if user is actively adjusting volume to avoid sync loops
+  const isAdjustingVolumeRef = useRef(false);
+  const adjustingVolumeTimeoutRef = useRef<number | null>(null);
 
   // ✅ Track if we're syncing from server to avoid feedback loops
   const isSyncingRef = useRef(false);
@@ -65,12 +92,22 @@ export const SpacePlayer = ({
   const lastPauseTimeRef = useRef<number | null>(null);
   // ✅ Store expected seek position after reload
   const pendingSeekRef = useRef<number | null>(null);
+  // Keep local seek authoritative briefly to avoid snap-back from stale server state.
+  const localSeekLockRef = useRef<{
+    targetSeconds: number;
+    startedAtMs: number;
+  } | null>(null);
+  // Delay remote seek after user releases slider
+  const seekTimeoutRef = useRef<number | null>(null);
+  const SEEK_API_DELAY_MS = 120;
+  const LOCAL_SEEK_LOCK_MS = 3500;
+  const LOCAL_SEEK_MATCH_TOLERANCE_SECONDS = 0.25;
+  const POSITION_SYNC_TOLERANCE_SECONDS = 0.6;
 
   // Initialize HLS player
   useEffect(() => {
     console.log('🎯 HLS Effect triggered:', {
       hlsUrl: hlsUrl?.substring(0, 50),
-      isPlaying,
     });
 
     if (!hlsUrl || !audioRef.current) {
@@ -113,14 +150,7 @@ export const SpacePlayer = ({
           pendingSeekRef.current = null;
         }
 
-        // Auto-play if state says it should be playing
-        if (isPlaying) {
-          console.log('▶️ Auto-playing after manifest parsed');
-          audio.play().catch((err) => {
-            console.error('❌ Auto-play failed:', err);
-            message.warning('Click play to start playback');
-          });
-        }
+        // DO NOT autop-play here based on stale isPlaying, we rely on the state sync effect
       });
 
       hls.on(Hls.Events.MANIFEST_LOADING, () => {
@@ -170,16 +200,12 @@ export const SpacePlayer = ({
         pendingSeekRef.current = null;
       }
 
-      if (isPlaying) {
-        audio.play().catch((err) => {
-          console.error('Auto-play failed:', err);
-        });
-      }
+      // DO NOT autoplay here based on stale isPlaying, we rely on the state sync effect
     } else {
       console.error('❌ HLS playback not supported in this browser');
       message.error('HLS playback not supported in this browser');
     }
-  }, [hlsUrl, isPlaying]);
+  }, [hlsUrl]);
 
   // ✅ Sync audio playback state from server (SpaceStateSync)
   useEffect(() => {
@@ -203,88 +229,119 @@ export const SpacePlayer = ({
         lastPauseTimeRef.current = Date.now();
       }
       // Sync to pause position
-      if (state.pausePositionSeconds != null) {
-        audio.currentTime = state.pausePositionSeconds;
+      if (
+        state.pausePositionSeconds != null &&
+        !Number.isNaN(state.pausePositionSeconds)
+      ) {
+        const target = state.pausePositionSeconds;
+        if (Math.abs(audio.currentTime - target) > 0.3) {
+          audio.currentTime = target;
+        }
       }
 
+      pendingSeekRef.current = null;
       isSyncingRef.current = false;
-    } else {
-      // Handle playing state from server
-      const expectedPosition = getEffectiveSeekOffset(state);
+      return;
+    }
 
-      // ✅ Check if paused for too long (> 30s) — need HLS reload
-      const pauseDuration = lastPauseTimeRef.current
-        ? Date.now() - lastPauseTimeRef.current
-        : 0;
-      const needsReload = pauseDuration > 30000; // 30 seconds
+    // Handle playing state from server
+    const expectedPosition = getEffectiveSeekOffset(state);
 
-      if (needsReload && hlsUrl && hlsRef.current) {
-        console.log(
-          `🔄 Long pause detected (${(pauseDuration / 1000).toFixed(0)}s). Reloading HLS instance...`,
-        );
+    const localSeekLock = localSeekLockRef.current;
+    if (localSeekLock) {
+      const lockAgeMs = Date.now() - localSeekLock.startedAtMs;
+      const serverCaughtUp =
+        Math.abs(expectedPosition - localSeekLock.targetSeconds) <=
+        LOCAL_SEEK_MATCH_TOLERANCE_SECONDS;
 
-        const hls = hlsRef.current;
+      if (serverCaughtUp || lockAgeMs > LOCAL_SEEK_LOCK_MS) {
+        localSeekLockRef.current = null;
 
-        // ✅ Store expected position to apply after reload
-        pendingSeekRef.current = expectedPosition;
-
-        // ✅ Reload HLS source directly (no setState)
-        hls.detachMedia();
-        hls.loadSource(hlsUrl);
-        hls.attachMedia(audio);
-
-        // Manifest parsed event will handle seek + play
-        lastPauseTimeRef.current = null;
-        isSyncingRef.current = false;
-      } else {
-        // Normal resume — just sync position and play
-        const diff = Math.abs(audio.currentTime - expectedPosition);
-        if (diff > 2) {
-          console.log(
-            `🔄 Syncing position: ${audio.currentTime.toFixed(1)}s → ${expectedPosition.toFixed(1)}s (diff: ${diff.toFixed(1)}s)`,
-          );
-          audio.currentTime = expectedPosition;
-        }
-
-        // ✅ Only try to play if HLS is ready (has duration)
-        if (audio.paused && isPlaying) {
-          if (audio.duration && audio.duration > 0) {
-            console.log('▶️ Resuming playback');
-            audio.play().catch((err) => {
-              console.error('❌ Play failed:', err);
-              // Retry once
-              setTimeout(() => {
-                if (audioRef.current && audioRef.current.paused) {
-                  audioRef.current.play().catch(console.error);
-                }
-              }, 500);
-            });
-          } else {
-            console.warn(
-              '⚠️ Audio not ready (no duration). Waiting for HLS...',
-            );
-            // Wait for duration to be available
-            const checkReady = setInterval(() => {
-              if (audioRef.current && audioRef.current.duration > 0) {
-                console.log('✅ Audio ready, playing now');
-                clearInterval(checkReady);
-                audioRef.current.play().catch(console.error);
-              }
-            }, 200);
-
-            // Timeout after 3 seconds
-            setTimeout(() => clearInterval(checkReady), 3000);
-          }
-        }
-
-        lastPauseTimeRef.current = null;
-
-        // ✅ Delay before allowing next sync
-        setTimeout(() => {
+        // Keep the locally sought position when server has effectively caught up.
+        // This avoids a final tiny snap on the same sync tick.
+        if (serverCaughtUp) {
           isSyncingRef.current = false;
-        }, 1000); // Increase delay to 1s to prevent rapid re-sync
+          return;
+        }
+      } else {
+        // Ignore stale server position briefly after local seek to prevent UI jump-back.
+        isSyncingRef.current = false;
+        return;
       }
     }
+
+    // ✅ Check if paused for too long (> 30s) — need HLS reload
+    const pauseDuration = lastPauseTimeRef.current
+      ? Date.now() - lastPauseTimeRef.current
+      : 0;
+    const needsReload = pauseDuration > 30000; // 30 seconds
+
+    if (needsReload && hlsUrl && hlsRef.current) {
+      console.log(
+        `🔄 Long pause detected (${(pauseDuration / 1000).toFixed(0)}s). Reloading HLS instance...`,
+      );
+
+      const hls = hlsRef.current;
+
+      // ✅ Store expected position to apply after reload
+      pendingSeekRef.current = expectedPosition;
+
+      // ✅ Reload HLS source directly (no setState)
+      hls.detachMedia();
+      hls.loadSource(hlsUrl);
+      hls.attachMedia(audio);
+
+      // Manifest parsed event will handle seek + play
+      lastPauseTimeRef.current = null;
+      isSyncingRef.current = false;
+      return;
+    }
+
+    // Normal resume — sync position if ready, otherwise schedule pending
+    const canSeek = audio.readyState > 0 && !Number.isNaN(expectedPosition);
+
+    if (canSeek) {
+      const diff = Math.abs(audio.currentTime - expectedPosition);
+      if (diff > POSITION_SYNC_TOLERANCE_SECONDS) {
+        console.log(
+          `🔄 Syncing position: ${audio.currentTime.toFixed(1)}s → ${expectedPosition.toFixed(1)}s (diff: ${diff.toFixed(1)}s)`,
+        );
+        audio.currentTime = expectedPosition;
+      }
+    } else {
+      pendingSeekRef.current = expectedPosition;
+    }
+
+    if (audio.paused && isPlaying) {
+      if (audio.duration > 0 && !Number.isNaN(audio.duration)) {
+        console.log('▶️ Resuming playback');
+        audio.play().catch((err) => {
+          console.error('❌ Play failed:', err);
+          setTimeout(() => {
+            if (audioRef.current && audioRef.current.paused) {
+              audioRef.current.play().catch(console.error);
+            }
+          }, 500);
+        });
+      } else {
+        console.warn('⚠️ Audio not ready (no duration). Waiting for HLS...');
+        const checkReady = setInterval(() => {
+          if (audioRef.current && audioRef.current.duration > 0) {
+            console.log('✅ Audio ready, playing now');
+            clearInterval(checkReady);
+            audioRef.current.play().catch(console.error);
+          }
+        }, 200);
+        setTimeout(() => clearInterval(checkReady), 3000);
+      }
+    }
+
+    lastPauseTimeRef.current = null;
+
+    // ✅ Delay before allowing next sync
+    setTimeout(() => {
+      isSyncingRef.current = false;
+    }, 1000); // Increase delay to 1s to prevent rapid re-sync
   }, [state, isPlaying, hlsUrl]);
 
   // Sync volume
@@ -292,6 +349,29 @@ export const SpacePlayer = ({
     if (!audioRef.current) return;
     audioRef.current.volume = volumeToAudioLevel(volume);
   }, [volume]);
+
+  // Sync volume/mute from server state
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!state) return;
+    // Avoid overriding local adjustments while the user is actively dragging the slider
+    if (
+      !isAdjustingVolumeRef.current &&
+      typeof state.volumePercent === 'number'
+    ) {
+      setVolume(Math.max(0, Math.min(100, Math.floor(state.volumePercent))));
+    }
+    if (typeof state.isMuted === 'boolean') {
+      setIsMuted(state.isMuted);
+    }
+  }, [state]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Apply muted to audio element
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.muted = isMuted;
+  }, [isMuted]);
 
   // Audio event handlers
   useEffect(() => {
@@ -312,6 +392,15 @@ export const SpacePlayer = ({
 
     const handleCanPlay = () => {
       setIsBuffering(false);
+
+      if (pendingSeekRef.current !== null && audioRef.current) {
+        const seekTarget = pendingSeekRef.current;
+        console.log(
+          `⏩ Applying pending seek on canplay: ${seekTarget.toFixed(1)}s`,
+        );
+        audioRef.current.currentTime = seekTarget;
+        pendingSeekRef.current = null;
+      }
     };
 
     const handleEnded = () => {
@@ -333,17 +422,66 @@ export const SpacePlayer = ({
     };
   }, []);
 
-  // Handle seek
+  // Handle seek (scrub) - immediate local scrub on change, remote seek on afterChange
   const handleSeek = (value: number) => {
     if (!audioRef.current) return;
     const seekTime = (value / 100) * duration;
     audioRef.current.currentTime = seekTime;
-    onSeek?.(seekTime);
+    setCurrentTime(seekTime);
   };
+
+  const handleSeekComplete = (value: number) => {
+    if (!audioRef.current) return;
+    const seekTime = (value / 100) * duration;
+    localSeekLockRef.current = {
+      targetSeconds: seekTime,
+      startedAtMs: Date.now(),
+    };
+
+    // Keep local audio at sought position immediately.
+    audioRef.current.currentTime = seekTime;
+    setCurrentTime(seekTime);
+
+    // Debounce the remote seek call so server is called only after release
+    if (seekTimeoutRef.current) {
+      clearTimeout(seekTimeoutRef.current);
+      seekTimeoutRef.current = null;
+    }
+    seekTimeoutRef.current = window.setTimeout(() => {
+      onSeek?.(seekTime);
+      seekTimeoutRef.current = null;
+    }, SEEK_API_DELAY_MS);
+  };
+
+  // Cleanup pending seek timer on unmount
+  useEffect(() => {
+    return () => {
+      if (seekTimeoutRef.current) {
+        clearTimeout(seekTimeoutRef.current);
+        seekTimeoutRef.current = null;
+      }
+
+      localSeekLockRef.current = null;
+    };
+  }, []);
 
   // Handle volume change
   const handleVolumeChange = (value: number) => {
     setVolume(value);
+    // mark user adjusting to prevent server-sync from overriding during drag
+    isAdjustingVolumeRef.current = true;
+    if (adjustingVolumeTimeoutRef.current) {
+      clearTimeout(adjustingVolumeTimeoutRef.current);
+    }
+    adjustingVolumeTimeoutRef.current = window.setTimeout(() => {
+      isAdjustingVolumeRef.current = false;
+      adjustingVolumeTimeoutRef.current = null;
+    }, 1200);
+  };
+
+  const handleVolumeChangeComplete = (value: number) => {
+    onVolumeChangeComplete?.(value);
+    // Also call the generic onVolumeChange for backwards compatibility
     onVolumeChange?.(value);
   };
 
@@ -369,7 +507,7 @@ export const SpacePlayer = ({
               strong
               style={{ fontSize: 16, display: 'block' }}
             >
-              {state?.currentPlaylistName || 'No playlist playing'}
+              {state?.currentTrackName || 'No track playing'}
             </Text>
             <Space>
               {isPlaying && (
@@ -395,10 +533,15 @@ export const SpacePlayer = ({
         </Flex>
 
         {/* Progress Bar */}
-        <div>
+        <div
+          title='Seek: drag to scrub, release to send seek'
+          aria-label='Seek control'
+        >
           <Slider
             value={progress}
             onChange={handleSeek}
+            onAfterChange={handleSeekComplete}
+            aria-label='Seek'
             tooltip={{
               formatter: (value) => {
                 const seconds = ((value ?? 0) / 100) * duration;
@@ -423,42 +566,99 @@ export const SpacePlayer = ({
           </Flex>
         </div>
 
-        {/* Playback Controls */}
+        {/* Playback Controls with RepeatButton at far left */}
         <Flex
-          justify='center'
+          justify='space-between'
           align='center'
-          gap='middle'
+          style={{ width: '100%' }}
         >
-          <Button
-            size='large'
-            type='text'
-            icon={<StepBackwardOutlined />}
-            onClick={onSkipPrevious}
-            disabled={!state?.currentPlaylistId || isLoading}
-          />
-          <Button
-            type='primary'
-            shape='circle'
-            size='large'
-            icon={
-              isPlaying ? (
-                <PauseCircleOutlined style={{ fontSize: 24 }} />
-              ) : (
-                <PlayCircleOutlined style={{ fontSize: 24 }} />
-              )
-            }
-            onClick={onPlayPause}
-            disabled={!hlsUrl || isLoading}
-            loading={isBuffering}
-            style={{ width: 56, height: 56 }}
-          />
-          <Button
-            size='large'
-            type='text'
-            icon={<StepForwardOutlined />}
-            onClick={onSkipNext}
-            disabled={!state?.currentPlaylistId || isLoading}
-          />
+          {/* Left: Repeat control, visually aligned with other controls */}
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <RepeatButton
+              queueEndBehavior={state?.queueEndBehavior ?? 0}
+              onChange={(next) => {
+                // bubble to parent if provided
+                onQueueEndBehaviorChange?.(Number(next));
+              }}
+              size={20}
+              className={'mr-2'}
+            />
+          </div>
+
+          {/* Center: main playback controls */}
+          <Flex
+            justify='center'
+            align='center'
+            gap='middle'
+          >
+            <Button
+              size='large'
+              type='text'
+              icon={<FastBackwardOutlined />}
+              onClick={() => onRewind10?.()}
+              disabled={isLoading || !state?.currentQueueItemId}
+              title='Rewind 10 seconds'
+              aria-label='Rewind 10 seconds'
+            />
+            <Button
+              size='large'
+              type='text'
+              icon={<StepBackwardOutlined />}
+              onClick={onSkipPrevious}
+              title='Skip to previous track'
+              aria-label='Skip to previous track'
+              disabled={
+                isLoading ||
+                (typeof isPreviousDisabled === 'boolean'
+                  ? isPreviousDisabled
+                  : !state?.currentQueueItemId)
+              }
+            />
+            <Button
+              type='primary'
+              shape='circle'
+              size='large'
+              icon={
+                isPlaying ? (
+                  <PauseCircleOutlined style={{ fontSize: 24 }} />
+                ) : (
+                  <PlayCircleOutlined style={{ fontSize: 24 }} />
+                )
+              }
+              onClick={onPlayPause}
+              disabled={!hlsUrl || isLoading}
+              loading={isBuffering}
+              style={{ width: 56, height: 56 }}
+              title={isPlaying ? 'Pause' : 'Resume'}
+              aria-label={isPlaying ? 'Pause' : 'Resume'}
+            />
+            <Button
+              size='large'
+              type='text'
+              icon={<StepForwardOutlined />}
+              onClick={onSkipNext}
+              title='Skip to next track'
+              aria-label='Skip to next track'
+              disabled={
+                isLoading ||
+                (typeof isNextDisabled === 'boolean'
+                  ? isNextDisabled
+                  : !state?.currentQueueItemId)
+              }
+            />
+            <Button
+              size='large'
+              type='text'
+              icon={<FastForwardOutlined />}
+              onClick={() => onForward10?.()}
+              disabled={isLoading || !state?.currentQueueItemId}
+              title='Forward 10 seconds'
+              aria-label='Forward 10 seconds'
+            />
+          </Flex>
+
+          {/* Right placeholder for visual balance (keeps center centered) */}
+          <div style={{ width: 40 }} />
         </Flex>
 
         {/* Volume Control */}
@@ -466,10 +666,27 @@ export const SpacePlayer = ({
           align='center'
           gap='middle'
         >
-          <SoundOutlined style={{ fontSize: 16 }} />
+          <Button
+            type='text'
+            icon={
+              isMuted ? (
+                <MutedOutlined style={{ fontSize: 16, color: '#ff4d4f' }} />
+              ) : (
+                <SoundOutlined style={{ fontSize: 16 }} />
+              )
+            }
+            onClick={() => {
+              // local toggle for instant feedback; server will sync via spaceState
+              setIsMuted((m) => !m);
+              onToggleMute?.();
+            }}
+            title={isMuted ? 'Unmute' : 'Mute'}
+            aria-label={isMuted ? 'Unmute' : 'Mute'}
+          />
           <Slider
             value={volume}
             onChange={handleVolumeChange}
+            onAfterChange={handleVolumeChangeComplete}
             min={0}
             max={100}
             style={{ flex: 1 }}

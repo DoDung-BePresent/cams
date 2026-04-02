@@ -14,7 +14,6 @@ import {
  * Constants
  */
 import { ENTITY_STATUS_OPTIONS } from '@/shared/constants';
-import { PLAYLIST_TYPE_OPTIONS } from '@/shared/modules/playlists/constants';
 
 /**
  * Types
@@ -27,6 +26,7 @@ interface PlaylistFilterProps {
   brands: Array<{ label: string; value: string }>;
   moods: Array<{ label: string; value: string }>;
   onSearch: (value: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFilterChange: (key: keyof PlaylistFilterType, value: any) => void;
   onToggleAdvanced: () => void;
   onRefresh: () => void;
@@ -49,7 +49,6 @@ export const PlaylistFilter = ({
     filter.brandId ||
     filter.moodId ||
     filter.status !== undefined ||
-    filter.isDynamic !== undefined ||
     filter.isDefault !== undefined;
 
   return (
@@ -140,18 +139,7 @@ export const PlaylistFilter = ({
               optionFilterProp='label'
             />
           </Col>
-          <Col span={4}>
-            <Select
-              size='large'
-              placeholder='Type'
-              options={PLAYLIST_TYPE_OPTIONS}
-              value={filter.isDynamic}
-              onChange={(value) => onFilterChange('isDynamic', value)}
-              style={{ width: '100%' }}
-              allowClear
-            />
-          </Col>
-          <Col span={4}>
+          <Col span={6}>
             <Select
               size='large'
               placeholder='Default'
@@ -166,7 +154,7 @@ export const PlaylistFilter = ({
               allowClear
             />
           </Col>
-          <Col span={4}>
+          <Col span={6}>
             <Select
               size='large'
               placeholder='Status'
@@ -197,14 +185,6 @@ export const PlaylistFilter = ({
               onClose={() => onFilterChange('moodId', undefined)}
             >
               Mood: {moods.find((m) => m.value === filter.moodId)?.label}
-            </Tag>
-          )}
-          {filter.isDynamic !== undefined && (
-            <Tag
-              closable
-              onClose={() => onFilterChange('isDynamic', undefined)}
-            >
-              Type: {filter.isDynamic ? 'Dynamic' : 'Static'}
             </Tag>
           )}
           {filter.isDefault !== undefined && (

@@ -12,12 +12,19 @@ import {
 /**
  * Hooks
  */
-import { useTrack } from '@/shared/modules/tracks/hooks';
+import {
+  useTrack,
+  useTrackMetadataPolling,
+} from '@/shared/modules/tracks/hooks';
 
 /**
  * Components
  */
-import { TrackAudioPlayer } from '@/shared/modules/tracks/components';
+import {
+  HLSAudioPlayer,
+  MetadataStatusBadge,
+  MetadataPollingProgress,
+} from '@/shared/modules/tracks/components';
 
 /**
  * Utils
@@ -53,6 +60,14 @@ export const TrackDetailsDrawer = ({
 }: TrackDetailsDrawerProps) => {
   const { data: track, isLoading } = useTrack(trackId, open);
 
+  // Auto-poll metadata status for newly uploaded tracks
+  const { isPolling, attempts, maxAttempts, status } = useTrackMetadataPolling(
+    trackId,
+    {
+      enabled: open && !!trackId,
+    },
+  );
+
   return (
     <Drawer
       closeIcon={null}
@@ -76,23 +91,30 @@ export const TrackDetailsDrawer = ({
           style={{ width: '100%' }}
           size='large'
         >
-          {/* Audio Player */}
-          {track.audioUrl && (
-            <div>
-              <Title
-                level={5}
-                className='mb-4!'
-              >
-                Audio Player
-              </Title>
-              <TrackAudioPlayer
-                audioUrl={track.audioUrl}
-                title={track.title}
-                artist={track.artist}
-                coverImageUrl={track.coverImageUrl}
-              />
-            </div>
-          )}
+          {/* Metadata Polling Progress */}
+          <MetadataPollingProgress
+            isPolling={isPolling}
+            attempts={attempts}
+            maxAttempts={maxAttempts}
+            status={status}
+          />
+
+          {/* Audio Player — always mount like store drawer so missing CDN URL shows fallback, not a blank panel */}
+          <div>
+            <Title
+              level={5}
+              className='mb-4!'
+            >
+              Audio Player
+            </Title>
+            <HLSAudioPlayer
+              hlsUrl={track.hlsUrl}
+              title={track.title}
+              artist={track.artist}
+              coverImageUrl={track.coverImageUrl}
+              shouldStop={!open}
+            />
+          </div>
 
           {/* Basic Info */}
           <Descriptions
@@ -131,6 +153,12 @@ export const TrackDetailsDrawer = ({
             title='Audio Metadata'
             column={1}
             bordered
+            extra={
+              <MetadataStatusBadge
+                track={track}
+                showDetails
+              />
+            }
           >
             <Descriptions.Item label='Duration'>
               {formatDuration(track.durationSec)}

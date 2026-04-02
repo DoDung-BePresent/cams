@@ -18,8 +18,12 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DeleteOutlined,
-  PlayCircleOutlined,
 } from '@ant-design/icons';
+
+/**
+ * Components
+ */
+import { MiniAudioPlayer } from '@/shared/components';
 
 /**
  * Hooks
@@ -29,7 +33,6 @@ import { usePlaylist, useRemoveTrackFromPlaylist } from '../hooks';
 /**
  * Constants
  */
-import { PLAYLIST_TYPE_LABELS, PLAYLIST_TYPE_COLORS } from '../constants';
 import { ENTITY_STATUS_LABELS } from '@/shared/constants';
 
 /**
@@ -122,11 +125,6 @@ export const PlaylistDetailsDrawer = ({
             <Descriptions.Item label='Store'>
               {playlist.storeName || '—'}
             </Descriptions.Item>
-            <Descriptions.Item label='Type'>
-              <Tag color={PLAYLIST_TYPE_COLORS[playlist.isDynamic ? 1 : 0]}>
-                {PLAYLIST_TYPE_LABELS[playlist.isDynamic ? 1 : 0]}
-              </Tag>
-            </Descriptions.Item>
             <Descriptions.Item label='Mood'>
               {playlist.moodName ? (
                 <Tag color='blue'>{playlist.moodName}</Tag>
@@ -161,37 +159,13 @@ export const PlaylistDetailsDrawer = ({
           {/* Playlist Statistics */}
           <Descriptions
             title='Statistics'
-            column={2}
+            column={1}
             bordered
           >
             <Descriptions.Item label='Total Tracks'>
               {playlist.trackCount}
             </Descriptions.Item>
-            <Descriptions.Item label='Total Duration'>
-              {playlist.totalDurationSeconds
-                ? formatDuration(playlist.totalDurationSeconds)
-                : '—'}
-            </Descriptions.Item>
           </Descriptions>
-
-          {/* HLS Streaming Info */}
-          {playlist.hlsUrl && (
-            <Descriptions
-              title='Streaming Info'
-              column={1}
-              bordered
-            >
-              <Descriptions.Item label='HLS URL'>
-                <a
-                  href={playlist.hlsUrl}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {playlist.hlsUrl}
-                </a>
-              </Descriptions.Item>
-            </Descriptions>
-          )}
 
           {/* Track List */}
           <Descriptions
@@ -232,32 +206,11 @@ export const PlaylistDetailsDrawer = ({
                     >
                       <List.Item.Meta
                         avatar={
-                          track.coverImageUrl ? (
-                            <img
-                              src={track.coverImageUrl}
-                              alt={track.title}
-                              style={{
-                                width: 48,
-                                height: 48,
-                                borderRadius: 4,
-                                objectFit: 'cover',
-                              }}
-                            />
-                          ) : (
-                            <div
-                              style={{
-                                width: 48,
-                                height: 48,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: '#f0f0f0',
-                                borderRadius: 4,
-                              }}
-                            >
-                              <PlayCircleOutlined style={{ fontSize: 20 }} />
-                            </div>
-                          )
+                          <MiniAudioPlayer
+                            hlsUrl={track.hlsUrl}
+                            coverImageUrl={track.coverImageUrl}
+                            size={48}
+                          />
                         }
                         title={
                           <Space>
@@ -273,6 +226,14 @@ export const PlaylistDetailsDrawer = ({
                             {track.durationSec && (
                               <Text type='secondary'>
                                 {formatDuration(track.durationSec)}
+                              </Text>
+                            )}
+                            {track.coverImageUrl && (
+                              <Text
+                                type='secondary'
+                                ellipsis={{ tooltip: track.coverImageUrl }}
+                              >
+                                Cover: {track.coverImageUrl}
                               </Text>
                             )}
                             <Text type='secondary'>

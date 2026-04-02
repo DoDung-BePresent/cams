@@ -62,18 +62,13 @@ export const EditPlaylistDrawer = ({
 
   const { data: moodsData } = useMoods();
 
-  const isDynamic = Form.useWatch('isDynamic', form);
-
   useEffect(() => {
     if (open && playlist) {
       form.setFieldsValue({
         name: playlist.name,
         moodId: playlist.moodId || undefined,
         description: playlist.description || undefined,
-        isDynamic: playlist.isDynamic,
         isDefault: playlist.isDefault,
-        hlsUrl: playlist.hlsUrl || undefined,
-        totalDurationSeconds: playlist.totalDurationSeconds || undefined,
       });
     }
   }, [open, playlist, form]);
@@ -218,28 +213,6 @@ export const EditPlaylistDrawer = ({
             </Title>
 
             <Form.Item
-              label='Playlist Type'
-              name='isDynamic'
-              valuePropName='checked'
-            >
-              <Switch
-                checkedChildren='Dynamic'
-                unCheckedChildren='Static'
-              />
-            </Form.Item>
-
-            {isDynamic && (
-              <Alert
-                message='Dynamic Playlist'
-                description='Dynamic playlists automatically select tracks based on the assigned mood. You cannot manually add/remove tracks.'
-                type='info'
-                icon={<InfoCircleOutlined />}
-                showIcon
-                style={{ marginBottom: 16 }}
-              />
-            )}
-
-            <Form.Item
               label='Default Playlist'
               name='isDefault'
               valuePropName='checked'
@@ -247,36 +220,6 @@ export const EditPlaylistDrawer = ({
               <Switch
                 checkedChildren='Yes'
                 unCheckedChildren='No'
-              />
-            </Form.Item>
-          </div>
-
-          {/* Advanced Settings */}
-          <div style={{ marginBottom: 24 }}>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Advanced Settings
-            </Title>
-
-            <Form.Item
-              label='HLS URL'
-              name='hlsUrl'
-              rules={updatePlaylistValidation.hlsUrl}
-            >
-              <Input placeholder='https://example.com/playlist.m3u8' />
-            </Form.Item>
-
-            <Form.Item
-              label='Total Duration (seconds)'
-              name='totalDurationSeconds'
-              rules={updatePlaylistValidation.totalDurationSeconds}
-            >
-              <Input
-                type='number'
-                placeholder='e.g., 3600'
-                min={1}
               />
             </Form.Item>
           </div>

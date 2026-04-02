@@ -6,6 +6,106 @@
 
 ---
 
+## [2026-03-24] — Suno AI Music Generation & Track Metadata Status
+
+> Tóm tắt thay đổi quan trọng:
+
+### 🎵 Suno AI Music Generation (NEW)
+
+**Backend Integration:**
+
+- Tích hợp Suno AI API để generate nhạc từ text prompts
+- Hỗ trợ template-based và manual prompt modes
+- Real-time progress tracking qua SignalR
+- Auto-add generated tracks vào playlists
+
+**Frontend Implementation:**
+
+- Module hoàn chỉnh: `src/shared/modules/suno/`
+- Page mới: `/brand/suno-ai` với 3 tabs (Generate, History, Config)
+- SignalR integration cho real-time updates
+- Components: SunoConfigForm, SunoGenerationForm, SunoGenerationCard
+
+**API Endpoints:**
+
+- `GET /api/cms/suno/config` - Load config
+- `PUT /api/cms/suno/config` - Update config
+- `POST /api/cms/suno/generations` - Create generation (202 Accepted)
+- `GET /api/cms/suno/generations/{id}` - Get status
+- `POST /api/cms/suno/generations/{id}/cancel` - Cancel generation
+
+**SignalR Events:**
+
+- Hub: `/hubs/store`
+- Method: `JoinBrandManagerRoomAsync(brandId)`
+- Event: `SunoGenerationStatusChanged`
+
+**Status Enum:**
+
+```typescript
+enum SunoGenerationStatus {
+  Queued = 0,
+  Generating = 1,
+  Completed = 2,
+  Failed = 3,
+  Cancelled = 4,
+}
+```
+
+**Tài liệu:** [docs/cams/FE_SUNO_IMPLEMENTATION_GUIDE.md](cams/FE_SUNO_IMPLEMENTATION_GUIDE.md), [IMPLEMENTATION_SUNO_AI_MUSIC_GENERATION.md](../IMPLEMENTATION_SUNO_AI_MUSIC_GENERATION.md)
+
+### 🎼 Track Metadata Status Display
+
+**Backend Changes:**
+
+- Track list response bổ sung `transcodeStatus` (0-4) và `actualDurationSec`
+- Metadata extraction (BPM, energy, valence) happens during transcode
+- `transcodeStatus` serves as proxy for metadata availability
+
+**Frontend Implementation:**
+
+- New enum: `TranscodeStatusEnum` (None/Pending/Processing/Ready/Failed)
+- Updated `TrackListItem` interface với `transcodeStatus` và `actualDurationSec`
+- Enhanced `MetadataStatusBadge` component hiển thị transcode status
+- Smart status logic: metadata fields (detail view) → transcodeStatus (list view) → track age (fallback)
+
+**Status Display:**
+
+- 🟢 Ready - Transcode complete, metadata available
+- 🔵 Queued - Track queued for transcoding
+- 🔵 Transcoding - AWS MediaConvert processing
+- 🔴 Failed - Transcode failed
+- 🔴 Unavailable - Metadata not available
+
+**Tài liệu:** [IMPLEMENTATION_TRACK_METADATA_STATUS.md](../IMPLEMENTATION_TRACK_METADATA_STATUS.md), [BUGFIX_METADATA_STATUS_TRANSCODE.md](../BUGFIX_METADATA_STATUS_TRANSCODE.md)
+
+**Hành động frontend:**
+
+- Suno AI page đã được thêm vào brand routes (`/brand/suno-ai`)
+- Menu item mới: "AI Music Generator" với ThunderboltOutlined icon
+- SignalR connection tự động khi vào page
+- Real-time progress updates không cần refresh
+
+---
+
+## [2026-03-23] Commit fb68e92baa3 — Docs & API changes impacting Frontend
+
+> Tóm tắt thay đổi quan trọng ảnh hưởng tới Frontend (React TypeScript) và Mobile (Flutter):
+
+- **Tracks**: `audioUrl` → `hlsUrl` (.m3u8) trong response/examples; thêm endpoint per-track `POST /api/tracks/{id}/retranscode` (playlist-level retranscode đã chuyển sang track-level); cập nhật business rule: không thể xóa track nếu còn tồn tại trong playlists hoặc space queues.
+- **Playlists**: loại bỏ các trường playlist-level không còn dùng (`isDynamic`, playlist `hlsUrl`, `totalDurationSeconds`); mỗi track trong playlist giờ chứa `hlsUrl` + `seekOffsetSeconds` (dùng để SkipToTrack); playlist-level retranscode bị loại bỏ.
+- **CAMS API**: thay đổi lớn về queue model — thêm/chuẩn hoá endpoints quản lý queue (`POST /api/cams/spaces/queue/tracks`, `POST /api/cams/spaces/queue/playlist`, `PATCH /api/cams/spaces/queue/reorder`, `DELETE /api/cams/spaces/queue/all`, v.v.) và `PATCH /api/cams/spaces/state/audio` (volume/mute/queueEndBehavior); Override API hỗ trợ `trackIds` và cờ `isClearManagerSelectedQueues`.
+- **SignalR / StoreHub**: `SpaceStateSync` thay đổi schema: `currentPlaylistId`/`currentPlaylistName` → `currentQueueItemId`/`currentTrackName`; thêm `pendingQueueItemId`, `volumePercent`, `isMuted`, `queueEndBehavior`, `spaceQueueItems[]` (new DTO); thêm enum `TrackEnded`; thay đổi semantics của Skip/Seek (SignalR push có thể có `seekOffsetSeconds = null` — frontend phải compute từ `startedAtUtc`).
+
+**Hành động frontend (recommended):**
+
+- Cập nhật TypeScript/Dart models và serializers theo tài liệu: [docs/tracks/API_Tracks.md](docs/tracks/API_Tracks.md), [docs/playlists/API_Playlists.md](docs/playlists/API_Playlists.md), [docs/cams/API_CAMS.md](docs/cams/API_CAMS.md), [docs/cams/SIGNALR_STOREHUB.md](docs/cams/SIGNALR_STOREHUB.md).
+- Player logic: khi SignalR push có `seekOffsetSeconds = null` tính offset từ `startedAtUtc`; hiển thị trạng thái "⏳ Đang chuẩn bị" khi `pendingQueueItemId` ≠ null; áp dụng `volumePercent`/`isMuted` từ `SpaceStateSync`.
+- Tích hợp lại flow retranscode: thay vì playlist-level, gọi `POST /api/tracks/{id}/retranscode` khi cần force re-transcode.
+- Kiểm tra flows liên quan tới xóa track/playlist vì rules giờ tính cả space queues.
+
+Commit tham khảo: `fb68e92baa3236600c6bba53f1ee40f5bf8a39e7` — xem diff đầy đủ trong git để chi tiết.
+
 ## [2026-03-16] PR #26 — Device pairing, PlaybackDevice access & SpaceState sync
 
 > **Branch:** `feature/nam` → `develop`

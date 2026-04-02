@@ -30,18 +30,23 @@ Tất cả enum trong SignalR payload dùng **giá trị số nguyên**. KHÔNG 
 
 _Dùng trong: event `PlaybackStateChanged` (field `command`)_
 
-| Giá trị | Tên            | `seekPositionSeconds` trong event       | `targetTrackId` trong event |
-| ------- | -------------- | --------------------------------------- | --------------------------- |
-| `1`     | `Pause`        | null                                    | null                        |
-| `2`     | `Resume`       | null                                    | null                        |
-| `3`     | `Seek`         | Vị trí tuyệt đối (giây)                 | null                        |
-| `4`     | `SeekForward`  | **Absolute** đã tính (không phải delta) | null                        |
-| `5`     | `SeekBackward` | **Absolute** đã tính (không phải delta) | null                        |
-| `6`     | `SkipNext`     | Offset của track kế (absolute)          | GUID của track kế           |
-| `7`     | `SkipPrevious` | Offset của track trước (absolute)       | null                        |
-| `8`     | `SkipToTrack`  | Offset của track đích (absolute)        | GUID của track đích         |
+| Giá trị | Tên            | `seekPositionSeconds` trong event       | `targetTrackId` trong event             |
+| ------- | -------------- | --------------------------------------- | --------------------------------------- |
+| `1`     | `Pause`        | null                                    | null                                    |
+| `2`     | `Resume`       | null                                    | null                                    |
+| `3`     | `Seek`         | Vị trí tuyệt đối (giây)                 | null                                    |
+| `4`     | `SeekForward`  | **Absolute** đã tính (không phải delta) | null                                    |
+| `5`     | `SeekBackward` | **Absolute** đã tính (không phải delta) | null                                    |
+| `6`     | `SkipNext`     | `0` hoặc null (khi pending transcode)   | GUID của track kế                       |
+| `7`     | `SkipPrevious` | `0` hoặc null (khi pending transcode)   | GUID của track đích                     |
+| `8`     | `SkipToTrack`  | `0` hoặc null (khi pending transcode)   | GUID của track đích                     |
+| `9`     | `TrackEnded`   | `0` hoặc null (khi pending transcode)   | GUID track kế / hiện tại tùy transition |
 
 > ⚠️ Khi server relay `SeekForward`/`SeekBackward`, giá trị `seekPositionSeconds` trong event đã được **convert sang vị trí tuyệt đối** — tablet gọi `seekTo(seekPositionSeconds)` trực tiếp, không cộng/trừ thêm.
+
+> ⚠️ Với `SkipNext`/`SkipPrevious`/`SkipToTrack`, `seekPositionSeconds` trong event chỉ mang tính tín hiệu (`0` hoặc null). Client chuyển track dựa trên `SpaceStateSync.hlsUrl/startedAtUtc` và `targetTrackId`.
+
+> **SkipNext:** server chọn bài kế theo **`Position` tuần tự** trên toàn queue (không wrap về đầu). **TrackEnded / watchdog:** áp dụng `queueEndBehavior` (Stop / RepeatAll / RepeatOne) trên `SpaceMusicState`.
 
 ### `TransitionTypeEnum`
 
@@ -65,6 +70,7 @@ enum PlaybackCommand {
   skipNext    = 6,
   skipPrevious = 7,
   skipToTrack  = 8,
+  trackEnded   = 9,
 }
 
 enum TransitionType {
@@ -86,6 +92,7 @@ export enum PlaybackCommand {
   SkipNext = 6,
   SkipPrevious = 7,
   SkipToTrack = 8,
+  TrackEnded = 9,
 }
 
 export enum TransitionType {
@@ -125,6 +132,17 @@ Server thêm connection vào group `mgr-{storeId}`.
 | Param     | Type            | Mô tả                                |
 | --------- | --------------- | ------------------------------------ |
 | `storeId` | `string` (GUID) | ID của Store mà manager đang quản lý |
+
+---
+
+### `JoinBrandManagerRoomAsync(brandId: string)`
+
+Manager browser tab gọi để nhận update realtime cho Suno generation jobs theo cấp Brand.
+Server thêm connection vào group `brand-{brandId}`.
+
+| Param     | Type            | Mô tả                |
+| --------- | --------------- | -------------------- |
+| `brandId` | `string` (GUID) | ID Brand của manager |
 
 ---
 
@@ -212,7 +230,7 @@ Broadcast sau mỗi lệnh playback (Pause/Resume/Seek/Skip…). Gửi đến **
 
 ### `SpaceStateSync`
 
-Full `SpaceStateDto` snapshot — gửi sau **mọi thao tác làm thay đổi state**: Override, CancelOverride, và **tất cả lệnh Playback** (Pause/Resume/Seek/Skip…).
+Full `SpaceStateDto` snapshot — gửi sau **mọi thao tác làm thay đổi state**: Override, CancelOverride, **queue operations** (add/reorder/remove/clear), **Patch audio mixer**, và **tất cả lệnh Playback** (Pause/Resume/Seek/Skip…).
 
 > ⚠️ **Client nên dùng `SpaceStateSync` là nguồn sự thật chính** để rebuild toàn bộ UI state sau bất kỳ thay đổi nào — không cần poll REST `/state`.
 
@@ -221,8 +239,8 @@ Full `SpaceStateDto` snapshot — gửi sau **mọi thao tác làm thay đổi s
   "spaceId": "uuid",
   "storeId": "uuid",
   "brandId": "uuid",
-  "currentPlaylistId": "uuid",
-  "currentPlaylistName": "Evening Chill",
+  "currentQueueItemId": "uuid",
+  "currentTrackName": "Evening Chill",
   "hlsUrl": "https://dXXX.cloudfront.net/audio/playlists/.../master.m3u8",
   "moodName": "Chill",
   "isManualOverride": false,
@@ -232,23 +250,36 @@ Full `SpaceStateDto` snapshot — gửi sau **mọi thao tác làm thay đổi s
   "seekOffsetSeconds": 182.0,
   "isPaused": false,
   "pausePositionSeconds": null,
-  "pendingPlaylistId": null,
-  "pendingOverrideReason": null
+  "pendingQueueItemId": null,
+  "pendingOverrideReason": null,
+  "volumePercent": 100,
+  "isMuted": false,
+  "queueEndBehavior": 0,
+  "spaceQueueItems": []
 }
 ```
 
 **Khi nào được push:**
 
-| Trigger (server action)                                   | Event đi kèm                                    |
-| --------------------------------------------------------- | ----------------------------------------------- |
-| `OverrideSpaceMood` (200 OK)                              | `PlayStream` + **`SpaceStateSync`**             |
-| `OverrideSpaceMood` (202 Accepted — transcode pending)    | **`SpaceStateSync`** (pendingPlaylistId ≠ null) |
-| `CancelSpaceOverride`                                     | **`SpaceStateSync`**                            |
-| `SendPlaybackCommand` (Pause)                             | `PlaybackStateChanged` + **`SpaceStateSync`**   |
-| `SendPlaybackCommand` (Resume)                            | `PlaybackStateChanged` + **`SpaceStateSync`**   |
-| `SendPlaybackCommand` (Seek/SeekForward/SeekBackward)     | `PlaybackStateChanged` + **`SpaceStateSync`**   |
-| `SendPlaybackCommand` (SkipNext/SkipPrevious/SkipToTrack) | `PlaybackStateChanged` + **`SpaceStateSync`**   |
-| `SendPlaybackCommand` — no-op (e.g. Pause khi đã Pause)   | ❌ Không push                                   |
+| Trigger (server action)                                        | Event đi kèm                                                                                                        |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `OverrideSpaceMood` (200 OK)                                   | `PlayStream` + **`SpaceStateSync`**                                                                                 |
+| `OverrideSpaceMood`                                            | **`SpaceStateSync`** (trước đây là 202 Accepted, hiện tại chỉ có 200 OK + ACK)                                      |
+| `CancelSpaceOverride`                                          | **`SpaceStateSync`**                                                                                                |
+| `AddTracksToQueue` (PlayNow và next track ready)               | `PlayStream` + **`SpaceStateSync`**                                                                                 |
+| `AddTracksToQueue` (các mode khác / hoặc next track pending)   | **`SpaceStateSync`**                                                                                                |
+| `AddPlaylistToQueue` (PlayNow và next track ready)             | `PlayStream` + **`SpaceStateSync`**                                                                                 |
+| `AddPlaylistToQueue` (các mode khác / hoặc next track pending) | **`SpaceStateSync`**                                                                                                |
+| `ReorderSpaceQueue`                                            | **`SpaceStateSync`**                                                                                                |
+| `RemoveQueueItems`                                             | **`SpaceStateSync`** (+ `PlayStream` khi transition sang track đã sẵn sàng)                                         |
+| `ClearSpaceQueue`                                              | `StopPlayback` + **`SpaceStateSync`**                                                                               |
+| `SendPlaybackCommand` (Pause)                                  | `PlaybackStateChanged` + **`SpaceStateSync`**                                                                       |
+| `SendPlaybackCommand` (Resume)                                 | `PlaybackStateChanged` + **`SpaceStateSync`**                                                                       |
+| `SendPlaybackCommand` (Seek/SeekForward/SeekBackward)          | `PlaybackStateChanged` + **`SpaceStateSync`**                                                                       |
+| `SendPlaybackCommand` (SkipNext/SkipPrevious/SkipToTrack)      | `PlaybackStateChanged` + **`SpaceStateSync`**                                                                       |
+| `SendPlaybackCommand` (`TrackEnded`)                           | `PlaybackStateChanged` (nếu relay) + **`SpaceStateSync`**; có thể thêm `PlayStream` / `StopPlayback` tùy transition |
+| `PATCH .../state/audio` (volume / mute / `queueEndBehavior`)   | Chỉ **`SpaceStateSync`** (background) — **không** `PlaybackStateChanged`                                            |
+| `SendPlaybackCommand` — no-op (e.g. Pause khi đã Pause)        | ❌ Không push                                                                                                       |
 
 > `PlaybackStateChanged` và `SpaceStateSync` đến **gần như đồng thời** sau mỗi lệnh. `PlaybackStateChanged` là relay nhanh để tablet thực hiện action tức thì; `SpaceStateSync` là state đầy đủ sau khi DB đã commit.
 
@@ -270,30 +301,51 @@ Lỗi validation tại Hub (ví dụ: `spaceId` không hợp lệ).
 
 ---
 
+### `SunoGenerationStatusChanged`
+
+Realtime update cho async Suno generation flow.
+
+```json
+{
+  "id": "uuid-request",
+  "brandId": "uuid-brand",
+  "generationStatus": 1,
+  "progressPercent": 46,
+  "errorMessage": null,
+  "generatedTrackId": null
+}
+```
+
+---
+
 ## 4. SpaceStateDto — Full Schema
 
 `SpaceStateDto` là payload của event `SpaceStateSync` và response của `GET /api/cams/spaces/{spaceId}/state`. Đây là **snapshot toàn bộ trạng thái playback** của một Space tại một thời điểm.
 
 ### Bảng field chi tiết
 
-| Field                   | Kiểu        | Null? | Mô tả                                                                                                                                                  |
-| ----------------------- | ----------- | :---: | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `spaceId`               | `Guid`      |  ❌   | ID của Space                                                                                                                                           |
-| `storeId`               | `Guid`      |  ❌   | ID của Store chứa Space                                                                                                                                |
-| `brandId`               | `Guid`      |  ❌   | ID của Brand chứa Store                                                                                                                                |
-| `currentPlaylistId`     | `Guid?`     |  ✅   | Playlist đang phát; null khi không có playlist nào chạy                                                                                                |
-| `currentPlaylistName`   | `string?`   |  ✅   | Tên playlist đang phát                                                                                                                                 |
-| `hlsUrl`                | `string?`   |  ✅   | CloudFront HLS URL (`.m3u8`). Tablet truyền vào player. Null khi không phát                                                                            |
-| `moodName`              | `string?`   |  ✅   | Tên mood hiện tại (từ AI scheduler hoặc manager override)                                                                                              |
-| `isManualOverride`      | `bool`      |  ❌   | `true` khi manager đang override; `false` khi AI scheduler điều khiển                                                                                  |
-| `overrideMode`          | `int?`      |  ✅   | `1` = DirectPlaylist, `2` = MoodOverride; null khi AI-driven                                                                                           |
-| `startedAtUtc`          | `DateTime?` |  ✅   | Thời điểm playlist bắt đầu phát (UTC). Null khi không phát                                                                                             |
-| `expectedEndAtUtc`      | `DateTime?` |  ✅   | Thời điểm dự kiến kết thúc. Null khi AI-driven hoặc pause                                                                                              |
-| `seekOffsetSeconds`     | `double?`   |  ✅   | `(UtcNow − StartedAtUtc).TotalSeconds` — tính tại thời điểm **REST call**; null trong SignalR push (dùng `startedAtUtc` để tự tính). Xem note bên dưới |
-| `isPaused`              | `bool`      |  ❌   | `true` khi playback đang pause                                                                                                                         |
-| `pausePositionSeconds`  | `int?`      |  ✅   | Vị trí (giây) tại lúc Pause. Dùng để resume đúng vị trí và hiển thị progress bar khi pause                                                             |
-| `pendingPlaylistId`     | `Guid?`     |  ✅   | Playlist đang chờ transcode (override trả 202). Null khi không có pending                                                                              |
-| `pendingOverrideReason` | `string?`   |  ✅   | Lý do override đang pending (hiển thị cho manager/tablet)                                                                                              |
+| Field                   | Kiểu                       | Null? | Mô tả                                                                                                                                                  |
+| ----------------------- | -------------------------- | :---: | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `spaceId`               | `Guid`                     |  ❌   | ID của Space                                                                                                                                           |
+| `storeId`               | `Guid`                     |  ❌   | ID của Store chứa Space                                                                                                                                |
+| `brandId`               | `Guid`                     |  ❌   | ID của Brand chứa Store                                                                                                                                |
+| `currentQueueItemId`    | `Guid?`                    |  ✅   | Queue item đang được phát; null khi không có queue nào đang phát                                                                                       |
+| `currentTrackName`      | `string?`                  |  ✅   | Tên track đang được phát                                                                                                                               |
+| `hlsUrl`                | `string?`                  |  ✅   | CloudFront HLS URL (`.m3u8`). Tablet truyền vào player. Null khi không phát                                                                            |
+| `moodName`              | `string?`                  |  ✅   | Tên mood hiện tại (từ AI scheduler hoặc manager override)                                                                                              |
+| `isManualOverride`      | `bool`                     |  ❌   | `true` khi manager đang override; `false` khi AI scheduler điều khiển                                                                                  |
+| `overrideMode`          | `int?`                     |  ✅   | `1` = DirectPlaylist, `2` = MoodOverride; null khi AI-driven                                                                                           |
+| `startedAtUtc`          | `DateTime?`                |  ✅   | Thời điểm track bắt đầu phát (UTC). Null khi không phát                                                                                                |
+| `expectedEndAtUtc`      | `DateTime?`                |  ✅   | Thời điểm dự kiến kết thúc. Null khi AI-driven hoặc pause                                                                                              |
+| `seekOffsetSeconds`     | `double?`                  |  ✅   | `(UtcNow − StartedAtUtc).TotalSeconds` — tính tại thời điểm **REST call**; null trong SignalR push (dùng `startedAtUtc` để tự tính). Xem note bên dưới |
+| `isPaused`              | `bool`                     |  ❌   | `true` khi playback đang pause                                                                                                                         |
+| `pausePositionSeconds`  | `int?`                     |  ✅   | Vị trí (giây) tại lúc Pause. Dùng để resume đúng vị trí và hiển thị progress bar khi pause                                                             |
+| `pendingQueueItemId`    | `Guid?`                    |  ✅   | Queue item đang chờ track sẵn sàng để phát (override pending). Null khi không có pending                                                               |
+| `pendingOverrideReason` | `string?`                  |  ✅   | Lý do override đang pending (hiển thị cho manager/tablet)                                                                                              |
+| `volumePercent`         | `byte` / `number`          |  ❌   | `0`–`100`, mặc định `100` — gợi ý âm lượng UI/player                                                                                                   |
+| `isMuted`               | `bool`                     |  ❌   | `true` → client nên mute                                                                                                                               |
+| `queueEndBehavior`      | `int` / `number`           |  ❌   | `0` Stop, `1` RepeatAll, `2` RepeatOne (kết thúc tự nhiên / watchdog)                                                                                  |
+| `spaceQueueItems`       | `SpaceQueueStateItemDto[]` |  ❌   | Toàn bộ queue items trong Space (có thể rỗng)                                                                                                          |
 
 ### Notes quan trọng
 
@@ -303,7 +355,7 @@ Lỗi validation tại Hub (ví dụ: `spaceId` không hợp lệ).
 > - **SignalR** `SpaceStateSync` → `seekOffsetSeconds` = null. Tablet tự tính: `(DateTime.now().toUtc().difference(startedAtUtc!).inMilliseconds / 1000)`.
 > - Khi `isPaused = true` → dùng `pausePositionSeconds` thay vì tính từ clock.
 
-> **`pendingPlaylistId` ≠ null** → UI nên hiển thị trạng thái "⏳ Đang chuẩn bị..." và không cố load HLS. Khi transcode xong, server sẽ push `PlayStream` + `SpaceStateSync` mới với `pendingPlaylistId = null` và `hlsUrl` đầy đủ.
+> **`pendingQueueItemId` ≠ null** → UI nên hiển thị trạng thái "⏳ Đang chuẩn bị..." và không cố load HLS. Khi transcode xong, server sẽ push `PlayStream` + `SpaceStateSync` mới với `pendingQueueItemId = null` và `hlsUrl` đầy đủ.
 
 ### TypeScript interface đầy đủ
 
@@ -313,8 +365,8 @@ export interface SpaceStateDto {
   storeId: string; // Guid
   brandId: string; // Guid
 
-  currentPlaylistId: string | null;
-  currentPlaylistName: string | null;
+  currentQueueItemId: string | null;
+  currentTrackName: string | null;
   hlsUrl: string | null; // CloudFront .m3u8 URL
   moodName: string | null;
   isManualOverride: boolean;
@@ -327,8 +379,24 @@ export interface SpaceStateDto {
   isPaused: boolean;
   pausePositionSeconds: number | null;
 
-  pendingPlaylistId: string | null;
+  pendingQueueItemId: string | null;
   pendingOverrideReason: string | null;
+
+  volumePercent: number;
+  isMuted: boolean;
+  queueEndBehavior: number;
+  spaceQueueItems: SpaceQueueStateItemDto[]; // includes played/skipped/pending rows
+}
+
+export interface SpaceQueueStateItemDto {
+  queueItemId: string; // Guid
+  trackId: string; // Guid
+  trackName: string | null;
+  position: number; // sequential order by Position
+  queueStatus: number; // 0=Pending, 1=Playing, 2=Played, 3=Skipped
+  source: number; // 0=AI, 1=Manager
+  hlsUrl: string | null;
+  isReadyToStream: boolean;
 }
 
 export enum OverrideMode {
@@ -345,8 +413,8 @@ class SpaceStateDto {
   final String storeId;
   final String brandId;
 
-  final String? currentPlaylistId;
-  final String? currentPlaylistName;
+  final String? currentQueueItemId;
+  final String? currentTrackName;
   final String? hlsUrl;
   final String? moodName;
   final bool isManualOverride;
@@ -359,15 +427,20 @@ class SpaceStateDto {
   final bool isPaused;
   final int? pausePositionSeconds;
 
-  final String? pendingPlaylistId;
+  final String? pendingQueueItemId;
   final String? pendingOverrideReason;
+
+  final int volumePercent;       // 0–100
+  final bool isMuted;
+  final int queueEndBehavior;    // 0 Stop, 1 RepeatAll, 2 RepeatOne
+  final List<SpaceQueueStateItemDto> spaceQueueItems;
 
   const SpaceStateDto({
     required this.spaceId,
     required this.storeId,
     required this.brandId,
-    this.currentPlaylistId,
-    this.currentPlaylistName,
+    this.currentQueueItemId,
+    this.currentTrackName,
     this.hlsUrl,
     this.moodName,
     required this.isManualOverride,
@@ -377,16 +450,20 @@ class SpaceStateDto {
     this.seekOffsetSeconds,
     required this.isPaused,
     this.pausePositionSeconds,
-    this.pendingPlaylistId,
+    this.pendingQueueItemId,
     this.pendingOverrideReason,
+    required this.volumePercent,
+    required this.isMuted,
+    required this.queueEndBehavior,
+    required this.spaceQueueItems,
   });
 
   factory SpaceStateDto.fromJson(Map<String, dynamic> json) => SpaceStateDto(
     spaceId:              json['spaceId'] as String,
     storeId:              json['storeId'] as String,
     brandId:              json['brandId'] as String,
-    currentPlaylistId:    json['currentPlaylistId'] as String?,
-    currentPlaylistName:  json['currentPlaylistName'] as String?,
+    currentQueueItemId:    json['currentQueueItemId'] as String?,
+    currentTrackName:      json['currentTrackName'] as String?,
     hlsUrl:               json['hlsUrl'] as String?,
     moodName:             json['moodName'] as String?,
     isManualOverride:     json['isManualOverride'] as bool,
@@ -398,8 +475,14 @@ class SpaceStateDto {
     seekOffsetSeconds:    (json['seekOffsetSeconds'] as num?)?.toDouble(),
     isPaused:             json['isPaused'] as bool? ?? false,
     pausePositionSeconds: json['pausePositionSeconds'] as int?,
-    pendingPlaylistId:    json['pendingPlaylistId'] as String?,
+    pendingQueueItemId:    json['pendingQueueItemId'] as String?,
     pendingOverrideReason: json['pendingOverrideReason'] as String?,
+    volumePercent:        (json['volumePercent'] as num?)?.toInt() ?? 100,
+    isMuted:              json['isMuted'] as bool? ?? false,
+    queueEndBehavior:     (json['queueEndBehavior'] as num?)?.toInt() ?? 0,
+    spaceQueueItems:      (json['spaceQueueItems'] as List?)
+        ?.map((e) => SpaceQueueStateItemDto.fromJson(e as Map<String, dynamic>))
+        .toList() ?? [],
   );
 
   /// Tính seek offset thực tế (cho SignalR push khi seekOffsetSeconds = null)
@@ -409,6 +492,40 @@ class SpaceStateDto {
     if (startedAtUtc == null) return 0;
     return DateTime.now().toUtc().difference(startedAtUtc!).inMilliseconds / 1000.0;
   }
+}
+
+class SpaceQueueStateItemDto {
+  final String queueItemId;
+  final String trackId;
+  final String? trackName;
+  final int position;
+  final int queueStatus;
+  final int source;
+  final String? hlsUrl;
+  final bool isReadyToStream;
+
+  const SpaceQueueStateItemDto({
+    required this.queueItemId,
+    required this.trackId,
+    this.trackName,
+    required this.position,
+    required this.queueStatus,
+    required this.source,
+    this.hlsUrl,
+    required this.isReadyToStream,
+  });
+
+  factory SpaceQueueStateItemDto.fromJson(Map<String, dynamic> json) =>
+      SpaceQueueStateItemDto(
+        queueItemId: json['queueItemId'] as String,
+        trackId: json['trackId'] as String,
+        trackName: json['trackName'] as String?,
+        position: json['position'] as int,
+        queueStatus: json['queueStatus'] as int,
+        source: json['source'] as int,
+        hlsUrl: json['hlsUrl'] as String?,
+        isReadyToStream: json['isReadyToStream'] as bool,
+      );
 }
 ```
 
@@ -448,7 +565,7 @@ Nhận SpaceStateSync?
   └── Luôn luôn: rebuild state từ payload (overwrite toàn bộ local state)
       ├── isPaused=true → hiển thị pause icon; progress = pausePositionSeconds
       ├── isPaused=false và startedAtUtc ≠ null → tính seek: (now − startedAtUtc)
-      ├── pendingPlaylistId ≠ null → hiển thị "⏳ Đang chuẩn bị..."
+      ├── pendingQueueItemId ≠ null → hiển thị "⏳ Đang chuẩn bị..."
       ├── isManualOverride=true → badge "Manual Override" + overrideMode label
       ├── isManualOverride=false → badge "AI Scheduling"
       └── hlsUrl = null → không có playlist; clear player
@@ -465,21 +582,7 @@ Manager gọi POST /api/cams/spaces/{spaceId}/override
   ├─► [Server] Lưu state vào DB
   ├─► [SignalR] PlayStream        → tablet load HLS URL mới
   └─► [SignalR] SpaceStateSync    → tablet + manager rebuild state:
-        isManualOverride=true, overrideMode=1, currentPlaylistName="Evening Chill"
-```
-
-### Sequence: Override (202 Pending) → Tablet thấy gì
-
-```
-Manager gọi POST /api/cams/spaces/{spaceId}/override (playlist chưa transcode)
-  │
-  ├─► [REST] Response 202: { transitionType: 3, pendingPlaylistId: "uuid" }
-  ├─► [SignalR] SpaceStateSync    → pendingPlaylistId ≠ null → UI "⏳ Đang chuẩn bị..."
-  │
-  ... (Hangfire transcode job chạy nền) ...
-  │
-  ├─► [SignalR] PlayStream (transitionType=1) → tablet hard-switch sang HLS mới
-  └─► [SignalR] SpaceStateSync    → pendingPlaylistId=null, hlsUrl có sẵn → UI bình thường
+        isManualOverride=true, overrideMode=1, currentTrackName="Evening Chill"
 ```
 
 ### Sequence: Pause → Tablet + Manager thấy gì
@@ -766,14 +869,14 @@ class _SpacePlayerPageState extends State<SpacePlayerPage> {
 
   void _onSpaceStateSync(SpaceStateDto state) {
     // Rebuild toàn bộ UI state từ SpaceStateSync
-    setState(() { /* update your local state: currentPlaylistName, isManualOverride, etc. */ });
+    setState(() { /* update your local state: currentTrackName, isManualOverride, etc. */ });
 
     if (state.isPaused) {
       // Đồng bộ pause position
       final pos = state.pausePositionSeconds?.toDouble() ?? 0;
       _audioPlayer.seek(Duration(milliseconds: (pos * 1000).toInt()));
       _audioPlayer.pause();
-    } else if (state.pendingPlaylistId != null) {
+    } else if (state.pendingQueueItemId != null) {
       // Override đang transcode — hiển thị loading state
     } else if (state.hlsUrl != null && state.startedAtUtc != null) {
       // Tính lại seek từ startedAtUtc (SpaceStateSync không có seekOffsetSeconds)
@@ -835,12 +938,23 @@ export interface PlaybackStateChangedPayload {
   targetTrackId: string | null;
 }
 
+export interface SpaceQueueStateItemDto {
+  queueItemId: string;
+  trackId: string;
+  trackName: string | null;
+  position: number;
+  queueStatus: number; // 0=Pending, 1=Playing, 2=Played, 3=Skipped
+  source: number; // 0=AI, 1=Manager
+  hlsUrl: string | null;
+  isReadyToStream: boolean;
+}
+
 export interface SpaceStateDto {
   spaceId: string;
   storeId: string;
   brandId: string;
-  currentPlaylistId: string | null;
-  currentPlaylistName: string | null;
+  currentQueueItemId: string | null;
+  currentTrackName: string | null;
   hlsUrl: string | null;
   moodName: string | null;
   isManualOverride: boolean;
@@ -850,8 +964,13 @@ export interface SpaceStateDto {
   seekOffsetSeconds: number | null; // null trong SignalR push; có trong REST
   isPaused: boolean;
   pausePositionSeconds: number | null;
-  pendingPlaylistId: string | null;
+  pendingQueueItemId: string | null;
   pendingOverrideReason: string | null;
+
+  volumePercent: number;
+  isMuted: boolean;
+  queueEndBehavior: number;
+  spaceQueueItems: SpaceQueueStateItemDto[];
 }
 
 export enum OverrideMode {
@@ -876,6 +995,7 @@ export enum PlaybackCommand {
   SkipNext = 6,
   SkipPrevious = 7,
   SkipToTrack = 8,
+  TrackEnded = 9,
 }
 
 export enum TransitionType {
@@ -1100,7 +1220,7 @@ export function useStoreHub(spaceId: string) {
             // Đồng bộ player về vị trí pause
             audioPlayer.seek(state.pausePositionSeconds ?? 0);
             audioPlayer.pause();
-          } else if (state.pendingPlaylistId) {
+          } else if (state.pendingQueueItemId) {
             // Đang chờ transcode — hiển thị loading indicator
           } else if (state.hlsUrl && state.startedAtUtc) {
             // Resume: tính offset thực tế
@@ -1159,6 +1279,7 @@ async function setupManagerHub(
 | ------------------ | ----------------------------------------------- | ------------------------------------------------------------ |
 | `{spaceId}` (GUID) | Tablet của Space đó + manager đang xem Space đó | `PlayStream`, `PlaybackStateChanged`, `StopPlayback`         |
 | `mgr-{storeId}`    | Tất cả manager tabs/sessions của Store          | `SpaceStateSync`, `OverrideActivated`\*, `OverrideCleared`\* |
+| `brand-{brandId}`  | Tất cả manager tabs của Brand                   | `SunoGenerationStatusChanged`                                |
 
 > \* Chưa implement, dự kiến Phase 14.
 
@@ -1202,8 +1323,24 @@ Tablet mất mạng 30s
   → Gọi GET /api/cams/spaces/state           ← REST: seekOffsetSeconds chính xác
   → Nếu isPaused: seekTo(pausePositionSeconds); player.pause()
   → Nếu đang play: seekTo(seekOffsetSeconds); player.play()
-  → Nếu pendingPlaylistId ≠ null: hiển thị "⏳ Đang chuẩn bị..."
+  → Nếu pendingQueueItemId ≠ null: hiển thị "⏳ Đang chuẩn bị..."
   → Tiếp tục nhận SignalR events bình thường
 ```
 
 > **Xem thêm Section 5** cho đầy đủ decision tree và sequence diagrams.
+
+---
+
+## Appendix — SpaceStateDto: mixer & queue end (backend v2)
+
+Tóm tắt nhanh (schema đầy đủ: **Section 4**). Các field sau có trong JSON `GET /api/cams/spaces/.../state` và **`SpaceStateSync`** (camelCase theo ASP.NET):
+
+| Field              | Kiểu             | Mô tả                                                                               |
+| ------------------ | ---------------- | ----------------------------------------------------------------------------------- |
+| `volumePercent`    | `number` (0–100) | Gợi ý âm lượng cho client; mặc định 100                                             |
+| `isMuted`          | `boolean`        | `true` → client nên mute player                                                     |
+| `queueEndBehavior` | `number`         | `0` = Stop, `1` = RepeatAll, `2` = RepeatOne (khi bài kết thúc tự nhiên / watchdog) |
+
+**PATCH** ` /api/cams/spaces/state/audio` hoặc `/api/cams/spaces/{spaceId}/state/audio` chỉ cập nhật các field trên; server **enqueue `SpaceStateSync`**, **không** publish `SpaceMusicStatePlaybackChangedDomainEvent` (không reschedule watchdog).
+
+**Client:** sau mỗi `SpaceStateSync`, áp dụng `volumePercent` / `isMuted` cho UI và engine phát. `queueEndBehavior` chỉ cần hiển thị hoặc lưu local nếu product yêu cầu; logic lặp/vòng thực tế do server quyết định khi nhận `TrackEnded` / watchdog.

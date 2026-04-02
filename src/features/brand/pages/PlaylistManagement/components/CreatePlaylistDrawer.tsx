@@ -8,13 +8,7 @@ import {
   Button,
   Flex,
   Typography,
-  Alert,
 } from 'antd';
-
-/**
- * Icon
- */
-import { InfoCircleOutlined } from '@ant-design/icons';
 
 /**
  * Hooks
@@ -61,13 +55,10 @@ export const CreatePlaylistDrawer = ({
   });
   const { data: moodsData } = useMoods();
 
-  const isDynamic = Form.useWatch('isDynamic', form);
-
   useEffect(() => {
     if (open) {
       form.resetFields();
       form.setFieldsValue({
-        isDynamic: false,
         isDefault: false,
       });
     }
@@ -203,35 +194,13 @@ export const CreatePlaylistDrawer = ({
         </div>
 
         {/* Configuration */}
-        <div style={{ marginBottom: 24 }}>
+        <div>
           <Title
             level={5}
             style={{ marginBottom: 16 }}
           >
             Configuration
           </Title>
-
-          <Form.Item
-            label='Playlist Type'
-            name='isDynamic'
-            valuePropName='checked'
-          >
-            <Switch
-              checkedChildren='Dynamic'
-              unCheckedChildren='Static'
-            />
-          </Form.Item>
-
-          {isDynamic && (
-            <Alert
-              message='Dynamic Playlist'
-              description='Dynamic playlists automatically select tracks based on the assigned mood. You cannot manually add/remove tracks.'
-              type='info'
-              icon={<InfoCircleOutlined />}
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
-          )}
 
           <Form.Item
             label='Default Playlist'
@@ -241,36 +210,6 @@ export const CreatePlaylistDrawer = ({
             <Switch
               checkedChildren='Yes'
               unCheckedChildren='No'
-            />
-          </Form.Item>
-        </div>
-
-        {/* Advanced Settings */}
-        <div>
-          <Title
-            level={5}
-            style={{ marginBottom: 16 }}
-          >
-            Advanced Settings
-          </Title>
-
-          <Form.Item
-            label='HLS URL'
-            name='hlsUrl'
-            rules={createPlaylistValidation.hlsUrl}
-          >
-            <Input placeholder='https://example.com/playlist.m3u8' />
-          </Form.Item>
-
-          <Form.Item
-            label='Total Duration (seconds)'
-            name='totalDurationSeconds'
-            rules={createPlaylistValidation.totalDurationSeconds}
-          >
-            <Input
-              type='number'
-              placeholder='e.g., 3600'
-              min={1}
             />
           </Form.Item>
         </div>

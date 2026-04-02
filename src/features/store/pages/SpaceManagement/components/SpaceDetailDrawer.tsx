@@ -145,6 +145,11 @@ export const SpaceDetailDrawer = ({
                 {space.description}
               </Descriptions.Item>
             )}
+            {space.ioTDeviceId && (
+              <Descriptions.Item label='IoT Device ID'>
+                <Tag color='geekblue'>{space.ioTDeviceId}</Tag>
+              </Descriptions.Item>
+            )}
           </Descriptions>
 
           {/* Playback State */}
@@ -156,12 +161,12 @@ export const SpaceDetailDrawer = ({
             <Descriptions.Item label='Status'>
               {getPlaybackStatusTag(
                 spaceState?.isPaused,
-                !!spaceState?.currentPlaylistId,
+                !!spaceState?.currentQueueItemId,
               )}
             </Descriptions.Item>
-            <Descriptions.Item label='Current Playlist'>
-              {spaceState?.currentPlaylistName ? (
-                <Tag color='blue'>{spaceState.currentPlaylistName}</Tag>
+            <Descriptions.Item label='Current Track'>
+              {spaceState?.currentTrackName ? (
+                <Tag color='blue'>{spaceState.currentTrackName}</Tag>
               ) : (
                 '—'
               )}
@@ -196,14 +201,44 @@ export const SpaceDetailDrawer = ({
                 {formatDate(spaceState.expectedEndAtUtc)}
               </Descriptions.Item>
             )}
-            {spaceState?.pendingPlaylistId && (
-              <Descriptions.Item label='Pending Playlist'>
+            {spaceState?.pendingQueueItemId && (
+              <Descriptions.Item label='Pending Track'>
                 <Badge
                   status='processing'
-                  text={spaceState.pendingPlaylistId}
+                  text={spaceState.pendingQueueItemId}
                 />
               </Descriptions.Item>
             )}
+          </Descriptions>
+
+          {/* Audio Mixer State */}
+          <Descriptions
+            title='Audio Mixer'
+            column={1}
+            bordered
+          >
+            <Descriptions.Item label='Volume'>
+              {spaceState?.volumePercent ?? 100}%
+            </Descriptions.Item>
+            <Descriptions.Item label='Muted'>
+              {spaceState?.isMuted ? (
+                <Tag color='error'>Yes</Tag>
+              ) : (
+                <Tag color='success'>No</Tag>
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label='Queue End Behavior'>
+              {spaceState?.queueEndBehavior === 0 && <Tag>Stop</Tag>}
+              {spaceState?.queueEndBehavior === 1 && (
+                <Tag color='blue'>Repeat Queue</Tag>
+              )}
+              {spaceState?.queueEndBehavior === 2 && (
+                <Tag color='purple'>Return to Schedule</Tag>
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label='Queue Items'>
+              {spaceState?.spaceQueueItems?.length || 0} track(s)
+            </Descriptions.Item>
           </Descriptions>
 
           {/* Streaming Info */}

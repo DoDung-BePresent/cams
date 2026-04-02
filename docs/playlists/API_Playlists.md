@@ -97,17 +97,14 @@ public class BasePaginationFilter
 
 ### 4.1 `PlaylistRequest` (Create / Update — `application/json`)
 
-| Field                  | Type        | Required (Create) | Required (Update) | Validation                                                      |
-| ---------------------- | ----------- | :---------------: | :---------------: | --------------------------------------------------------------- |
-| `name`                 | string?     |        ✅         |   ❌ (partial)    | NotEmpty; max 255 chars; unique trong cùng store                |
-| `storeId`              | Guid?       |  ✅ (BM only) ³   |        ❌         | BrandManager phải cung cấp; phải thuộc brand của BM             |
-| `moodId`               | Guid?       |        ❌         |        ❌         | Tùy chọn; must exist nếu cung cấp                               |
-| `description`          | string?     |        ❌         |        ❌         | Tùy chọn; max 2000 chars                                        |
-| `isDynamic`            | bool?       |        ❌         |        ❌         | Playlist động hay tĩnh                                          |
-| `isDefault`            | bool?       |        ❌         |        ❌         | Playlist mặc định của store                                     |
-| `hlsUrl`               | string?     |        ❌         |        ❌         | Phải kết thúc bằng `.m3u8`; max 500 chars                       |
-| `totalDurationSeconds` | int?        |        ❌         |        ❌         | > 0 nếu được cung cấp                                           |
-| `trackIds`             | List<Guid>? |        ❌         |       ❌ ⁴        | Create: initial tracks; Update: full desired set (null = no-op) |
+| Field         | Type        | Required (Create) | Required (Update) | Validation                                                      |
+| ------------- | ----------- | :---------------: | :---------------: | --------------------------------------------------------------- |
+| `name`        | string?     |        ✅         |   ❌ (partial)    | NotEmpty; max 255 chars; unique trong cùng store                |
+| `storeId`     | Guid?       |  ✅ (BM only) ³   |        ❌         | BrandManager phải cung cấp; phải thuộc brand của BM             |
+| `moodId`      | Guid?       |        ❌         |        ❌         | Tùy chọn; must exist nếu cung cấp                               |
+| `description` | string?     |        ❌         |        ❌         | Tùy chọn; max 2000 chars                                        |
+| `isDefault`   | bool?       |        ❌         |        ❌         | Playlist mặc định của store                                     |
+| `trackIds`    | List<Guid>? |        ❌         |       ❌ ⁴        | Create: initial tracks; Update: full desired set (null = no-op) |
 
 > **³ `storeId` theo role:**
 >
@@ -121,7 +118,6 @@ public class BasePaginationFilter
 > - `trackIds: []` → **xóa tất cả** track khỏi playlist.
 > - `trackIds: [id1, id2]` → **sync** danh sách: xóa track không có trong list, thêm track mới.
 > - Track IDs phải thuộc cùng brand (qua store) — track của brand khác bị bỏ qua.
-> - Placeholder: track đang stream → **422** khi add/remove track riêng lẻ.
 
 ### 4.2 `AddTracksToPlaylistRequest` (cho `POST /api/playlists/{id}/tracks`)
 
@@ -146,7 +142,6 @@ public class BasePaginationFilter
 | `brandId`     | Guid?                | —       | ⚠️ BM/SM: luôn bị override. SA: lọc tự do                   |
 | `storeId`     | Guid?                | —       | ⚠️ SM: luôn bị override. BM: lọc trong brand. SA: lọc tự do |
 | `moodId`      | Guid?                | —       | Lọc theo mood                                               |
-| `isDynamic`   | boolean?             | —       | `true` = chỉ dynamic playlist; `false` = chỉ static         |
 | `isDefault`   | boolean?             | —       | `true` = chỉ default playlist                               |
 | `createdFrom` | datetime? (ISO 8601) | —       | Lọc playlist tạo từ ngày này                                |
 | `createdTo`   | datetime? (ISO 8601) | —       | Lọc playlist tạo đến ngày này                               |
@@ -155,21 +150,19 @@ public class BasePaginationFilter
 
 **Kế thừa từ `BaseResponse`** (§3.1) + thêm:
 
-| Field                  | Type         | Mô tả                                                              |
-| ---------------------- | ------------ | ------------------------------------------------------------------ |
-| (inherited)            | BaseResponse | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
-| `brandId`              | Guid?        | ID brand (từ store.BrandId)                                        |
-| `storeId`              | Guid?        | ID store chứa playlist                                             |
-| `storeName`            | string?      | Tên store (display)                                                |
-| `moodId`               | Guid?        | ID mood                                                            |
-| `moodName`             | string?      | Tên mood (display)                                                 |
-| `name`                 | string?      | Tên playlist                                                       |
-| `description`          | string?      | Mô tả playlist                                                     |
-| `isDynamic`            | bool?        | Playlist động (AI-managed) hay tĩnh                                |
-| `isDefault`            | bool?        | Playlist mặc định của store                                        |
-| `hlsUrl`               | string?      | Master HLS manifest URL (.m3u8)                                    |
-| `totalDurationSeconds` | int?         | Tổng thời lượng (giây)                                             |
-| `trackCount`           | int          | Số track trong playlist                                            |
+| Field         | Type         | Mô tả                                                              |
+| ------------- | ------------ | ------------------------------------------------------------------ |
+| (inherited)   | BaseResponse | `id`, `createdAt`, `updatedAt`, `createdBy`, `updatedBy`, `status` |
+| `brandId`     | Guid?        | ID brand (từ store.BrandId)                                        |
+| `storeId`     | Guid?        | ID store chứa playlist                                             |
+| `storeName`   | string?      | Tên store (display)                                                |
+| `moodId`      | Guid?        | ID mood                                                            |
+| `moodName`    | string?      | Tên mood (display)                                                 |
+| `name`        | string?      | Tên playlist                                                       |
+| `description` | string?      | Mô tả playlist                                                     |
+| `isDefault`   | bool?        | Playlist mặc định của store                                        |
+| `trackCount`  | int          | Số track trong playlist                                            |
+| `trackCount`  | int          | Số track trong playlist                                            |
 
 ### 4.5 `PlaylistDetailResponse` (trong `Result<PlaylistDetailResponse>`)
 
@@ -259,10 +252,7 @@ public class BasePaginationFilter
       "moodName": "Relaxing",
       "name": "Afternoon Chill",
       "description": "Soft background music for afternoon hours",
-      "isDynamic": false,
       "isDefault": true,
-      "hlsUrl": "https://cdn.example.com/hls/p1000000/master.m3u8",
-      "totalDurationSeconds": 3600,
       "trackCount": 12,
       "createdAt": "2026-01-20T10:00:00Z",
       "updatedAt": null,
@@ -313,10 +303,7 @@ public class BasePaginationFilter
     "moodName": "Relaxing",
     "name": "Afternoon Chill",
     "description": "Soft background music for afternoon hours",
-    "isDynamic": false,
     "isDefault": true,
-    "hlsUrl": "https://cdn.example.com/hls/p1000000/master.m3u8",
-    "totalDurationSeconds": 3600,
     "trackCount": 2,
     "tracks": [
       {
@@ -325,8 +312,7 @@ public class BasePaginationFilter
         "artist": "Studio One",
         "durationSec": 210,
         "orderIndex": 1,
-        "coverImageUrl": "https://cdn.example.com/tracks/covers/summer-vibes.jpg",
-        "actualDurationSec": 208,
+        "hlsUrl": "https://cdn.example.com/tracks/audio/summer-vibes.m3u8",
         "seekOffsetSeconds": 0
       },
       {
@@ -335,9 +321,8 @@ public class BasePaginationFilter
         "artist": "Ambient Lab",
         "durationSec": 195,
         "orderIndex": 2,
-        "coverImageUrl": "https://cdn.example.com/tracks/covers/ocean-breeze.jpg",
-        "actualDurationSec": 193,
-        "seekOffsetSeconds": 208
+        "hlsUrl": "https://cdn.example.com/tracks/audio/ocean-breeze.m3u8",
+        "seekOffsetSeconds": 210
       }
     ],
     "createdAt": "2026-01-20T10:00:00Z",
@@ -448,7 +433,6 @@ public class BasePaginationFilter
 - **Path param:** `id` (Guid)
 - **Notes:**
   - Ownership check theo role (§1).
-  - **Business rule:** Không thể xóa playlist đang được streaming (có `SpaceMusicState.CurrentPlaylistId == id`) → **422 BusinessRuleViolation**.
   - **Soft delete:** playlist được đánh dấu `IsDeleted = true`.
   - Sau DB commit: enqueue **S3 folder cleanup** cho tất cả transcode outputs của playlist.
 
@@ -461,17 +445,6 @@ public class BasePaginationFilter
   "data": null,
   "errors": null,
   "errorCode": null
-}
-```
-
-- **Response 422:** Playlist đang được streaming
-
-```json
-{
-  "isSuccess": false,
-  "message": "Cannot delete playlist that is currently streaming",
-  "errors": null,
-  "errorCode": "BusinessRuleViolation"
 }
 ```
 
@@ -509,7 +482,6 @@ public class BasePaginationFilter
   - Ownership check theo role (§1).
   - Track IDs không thuộc brand (qua store) → bị **loại bỏ** (không báo lỗi).
   - Track đã có trong playlist → **skipped** (`skippedCount` trong audit log).
-  - **Không thể thêm track vào playlist đang stream** → **422**.
   - Sau DB commit: auto-reindex `OrderIndex` trong background + trigger **auto-transcode** (debounced 5 min).
 
 - **Request body example:**
@@ -535,17 +507,6 @@ public class BasePaginationFilter
 }
 ```
 
-- **Response 422:** Playlist đang stream
-
-```json
-{
-  "isSuccess": false,
-  "message": "Cannot modify playlist while actively streaming",
-  "errors": null,
-  "errorCode": "BusinessRuleViolation"
-}
-```
-
 ---
 
 ### 5.8 `DELETE /api/playlists/{id}/tracks/{trackId}` — Xóa track khỏi playlist
@@ -554,7 +515,6 @@ public class BasePaginationFilter
 - **Path params:** `id` (Guid) — playlist ID; `trackId` (Guid) — track ID
 - **Notes:**
   - Ownership check theo role (§1).
-  - **Không thể xóa track khỏi playlist đang stream** → **422**.
   - Nếu track không có trong playlist → idempotent (không báo lỗi).
   - Sau DB commit: auto-reindex `OrderIndex` trong background + trigger **auto-transcode** (debounced 5 min).
 
@@ -570,45 +530,6 @@ public class BasePaginationFilter
 }
 ```
 
-- **Response 422:** Playlist đang stream
-
-```json
-{
-  "isSuccess": false,
-  "message": "Cannot modify playlist while actively streaming",
-  "errors": null,
-  "errorCode": "BusinessRuleViolation"
-}
-```
-
----
-
-### 5.9 `POST /api/playlists/{id}/retranscode` — Force Re-transcode Playlist
-
-- **Auth:** BrandManager (own brand), StoreManager (own store)
-- **Path param:** `id` (Guid)
-- **No request body**
-- **Notes:**
-  - Ownership check theo role (§1).
-  - Xóa `HlsUrl` hiện tại, tăng `TranscodeVersion` lên 1, queue MediaConvert job mới vào Hangfire.
-  - Dùng khi HLS cũ bị hỏng hoặc cần regenerate sau khi CloudFront/S3 config thay đổi.
-  - Sau khi job hoàn tất, `HlsUrl` sẽ được cập nhật và SignalR push `PlayStream` đến tablet.
-
-- **Response 202 Accepted (`Result`):**
-
-```json
-{
-  "isSuccess": true,
-  "message": "Retranscode job queued successfully.",
-  "data": null,
-  "errors": null,
-  "errorCode": null
-}
-```
-
-- **Response 404 Not Found:** Playlist không tồn tại
-- **Response 403 Forbidden:** Không có quyền
-
 ---
 
 ## 6. Error Response Reference
@@ -620,7 +541,7 @@ public class BasePaginationFilter
 | 401         | `Unauthorized`          | Chưa đăng nhập hoặc session không hợp lệ                      |
 | 403         | `Forbidden`             | Không đủ quyền hoặc playlist không thuộc brand/store của user |
 | 404         | `NotFound`              | Playlist, Store, hoặc Mood không tồn tại                      |
-| 409 / 422   | `BusinessRuleViolation` | Name trùng; playlist đang stream (delete/add/remove track)    |
+| 409 / 422   | `BusinessRuleViolation` | Name trùng                                                    |
 | 500         | `InternalServerError`   | Lỗi server không mong đợi                                     |
 
 ---
@@ -629,17 +550,15 @@ public class BasePaginationFilter
 
 1. **Playlist không có BrandId trực tiếp:** Brand được xác định qua `playlist.Store.BrandId`. Khi load playlist, luôn cần include `Store` navigation để kiểm tra ownership.
 
-2. **ActiveStream guard:** Cả `AddTracksToPlaylist` và `RemoveTrackFromPlaylist` đều kiểm tra `PlaylistActiveStreamGuard.ThrowIfStreamingAsync` để bảo vệ khỏi race condition khi playlist đang phát live.
+2. **Auto-transcode (debounced):** Mỗi khi thêm/xóa track, hệ thống tự động lên lịch MediaConvert job (debounced 5 phút) để concat HLS mới. Giá trị `actualDurationSec` và `hlsUrl` sẽ cập nhật sau khi transcode hoàn tất.
 
-3. **Auto-transcode (debounced):** Mỗi khi thêm/xóa track, hệ thống tự động lên lịch MediaConvert job (debounced 5 phút) để concat HLS mới. Giá trị `actualDurationSec` và `hlsUrl` sẽ cập nhật sau khi transcode hoàn tất.
+3. **OrderIndex reindex:** Sau mỗi thay đổi track, `OrderIndex` được reindex trong background (1, 2, 3, …) để tránh gaps. Client không nên rely vào OrderIndex trong thời gian ngắn sau khi thêm/xóa track.
 
-4. **OrderIndex reindex:** Sau mỗi thay đổi track, `OrderIndex` được reindex trong background (1, 2, 3, …) để tránh gaps. Client không nên rely vào OrderIndex trong thời gian ngắn sau khi thêm/xóa track.
-
-5. **trackIds = null vs [] (Update):**
+4. **trackIds = null vs [] (Update):**
    - `"trackIds": null` → **không thay đổi gì** (patch semantics).
    - `"trackIds": []` → **xóa tất cả** track khỏi playlist.
    - Đây là điểm dễ nhầm lẫn — client phải gửi đúng ý định.
 
-6. **StoreManager constraint:** StoreManager phải có `user.StoreId` hợp lệ. SM không có store → **403** ngay từ authorization step.
+5. **StoreManager constraint:** StoreManager phải có `user.StoreId` hợp lệ. SM không có store → **403** ngay từ authorization step.
 
-7. **seekOffsetSeconds:** Được tính server-side để tránh float precision lỗi ở client. Luôn lấy từ `PlaylistDetailResponse.tracks[].seekOffsetSeconds` thay vì tự tính ở client.
+6. **seekOffsetSeconds:** Được tính server-side để tránh float precision lỗi ở client. Luôn lấy từ `PlaylistDetailResponse.tracks[].seekOffsetSeconds` thay vì tự tính ở client.
