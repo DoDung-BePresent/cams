@@ -15,6 +15,25 @@ export type BrandRequest = {
   taxCode?: string;
   billingAddress?: string;
   defaultTimeZone?: string;
+  /** CAMS fuzzy template: Cafe | Apparel | Furniture | LuxuryRestaurant */
+  fuzzyProfileTemplate?: string;
+  /** 1 = brand lock, 2 = threshold only, 3 = full override */
+  storeOverrideLevel?: number;
+  chillBpmMin?: number;
+  chillBpmMax?: number;
+  focusBpmMin?: number;
+  focusBpmMax?: number;
+  energeticBpmMin?: number;
+  energeticBpmMax?: number;
+  pressureLowMax?: number;
+  pressureCriticalMin?: number;
+  stressComfortableMax?: number;
+  stressHighMin?: number;
+  densitySparseMax?: number;
+  densityCrowdedMin?: number;
+  spaceCapacity?: number;
+  defaultDensityRatioWhenNull?: number;
+  allowedPlaylistIds?: string[];
 };
 
 // List Item Response (extends BaseResponse)
@@ -43,6 +62,24 @@ export type BrandDetailResponse = BrandListItem & {
   technicalContactEmail: string | null;
   defaultTimeZone: string;
   currentSubscriptionId: string | null;
+  /** CAMS: mirrors BrandRequest music policy when present */
+  storeOverrideLevel?: number | null;
+  fuzzyProfileTemplate?: string | null;
+  chillBpmMin?: number | null;
+  chillBpmMax?: number | null;
+  focusBpmMin?: number | null;
+  focusBpmMax?: number | null;
+  energeticBpmMin?: number | null;
+  energeticBpmMax?: number | null;
+  pressureLowMax?: number | null;
+  pressureCriticalMin?: number | null;
+  stressComfortableMax?: number | null;
+  stressHighMin?: number | null;
+  densitySparseMax?: number | null;
+  densityCrowdedMin?: number | null;
+  spaceCapacity?: number | null;
+  defaultDensityRatioWhenNull?: number | null;
+  allowedPlaylistIds?: string[] | null;
 };
 
 // Filter (extends BasePaginationFilter)

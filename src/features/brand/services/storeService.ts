@@ -8,6 +8,7 @@ import type {
   StoreListItem,
   StoreDetailResponse,
   StoreRequest,
+  StoreFuzzyOverrideProfileRequest,
 } from '../types';
 import type { PaginationResult, Result } from '@/shared/types';
 
@@ -18,6 +19,7 @@ const STORE_ENDPOINTS = {
   update: (id: string) => `/api/stores/${id}`,
   delete: (id: string) => `/api/stores/${id}`,
   toggleStatus: (id: string) => `/api/stores/${id}/toggle-status`,
+  fuzzyProfiles: (id: string) => `/api/stores/${id}/fuzzy-profiles`,
 } as const;
 
 export const storeService = {
@@ -57,4 +59,9 @@ export const storeService = {
     api.put<Result>(STORE_ENDPOINTS.toggleStatus(id)),
 
   delete: (id: string) => api.delete<Result>(STORE_ENDPOINTS.delete(id)),
+
+  createFuzzyOverrideProfile: (
+    storeId: string,
+    body: StoreFuzzyOverrideProfileRequest,
+  ) => api.post<Result>(STORE_ENDPOINTS.fuzzyProfiles(storeId), body),
 };

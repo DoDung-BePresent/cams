@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Form,
   Input,
@@ -9,97 +9,134 @@ import {
   Alert,
   message,
   Typography,
+  Segmented,
+  Spin,
+  Divider,
 } from 'antd';
-
-/**
- * Icons
- */
-import { ThunderboltOutlined, CopyOutlined } from '@ant-design/icons';
-
-/**
- * Components
- */
+import {
+  ThunderboltOutlined,
+  CopyOutlined,
+  StarOutlined,
+} from '@ant-design/icons';
 import { SettingSwitch } from '@/shared/components';
-
-/**
- * Hooks
- */
 import { useSunoConfig, useCreateSunoGeneration } from '../hooks';
 import { useMoodOptions } from '@/shared/modules/moods/hooks';
 import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
-
-/**
- * Utils
- */
-import { buildPromptFromTemplate } from '../utils';
-
-/**
- * Types
- */
+import {
+  buildBrandProfileSunoPrompt,
+  hasBrandMusicProfileData,
+} from '../utils';
 import type { SunoGenerationCreateRequest } from '../types';
+import type { BrandProfileSunoMood } from '../utils/brandProfileSunoPrompt';
+import { useAuth } from '@/providers';
+import { useBrand } from '@/features/admin/hooks';
 
 const { TextArea } = Input;
 const { Text } = Typography;
+
+type PromptMode = 'manual' | 'brandProfile';
 
 interface SunoGenerationFormProps {
   onSuccess?: (generationId: string) => void;
 }
 
+type SunoGenerationFormValues = SunoGenerationCreateRequest & {
+  genre?: string | null;
+  profileMood?: BrandProfileSunoMood;
+};
+
+const storeOverrideLabels: Record<number, string> = {
+  1: 'Brand lock',
+  2: 'Threshold only',
+  3: 'Full store override',
+};
+
 export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
-  type SunoGenerationFormValues = SunoGenerationCreateRequest & {
-    // FE-only helper field to fill {genre} in the prompt template
-    genre?: string | null;
-  };
-
   const [form] = Form.useForm<SunoGenerationFormValues>();
-  const [useTemplate, setUseTemplate] = useState(true);
-  const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
+  const [promptMode, setPromptMode] = useState<PromptMode>('manual');
 
-  const { data: config } = useSunoConfig();
+  const { user } = useAuth();
+  const brandId = user?.brandId ?? undefined;
+
+  const { data: config, isLoading: isConfigLoading } = useSunoConfig();
+  const profileFromConfig = config?.brandMusicProfile;
+  const hasFromConfig = hasBrandMusicProfileData(
+    profileFromConfig ?? undefined,
+  );
+  const isConfigReady = !isConfigLoading;
+
+  const { data: brand, isLoading: isBrandLoading } = useBrand(
+    brandId,
+    !!brandId && isConfigReady && !hasFromConfig,
+  );
+
+  const musicSnapshot = useMemo(() => {
+    if (hasBrandMusicProfileData(profileFromConfig ?? undefined)) {
+      return profileFromConfig;
+    }
+    if (brand && hasBrandMusicProfileData(brand)) {
+      return brand;
+    }
+    return undefined;
+  }, [profileFromConfig, brand]);
+
   const createGeneration = useCreateSunoGeneration();
   const { options: moodOptions } = useMoodOptions();
   const { data: playlistOptions } = usePlaylistOptions();
 
-  // Initialize form with config defaults
+  const hasProfile = hasBrandMusicProfileData(musicSnapshot);
+  const isResolvingProfile =
+    isConfigLoading ||
+    (!!brandId && isConfigReady && !hasFromConfig && isBrandLoading);
+
+  const watchedProfileMood = Form.useWatch('profileMood', form);
+  const watchedTitle = Form.useWatch('title', form);
+  const watchedGenre = Form.useWatch('genre', form);
+  const watchedArtist = Form.useWatch('artist', form);
+
+  const generatedPrompt = useMemo(() => {
+    if (
+      promptMode !== 'brandProfile' ||
+      !musicSnapshot ||
+      !hasBrandMusicProfileData(musicSnapshot)
+    ) {
+      return '';
+    }
+
+    return buildBrandProfileSunoPrompt(
+      musicSnapshot,
+      watchedProfileMood ?? 'focus',
+      {
+        title: watchedTitle ?? undefined,
+        genre: watchedGenre ?? undefined,
+        artist: watchedArtist ?? undefined,
+      },
+      config?.sunoPromptTemplate,
+    );
+  }, [
+    promptMode,
+    musicSnapshot,
+    watchedProfileMood,
+    watchedTitle,
+    watchedGenre,
+    watchedArtist,
+    config?.sunoPromptTemplate,
+  ]);
+
   useEffect(() => {
     if (config) {
       form.setFieldsValue({
         targetPlaylistId: config.sunoDefaultPlaylistId,
         autoAddToTargetPlaylist: true,
+        profileMood: 'focus',
       });
     }
   }, [config, form]);
 
-  // Generate prompt from template when fields change
-  const handleFieldsChange = () => {
-    if (!useTemplate || !config?.sunoPromptTemplate) return;
-
-    const values = form.getFieldsValue();
-    const moodName =
-      moodOptions?.find(
-        (m: { value: string; label: string }) => m.value === values.moodId,
-      )?.label || '';
-
-    const variables: Record<string, string> = {
-      mood: moodName,
-      genre: (values.genre || values.artist || '') as string,
-      title: values.title || '',
-      artist: values.artist || '',
-    };
-
-    const prompt = buildPromptFromTemplate(
-      config.sunoPromptTemplate,
-      variables,
-    );
-    setGeneratedPrompt(prompt);
-  };
-
   const handleSubmit = async (values: SunoGenerationFormValues) => {
     const finalPrompt =
-      useTemplate && typeof generatedPrompt === 'string'
-        ? generatedPrompt.trim()
-          ? generatedPrompt
-          : null
+      promptMode === 'brandProfile'
+        ? generatedPrompt.trim() || null
         : values.prompt;
 
     if (finalPrompt && finalPrompt.trim().length > 4000) {
@@ -107,9 +144,10 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       return;
     }
 
-    // Strip FE-only helper field before calling backend.
-    const { genre: _genre, ...payload } = values;
-    void _genre; // ensure eslint no-unused-vars is satisfied
+    const { genre: _genre, profileMood: _profileMood, ...payload } = values;
+    void _genre;
+    void _profileMood;
+
     const result = await createGeneration.mutateAsync({
       ...payload,
       prompt: finalPrompt,
@@ -119,42 +157,98 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       onSuccess(result.id);
     }
 
-    // Reset form
     form.resetFields();
-    setGeneratedPrompt('');
+    form.setFieldsValue({
+      targetPlaylistId: config?.sunoDefaultPlaylistId,
+      autoAddToTargetPlaylist: true,
+      profileMood: 'focus',
+    });
+    setPromptMode(
+      hasBrandMusicProfileData(musicSnapshot) ? 'brandProfile' : 'manual',
+    );
   };
 
-  const hasTemplate = !!config?.sunoPromptTemplate;
+  const profileSummary =
+    musicSnapshot && hasProfile ? (
+      <Space
+        direction='vertical'
+        size={4}
+        style={{ width: '100%' }}
+      >
+        <Text type='secondary'>
+          Template:{' '}
+          <Text strong>{musicSnapshot.fuzzyProfileTemplate ?? '—'}</Text>
+          {musicSnapshot.storeOverrideLevel != null && (
+            <>
+              {' '}
+              · Override:{' '}
+              {storeOverrideLabels[musicSnapshot.storeOverrideLevel] ??
+                `Level ${musicSnapshot.storeOverrideLevel}`}
+            </>
+          )}
+        </Text>
+        <Text
+          type='secondary'
+          style={{ fontSize: 12 }}
+        >
+          BPM (guide): Chill {musicSnapshot.chillBpmMin}–
+          {musicSnapshot.chillBpmMax} · Focus {musicSnapshot.focusBpmMin}–
+          {musicSnapshot.focusBpmMax} · Energetic{' '}
+          {musicSnapshot.energeticBpmMin}–{musicSnapshot.energeticBpmMax}
+        </Text>
+      </Space>
+    ) : null;
 
   return (
-    <Card title='Generate AI Music'>
+    <Card
+      title={
+        <Space>
+          <StarOutlined />
+          Generate AI Music
+        </Space>
+      }
+    >
+      {isResolvingProfile && (
+        <div style={{ marginBottom: 16 }}>
+          <Spin size='small' />{' '}
+          <Text type='secondary'>Loading CAMS profile for Suno...</Text>
+        </div>
+      )}
+
       <Form
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
-        onValuesChange={handleFieldsChange}
-        size='large'
-        styles={{
-          label: {
-            height: 22,
-          },
-        }}
       >
-        {hasTemplate && (
-          <>
-            <SettingSwitch
-              label='Prompt Mode'
-              description={
-                useTemplate
-                  ? 'Using configured template - fill fields to generate prompt'
-                  : 'Write custom prompt manually'
-              }
-              value={useTemplate}
-              onChange={setUseTemplate}
-              className='pt-0!'
+        <Form.Item label='Prompt mode'>
+          <Space
+            direction='vertical'
+            size='small'
+            style={{ width: '100%' }}
+          >
+            <Segmented
+              value={promptMode}
+              onChange={(v) => setPromptMode(v as PromptMode)}
+              options={[
+                { label: 'Manual prompt', value: 'manual' },
+                {
+                  label: 'Brand music profile',
+                  value: 'brandProfile',
+                  disabled: !hasProfile,
+                },
+              ]}
             />
-          </>
-        )}
+            {!hasProfile && isConfigReady && !isResolvingProfile && brandId && (
+              <Alert
+                type='warning'
+                showIcon
+                message='No brand music profile yet'
+                description='Configure Music policy (CAMS fuzzy) under Brand settings, then return here to use this mode.'
+              />
+            )}
+          </Space>
+        </Form.Item>
+
         <SettingSwitch
           label='Auto-add to Playlist'
           description='Automatically add generated track to the selected playlist'
@@ -167,8 +261,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
 
         <Form.Item
           name='targetPlaylistId'
-          label='Target Playlist'
-          tooltip='Generated track will be added to this playlist'
+          label='Target playlist'
         >
           <Select
             placeholder='Select playlist (optional)'
@@ -181,18 +274,54 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
           />
         </Form.Item>
 
-        {useTemplate && hasTemplate ? (
+        <Divider style={{ margin: '12px 0' }} />
+
+        {promptMode === 'brandProfile' && hasProfile ? (
           <>
+            {profileSummary && (
+              <Alert
+                type='info'
+                showIcon
+                style={{ marginBottom: 16 }}
+                message='Using your brand CAMS profile'
+                description={profileSummary}
+              />
+            )}
+
+            <Form.Item
+              name='profileMood'
+              label='Primary music zone'
+              initialValue='focus'
+              rules={[{ required: true, message: 'Select a zone' }]}
+            >
+              <Select<BrandProfileSunoMood>
+                options={[
+                  {
+                    value: 'chill',
+                    label: 'Chill / calm (BPM band from profile)',
+                  },
+                  {
+                    value: 'focus',
+                    label: 'Focus / steady (BPM band from profile)',
+                  },
+                  {
+                    value: 'energetic',
+                    label: 'Energetic / peak (BPM band from profile)',
+                  },
+                ]}
+              />
+            </Form.Item>
+
             <Form.Item
               name='title'
-              label='Track Title'
+              label='Track title'
               rules={[
                 { required: true, message: 'Please enter track title' },
                 { max: 300, message: 'Title too long' },
               ]}
             >
               <Input
-                placeholder='e.g., Summer Vibes'
+                placeholder='e.g., Morning Focus In-Store'
                 maxLength={300}
               />
             </Form.Item>
@@ -200,29 +329,28 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
             <Form.Item
               name='genre'
               label='Genre'
-              tooltip='Dùng để fill placeholder {genre} trong prompt template'
               rules={[{ max: 120, message: 'Genre too long' }]}
             >
               <Input
-                placeholder='e.g., Pop, Jazz, Lo-fi, EDM'
+                placeholder='e.g., ambient, lo-fi, soft jazz'
                 maxLength={120}
               />
             </Form.Item>
 
             <Form.Item
               name='artist'
-              label='Artist Name'
-              rules={[{ max: 300, message: 'Artist name too long' }]}
+              label='Artist / style hint'
+              rules={[{ max: 300, message: 'Too long' }]}
             >
               <Input
-                placeholder='e.g., Studio One'
+                placeholder='e.g., subtle piano, no vocals'
                 maxLength={300}
               />
             </Form.Item>
 
             <Form.Item
               name='moodId'
-              label='Mood'
+              label='Catalog mood (optional)'
             >
               <Select
                 placeholder='Select mood'
@@ -234,7 +362,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
             <Form.Item
               label={
                 <Space size={6}>
-                  <span>Generated Prompt (preview)</span>
+                  <span>Generated prompt (preview)</span>
                   <Text
                     type='secondary'
                     style={{ fontSize: 12 }}
@@ -254,49 +382,30 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
                 <TextArea
                   value={generatedPrompt}
                   readOnly
-                  rows={5}
-                  placeholder='Fill Title/Genre/Artist/Mood to generate prompt from template...'
+                  rows={6}
+                  placeholder='Adjust title, genre, zone, or Suno Configuration template to refresh...'
                 />
-                <Space>
-                  <Button
-                    icon={<CopyOutlined />}
-                    disabled={!generatedPrompt}
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(generatedPrompt);
-                        message.success('Prompt copied');
-                      } catch {
-                        message.error('Failed to copy prompt');
-                      }
-                    }}
-                  >
-                    Copy
-                  </Button>
-                  <Text
-                    type='secondary'
-                    style={{ fontSize: 12 }}
-                  >
-                    Tip: switch to “Manual Prompt” if you want to edit the
-                    prompt.
-                  </Text>
-                </Space>
+                <Button
+                  icon={<CopyOutlined />}
+                  disabled={!generatedPrompt}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(generatedPrompt);
+                      message.success('Prompt copied');
+                    } catch {
+                      message.error('Failed to copy prompt');
+                    }
+                  }}
+                >
+                  Copy
+                </Button>
               </Space>
             </Form.Item>
-
-            {generatedPrompt && generatedPrompt.length > 3900 && (
-              <Alert
-                message='Prompt is near the limit'
-                description='Backend max length is 4000 characters. Consider shortening your template or inputs.'
-                type='warning'
-                showIcon
-                style={{ marginBottom: 16 }}
-              />
-            )}
           </>
         ) : (
           <Form.Item
             name='prompt'
-            label='Custom Prompt'
+            label='Custom prompt'
             rules={[
               { required: true, message: 'Please enter generation prompt' },
               { max: 4000, message: 'Prompt too long' },
@@ -325,12 +434,24 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
             htmlType='submit'
             icon={<ThunderboltOutlined />}
             loading={createGeneration.isPending}
+            disabled={
+              promptMode === 'brandProfile' &&
+              hasProfile &&
+              !generatedPrompt.trim()
+            }
             block
             size='large'
           >
-            Generate Music
+            Generate music
           </Button>
         </Form.Item>
+
+        <Alert
+          message='Generation takes 1-2 minutes'
+          description='You will be notified when the music is ready. You can continue working while generation is in progress.'
+          type='info'
+          showIcon
+        />
       </Form>
     </Card>
   );

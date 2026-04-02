@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Button } from 'antd';
+import { Alert, App, Button, Descriptions, Tag } from 'antd';
+import dayjs from 'dayjs';
 import { useNavigate } from 'react-router';
 
 /**
@@ -40,14 +41,29 @@ import {
   PairDeviceModal,
   QueueManagementDrawer,
 } from '@/shared/modules/cams/components';
+import { useTriggerAnalysis } from '@/shared/modules/cams/hooks';
 
 /**
  * Constants
  */
 import { PAGINATION_SIZES } from '@/shared/constants';
+import type { ContextAnalysisResponse } from '@/shared/modules/cams/types';
+
+const moodLabelMap: Record<number, string> = {
+  0: 'Chill',
+  1: 'Focus',
+  2: 'Energetic',
+};
+
+const toMoodLabel = (value: number | string | null | undefined) => {
+  if (value === null || value === undefined) return '-';
+  if (typeof value === 'number') return moodLabelMap[value] ?? String(value);
+  return value;
+};
 
 export const SpaceList = () => {
   const navigate = useNavigate();
+  const { message } = App.useApp();
   const { user } = useAuth();
   const [filter, setFilter] = useState<SpaceFilter>({
     page: 1,
@@ -64,11 +80,15 @@ export const SpaceList = () => {
   const [queueDrawerOpen, setQueueDrawerOpen] = useState(false);
   const [pairDeviceModalOpen, setPairDeviceModalOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const [lastAnalysis, setLastAnalysis] = useState<
+    (ContextAnalysisResponse & { spaceName?: string }) | null
+  >(null);
 
   const { data, isLoading, refetch } = useSpaces(filter);
 
   const deleteSpace = useDeleteSpace();
   const toggleStatus = useToggleSpaceStatus();
+  const triggerAnalysis = useTriggerAnalysis();
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
@@ -113,6 +133,38 @@ export const SpaceList = () => {
   const handlePairDevice = (id: string) => {
     setSelectedSpaceId(id);
     setPairDeviceModalOpen(true);
+  };
+
+  const handleTriggerAnalysis = (spaceId: string) => {
+    if (!user?.storeId || !user?.brandId) {
+      message.warning(
+        'Missing store or brand scope. Please re-login and try again.',
+      );
+      return;
+    }
+
+    triggerAnalysis.mutate(
+      {
+        spaceId,
+        body: {
+          storeId: user.storeId,
+          brandId: user.brandId,
+        },
+      },
+      {
+        onSuccess: (response) => {
+          const analysis = response.data.data;
+          if (!analysis) return;
+          const spaceName = data?.items.find((s) => s.id === spaceId)?.name;
+          setLastAnalysis({
+            ...analysis,
+            spaceName,
+          });
+          setSelectedSpaceId(spaceId);
+          setDetailsDrawerOpen(true);
+        },
+      },
+    );
   };
 
   const handleEdit = (spaceId: string) => {
@@ -180,6 +232,7 @@ export const SpaceList = () => {
     onManageMusic: handleManageMusic,
     onManageQueue: handleManageQueue,
     onPairDevice: handlePairDevice,
+    onTriggerAnalysis: handleTriggerAnalysis,
     onEdit: handleEdit,
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
@@ -205,6 +258,61 @@ export const SpaceList = () => {
           </Button>
         }
       />
+
+      {lastAnalysis && (
+        <Alert
+          showIcon
+          type='info'
+          style={{ marginBottom: 16 }}
+          message={`Last AI analysis: ${lastAnalysis.spaceName ?? lastAnalysis.spaceId}`}
+          action={
+            <Button
+              size='large'
+              onClick={() => setLastAnalysis(null)}
+            >
+              Clear
+            </Button>
+          }
+          description={
+            <Descriptions
+              size='small'
+              column={2}
+              style={{ marginTop: 8 }}
+            >
+              <Descriptions.Item label='Mood'>
+                <Tag color='purple'>{toMoodLabel(lastAnalysis.targetMood)}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label='Rule'>
+                <Tag color='blue'>
+                  {lastAnalysis.triggeredRule || 'DEFAULT'}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label='BPM Range'>
+                {lastAnalysis.recommendedBpmMin} -{' '}
+                {lastAnalysis.recommendedBpmMax}
+              </Descriptions.Item>
+              <Descriptions.Item label='Target BPM'>
+                {lastAnalysis.recommendedBpmTarget}
+              </Descriptions.Item>
+              <Descriptions.Item label='Mood Changed'>
+                <Tag color={lastAnalysis.moodChanged ? 'success' : 'default'}>
+                  {lastAnalysis.moodChanged ? 'Yes' : 'No'}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label='Analyzed At (UTC)'>
+                {lastAnalysis.analyzedAtUtc
+                  ? dayjs(lastAnalysis.analyzedAtUtc)
+                      .utc()
+                      .format('YYYY-MM-DD HH:mm:ss')
+                  : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label='Reason'>
+                {lastAnalysis.reason || '-'}
+              </Descriptions.Item>
+            </Descriptions>
+          }
+        />
+      )}
 
       <DataTable<SpaceListItem>
         filter={

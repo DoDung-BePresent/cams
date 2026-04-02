@@ -75,6 +75,12 @@ export const QUERY_KEYS = {
       ['moods', 'list', filter] as const,
     detail: (id?: string) => ['moods', 'detail', id] as const,
   },
+  fuzzyProfileTemplates: {
+    forSelect: ['fuzzy-profile-templates', 'for-select'] as const,
+    manage: (page?: number, pageSize?: number) =>
+      ['fuzzy-profile-templates', 'manage', page, pageSize] as const,
+    detail: (id?: string) => ['fuzzy-profile-templates', 'detail', id] as const,
+  },
   // CAMS
   cams: {
     all: ['cams'] as const, // NEW (2026-03-23): For queue management invalidation

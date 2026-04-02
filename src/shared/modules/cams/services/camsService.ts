@@ -1,8 +1,10 @@
 import { api } from '@/config';
 import type { Result } from '@/shared/types';
 import type {
+  ContextAnalysisResponse,
   SpaceStateResponse,
   OverridePlaylistRequest,
+  TriggerAnalysisRequest,
   PlaybackControlRequest,
   PairCodeResponse,
   PairDeviceInfoResponse,
@@ -18,6 +20,7 @@ import type {
  * ⚠️ NEW (2026-03-23): Added queue management endpoints
  */
 const CAMS_ENDPOINTS = {
+  triggerAnalysis: (spaceId: string) => `/api/cams/trigger-analysis/${spaceId}`,
   spaceState: (spaceId: string) => `/api/cams/spaces/${spaceId}/state`,
   overridePlaylist: (spaceId: string) => `/api/cams/spaces/${spaceId}/override`,
   playbackControl: (spaceId: string) => `/api/cams/spaces/${spaceId}/playback`,
@@ -44,6 +47,16 @@ const CAMS_ENDPOINTS = {
  * Handles REST API calls for CAMS operations
  */
 export const camsService = {
+  /**
+   * Trigger one CAMS fuzzy analysis cycle manually (debug/verification)
+   * POST /api/cams/trigger-analysis/{spaceId}
+   */
+  triggerAnalysis: (spaceId: string, data: TriggerAnalysisRequest) =>
+    api.post<Result<ContextAnalysisResponse>>(
+      CAMS_ENDPOINTS.triggerAnalysis(spaceId),
+      data,
+    ),
+
   /**
    * Get space current state (§ 4.3)
    * GET /api/cams/spaces/{spaceId}/state

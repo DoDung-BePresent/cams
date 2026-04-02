@@ -193,6 +193,31 @@ export interface OverridePlaylistRequest {
   reason?: string | null; // Optional reason for audit trail
 }
 
+/** POST /api/cams/trigger-analysis/{spaceId} */
+export interface TriggerAnalysisRequest {
+  storeId: string;
+  brandId: string;
+  spaceMaxOccupancy?: number;
+}
+
+/** Response payload from POST /api/cams/trigger-analysis/{spaceId} */
+export interface ContextAnalysisResponse {
+  spaceId: string;
+  targetMood: number | string;
+  recommendedBpmTarget: number;
+  recommendedBpmMin: number;
+  recommendedBpmMax: number;
+  targetMoodType?: number | string;
+  moodChanged: boolean;
+  previousMood?: number | string | null;
+  pressure?: number | string;
+  stress?: number | string;
+  density?: number | string;
+  triggeredRule: string;
+  reason: string;
+  analyzedAtUtc: string;
+}
+
 /**
  * Add tracks to queue request (from API_CAMS.md § 3.3.2)
  * ⚠️ NEW (2026-03-23): Queue management
