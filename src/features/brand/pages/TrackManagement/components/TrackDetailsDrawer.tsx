@@ -99,23 +99,22 @@ export const TrackDetailsDrawer = ({
             status={status}
           />
 
-          {/* Audio Player */}
-          {track.hlsUrl && (
-            <div>
-              <Title
-                level={5}
-                className='mb-4!'
-              >
-                Audio Player
-              </Title>
-              <HLSAudioPlayer
-                hlsUrl={track.hlsUrl}
-                title={track.title}
-                artist={track.artist}
-                coverImageUrl={track.coverImageUrl}
-              />
-            </div>
-          )}
+          {/* Audio Player — always mount like store drawer so missing CDN URL shows fallback, not a blank panel */}
+          <div>
+            <Title
+              level={5}
+              className='mb-4!'
+            >
+              Audio Player
+            </Title>
+            <HLSAudioPlayer
+              hlsUrl={track.hlsUrl}
+              title={track.title}
+              artist={track.artist}
+              coverImageUrl={track.coverImageUrl}
+              shouldStop={!open}
+            />
+          </div>
 
           {/* Basic Info */}
           <Descriptions

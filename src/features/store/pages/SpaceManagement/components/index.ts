@@ -5,3 +5,4 @@ export * from './SpaceFilter';
 export * from './SpacePlayerCard';
 export * from './SpaceDetailDrawer';
 export * from './SpaceMusicDrawer';
+export * from './SpaceFuzzyOverrideFields';

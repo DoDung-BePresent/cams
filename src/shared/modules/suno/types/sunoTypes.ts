@@ -12,6 +12,33 @@ export enum SunoGenerationStatus {
   Cancelled = 4, // Generation cancelled by user
 }
 
+export enum AiGenerationMode {
+  Suno = 1,
+  BrandModel = 2,
+}
+
+/**
+ * CAMS fuzzy snapshot returned with Suno config (same data source as brand detail music policy).
+ */
+export interface SunoBrandMusicProfileDto {
+  fuzzyProfileTemplate?: string | null;
+  storeOverrideLevel?: number | null;
+  chillBpmMin?: number | null;
+  chillBpmMax?: number | null;
+  focusBpmMin?: number | null;
+  focusBpmMax?: number | null;
+  energeticBpmMin?: number | null;
+  energeticBpmMax?: number | null;
+  pressureLowMax?: number | null;
+  pressureCriticalMin?: number | null;
+  stressComfortableMax?: number | null;
+  stressHighMin?: number | null;
+  densitySparseMax?: number | null;
+  densityCrowdedMin?: number | null;
+  spaceCapacity?: number | null;
+  defaultDensityRatioWhenNull?: number | null;
+}
+
 /**
  * Suno Config Response (from backend)
  * GET /api/cms/suno/config
@@ -20,6 +47,9 @@ export interface SunoConfigResponse {
   brandId: string;
   sunoPromptTemplate: string | null;
   sunoDefaultPlaylistId: string | null;
+  aiGenerationMode: AiGenerationMode;
+  /** Present when brand has CAMS music policy (null if not configured yet). */
+  brandMusicProfile?: SunoBrandMusicProfileDto | null;
 }
 
 /**
@@ -29,6 +59,7 @@ export interface SunoConfigResponse {
 export interface SunoConfigUpdateRequest {
   sunoPromptTemplate?: string | null;
   sunoDefaultPlaylistId?: string | null;
+  aiGenerationMode?: AiGenerationMode;
 }
 
 /**
@@ -37,8 +68,14 @@ export interface SunoConfigUpdateRequest {
  */
 export interface SunoGenerationCreateRequest {
   prompt?: string | null;
+  style?: string | null;
   title?: string | null;
   artist?: string | null;
+  duration?: number | null;
+  customMode?: boolean;
+  lyrics?: string | null;
+  instrumental?: boolean;
+  callbackUrl?: string | null;
   moodId?: string | null;
   targetPlaylistId?: string | null;
   autoAddToTargetPlaylist?: boolean;
@@ -64,11 +101,19 @@ export interface SunoGenerationRealtimeDto {
  */
 export interface SunoGenerationStatusDto
   extends SunoGenerationRealtimeDto, BaseResponse {
+  generationMode: AiGenerationMode;
   prompt: string | null;
+  style: string | null;
   title: string | null;
   artist: string | null;
+  duration: number | null;
+  customMode: boolean;
+  lyrics: string | null;
+  instrumental: boolean;
+  callbackUrl: string | null;
   externalTaskId: string | null;
   outputAudioUrl: string | null;
+  outputStreamUrl: string | null;
   targetPlaylistId: string | null;
   completedAtUtc: string | null;
   lastPolledAtUtc: string | null;

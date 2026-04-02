@@ -1,9 +1,20 @@
 import { useEffect } from 'react';
-import { Form, Input, Select, Button, Card, Space, Alert, Spin } from 'antd';
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Card,
+  Space,
+  Alert,
+  Spin,
+  Divider,
+} from 'antd';
 import { SaveOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useSunoConfig, useUpdateSunoConfig } from '../hooks';
 import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
 import type { SunoConfigUpdateRequest } from '../types';
+import { AiGenerationMode } from '../types';
 
 const { TextArea } = Input;
 
@@ -20,6 +31,7 @@ export const SunoConfigForm = () => {
       form.setFieldsValue({
         sunoPromptTemplate: config.sunoPromptTemplate,
         sunoDefaultPlaylistId: config.sunoDefaultPlaylistId,
+        aiGenerationMode: config.aiGenerationMode,
       });
     }
   }, [config, form]);
@@ -81,12 +93,45 @@ export const SunoConfigForm = () => {
               <div>
                 <code>{'{artist}'}</code> - Artist name
               </div>
+              <Divider style={{ margin: '8px 0' }} />
+              <div>
+                When using <strong>Generate → Brand music profile</strong>,
+                these are also filled from your CAMS fuzzy profile:
+              </div>
+              <div>
+                <code>{'{fuzzyTemplate}'}</code>, <code>{'{bpmBand}'}</code>,{' '}
+                <code>{'{chillBpm}'}</code>, <code>{'{focusBpm}'}</code>,{' '}
+                <code>{'{energeticBpm}'}</code>
+              </div>
+              <div>
+                <code>{'{pressureLowMax}'}</code>,{' '}
+                <code>{'{pressureCriticalMin}'}</code>,{' '}
+                <code>{'{stressComfortableMax}'}</code>,{' '}
+                <code>{'{stressHighMin}'}</code>,{' '}
+                <code>{'{densitySparseMax}'}</code>,{' '}
+                <code>{'{densityCrowdedMin}'}</code>,{' '}
+                <code>{'{spaceCapacity}'}</code>
+              </div>
             </Space>
           }
           type='info'
           icon={<InfoCircleOutlined />}
           style={{ marginBottom: 24 }}
         />
+
+        <Form.Item
+          name='aiGenerationMode'
+          label='Generation Mode'
+          tooltip='Select which AI provider mode this brand will use for generation jobs.'
+          initialValue={AiGenerationMode.Suno}
+        >
+          <Select
+            options={[
+              { label: 'Suno', value: AiGenerationMode.Suno },
+              { label: 'Brand Model URL', value: AiGenerationMode.BrandModel },
+            ]}
+          />
+        </Form.Item>
 
         <Form.Item
           name='sunoPromptTemplate'

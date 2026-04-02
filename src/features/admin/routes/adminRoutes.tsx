@@ -18,6 +18,12 @@ const BrandList = Loadable(
   'BrandList',
 );
 
+const FuzzyProfileTemplateList = Loadable(
+  () =>
+    import('@/features/admin/pages/FuzzyProfileTemplateManagement/FuzzyProfileTemplateList'),
+  'FuzzyProfileTemplateList',
+);
+
 const AccountList = Loadable(
   () => import('@/features/admin/pages/AccountManagement/AccountList'),
   'AccountList',
@@ -46,6 +52,10 @@ export const adminRoutes = [
   {
     path: 'brands',
     element: <BrandList />,
+  },
+  {
+    path: 'ai-fuzzy-templates',
+    element: <FuzzyProfileTemplateList />,
   },
   {
     path: 'accounts',

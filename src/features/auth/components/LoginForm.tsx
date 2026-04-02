@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { Button, Checkbox, Flex, Form, Input, Typography } from 'antd';
+import { Button, Checkbox, Flex, Form, Input } from 'antd';
 
 /**
  * Hooks
@@ -22,7 +22,14 @@ type LoginFormType = {
   rememberMe: boolean;
 };
 
-const { Link: AntLink } = Typography;
+type ApiError = {
+  response?: {
+    data?: {
+      errorCode?: string;
+      message?: string;
+    };
+  };
+};
 
 export const LoginForm = () => {
   const { login } = useAuth();
@@ -36,10 +43,12 @@ export const LoginForm = () => {
         rememberMe: values.rememberMe ?? false,
       },
       {
-        onError: (error: any) => {
-          const errorCode = error.response?.data?.errorCode;
+        onError: (error: unknown) => {
+          const apiError = error as ApiError;
+          const errorCode = apiError.response?.data?.errorCode;
           const errorMessage =
-            error.response?.data?.message || 'Login failed! Please try again.';
+            apiError.response?.data?.message ||
+            'Login failed! Please try again.';
 
           // Handle InvalidCredentials (wrong email/password)
           if (errorCode === ErrorCodeEnum.InvalidCredentials) {
@@ -107,8 +116,11 @@ export const LoginForm = () => {
       >
         <Flex justify='space-between'>
           <Checkbox defaultChecked>Remember me</Checkbox>
-          <Link to='/forgot-password'>
-            <AntLink>Forgot Password?</AntLink>
+          <Link
+            to='/forgot-password'
+            className='text-[#1677ff] hover:text-[#4096ff]'
+          >
+            Forgot Password?
           </Link>
         </Flex>
       </Form.Item>
