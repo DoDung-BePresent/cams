@@ -10,17 +10,28 @@ import {
   message,
   Tag,
 } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
+import {
+  SettingOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
 import {
   SpacePlayer,
   AIExplainabilityPanel,
   QueueList,
+  OverrideSpaceMusicModal,
+  AddToQueueModal,
 } from '@/shared/modules/cams/components';
 import {
   useSpaceState,
   usePlaybackControl,
   useOverridePlaylist,
+  useCancelOverride,
   useUpdateAudioState,
+  useRemoveQueueItem,
+  useRemoveQueueItems,
+  useClearQueue,
+  useReorderQueue,
 } from '@/shared/modules/cams/hooks';
 import {
   PlaybackCommand,
@@ -32,6 +43,7 @@ import type { SpaceQueueItemResponse } from '@/shared/modules/cams/types';
 import { isSpacePlaying } from '@/shared/modules/cams/utils';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
+import { AppModal, SettingSwitch } from '@/shared/components';
 
 const { Title, Text } = Typography;
 
@@ -42,14 +54,14 @@ interface SpacePlayerCardProps {
 
 export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const [showSettings, setShowSettings] = useState(false);
+  const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
+  const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
 
   // Fetch space state from API (initial load only)
   const { data: spaceState, isLoading: isLoadingState } = useSpaceState(
     space.id,
     true,
   );
-
-  console.log(spaceState);
 
   // ✅ Use spaceState directly - no need for intermediate state
   // The component will re-render when spaceState changes from React Query
@@ -65,7 +77,12 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   // Mutations
   const playbackControl = usePlaybackControl();
   const overridePlaylist = useOverridePlaylist();
+  const cancelOverride = useCancelOverride();
   const updateAudio = useUpdateAudioState();
+  const removeQueueItem = useRemoveQueueItem();
+  const removeQueueItems = useRemoveQueueItems();
+  const clearQueue = useClearQueue();
+  const reorderQueue = useReorderQueue();
 
   // Debounce ref for volume updates
   const volumeUpdateTimeoutRef = useRef<number | null>(null);
@@ -88,6 +105,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       Partial<SpaceQueueItemResponse> & {
         orderIndex?: number;
         queueStatus?: number;
+        source?: number;
       }
     >
   ).map((item) => {
@@ -100,7 +118,10 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       trackName: item.trackName || 'Unknown',
       position,
       rawStatus,
-      source: QueueItemSource.AI,
+      source:
+        typeof item.source === 'number'
+          ? (item.source as QueueItemSource)
+          : QueueItemSource.Manager,
       hlsUrl: item.hlsUrl ?? null,
       isReadyToStream: !!item.hlsUrl,
       coverImageUrl: item.coverImageUrl ?? null,
@@ -146,6 +167,8 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       coverImageUrl: i.coverImageUrl ?? null,
     } as SpaceQueueItemResponse;
   });
+
+  const queueTrackIds = queueItems.map((item) => item.trackId);
 
   // Playback control handlers
   const handlePlayPause = useCallback(() => {
@@ -229,6 +252,71 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     },
     [space.id, isPending, playbackControl],
   );
+
+  const handleRemoveQueueItem = useCallback(
+    async (queueItemId: string) => {
+      if (!queueItemId) {
+        return;
+      }
+
+      await removeQueueItem.mutateAsync({
+        spaceId: space.id,
+        queueItemId,
+      });
+    },
+    [removeQueueItem, space.id],
+  );
+
+  const handleReorderQueue = useCallback(
+    async (orderedQueueItemIds: string[]) => {
+      const pendingIdSet = new Set(
+        queueItems
+          .filter((item) => item.queueStatus === QueueItemStatus.Pending)
+          .map((item) => item.queueItemId),
+      );
+
+      const pendingOrderedIds = orderedQueueItemIds.filter((id) =>
+        pendingIdSet.has(id),
+      );
+
+      if (pendingOrderedIds.length === 0) {
+        return;
+      }
+
+      await reorderQueue.mutateAsync({
+        spaceId: space.id,
+        data: { queueItemIds: pendingOrderedIds },
+      });
+    },
+    [queueItems, reorderQueue, space.id],
+  );
+
+  const handleRemoveQueueItems = useCallback(
+    async (queueItemIds: string[]) => {
+      if (!queueItemIds.length) {
+        return;
+      }
+
+      await removeQueueItems.mutateAsync({
+        spaceId: space.id,
+        queueItemIds,
+      });
+    },
+    [removeQueueItems, space.id],
+  );
+
+  const handleClearQueue = useCallback(() => {
+    AppModal.confirm({
+      title: 'Clear Queue',
+      content: 'Are you sure you want to clear the entire queue?',
+      okText: 'Clear All',
+      cancelText: 'Cancel',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await clearQueue.mutateAsync(space.id);
+      },
+    });
+  }, [clearQueue, space.id]);
 
   // Seek (absolute) from player slider (debounced on after-change)
   const handleSeek = useCallback(
@@ -324,6 +412,27 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     [space.id, overridePlaylist],
   );
 
+  const handleOverrideToggle = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setIsOverrideModalOpen(true);
+        return;
+      }
+
+      AppModal.confirm({
+        title: 'Cancel Manual Override',
+        content:
+          'Are you sure you want to cancel manual override? AI scheduling will resume automatically.',
+        okText: 'Cancel Override',
+        cancelText: 'Keep Override',
+        onOk: async () => {
+          await cancelOverride.mutateAsync(space.id);
+        },
+      });
+    },
+    [cancelOverride, space.id],
+  );
+
   // Playlist options for Select
   const playlistOptions = (playlistsData?.items || []).map((playlist) => ({
     label: playlist.name,
@@ -352,6 +461,22 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         style={{ width: '100%' }}
         size='middle'
       >
+        <Flex
+          justify='space-between'
+          align='center'
+        >
+          <SettingSwitch
+            label='Manual Override'
+            description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
+            value={!!spaceState?.isManualOverride}
+            onChange={handleOverrideToggle}
+            disabled={overridePlaylist.isPending || cancelOverride.isPending}
+          />
+          {spaceState?.isManualOverride && (
+            <Tag color='warning'>Manual Override</Tag>
+          )}
+        </Flex>
+
         {/* Playlist Selection (Settings) */}
         {showSettings && (
           <>
@@ -366,10 +491,8 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 >
                   Select Playlist to Play
                 </Text>
-                {spaceState?.isManualOverride && (
-                  <Tag color='warning'>Manual Override</Tag>
-                )}
               </Flex>
+
               <Select
                 size='large'
                 placeholder='Choose a playlist'
@@ -378,7 +501,9 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 onChange={handlePlaylistChange}
                 style={{ width: '100%' }}
                 loading={overridePlaylist.isPending}
-                disabled={overridePlaylist.isPending}
+                disabled={
+                  overridePlaylist.isPending || cancelOverride.isPending
+                }
                 showSearch
                 optionFilterProp='label'
                 allowClear={false}
@@ -475,10 +600,55 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
 
         {/* Queue list (render all items sorted) */}
         <Divider style={{ margin: '8px 0' }} />
+        <Flex
+          justify='space-between'
+          align='center'
+        >
+          <Text strong>Queue Management</Text>
+          <Space>
+            <Button
+              size='large'
+              icon={<DeleteOutlined />}
+              danger
+              onClick={handleClearQueue}
+              loading={clearQueue.isPending}
+              disabled={queueItems.length === 0 || clearQueue.isPending}
+            >
+              Clear Queue
+            </Button>
+            <Button
+              size='large'
+              type='primary'
+              icon={<PlusOutlined />}
+              onClick={() => setIsAddQueueModalOpen(true)}
+              disabled={clearQueue.isPending}
+            >
+              Add to Queue
+            </Button>
+          </Space>
+        </Flex>
         <QueueList
           items={queueItems}
-          onRemove={() => {}}
+          onRemove={handleRemoveQueueItem}
+          onRemoveMany={handleRemoveQueueItems}
+          onReorder={handleReorderQueue}
           onSkipToTrack={handleSkipToTrack}
+        />
+
+        <AddToQueueModal
+          open={isAddQueueModalOpen}
+          spaceId={space.id}
+          storeId={storeId}
+          queueTrackIds={queueTrackIds}
+          onClose={() => setIsAddQueueModalOpen(false)}
+        />
+
+        <OverrideSpaceMusicModal
+          open={isOverrideModalOpen}
+          spaceId={space.id}
+          storeId={storeId}
+          queueTrackIds={queueTrackIds}
+          onClose={() => setIsOverrideModalOpen(false)}
         />
       </Space>
     </Card>

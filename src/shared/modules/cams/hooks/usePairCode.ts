@@ -14,14 +14,8 @@ export const useGeneratePairCode = () => {
     mutationFn: (spaceId: string) => camsService.generatePairCode(spaceId),
     onSuccess: (response) => {
       if (response.data.isSuccess) {
-        message.success('Pair code generated successfully');
         queryClient.invalidateQueries({ queryKey: ['pairDeviceInfo'] });
-      } else {
-        message.error(response.data.message || 'Failed to generate pair code');
       }
-    },
-    onError: (error) => {
-      handleApiError(error, undefined, 'Failed to generate pair code');
     },
   });
 };

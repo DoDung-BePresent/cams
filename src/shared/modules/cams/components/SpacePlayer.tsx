@@ -92,9 +92,17 @@ export const SpacePlayer = ({
   const lastPauseTimeRef = useRef<number | null>(null);
   // ✅ Store expected seek position after reload
   const pendingSeekRef = useRef<number | null>(null);
+  // Keep local seek authoritative briefly to avoid snap-back from stale server state.
+  const localSeekLockRef = useRef<{
+    targetSeconds: number;
+    startedAtMs: number;
+  } | null>(null);
   // Delay remote seek after user releases slider
   const seekTimeoutRef = useRef<number | null>(null);
-  const SEEK_API_DELAY_MS = 600; // ms — increase if users want a longer debounce
+  const SEEK_API_DELAY_MS = 120;
+  const LOCAL_SEEK_LOCK_MS = 3500;
+  const LOCAL_SEEK_MATCH_TOLERANCE_SECONDS = 0.25;
+  const POSITION_SYNC_TOLERANCE_SECONDS = 0.6;
 
   // Initialize HLS player
   useEffect(() => {
@@ -239,6 +247,29 @@ export const SpacePlayer = ({
     // Handle playing state from server
     const expectedPosition = getEffectiveSeekOffset(state);
 
+    const localSeekLock = localSeekLockRef.current;
+    if (localSeekLock) {
+      const lockAgeMs = Date.now() - localSeekLock.startedAtMs;
+      const serverCaughtUp =
+        Math.abs(expectedPosition - localSeekLock.targetSeconds) <=
+        LOCAL_SEEK_MATCH_TOLERANCE_SECONDS;
+
+      if (serverCaughtUp || lockAgeMs > LOCAL_SEEK_LOCK_MS) {
+        localSeekLockRef.current = null;
+
+        // Keep the locally sought position when server has effectively caught up.
+        // This avoids a final tiny snap on the same sync tick.
+        if (serverCaughtUp) {
+          isSyncingRef.current = false;
+          return;
+        }
+      } else {
+        // Ignore stale server position briefly after local seek to prevent UI jump-back.
+        isSyncingRef.current = false;
+        return;
+      }
+    }
+
     // ✅ Check if paused for too long (> 30s) — need HLS reload
     const pauseDuration = lastPauseTimeRef.current
       ? Date.now() - lastPauseTimeRef.current
@@ -271,7 +302,7 @@ export const SpacePlayer = ({
 
     if (canSeek) {
       const diff = Math.abs(audio.currentTime - expectedPosition);
-      if (diff > 0.3) {
+      if (diff > POSITION_SYNC_TOLERANCE_SECONDS) {
         console.log(
           `🔄 Syncing position: ${audio.currentTime.toFixed(1)}s → ${expectedPosition.toFixed(1)}s (diff: ${diff.toFixed(1)}s)`,
         );
@@ -396,11 +427,21 @@ export const SpacePlayer = ({
     if (!audioRef.current) return;
     const seekTime = (value / 100) * duration;
     audioRef.current.currentTime = seekTime;
+    setCurrentTime(seekTime);
   };
 
   const handleSeekComplete = (value: number) => {
     if (!audioRef.current) return;
     const seekTime = (value / 100) * duration;
+    localSeekLockRef.current = {
+      targetSeconds: seekTime,
+      startedAtMs: Date.now(),
+    };
+
+    // Keep local audio at sought position immediately.
+    audioRef.current.currentTime = seekTime;
+    setCurrentTime(seekTime);
+
     // Debounce the remote seek call so server is called only after release
     if (seekTimeoutRef.current) {
       clearTimeout(seekTimeoutRef.current);
@@ -419,6 +460,8 @@ export const SpacePlayer = ({
         clearTimeout(seekTimeoutRef.current);
         seekTimeoutRef.current = null;
       }
+
+      localSeekLockRef.current = null;
     };
   }, []);
 
