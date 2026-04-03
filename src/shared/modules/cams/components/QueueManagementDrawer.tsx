@@ -19,6 +19,7 @@ import {
   useSpaceState,
   useClearQueue,
   useRemoveQueueItem,
+  useRemoveQueueItems,
   useUpdateAudioState,
   useReorderQueue,
 } from '../hooks';
@@ -54,6 +55,7 @@ export const QueueManagementDrawer = ({
   // Mutations
   const clearQueue = useClearQueue();
   const removeQueueItem = useRemoveQueueItem();
+  const removeQueueItems = useRemoveQueueItems();
   const updateAudioState = useUpdateAudioState();
   const reorderQueue = useReorderQueue();
 
@@ -141,22 +143,21 @@ export const QueueManagementDrawer = ({
     }
   };
 
+  const handleRemoveItems = async (queueItemIds: string[]) => {
+    try {
+      await removeQueueItems.mutateAsync({
+        spaceId,
+        queueItemIds,
+      });
+    } catch (error) {
+      console.error('Failed to remove queue items:', error);
+    }
+  };
+
   return (
     <>
       <Drawer
-        title={
-          <Space
-            direction='vertical'
-            size={0}
-          >
-            <Title
-              level={4}
-              style={{ margin: 0 }}
-            >
-              Queue Management
-            </Title>
-          </Space>
-        }
+        title='Queue Management'
         closeIcon={null}
         placement='right'
         width={DRAWER_WIDTHS.medium}
@@ -243,6 +244,7 @@ export const QueueManagementDrawer = ({
                 items={queueData || []}
                 loading={isLoading}
                 onRemove={handleRemoveItem}
+                onRemoveMany={handleRemoveItems}
                 onReorder={handleReorder}
               />
             </Space>

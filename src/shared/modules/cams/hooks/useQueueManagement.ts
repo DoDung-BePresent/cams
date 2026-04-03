@@ -147,7 +147,7 @@ export const useClearQueue = () => {
  * Auth: BrandManager, StoreManager
  */
 export const useRemoveQueueItem = () => {
-  const queryClient = useQueryClient();
+  const removeQueueItems = useRemoveQueueItems();
 
   return useMutation({
     mutationFn: ({
@@ -156,12 +156,42 @@ export const useRemoveQueueItem = () => {
     }: {
       spaceId: string;
       queueItemId: string;
-    }) => camsService.removeQueueItem(spaceId, queueItemId),
-    onSuccess: (_, { spaceId }) => {
+    }) =>
+      removeQueueItems.mutateAsync({
+        spaceId,
+        queueItemIds: [queueItemId],
+      }),
+  });
+};
+
+/**
+ * Hook: Remove multiple queue items
+ * DELETE /api/cams/spaces/{spaceId}/queue with payload { queueItemIds: [...] }
+ */
+export const useRemoveQueueItems = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      spaceId,
+      queueItemIds,
+    }: {
+      spaceId: string;
+      queueItemIds: string[];
+    }) =>
+      camsService.removeQueueItems(spaceId, {
+        queueItemIds,
+      }),
+    onSuccess: (_, { spaceId, queueItemIds }) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.cams.queue(spaceId),
       });
-      message.success('Queue item removed');
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.spaceState(spaceId),
+      });
+      message.success(
+        queueItemIds.length > 1 ? 'Queue items removed' : 'Queue item removed',
+      );
     },
     onError: (error) => {
       handleApiError(error);

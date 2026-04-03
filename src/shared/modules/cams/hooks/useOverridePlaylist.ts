@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
+import { QUERY_KEYS } from '@/config';
 import { handleApiError } from '@/shared/utils';
 import { camsService } from '../services';
 import type { OverridePlaylistRequest } from '../types';
@@ -19,29 +20,40 @@ export const useOverridePlaylist = () => {
       spaceId,
       playlistId,
       moodId,
+      trackIds,
+      isClearManagerSelectedQueues,
+      reason,
     }: {
       spaceId: string;
       playlistId?: string;
       moodId?: string;
+      trackIds?: string[];
+      isClearManagerSelectedQueues?: boolean;
+      reason?: string;
     }) => {
       const data: OverridePlaylistRequest = {
         playlistId: playlistId || null,
         moodId: moodId || null,
+        trackIds: trackIds?.length ? trackIds : null,
+        isClearManagerSelectedQueues,
+        reason: reason || null,
       };
       return camsService.overridePlaylist(spaceId, data);
     },
     onSuccess: (_, variables) => {
-      message.success('Playlist overridden successfully');
-      // Invalidate space state to refetch
+      message.success('Manual override applied successfully');
       queryClient.invalidateQueries({
-        queryKey: ['cams-space-state', variables.spaceId],
+        queryKey: QUERY_KEYS.cams.spaceState(variables.spaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.queue(variables.spaceId),
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       handleApiError(
         error,
         {},
-        'Failed to override playlist. Please try again.',
+        'Failed to apply manual override. Please try again.',
       );
     },
   });

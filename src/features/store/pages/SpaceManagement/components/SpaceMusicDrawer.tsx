@@ -56,12 +56,9 @@ export const SpaceMusicDrawer = ({
   );
 
   const { isConnected } = useStoreHub(storeId, accessToken, {
-    onSpaceStateSync: (syncedSpaceId: string) => {
+    onSpaceStateSync: (syncedSpaceId: string, state) => {
       if (syncedSpaceId === spaceId) {
-        queryClient.invalidateQueries({
-          queryKey: ['cams-space-state', spaceId],
-          refetchType: 'active',
-        });
+        queryClient.setQueryData(['cams-space-state', spaceId], state);
       }
     },
   });

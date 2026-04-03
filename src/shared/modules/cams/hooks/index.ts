@@ -1,6 +1,7 @@
 export * from './useStoreHub';
 export * from './useSpaceState';
 export * from './useOverridePlaylist';
+export * from './useCancelOverride';
 export * from './useTriggerAnalysis';
 export * from './usePlaybackControl';
 export * from './usePairCode';
