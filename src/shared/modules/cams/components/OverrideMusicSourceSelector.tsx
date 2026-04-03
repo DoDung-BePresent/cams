@@ -84,7 +84,6 @@ type OverrideMusicSourceSelectorProps = {
     refetch: () => void;
     selectedTrackIds: string[];
     setSelectedTrackIds: React.Dispatch<React.SetStateAction<string[]>>;
-    queuedTrackIds: Set<string>;
     defaultFilter: TrackFilter;
     onTableChange: (
       pagination: TablePaginationConfig,
@@ -445,18 +444,11 @@ export const OverrideMusicSourceSelector = ({
                     loading={track.isLoading}
                     rowSelection={{
                       selectedRowKeys: track.selectedTrackIds,
-                      getCheckboxProps: (record) => ({
-                        disabled: track.queuedTrackIds.has(record.id),
-                      }),
                       onChange: (selectedRowKeys) =>
                         track.setSelectedTrackIds(selectedRowKeys as string[]),
                     }}
                     onRow={(record) => ({
                       onClick: () => {
-                        if (track.queuedTrackIds.has(record.id)) {
-                          return;
-                        }
-
                         track.setSelectedTrackIds((prev) =>
                           prev.includes(record.id)
                             ? prev.filter((id) => id !== record.id)

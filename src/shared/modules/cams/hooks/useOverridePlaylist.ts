@@ -22,6 +22,7 @@ export const useOverridePlaylist = () => {
       moodId,
       trackIds,
       isClearManagerSelectedQueues,
+      isCutOver,
       reason,
     }: {
       spaceId: string;
@@ -29,6 +30,7 @@ export const useOverridePlaylist = () => {
       moodId?: string;
       trackIds?: string[];
       isClearManagerSelectedQueues?: boolean;
+      isCutOver?: boolean;
       reason?: string;
     }) => {
       const data: OverridePlaylistRequest = {
@@ -36,6 +38,7 @@ export const useOverridePlaylist = () => {
         moodId: moodId || null,
         trackIds: trackIds?.length ? trackIds : null,
         isClearManagerSelectedQueues,
+        isCutOver: isCutOver ?? null,
         reason: reason || null,
       };
       return camsService.overridePlaylist(spaceId, data);
