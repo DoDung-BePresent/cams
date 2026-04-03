@@ -38,7 +38,6 @@ interface AddToQueueModalProps {
   open: boolean;
   spaceId: string;
   storeId: string;
-  queueTrackIds?: string[];
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -132,7 +131,6 @@ export const AddToQueueModal = ({
   open,
   spaceId,
   storeId,
-  queueTrackIds,
   onClose,
   onSuccess,
 }: AddToQueueModalProps) => {
@@ -180,11 +178,6 @@ export const AddToQueueModal = ({
         value: mood.id,
       })),
     [moods],
-  );
-
-  const queuedTrackIds = useMemo(
-    () => new Set(queueTrackIds ?? []),
-    [queueTrackIds],
   );
 
   const hasActiveTrackFilters =
@@ -293,7 +286,6 @@ export const AddToQueueModal = ({
               refetch: refetchTracks,
               selectedTrackIds,
               setSelectedTrackIds,
-              queuedTrackIds,
               defaultFilter: defaultTrackFilter,
               onTableChange: (pagination, _filters, sorter) => {
                 const currentSorter = Array.isArray(sorter)
@@ -361,11 +353,6 @@ export const AddToQueueModal = ({
                   ? '1 playlist selected'
                   : 'No playlist selected'}
             </Tag>
-            {activeTab === 'tracks' && queuedTrackIds.size > 0 && (
-              <Text type='secondary'>
-                Tracks already in queue are disabled for selection.
-              </Text>
-            )}
           </Flex>
         </div>
 

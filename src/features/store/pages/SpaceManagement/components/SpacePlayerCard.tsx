@@ -168,8 +168,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     } as SpaceQueueItemResponse;
   });
 
-  const queueTrackIds = queueItems.map((item) => item.trackId);
-
   // Playback control handlers
   const handlePlayPause = useCallback(() => {
     if (!hasActiveTrack) {
@@ -639,7 +637,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           open={isAddQueueModalOpen}
           spaceId={space.id}
           storeId={storeId}
-          queueTrackIds={queueTrackIds}
           onClose={() => setIsAddQueueModalOpen(false)}
         />
 
@@ -647,7 +644,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           open={isOverrideModalOpen}
           spaceId={space.id}
           storeId={storeId}
-          queueTrackIds={queueTrackIds}
           onClose={() => setIsOverrideModalOpen(false)}
         />
       </Space>

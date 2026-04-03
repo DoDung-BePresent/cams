@@ -191,6 +191,7 @@ export interface OverridePlaylistRequest {
   moodId?: string | null;
   trackIds?: string[] | null; // NEW: Direct track selection
   isClearManagerSelectedQueues?: boolean; // NEW: Clear existing queue
+  isCutOver?: boolean | null; // NEW: Immediate cutover behavior
   reason?: string | null; // Optional reason for audit trail
 }
 
