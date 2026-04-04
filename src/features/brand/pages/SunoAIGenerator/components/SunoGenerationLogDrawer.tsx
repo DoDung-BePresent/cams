@@ -1,4 +1,19 @@
-import { Drawer, Tabs, Descriptions, Badge, Button, Space, Tag } from 'antd';
+import {
+  Drawer,
+  Tabs,
+  Descriptions,
+  Badge,
+  Button,
+  Space,
+  Tag,
+  Tooltip,
+  message,
+} from 'antd';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import json from 'react-syntax-highlighter/dist/esm/languages/hljs/json';
+import { atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
+SyntaxHighlighter.registerLanguage('json', json);
 
 /**
  * Icons
@@ -71,7 +86,19 @@ export const SunoGenerationLogDrawer = ({
   onViewTrack,
 }: SunoGenerationLogDrawerProps) => {
   const { styles } = useStyle();
+
   if (!generation) return null;
+
+  const jsonString = JSON.stringify(generation, null, 2);
+
+  const handleCopyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(jsonString);
+      message.success('Copied to clipboard');
+    } catch {
+      message.error('Failed to copy');
+    }
+  };
 
   const inProgress = isGenerationInProgress(generation.generationStatus);
   const isCompleted =
@@ -181,22 +208,21 @@ export const SunoGenerationLogDrawer = ({
   );
 
   const rawContent = (
-    <pre
-      style={{
-        background: 'var(--ant-color-fill-quaternary)',
-        border: '1px solid var(--ant-color-border)',
+    <SyntaxHighlighter
+      language='json'
+      style={atomOneLight}
+      customStyle={{
         borderRadius: 8,
-        padding: 16,
-        fontSize: 12,
+        border: '1px solid #E6EBF1',
         lineHeight: 1.6,
-        overflowX: 'auto',
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-all',
         margin: 0,
+        padding: 12,
+        paddingInline: 20,
       }}
+      wrapLongLines
     >
-      {JSON.stringify(generation, null, 2)}
-    </pre>
+      {jsonString}
+    </SyntaxHighlighter>
   );
 
   const tabItems = [
@@ -247,6 +273,7 @@ export const SunoGenerationLogDrawer = ({
       }
     >
       <Tabs
+        size='small'
         defaultActiveKey='details'
         className={styles.customTabs}
         styles={{
@@ -260,10 +287,13 @@ export const SunoGenerationLogDrawer = ({
         }}
         items={tabItems}
         tabBarExtraContent={
-          <Button
-            type='text'
-            icon={<CopyOutlined />}
-          />
+          <Tooltip title='Copy as JSON'>
+            <Button
+              type='text'
+              icon={<CopyOutlined />}
+              onClick={handleCopyJson}
+            />
+          </Tooltip>
         }
       />
     </Drawer>
