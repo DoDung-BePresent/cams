@@ -11,28 +11,50 @@ import {
   Typography,
   Segmented,
   Spin,
-  Divider,
 } from 'antd';
+
+/**
+ * Icons
+ */
 import {
   ThunderboltOutlined,
   CopyOutlined,
-  StarOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
-import { AppModal, SettingSwitch } from '@/shared/components';
+
+/**
+ * Configs
+ */
 import { MODAL_WIDTHS } from '@/config';
+
+/**
+ * Components
+ */
+import { AppModal, SettingSwitch } from '@/shared/components';
 import { SunoConfigForm } from './SunoConfigForm';
+
+/**
+ * Hooks
+ */
+import { useAuth } from '@/providers';
+import { useBrand } from '@/features/admin/hooks';
 import { useSunoConfig, useCreateSunoGeneration } from '../hooks';
 import { useMoodOptions } from '@/shared/modules/moods/hooks';
 import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
+
+/**
+ * Utils
+ */
 import {
   buildBrandProfileSunoPrompt,
   hasBrandMusicProfileData,
 } from '../utils';
+
+/**
+ * Types
+ */
 import type { SunoGenerationCreateRequest } from '../types';
 import type { BrandProfileSunoMood } from '../utils/brandProfileSunoPrompt';
-import { useAuth } from '@/providers';
-import { useBrand } from '@/features/admin/hooks';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -208,20 +230,13 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   return (
     <>
       <Card
-        title={
-          <Space>
-            <StarOutlined />
-            Generate AI Music
-          </Space>
-        }
+        title='Generate AI Music'
         extra={
           <Button
-            size='large'
+            type='text'
             icon={<SettingOutlined />}
             onClick={() => setSettingsOpen(true)}
-          >
-            Settings
-          </Button>
+          />
         }
       >
         {isResolvingProfile && (
@@ -235,6 +250,12 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
           form={form}
           layout='vertical'
           onFinish={handleSubmit}
+          size='large'
+          styles={{
+            label: {
+              height: 22,
+            },
+          }}
         >
           <Form.Item label='Prompt mode'>
             <Space
@@ -294,8 +315,6 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
               }
             />
           </Form.Item>
-
-          <Divider style={{ margin: '12px 0' }} />
 
           {promptMode === 'brandProfile' && hasProfile ? (
             <>
