@@ -236,6 +236,7 @@ export const SunoGenerationLogDrawer = ({
       onClose={onClose}
       closeIcon={null}
       width={DRAWER_WIDTHS.medium}
+      destroyOnHidden
       title={
         <Space>
           <Badge

@@ -246,6 +246,17 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
           </div>
         )}
 
+        {!hasProfile && isConfigReady && !isResolvingProfile && brandId && (
+          <Alert
+            type='warning'
+            showIcon
+            closable
+            className='mb-5!'
+            message='No brand music profile yet'
+            description='Configure Music policy (CAMS fuzzy) under Brand settings, then return here to use this mode.'
+          />
+        )}
+
         <Form
           form={form}
           layout='vertical'
@@ -257,36 +268,22 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
             },
           }}
         >
-          <Form.Item label='Prompt mode'>
-            <Space
-              direction='vertical'
-              size='small'
-              style={{ width: '100%' }}
-            >
-              <Segmented
-                value={promptMode}
-                onChange={(v) => setPromptMode(v as PromptMode)}
-                options={[
-                  { label: 'Manual prompt', value: 'manual' },
-                  {
-                    label: 'Brand music profile',
-                    value: 'brandProfile',
-                    disabled: !hasProfile,
-                  },
-                ]}
-              />
-              {!hasProfile &&
-                isConfigReady &&
-                !isResolvingProfile &&
-                brandId && (
-                  <Alert
-                    type='warning'
-                    showIcon
-                    message='No brand music profile yet'
-                    description='Configure Music policy (CAMS fuzzy) under Brand settings, then return here to use this mode.'
-                  />
-                )}
-            </Space>
+          <Form.Item
+            label='Prompt mode'
+            className='mb-0!'
+          >
+            <Segmented
+              value={promptMode}
+              onChange={(v) => setPromptMode(v as PromptMode)}
+              options={[
+                { label: 'Manual prompt', value: 'manual' },
+                {
+                  label: 'Brand music profile',
+                  value: 'brandProfile',
+                  disabled: !hasProfile,
+                },
+              ]}
+            />
           </Form.Item>
 
           <SettingSwitch
@@ -481,17 +478,11 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
               }
               block
               size='large'
+              className='mt-5'
             >
               Generate music
             </Button>
           </Form.Item>
-
-          <Alert
-            message='Generation takes 1-2 minutes'
-            description='You will be notified when the music is ready. You can continue working while generation is in progress.'
-            type='info'
-            showIcon
-          />
         </Form>
       </Card>
 

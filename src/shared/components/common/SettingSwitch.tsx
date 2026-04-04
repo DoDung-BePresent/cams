@@ -1,6 +1,7 @@
 import { cn } from '@/shared/lib';
 import { Switch, Space, Typography } from 'antd';
 import type { SwitchProps } from 'antd';
+import type { CSSProperties } from 'react';
 
 const { Text } = Typography;
 
@@ -9,6 +10,11 @@ interface SettingSwitchProps extends Omit<SwitchProps, 'onChange'> {
   description?: string;
   value?: boolean;
   onChange?: (checked: boolean) => void;
+  styles?: {
+    label?: CSSProperties;
+    description?: CSSProperties;
+    container?: CSSProperties;
+  };
 }
 
 /**
@@ -29,6 +35,7 @@ export const SettingSwitch = ({
   value,
   onChange,
   className,
+  styles,
   ...switchProps
 }: SettingSwitchProps) => {
   return (
@@ -38,6 +45,7 @@ export const SettingSwitch = ({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '10px 0',
+        ...styles?.container,
       }}
       className={cn(className)}
     >
@@ -46,11 +54,16 @@ export const SettingSwitch = ({
         size={4}
         style={{ flex: 1 }}
       >
-        <Text strong>{label}</Text>
+        <Text
+          strong
+          style={styles?.label}
+        >
+          {label}
+        </Text>
         {description && (
           <Text
             type='secondary'
-            style={{ fontSize: 13 }}
+            style={{ fontSize: 13, ...styles?.description }}
           >
             {description}
           </Text>
