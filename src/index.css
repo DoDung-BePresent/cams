@@ -110,6 +110,10 @@
     font-size: 16px !important;
   }
 
+  .ant-input-textarea-show-count .ant-input-data-count {
+    font-size: 12px;
+  }
+
   .custom-breadcrumb ol li:last-child {
     font-weight: 500;
   }

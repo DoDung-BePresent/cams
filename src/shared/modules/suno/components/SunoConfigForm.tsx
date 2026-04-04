@@ -10,7 +10,7 @@ import {
   Spin,
   Divider,
 } from 'antd';
-import { SaveOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { useSunoConfig, useUpdateSunoConfig } from '../hooks';
 import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
 import type { SunoConfigUpdateRequest } from '../types';
@@ -54,8 +54,6 @@ export const SunoConfigForm = () => {
       extra={
         <Button
           type='primary'
-          icon={<SaveOutlined />}
-          loading={updateConfig.isPending}
           onClick={() => form.submit()}
         >
           Save Configuration
