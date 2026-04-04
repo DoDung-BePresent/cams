@@ -6,17 +6,13 @@ import { useNavigate } from 'react-router';
 /**
  * Icons
  */
-import {
-  ThunderboltOutlined,
-  SettingOutlined,
-  HistoryOutlined,
-} from '@ant-design/icons';
+import { ThunderboltOutlined, HistoryOutlined } from '@ant-design/icons';
 
 /**
  * Components
  */
 import { PageHeader } from '@/shared/components';
-import { SunoGenerationList, GenerateTab, ConfigTab } from './components';
+import { SunoGenerationList, GenerateTab } from './components';
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
@@ -92,16 +88,6 @@ export const SunoAI = () => {
           generationId={lastGenerationId}
         />
       ),
-    },
-    {
-      key: 'config',
-      label: (
-        <Space>
-          <SettingOutlined />
-          Configuration
-        </Space>
-      ),
-      children: <ConfigTab />,
     },
   ];
 
