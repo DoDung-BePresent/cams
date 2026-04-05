@@ -8,7 +8,6 @@ import {
   Divider,
   Flex,
   message,
-  Tag,
 } from 'antd';
 import {
   SettingOutlined,
@@ -19,8 +18,8 @@ import {
   SpacePlayer,
   AIExplainabilityPanel,
   QueueList,
-  OverrideSpaceMusicModal,
-  AddToQueueModal,
+  OverrideSpaceMusicDrawer,
+  AddToQueueDrawer,
 } from '@/shared/modules/cams/components';
 import {
   useSpaceState,
@@ -54,7 +53,7 @@ interface SpacePlayerCardProps {
 
 export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const [showSettings, setShowSettings] = useState(false);
-  const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
+  const [isOverrideDrawerOpen, setIsOverrideDrawerOpen] = useState(false);
   const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
 
   // Fetch space state from API (initial load only)
@@ -413,7 +412,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const handleOverrideToggle = useCallback(
     (checked: boolean) => {
       if (checked) {
-        setIsOverrideModalOpen(true);
+        setIsOverrideDrawerOpen(true);
         return;
       }
 
@@ -459,21 +458,13 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         style={{ width: '100%' }}
         size='middle'
       >
-        <Flex
-          justify='space-between'
-          align='center'
-        >
-          <SettingSwitch
-            label='Manual Override'
-            description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
-            value={!!spaceState?.isManualOverride}
-            onChange={handleOverrideToggle}
-            disabled={overridePlaylist.isPending || cancelOverride.isPending}
-          />
-          {spaceState?.isManualOverride && (
-            <Tag color='warning'>Manual Override</Tag>
-          )}
-        </Flex>
+        <SettingSwitch
+          label='Manual Override'
+          description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
+          value={!!spaceState?.isManualOverride}
+          onChange={handleOverrideToggle}
+          disabled={overridePlaylist.isPending || cancelOverride.isPending}
+        />
 
         {/* Playlist Selection (Settings) */}
         {showSettings && (
@@ -633,18 +624,18 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           onSkipToTrack={handleSkipToTrack}
         />
 
-        <AddToQueueModal
+        <AddToQueueDrawer
           open={isAddQueueModalOpen}
           spaceId={space.id}
           storeId={storeId}
           onClose={() => setIsAddQueueModalOpen(false)}
         />
 
-        <OverrideSpaceMusicModal
-          open={isOverrideModalOpen}
+        <OverrideSpaceMusicDrawer
+          open={isOverrideDrawerOpen}
           spaceId={space.id}
           storeId={storeId}
-          onClose={() => setIsOverrideModalOpen(false)}
+          onClose={() => setIsOverrideDrawerOpen(false)}
         />
       </Space>
     </Card>

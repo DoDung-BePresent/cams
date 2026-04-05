@@ -1,4 +1,11 @@
-import { useMemo, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from 'react';
 import {
   List,
   Tag,
@@ -20,12 +27,14 @@ import {
 } from '@ant-design/icons';
 import {
   DndContext,
+  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -102,6 +111,78 @@ const getSourceColor = (source: QueueItemSource) => {
   return source === QueueItemSource.AI ? 'purple' : 'blue';
 };
 
+// Visual clone rendered in DragOverlay — no sortable hooks, renders as portal above list
+const DragOverlayItem = ({
+  item,
+  selected,
+}: {
+  item: SpaceQueueItemResponse;
+  selected: boolean;
+}) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      padding: '12px 16px',
+      backgroundColor: selected ? '#e6f4ff' : '#ffffff',
+      boxShadow:
+        '0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08)',
+      borderRadius: 8,
+      border: '1px solid #bfdbfe',
+      cursor: 'grabbing',
+      gap: 12,
+    }}
+  >
+    <Space>
+      <div style={{ display: 'flex', alignItems: 'center', width: 16 }}>
+        <DragOutlined style={{ color: '#1890ff' }} />
+      </div>
+      <Checkbox
+        checked={selected}
+        style={{ pointerEvents: 'none' }}
+      />
+      {item.coverImageUrl ? (
+        <img
+          src={item.coverImageUrl}
+          alt={item.trackName}
+          style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
+        />
+      ) : (
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            background: '#fafafa',
+            borderRadius: 4,
+          }}
+        />
+      )}
+    </Space>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <Space>
+        {getStatusIcon(item.queueStatus)}
+        <Text>{item.trackName}</Text>
+      </Space>
+      <div style={{ marginTop: 4 }}>
+        <Space size='small'>
+          <Tag
+            color={getStatusColor(item.queueStatus)}
+            style={{ fontSize: 11 }}
+          >
+            {getStatusLabel(item.queueStatus)}
+          </Tag>
+          <Tag
+            color={getSourceColor(item.source)}
+            style={{ fontSize: 11 }}
+          >
+            {getSourceLabel(item.source)}
+          </Tag>
+        </Space>
+      </div>
+    </div>
+  </div>
+);
+
 // Sortable Item Component
 interface SortableItemProps {
   item: SpaceQueueItemResponse;
@@ -111,13 +192,14 @@ interface SortableItemProps {
   onSkipToTrack?: (queueItemId: string, trackId?: string) => void;
 }
 
-const SortableItem = ({
+const SortableItem = memo(function SortableItem({
   item,
   selected,
   onSelectChange,
   onRemove,
   onSkipToTrack,
-}: SortableItemProps) => {
+}: SortableItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const isDraggable = item.queueStatus === QueueItemStatus.Pending;
 
   const {
@@ -132,10 +214,9 @@ const SortableItem = ({
     disabled: !isDraggable,
   });
 
-  const style = {
+  const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
     padding: '12px 16px',
     borderBottom: '1px solid #f0f0f0',
     backgroundColor: selected
@@ -143,12 +224,16 @@ const SortableItem = ({
       : item.queueStatus === QueueItemStatus.Playing
         ? '#f6ffed'
         : 'transparent',
+    // Hide original slot while DragOverlay follows the cursor
+    opacity: isDragging ? 0 : 1,
   };
 
   return (
     <List.Item
       ref={setNodeRef}
       style={style}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       actions={[
         // Only show Play button when the item is not currently playing
         item.queueStatus !== QueueItemStatus.Playing && (
@@ -185,6 +270,28 @@ const SortableItem = ({
       <List.Item.Meta
         avatar={
           <Space>
+            <div
+              {...attributes}
+              {...(isDraggable ? listeners : {})}
+              style={{
+                cursor: isDraggable ? 'grab' : 'default',
+                touchAction: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                width: 16,
+                opacity: isHovered && isDraggable ? 1 : 0,
+                transition: 'opacity 0.15s ease',
+              }}
+            >
+              <DragOutlined style={{ color: '#1890ff' }} />
+            </div>
+            <Checkbox
+              checked={selected}
+              onChange={(e) =>
+                onSelectChange(item.queueItemId, e.target.checked)
+              }
+              onClick={(e) => e.stopPropagation()}
+            />
             {/* Cover image if available */}
             {item.coverImageUrl ? (
               <img
@@ -207,46 +314,12 @@ const SortableItem = ({
                 }}
               />
             )}
-
-            <Checkbox
-              checked={selected}
-              onChange={(e) =>
-                onSelectChange(item.queueItemId, e.target.checked)
-              }
-              onClick={(e) => e.stopPropagation()}
-            />
-
-            <div
-              {...attributes}
-              {...listeners}
-              style={{
-                cursor: isDraggable ? 'grab' : 'not-allowed',
-                touchAction: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                paddingLeft: 8,
-              }}
-            >
-              <DragOutlined
-                style={{
-                  color: isDraggable ? '#1890ff' : '#d9d9d9',
-                }}
-              />
-            </div>
-            <Text
-              type='secondary'
-              style={{ fontSize: 12, minWidth: 20 }}
-            >
-              #{item.position}
-            </Text>
           </Space>
         }
         title={
           <Space>
             {getStatusIcon(item.queueStatus)}
-            <Text strong={item.queueStatus === QueueItemStatus.Playing}>
-              {item.trackName}
-            </Text>
+            <Text>{item.trackName}</Text>
           </Space>
         }
         description={
@@ -263,15 +336,6 @@ const SortableItem = ({
             >
               {getSourceLabel(item.source)}
             </Tag>
-            {item.coverImageUrl && (
-              <Text
-                type='secondary'
-                style={{ maxWidth: 240, display: 'inline-block' }}
-                ellipsis={{ tooltip: item.coverImageUrl }}
-              >
-                Cover: {item.coverImageUrl}
-              </Text>
-            )}
             {!item.isReadyToStream && (
               <Tag
                 color='warning'
@@ -285,7 +349,7 @@ const SortableItem = ({
       />
     </List.Item>
   );
-};
+});
 
 export const QueueList = ({
   items,
@@ -298,6 +362,10 @@ export const QueueList = ({
   const [selectedQueueItemIds, setSelectedQueueItemIds] = useState<string[]>(
     [],
   );
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [localItems, setLocalItems] = useState<SpaceQueueItemResponse[]>(() =>
+    [...items].sort((a, b) => a.position - b.position),
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -306,19 +374,40 @@ export const QueueList = ({
     }),
   );
 
-  const sortedItems = useMemo(
-    () => [...items].sort((a, b) => a.position - b.position),
-    [items],
+  // Sync from props only when not actively dragging — preserves optimistic order
+  useEffect(() => {
+    if (!activeId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLocalItems([...items].sort((a, b) => a.position - b.position));
+    }
+  }, [items, activeId]);
+
+  const activeItem = useMemo(
+    () => localItems.find((item) => item.queueItemId === activeId) ?? null,
+    [localItems, activeId],
   );
 
   const visibleQueueItemIdSet = useMemo(
-    () => new Set(sortedItems.map((item) => item.queueItemId)),
-    [sortedItems],
+    () => new Set(localItems.map((item) => item.queueItemId)),
+    [localItems],
   );
 
   const effectiveSelectedQueueItemIds = useMemo(
     () => selectedQueueItemIds.filter((id) => visibleQueueItemIdSet.has(id)),
     [selectedQueueItemIds, visibleQueueItemIdSet],
+  );
+
+  const handleSelectItem = useCallback(
+    (queueItemId: string, checked: boolean) => {
+      setSelectedQueueItemIds((prev) => {
+        if (checked) {
+          return prev.includes(queueItemId) ? prev : [...prev, queueItemId];
+        }
+
+        return prev.filter((id) => id !== queueItemId);
+      });
+    },
+    [],
   );
 
   if (!items || items.length === 0) {
@@ -332,22 +421,12 @@ export const QueueList = ({
   }
 
   const allSelected =
-    sortedItems.length > 0 &&
-    effectiveSelectedQueueItemIds.length === sortedItems.length;
-
-  const handleSelectItem = (queueItemId: string, checked: boolean) => {
-    setSelectedQueueItemIds((prev) => {
-      if (checked) {
-        return prev.includes(queueItemId) ? prev : [...prev, queueItemId];
-      }
-
-      return prev.filter((id) => id !== queueItemId);
-    });
-  };
+    localItems.length > 0 &&
+    effectiveSelectedQueueItemIds.length === localItems.length;
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedQueueItemIds(
-      checked ? sortedItems.map((item) => item.queueItemId) : [],
+      checked ? localItems.map((item) => item.queueItemId) : [],
     );
   };
 
@@ -360,28 +439,34 @@ export const QueueList = ({
     setSelectedQueueItemIds([]);
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
 
     if (!over || active.id === over.id || !onReorder) {
       return;
     }
 
-    const oldIndex = sortedItems.findIndex(
+    const oldIndex = localItems.findIndex(
       (item) => item.queueItemId === active.id,
     );
-    const newIndex = sortedItems.findIndex(
+    const newIndex = localItems.findIndex(
       (item) => item.queueItemId === over.id,
     );
 
-    // Reorder array
-    const reorderedItems = arrayMove(sortedItems, oldIndex, newIndex);
+    if (oldIndex === -1 || newIndex === -1) return;
 
-    // Extract queue item IDs in new order
-    const newOrder = reorderedItems.map((item) => item.queueItemId);
+    const reordered = arrayMove(localItems, oldIndex, newIndex);
+    setLocalItems(reordered);
+    onReorder(reordered.map((item) => item.queueItemId));
+  };
 
-    // Call onReorder callback
-    onReorder(newOrder);
+  const handleDragCancel = () => {
+    setActiveId(null);
   };
 
   return (
@@ -415,7 +500,7 @@ export const QueueList = ({
               size='small'
               icon={<DeleteOutlined />}
             >
-              Remove selected ({effectiveSelectedQueueItemIds.length})
+              Remove ({effectiveSelectedQueueItemIds.length})
             </Button>
           </Popconfirm>
         )}
@@ -424,15 +509,17 @@ export const QueueList = ({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <SortableContext
-          items={sortedItems.map((item) => item.queueItemId)}
+          items={localItems.map((item) => item.queueItemId)}
           strategy={verticalListSortingStrategy}
         >
           <List
             loading={loading}
-            dataSource={sortedItems}
+            dataSource={localItems}
             renderItem={(item) => (
               <SortableItem
                 key={item.queueItemId}
@@ -447,6 +534,16 @@ export const QueueList = ({
             )}
           />
         </SortableContext>
+        <DragOverlay dropAnimation={null}>
+          {activeItem ? (
+            <DragOverlayItem
+              item={activeItem}
+              selected={effectiveSelectedQueueItemIds.includes(
+                activeItem.queueItemId,
+              )}
+            />
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </Space>
   );

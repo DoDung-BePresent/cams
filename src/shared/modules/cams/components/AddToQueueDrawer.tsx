@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import {
+  Drawer,
+  Button,
   Flex,
   Radio,
   Space,
-  Tag,
   Typography,
   Input,
   Tooltip,
@@ -11,11 +12,9 @@ import {
 } from 'antd';
 import {
   PlayCircleOutlined,
-  UnorderedListOutlined,
   PlusOutlined,
   OrderedListOutlined,
 } from '@ant-design/icons';
-import { AppModal } from '@/shared/components/ui';
 import { SettingSwitch } from '@/shared/components';
 import { useMoods } from '@/shared/modules/moods/hooks';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
@@ -24,7 +23,7 @@ import { useTracks } from '@/shared/modules/tracks/hooks';
 import type { TrackFilter } from '@/shared/modules/tracks/types';
 import { useAddTracksToQueue, useAddPlaylistToQueue } from '../hooks';
 import { QueueInsertMode } from '../types';
-import { MODAL_WIDTHS } from '@/config';
+import { DRAWER_WIDTHS } from '@/config';
 import { createStyles } from 'antd-style';
 import {
   OverrideMusicSourceSelector,
@@ -34,7 +33,7 @@ import {
 const { Text } = Typography;
 const { TextArea } = Input;
 
-interface AddToQueueModalProps {
+interface AddToQueueDrawerProps {
   open: boolean;
   spaceId: string;
   storeId: string;
@@ -127,13 +126,13 @@ const defaultPlaylistFilter: PlaylistFilter = {
   status: 1,
 };
 
-export const AddToQueueModal = ({
+export const AddToQueueDrawer = ({
   open,
   spaceId,
   storeId,
   onClose,
   onSuccess,
-}: AddToQueueModalProps) => {
+}: AddToQueueDrawerProps) => {
   const { styles } = useStyle();
   const [activeTab, setActiveTab] = useState<OverrideSourceTab>('tracks');
   const [showTrackFilters, setShowTrackFilters] = useState(false);
@@ -191,7 +190,7 @@ export const AddToQueueModal = ({
     playlistFilter.moodId ||
     playlistFilter.isDefault !== undefined;
 
-  const resetModalState = () => {
+  const resetState = () => {
     setActiveTab('tracks');
     setShowTrackFilters(false);
     setShowPlaylistFilters(false);
@@ -238,123 +237,116 @@ export const AddToQueueModal = ({
         });
       }
 
-      resetModalState();
+      resetState();
       onSuccess?.();
       onClose();
-    } catch (error) {
+    } catch {
       // Error handled by mutation hooks
-      console.error('Failed to add to queue:', error);
     }
   };
 
-  const handleCancel = () => {
-    resetModalState();
+  const handleClose = () => {
+    resetState();
     onClose();
   };
 
+  const isPending = addTracks.isPending || addPlaylist.isPending;
+
   return (
-    <AppModal
+    <Drawer
       title='Add to Queue'
-      size='large'
       open={open}
-      onOk={handleSubmit}
-      onCancel={handleCancel}
-      confirmLoading={addTracks.isPending || addPlaylist.isPending}
-      width={MODAL_WIDTHS.large}
-      okText='Add to Queue'
+      onClose={handleClose}
+      closeIcon={null}
+      width={DRAWER_WIDTHS.large}
       destroyOnHidden
+      footer={
+        <Flex
+          justify='end'
+          gap='small'
+        >
+          <Button
+            size='large'
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
+            type='primary'
+            loading={isPending}
+            onClick={handleSubmit}
+          >
+            Add to Queue
+          </Button>
+        </Flex>
+      }
     >
       <Space
         direction='vertical'
         size='large'
         style={{ width: '100%' }}
       >
-        <div className={styles.selectorBlock}>
-          <OverrideMusicSourceSelector
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            enabledTabs={['tracks', 'playlist']}
-            track={{
-              filter: trackFilter,
-              setFilter: setTrackFilter,
-              showFilters: showTrackFilters,
-              setShowFilters: setShowTrackFilters,
-              hasActiveFilters: !!hasActiveTrackFilters,
-              data: tracksData?.items || [],
-              total: tracksData?.totalItems || 0,
-              isLoading: isLoadingTracks,
-              refetch: refetchTracks,
-              selectedTrackIds,
-              setSelectedTrackIds,
-              defaultFilter: defaultTrackFilter,
-              onTableChange: (pagination, _filters, sorter) => {
-                const currentSorter = Array.isArray(sorter)
-                  ? sorter[0]
-                  : sorter;
+        <OverrideMusicSourceSelector
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          enabledTabs={['tracks', 'playlist']}
+          track={{
+            filter: trackFilter,
+            setFilter: setTrackFilter,
+            showFilters: showTrackFilters,
+            setShowFilters: setShowTrackFilters,
+            hasActiveFilters: !!hasActiveTrackFilters,
+            data: tracksData?.items || [],
+            total: tracksData?.totalItems || 0,
+            isLoading: isLoadingTracks,
+            refetch: refetchTracks,
+            selectedTrackIds,
+            setSelectedTrackIds,
+            defaultFilter: defaultTrackFilter,
+            onTableChange: (pagination, _filters, sorter) => {
+              const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
 
-                setTrackFilter((prev) => ({
-                  ...prev,
-                  page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
-                  sortBy: currentSorter.field
-                    ? String(currentSorter.field)
-                    : 'createdAt',
-                  isAscending: currentSorter.order === 'ascend',
-                }));
-              },
-            }}
-            playlist={{
-              filter: playlistFilter,
-              setFilter: setPlaylistFilter,
-              showFilters: showPlaylistFilters,
-              setShowFilters: setShowPlaylistFilters,
-              hasActiveFilters: !!hasActivePlaylistFilters,
-              data: playlistsData?.items || [],
-              total: playlistsData?.totalItems || 0,
-              isLoading: isLoadingPlaylists,
-              refetch: refetchPlaylists,
-              selectedPlaylistId,
-              setSelectedPlaylistId,
-              defaultFilter: defaultPlaylistFilter,
-              moodOptions,
-              onTableChange: (pagination, _filters, sorter) => {
-                const currentSorter = Array.isArray(sorter)
-                  ? sorter[0]
-                  : sorter;
+              setTrackFilter((prev) => ({
+                ...prev,
+                page: pagination.current || 1,
+                pageSize: pagination.pageSize || 10,
+                sortBy: currentSorter.field
+                  ? String(currentSorter.field)
+                  : 'createdAt',
+                isAscending: currentSorter.order === 'ascend',
+              }));
+            },
+          }}
+          playlist={{
+            filter: playlistFilter,
+            setFilter: setPlaylistFilter,
+            showFilters: showPlaylistFilters,
+            setShowFilters: setShowPlaylistFilters,
+            hasActiveFilters: !!hasActivePlaylistFilters,
+            data: playlistsData?.items || [],
+            total: playlistsData?.totalItems || 0,
+            isLoading: isLoadingPlaylists,
+            refetch: refetchPlaylists,
+            selectedPlaylistId,
+            setSelectedPlaylistId,
+            defaultFilter: defaultPlaylistFilter,
+            moodOptions,
+            onTableChange: (pagination, _filters, sorter) => {
+              const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
 
-                setPlaylistFilter((prev) => ({
-                  ...prev,
-                  page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
-                  sortBy: currentSorter.field
-                    ? String(currentSorter.field)
-                    : 'createdAt',
-                  isAscending: currentSorter.order === 'ascend',
-                }));
-              },
-            }}
-          />
-        </div>
-
-        <div className={styles.statusStrip}>
-          <Flex
-            justify='space-between'
-            align='center'
-            wrap='wrap'
-            gap={8}
-          >
-            <Tag
-              icon={<UnorderedListOutlined />}
-              color='processing'
-            >
-              {activeTab === 'tracks'
-                ? `${selectedTrackIds.length} track(s) selected`
-                : selectedPlaylistId
-                  ? '1 playlist selected'
-                  : 'No playlist selected'}
-            </Tag>
-          </Flex>
-        </div>
+              setPlaylistFilter((prev) => ({
+                ...prev,
+                page: pagination.current || 1,
+                pageSize: pagination.pageSize || 10,
+                sortBy: currentSorter.field
+                  ? String(currentSorter.field)
+                  : 'createdAt',
+                isAscending: currentSorter.order === 'ascend',
+              }));
+            },
+          }}
+        />
 
         <div className={styles.sectionCard}>
           <Text strong>Queue Mode</Text>
@@ -401,6 +393,6 @@ export const AddToQueueModal = ({
           />
         </div>
       </Space>
-    </AppModal>
+    </Drawer>
   );
 };
