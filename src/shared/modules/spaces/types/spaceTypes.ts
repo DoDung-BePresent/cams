@@ -36,22 +36,6 @@ export interface SpaceDetailResponse extends SpaceListItem {
   wiFiSensorId?: string;
   ioTDeviceId?: string;
   currentPlaylistId?: string; // 🔒 Read-only (set by AI pipeline)
-}
-
-/**
- * Create Space Request (from API_Spaces.md §4.1)
- * StoreManager: storeId is ignored (auto-filled from user.StoreId)
- */
-export interface CreateSpaceRequest {
-  name: string; // Required
-  type: SpaceTypeEnum; // Required
-  description?: string;
-  cameraId?: string;
-  roiCoordinates?: string;
-  maxOccupancy?: number;
-  criticalQueueThreshold?: number;
-  wiFiSensorId?: string;
-  ioTDeviceId?: string;
 
   activeFuzzyMusicProfileId?: string | null;
   activeFuzzyProfileName?: string | null;
@@ -75,6 +59,22 @@ export interface CreateSpaceRequest {
   focusMoodCandidates?: MoodType[] | null;
   energeticMoodCandidates?: MoodType[] | null;
   allowedPlaylistIds?: string[] | null;
+}
+
+/**
+ * Create Space Request (from API_Spaces.md §4.1)
+ * StoreManager: storeId is ignored (auto-filled from user.StoreId)
+ */
+export interface CreateSpaceRequest {
+  name: string; // Required
+  type: SpaceTypeEnum; // Required
+  description?: string;
+  cameraId?: string;
+  roiCoordinates?: string;
+  maxOccupancy?: number;
+  criticalQueueThreshold?: number;
+  wiFiSensorId?: string;
+  ioTDeviceId?: string;
 }
 
 /**
