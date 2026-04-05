@@ -19,7 +19,7 @@ import {
   AIExplainabilityPanel,
   QueueList,
   OverrideSpaceMusicDrawer,
-  AddToQueueModal,
+  AddToQueueDrawer,
 } from '@/shared/modules/cams/components';
 import {
   useSpaceState,
@@ -624,7 +624,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           onSkipToTrack={handleSkipToTrack}
         />
 
-        <AddToQueueModal
+        <AddToQueueDrawer
           open={isAddQueueModalOpen}
           spaceId={space.id}
           storeId={storeId}
