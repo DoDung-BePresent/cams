@@ -49,5 +49,26 @@ export function pickStoreFuzzyOverrideBody(
     out.allowedPlaylistIds = fuzzy.allowedPlaylistIds.filter(Boolean);
   }
 
+  if (
+    Array.isArray(fuzzy.chillMoodCandidates) &&
+    fuzzy.chillMoodCandidates.length
+  ) {
+    out.chillMoodCandidates = fuzzy.chillMoodCandidates;
+  }
+
+  if (
+    Array.isArray(fuzzy.focusMoodCandidates) &&
+    fuzzy.focusMoodCandidates.length
+  ) {
+    out.focusMoodCandidates = fuzzy.focusMoodCandidates;
+  }
+
+  if (
+    Array.isArray(fuzzy.energeticMoodCandidates) &&
+    fuzzy.energeticMoodCandidates.length
+  ) {
+    out.energeticMoodCandidates = fuzzy.energeticMoodCandidates;
+  }
+
   return out;
 }

@@ -1,4 +1,5 @@
 import type { EntityStatusEnum } from '@/shared/types/commonTypes';
+import type { MoodType } from '@/shared/modules/moods/types';
 
 // Request DTO
 export type BrandRequest = {
@@ -33,6 +34,9 @@ export type BrandRequest = {
   densityCrowdedMin?: number;
   spaceCapacity?: number;
   defaultDensityRatioWhenNull?: number;
+  chillMoodCandidates?: MoodType[];
+  focusMoodCandidates?: MoodType[];
+  energeticMoodCandidates?: MoodType[];
   allowedPlaylistIds?: string[];
 };
 
@@ -79,6 +83,9 @@ export type BrandDetailResponse = BrandListItem & {
   densityCrowdedMin?: number | null;
   spaceCapacity?: number | null;
   defaultDensityRatioWhenNull?: number | null;
+  chillMoodCandidates?: MoodType[] | null;
+  focusMoodCandidates?: MoodType[] | null;
+  energeticMoodCandidates?: MoodType[] | null;
   allowedPlaylistIds?: string[] | null;
 };
 

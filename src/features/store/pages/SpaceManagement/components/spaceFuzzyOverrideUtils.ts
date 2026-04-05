@@ -48,5 +48,26 @@ export const pickSpaceFuzzyOverrideBody = (
     out.allowedPlaylistIds = fuzzy.allowedPlaylistIds.filter(Boolean);
   }
 
+  if (
+    Array.isArray(fuzzy.chillMoodCandidates) &&
+    fuzzy.chillMoodCandidates.length > 0
+  ) {
+    out.chillMoodCandidates = fuzzy.chillMoodCandidates;
+  }
+
+  if (
+    Array.isArray(fuzzy.focusMoodCandidates) &&
+    fuzzy.focusMoodCandidates.length > 0
+  ) {
+    out.focusMoodCandidates = fuzzy.focusMoodCandidates;
+  }
+
+  if (
+    Array.isArray(fuzzy.energeticMoodCandidates) &&
+    fuzzy.energeticMoodCandidates.length > 0
+  ) {
+    out.energeticMoodCandidates = fuzzy.energeticMoodCandidates;
+  }
+
   return out;
 };

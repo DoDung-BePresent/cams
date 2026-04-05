@@ -6,6 +6,18 @@ function appendScalar(fd: FormData, key: string, value: unknown) {
   fd.append(key, String(value));
 }
 
+function appendArray(
+  fd: FormData,
+  key: string,
+  values?: Array<string | number>,
+) {
+  if (!Array.isArray(values)) return;
+  for (const value of values) {
+    if (value === undefined || value === null || value === '') continue;
+    fd.append(key, String(value));
+  }
+}
+
 /**
  * Appends CAMS fuzzy / music policy fields to brand multipart FormData (create or update).
  * Keys use PascalCase to match `BrandRequest` / `[FromForm]` binding on the API.
@@ -36,6 +48,13 @@ export function appendBrandMusicPolicyToFormData(
     formData,
     'DefaultDensityRatioWhenNull',
     values.defaultDensityRatioWhenNull,
+  );
+  appendArray(formData, 'ChillMoodCandidates', values.chillMoodCandidates);
+  appendArray(formData, 'FocusMoodCandidates', values.focusMoodCandidates);
+  appendArray(
+    formData,
+    'EnergeticMoodCandidates',
+    values.energeticMoodCandidates,
   );
 
   const ids = values.allowedPlaylistIds;

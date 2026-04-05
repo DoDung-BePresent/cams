@@ -10,6 +10,7 @@ import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useTracks } from '@/shared/modules/tracks/hooks';
 import type { PlaylistFilter } from '@/shared/modules/playlists/types';
 import type { TrackFilter } from '@/shared/modules/tracks/types';
+import { isTrackPlaybackBlockedByCopyright } from '@/shared/modules/tracks/utils';
 import { useOverridePlaylist } from '../hooks';
 import {
   OverrideMusicSourceSelector,
@@ -159,6 +160,15 @@ export const OverrideSpaceMusicModal = ({
     });
   }, [moodFilter.moodType, moodFilter.search, moods]);
 
+  const selectableTracks = useMemo(
+    () =>
+      (trackData?.items || []).filter(
+        (track) =>
+          !isTrackPlaybackBlockedByCopyright(track.copyrightClearanceStatus),
+      ),
+    [trackData?.items],
+  );
+
   const paginatedMoods = useMemo(() => {
     const start = (moodFilter.page - 1) * moodFilter.pageSize;
     const end = start + moodFilter.pageSize;
@@ -254,7 +264,7 @@ export const OverrideSpaceMusicModal = ({
               showFilters: showTrackFilters,
               setShowFilters: setShowTrackFilters,
               hasActiveFilters: !!hasActiveTrackFilters,
-              data: trackData?.items || [],
+              data: selectableTracks,
               total: trackData?.totalItems || 0,
               isLoading: isLoadingTracks,
               refetch: refetchTracks,

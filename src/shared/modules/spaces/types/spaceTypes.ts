@@ -1,4 +1,5 @@
 import type { BaseResponse, EntityStatusEnum } from '@/shared/types';
+import type { MoodType } from '@/shared/modules/moods/types';
 
 /**
  * Space Type Enum (from API_Spaces.md §4.5)
@@ -51,6 +52,29 @@ export interface CreateSpaceRequest {
   criticalQueueThreshold?: number;
   wiFiSensorId?: string;
   ioTDeviceId?: string;
+
+  activeFuzzyMusicProfileId?: string | null;
+  activeFuzzyProfileName?: string | null;
+
+  chillBpmMin?: number | null;
+  chillBpmMax?: number | null;
+  focusBpmMin?: number | null;
+  focusBpmMax?: number | null;
+  energeticBpmMin?: number | null;
+  energeticBpmMax?: number | null;
+  pressureLowMax?: number | null;
+  pressureCriticalMin?: number | null;
+  stressComfortableMax?: number | null;
+  stressHighMin?: number | null;
+  densitySparseMax?: number | null;
+  densityCrowdedMin?: number | null;
+  spaceCapacity?: number | null;
+  defaultDensityRatioWhenNull?: number | null;
+
+  chillMoodCandidates?: MoodType[] | null;
+  focusMoodCandidates?: MoodType[] | null;
+  energeticMoodCandidates?: MoodType[] | null;
+  allowedPlaylistIds?: string[] | null;
 }
 
 /**
@@ -86,6 +110,9 @@ export interface SpaceFuzzyOverrideProfileRequest {
   densityCrowdedMin?: number;
   spaceCapacity?: number;
   defaultDensityRatioWhenNull?: number;
+  chillMoodCandidates?: MoodType[];
+  focusMoodCandidates?: MoodType[];
+  energeticMoodCandidates?: MoodType[];
   allowedPlaylistIds?: string[];
 }
 

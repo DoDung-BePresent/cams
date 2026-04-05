@@ -22,6 +22,7 @@ import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { PlaylistFilter } from '@/shared/modules/playlists/types';
 import { useTracks } from '@/shared/modules/tracks/hooks';
 import type { TrackFilter } from '@/shared/modules/tracks/types';
+import { isTrackPlaybackBlockedByCopyright } from '@/shared/modules/tracks/utils';
 import { useAddTracksToQueue, useAddPlaylistToQueue } from '../hooks';
 import { QueueInsertMode } from '../types';
 import { MODAL_WIDTHS } from '@/config';
@@ -166,6 +167,15 @@ export const AddToQueueModal = ({
     refetch: refetchTracks,
   } = useTracks(trackFilter);
 
+  const selectableTracks = useMemo(
+    () =>
+      (tracksData?.items || []).filter(
+        (track) =>
+          !isTrackPlaybackBlockedByCopyright(track.copyrightClearanceStatus),
+      ),
+    [tracksData?.items],
+  );
+
   const { data: moods = [] } = useMoods();
 
   const addTracks = useAddTracksToQueue();
@@ -280,7 +290,7 @@ export const AddToQueueModal = ({
               showFilters: showTrackFilters,
               setShowFilters: setShowTrackFilters,
               hasActiveFilters: !!hasActiveTrackFilters,
-              data: tracksData?.items || [],
+              data: selectableTracks,
               total: tracksData?.totalItems || 0,
               isLoading: isLoadingTracks,
               refetch: refetchTracks,
