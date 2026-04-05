@@ -5,4 +5,4 @@ export * from './AudioMixerControls';
 export * from './AddToQueueModal';
 export * from './QueueManagementDrawer';
 export * from './AIExplainabilityPanel';
-export * from './OverrideSpaceMusicModal';
+export * from './OverrideSpaceMusicDrawer';

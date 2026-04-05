@@ -18,7 +18,7 @@ import {
   SpacePlayer,
   AIExplainabilityPanel,
   QueueList,
-  OverrideSpaceMusicModal,
+  OverrideSpaceMusicDrawer,
   AddToQueueModal,
 } from '@/shared/modules/cams/components';
 import {
@@ -53,7 +53,7 @@ interface SpacePlayerCardProps {
 
 export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const [showSettings, setShowSettings] = useState(false);
-  const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
+  const [isOverrideDrawerOpen, setIsOverrideDrawerOpen] = useState(false);
   const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
 
   // Fetch space state from API (initial load only)
@@ -412,7 +412,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const handleOverrideToggle = useCallback(
     (checked: boolean) => {
       if (checked) {
-        setIsOverrideModalOpen(true);
+        setIsOverrideDrawerOpen(true);
         return;
       }
 
@@ -631,11 +631,11 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           onClose={() => setIsAddQueueModalOpen(false)}
         />
 
-        <OverrideSpaceMusicModal
-          open={isOverrideModalOpen}
+        <OverrideSpaceMusicDrawer
+          open={isOverrideDrawerOpen}
           spaceId={space.id}
           storeId={storeId}
-          onClose={() => setIsOverrideModalOpen(false)}
+          onClose={() => setIsOverrideDrawerOpen(false)}
         />
       </Space>
     </Card>

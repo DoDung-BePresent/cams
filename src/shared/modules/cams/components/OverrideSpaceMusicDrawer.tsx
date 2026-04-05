@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Input, Space, Typography } from 'antd';
+import { Input, Space, Typography, Drawer, Button, Flex } from 'antd';
 import { createStyles } from 'antd-style';
 
-import { AppModal, SettingSwitch } from '@/shared/components';
-import { MODAL_WIDTHS } from '@/config';
+import { SettingSwitch } from '@/shared/components';
+import { DRAWER_WIDTHS } from '@/config';
 import { useMoods } from '@/shared/modules/moods/hooks';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useTracks } from '@/shared/modules/tracks/hooks';
@@ -36,7 +36,7 @@ const useStyle = createStyles(({ css }) => {
   };
 });
 
-interface OverrideSpaceMusicModalProps {
+interface OverrideSpaceMusicDrawerProps {
   open: boolean;
   spaceId: string;
   storeId: string;
@@ -65,13 +65,13 @@ const defaultMoodFilter: MoodSelectorFilter = {
   pageSize: 10,
 };
 
-export const OverrideSpaceMusicModal = ({
+export const OverrideSpaceMusicDrawer = ({
   open,
   spaceId,
   storeId,
   onClose,
   onSuccess,
-}: OverrideSpaceMusicModalProps) => {
+}: OverrideSpaceMusicDrawerProps) => {
   const { styles } = useStyle();
   const [activeTab, setActiveTab] = useState<OverrideSourceTab>('tracks');
   const [showTrackFilters, setShowTrackFilters] = useState(false);
@@ -221,16 +221,34 @@ export const OverrideSpaceMusicModal = ({
   };
 
   return (
-    <AppModal
+    <Drawer
       open={open}
       title='Override Space Music'
-      size='large'
-      width={MODAL_WIDTHS.large}
-      onCancel={handleClose}
-      onOk={handleSubmit}
-      okText={isCutOver ? 'Apply & Cut Over' : 'Apply Override'}
-      confirmLoading={overrideSpaceMusic.isPending}
+      width={DRAWER_WIDTHS.large}
+      onClose={handleClose}
+      closeIcon={null}
       destroyOnHidden
+      footer={
+        <Flex
+          justify='end'
+          gap='small'
+        >
+          <Button
+            size='large'
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
+            type='primary'
+            loading={overrideSpaceMusic.isPending}
+            onClick={handleSubmit}
+          >
+            {isCutOver ? 'Apply & Cut Over' : 'Apply Override'}
+          </Button>
+        </Flex>
+      }
     >
       <Space
         direction='vertical'
@@ -339,6 +357,6 @@ export const OverrideSpaceMusicModal = ({
           />
         </div>
       </Space>
-    </AppModal>
+    </Drawer>
   );
 };
