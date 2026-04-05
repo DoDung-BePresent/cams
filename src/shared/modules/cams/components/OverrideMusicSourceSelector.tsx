@@ -260,7 +260,7 @@ export const OverrideMusicSourceSelector = ({
   return (
     <Tabs
       className={styles.sourceTabs}
-      size='large'
+      size='small'
       activeKey={activeTab}
       onChange={(key) => onTabChange(key as OverrideSourceTab)}
       items={[

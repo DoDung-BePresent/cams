@@ -8,7 +8,6 @@ import {
   Divider,
   Flex,
   message,
-  Tag,
 } from 'antd';
 import {
   SettingOutlined,
@@ -459,21 +458,13 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         style={{ width: '100%' }}
         size='middle'
       >
-        <Flex
-          justify='space-between'
-          align='center'
-        >
-          <SettingSwitch
-            label='Manual Override'
-            description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
-            value={!!spaceState?.isManualOverride}
-            onChange={handleOverrideToggle}
-            disabled={overridePlaylist.isPending || cancelOverride.isPending}
-          />
-          {spaceState?.isManualOverride && (
-            <Tag color='warning'>Manual Override</Tag>
-          )}
-        </Flex>
+        <SettingSwitch
+          label='Manual Override'
+          description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
+          value={!!spaceState?.isManualOverride}
+          onChange={handleOverrideToggle}
+          disabled={overridePlaylist.isPending || cancelOverride.isPending}
+        />
 
         {/* Playlist Selection (Settings) */}
         {showSettings && (

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Flex, Input, Space, Tag, Typography } from 'antd';
-import { UnorderedListOutlined } from '@ant-design/icons';
+import { Input, Space, Typography } from 'antd';
 import { createStyles } from 'antd-style';
 
 import { AppModal, SettingSwitch } from '@/shared/components';
@@ -22,12 +21,6 @@ const { TextArea } = Input;
 
 const useStyle = createStyles(({ css }) => {
   return {
-    selectorBlock: css`
-      border: 1px solid var(--ant-color-border-secondary);
-      border-radius: 12px;
-      background: var(--ant-color-bg-container);
-      padding: 10px;
-    `,
     statusStrip: css`
       border: 1px solid var(--ant-color-border-secondary);
       border-radius: 12px;
@@ -244,110 +237,80 @@ export const OverrideSpaceMusicModal = ({
         size='large'
         style={{ width: '100%' }}
       >
-        <div className={styles.selectorBlock}>
-          <OverrideMusicSourceSelector
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            track={{
-              filter: trackFilter,
-              setFilter: setTrackFilter,
-              showFilters: showTrackFilters,
-              setShowFilters: setShowTrackFilters,
-              hasActiveFilters: !!hasActiveTrackFilters,
-              data: trackData?.items || [],
-              total: trackData?.totalItems || 0,
-              isLoading: isLoadingTracks,
-              refetch: refetchTracks,
-              selectedTrackIds,
-              setSelectedTrackIds,
-              defaultFilter: defaultTrackFilter,
-              onTableChange: (pagination, _filters, sorter) => {
-                const currentSorter = Array.isArray(sorter)
-                  ? sorter[0]
-                  : sorter;
+        <OverrideMusicSourceSelector
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          track={{
+            filter: trackFilter,
+            setFilter: setTrackFilter,
+            showFilters: showTrackFilters,
+            setShowFilters: setShowTrackFilters,
+            hasActiveFilters: !!hasActiveTrackFilters,
+            data: trackData?.items || [],
+            total: trackData?.totalItems || 0,
+            isLoading: isLoadingTracks,
+            refetch: refetchTracks,
+            selectedTrackIds,
+            setSelectedTrackIds,
+            defaultFilter: defaultTrackFilter,
+            onTableChange: (pagination, _filters, sorter) => {
+              const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
 
-                setTrackFilter((prev) => ({
-                  ...prev,
-                  page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
-                  sortBy: currentSorter.field
-                    ? String(currentSorter.field)
-                    : 'createdAt',
-                  isAscending: currentSorter.order === 'ascend',
-                }));
-              },
-            }}
-            playlist={{
-              filter: playlistFilter,
-              setFilter: setPlaylistFilter,
-              showFilters: showPlaylistFilters,
-              setShowFilters: setShowPlaylistFilters,
-              hasActiveFilters: !!hasActivePlaylistFilters,
-              data: playlistData?.items || [],
-              total: playlistData?.totalItems || 0,
-              isLoading: isLoadingPlaylists,
-              refetch: refetchPlaylists,
-              selectedPlaylistId,
-              setSelectedPlaylistId,
-              defaultFilter: defaultPlaylistFilter,
-              moodOptions,
-              onTableChange: (pagination, _filters, sorter) => {
-                const currentSorter = Array.isArray(sorter)
-                  ? sorter[0]
-                  : sorter;
+              setTrackFilter((prev) => ({
+                ...prev,
+                page: pagination.current || 1,
+                pageSize: pagination.pageSize || 10,
+                sortBy: currentSorter.field
+                  ? String(currentSorter.field)
+                  : 'createdAt',
+                isAscending: currentSorter.order === 'ascend',
+              }));
+            },
+          }}
+          playlist={{
+            filter: playlistFilter,
+            setFilter: setPlaylistFilter,
+            showFilters: showPlaylistFilters,
+            setShowFilters: setShowPlaylistFilters,
+            hasActiveFilters: !!hasActivePlaylistFilters,
+            data: playlistData?.items || [],
+            total: playlistData?.totalItems || 0,
+            isLoading: isLoadingPlaylists,
+            refetch: refetchPlaylists,
+            selectedPlaylistId,
+            setSelectedPlaylistId,
+            defaultFilter: defaultPlaylistFilter,
+            moodOptions,
+            onTableChange: (pagination, _filters, sorter) => {
+              const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
 
-                setPlaylistFilter((prev) => ({
-                  ...prev,
-                  page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
-                  sortBy: currentSorter.field
-                    ? String(currentSorter.field)
-                    : 'createdAt',
-                  isAscending: currentSorter.order === 'ascend',
-                }));
-              },
-            }}
-            mood={{
-              filter: moodFilter,
-              setFilter: setMoodFilter,
-              showFilters: showMoodFilters,
-              setShowFilters: setShowMoodFilters,
-              hasActiveFilters: !!hasActiveMoodFilters,
-              data: paginatedMoods,
-              total: filteredMoods.length,
-              isLoading: isLoadingMoods,
-              refetch: refetchMoods,
-              selectedMoodId,
-              setSelectedMoodId,
-              defaultFilter: defaultMoodFilter,
-              moodTypeOptions,
-            }}
-          />
-        </div>
-
-        <div className={styles.statusStrip}>
-          <Flex
-            justify='space-between'
-            align='center'
-            wrap='wrap'
-            gap={8}
-          >
-            <Tag
-              icon={<UnorderedListOutlined />}
-              color='processing'
-            >
-              {activeTab === 'tracks'
-                ? `${selectedTrackIds.length} track(s) selected`
-                : activeTab === 'playlist'
-                  ? selectedPlaylistId
-                    ? '1 playlist selected'
-                    : 'No playlist selected'
-                  : selectedMoodId
-                    ? '1 mood selected'
-                    : 'No mood selected'}
-            </Tag>
-          </Flex>
-        </div>
+              setPlaylistFilter((prev) => ({
+                ...prev,
+                page: pagination.current || 1,
+                pageSize: pagination.pageSize || 10,
+                sortBy: currentSorter.field
+                  ? String(currentSorter.field)
+                  : 'createdAt',
+                isAscending: currentSorter.order === 'ascend',
+              }));
+            },
+          }}
+          mood={{
+            filter: moodFilter,
+            setFilter: setMoodFilter,
+            showFilters: showMoodFilters,
+            setShowFilters: setShowMoodFilters,
+            hasActiveFilters: !!hasActiveMoodFilters,
+            data: paginatedMoods,
+            total: filteredMoods.length,
+            isLoading: isLoadingMoods,
+            refetch: refetchMoods,
+            selectedMoodId,
+            setSelectedMoodId,
+            defaultFilter: defaultMoodFilter,
+            moodTypeOptions,
+          }}
+        />
 
         <div className={styles.sectionCard}>
           <SettingSwitch
