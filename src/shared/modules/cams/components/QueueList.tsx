@@ -185,6 +185,29 @@ const SortableItem = ({
       <List.Item.Meta
         avatar={
           <Space>
+            <div
+              {...attributes}
+              {...listeners}
+              style={{
+                cursor: isDraggable ? 'grab' : 'not-allowed',
+                touchAction: 'none',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <DragOutlined
+                style={{
+                  color: isDraggable ? '#1890ff' : '#d9d9d9',
+                }}
+              />
+            </div>
+            <Checkbox
+              checked={selected}
+              onChange={(e) =>
+                onSelectChange(item.queueItemId, e.target.checked)
+              }
+              onClick={(e) => e.stopPropagation()}
+            />
             {/* Cover image if available */}
             {item.coverImageUrl ? (
               <img
@@ -207,38 +230,6 @@ const SortableItem = ({
                 }}
               />
             )}
-
-            <Checkbox
-              checked={selected}
-              onChange={(e) =>
-                onSelectChange(item.queueItemId, e.target.checked)
-              }
-              onClick={(e) => e.stopPropagation()}
-            />
-
-            <div
-              {...attributes}
-              {...listeners}
-              style={{
-                cursor: isDraggable ? 'grab' : 'not-allowed',
-                touchAction: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                paddingLeft: 8,
-              }}
-            >
-              <DragOutlined
-                style={{
-                  color: isDraggable ? '#1890ff' : '#d9d9d9',
-                }}
-              />
-            </div>
-            <Text
-              type='secondary'
-              style={{ fontSize: 12, minWidth: 20 }}
-            >
-              #{item.position}
-            </Text>
           </Space>
         }
         title={
@@ -263,15 +254,6 @@ const SortableItem = ({
             >
               {getSourceLabel(item.source)}
             </Tag>
-            {item.coverImageUrl && (
-              <Text
-                type='secondary'
-                style={{ maxWidth: 240, display: 'inline-block' }}
-                ellipsis={{ tooltip: item.coverImageUrl }}
-              >
-                Cover: {item.coverImageUrl}
-              </Text>
-            )}
             {!item.isReadyToStream && (
               <Tag
                 color='warning'
