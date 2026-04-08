@@ -42,20 +42,21 @@ const { Text } = Typography;
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
-    sourceTabs: css`
+    customTabs: css`
       .${prefixCls}-tabs-nav {
-        margin-bottom: 12px;
-      }
-
-      .${prefixCls}-tabs-nav-list {
-        display: flex;
-        gap: 8px;
-      }
-
-      .${prefixCls}-tabs-tab {
-        border-radius: 10px;
-        padding: 10px 16px;
-        margin: 0 !important;
+        margin-bottom: 0;
+        .${prefixCls}-tabs-nav-wrap {
+          .${prefixCls}-tabs-nav-list {
+            width: 100%;
+            .${prefixCls}-tabs-tab {
+              justify-content: center;
+              &:hover {
+                background-color: var(--ant-blue-1);
+                color: var(--ant-tabs-item-selected-color);
+              }
+            }
+          }
+        }
       }
     `,
   };
@@ -259,8 +260,17 @@ export const OverrideMusicSourceSelector = ({
 
   return (
     <Tabs
-      className={styles.sourceTabs}
-      size='large'
+      className={styles.customTabs}
+      styles={{
+        item: {
+          width: 'fit-content',
+          paddingInline: 15,
+        },
+        content: {
+          paddingTop: 20,
+        },
+      }}
+      size='small'
       activeKey={activeTab}
       onChange={(key) => onTabChange(key as OverrideSourceTab)}
       items={[
