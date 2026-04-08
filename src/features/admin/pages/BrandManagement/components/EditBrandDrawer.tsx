@@ -111,6 +111,15 @@ export const EditBrandDrawer = ({
         spaceCapacity: brand.spaceCapacity ?? undefined,
         defaultDensityRatioWhenNull:
           brand.defaultDensityRatioWhenNull ?? undefined,
+        chillMoodCandidates: brand.chillMoodCandidates?.length
+          ? brand.chillMoodCandidates
+          : undefined,
+        focusMoodCandidates: brand.focusMoodCandidates?.length
+          ? brand.focusMoodCandidates
+          : undefined,
+        energeticMoodCandidates: brand.energeticMoodCandidates?.length
+          ? brand.energeticMoodCandidates
+          : undefined,
         allowedPlaylistIds: brand.allowedPlaylistIds?.length
           ? brand.allowedPlaylistIds
           : undefined,

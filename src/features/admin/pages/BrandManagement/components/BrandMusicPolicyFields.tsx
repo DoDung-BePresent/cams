@@ -6,6 +6,15 @@ import { FUZZY_PROFILE_TEMPLATE_OPTIONS } from '@/features/admin/constants/fuzzy
 import { useFuzzyProfileTemplateOptions } from '@/features/admin/hooks';
 
 import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
+import { MOOD_TYPE_LABELS } from '@/shared/modules/moods/constants';
+import { MoodType } from '@/shared/modules/moods/types';
+
+const MOOD_CANDIDATE_OPTIONS = Object.values(MoodType)
+  .filter((value): value is MoodType => typeof value === 'number')
+  .map((value) => ({
+    label: MOOD_TYPE_LABELS[value],
+    value,
+  }));
 
 const formatRange = (min?: number, max?: number) => {
   if (min == null || max == null) return 'Not configured';
@@ -143,6 +152,51 @@ export const BrandMusicPolicyFields = ({
 
       {showPolicyFields ? (
         <>
+          <Form.Item
+            label='Chill mood candidates'
+            name='chillMoodCandidates'
+            tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+          >
+            <Select
+              size='large'
+              mode='multiple'
+              allowClear
+              placeholder='Optional - moods allowed for Chill lane'
+              options={MOOD_CANDIDATE_OPTIONS}
+              optionFilterProp='label'
+            />
+          </Form.Item>
+
+          <Form.Item
+            label='Focus mood candidates'
+            name='focusMoodCandidates'
+            tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+          >
+            <Select
+              size='large'
+              mode='multiple'
+              allowClear
+              placeholder='Optional - moods allowed for Focus lane'
+              options={MOOD_CANDIDATE_OPTIONS}
+              optionFilterProp='label'
+            />
+          </Form.Item>
+
+          <Form.Item
+            label='Energetic mood candidates'
+            name='energeticMoodCandidates'
+            tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+          >
+            <Select
+              size='large'
+              mode='multiple'
+              allowClear
+              placeholder='Optional - moods allowed for Energetic lane'
+              options={MOOD_CANDIDATE_OPTIONS}
+              optionFilterProp='label'
+            />
+          </Form.Item>
+
           <Form.Item
             label='Allowed playlists (optional)'
             name='allowedPlaylistIds'

@@ -1,8 +1,17 @@
 import { Collapse, Form, Input, InputNumber, Select, Typography } from 'antd';
 
 import { usePlaylistOptionsForStore } from '@/shared/modules/playlists/hooks';
+import { MOOD_TYPE_LABELS } from '@/shared/modules/moods/constants';
+import { MoodType } from '@/shared/modules/moods/types';
 
 const { Text } = Typography;
+
+const MOOD_CANDIDATE_OPTIONS = Object.values(MoodType)
+  .filter((value): value is MoodType => typeof value === 'number')
+  .map((value) => ({
+    label: MOOD_TYPE_LABELS[value],
+    value,
+  }));
 
 type SpaceFuzzyOverrideFieldsProps = {
   storeIdForPlaylists?: string;
@@ -34,6 +43,51 @@ export const SpaceFuzzyOverrideFields = ({
         name={['fuzzy', 'name']}
       >
         <Input placeholder='Optional label for this profile' />
+      </Form.Item>
+
+      <Form.Item
+        label='Chill mood candidates'
+        name={['fuzzy', 'chillMoodCandidates']}
+        tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+      >
+        <Select
+          size='large'
+          mode='multiple'
+          allowClear
+          placeholder='Optional - moods allowed for Chill lane'
+          options={MOOD_CANDIDATE_OPTIONS}
+          optionFilterProp='label'
+        />
+      </Form.Item>
+
+      <Form.Item
+        label='Focus mood candidates'
+        name={['fuzzy', 'focusMoodCandidates']}
+        tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+      >
+        <Select
+          size='large'
+          mode='multiple'
+          allowClear
+          placeholder='Optional - moods allowed for Focus lane'
+          options={MOOD_CANDIDATE_OPTIONS}
+          optionFilterProp='label'
+        />
+      </Form.Item>
+
+      <Form.Item
+        label='Energetic mood candidates'
+        name={['fuzzy', 'energeticMoodCandidates']}
+        tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+      >
+        <Select
+          size='large'
+          mode='multiple'
+          allowClear
+          placeholder='Optional - moods allowed for Energetic lane'
+          options={MOOD_CANDIDATE_OPTIONS}
+          optionFilterProp='label'
+        />
       </Form.Item>
 
       <Collapse
