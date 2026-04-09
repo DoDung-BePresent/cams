@@ -102,13 +102,21 @@ export const EditSpaceDrawer = ({
           energeticBpmMax: space.energeticBpmMax ?? undefined,
           pressureLowMax: space.pressureLowMax ?? undefined,
           pressureCriticalMin: space.pressureCriticalMin ?? undefined,
-          stressComfortableMax: space.stressComfortableMax ?? undefined,
-          stressHighMin: space.stressHighMin ?? undefined,
-          densitySparseMax: space.densitySparseMax ?? undefined,
-          densityCrowdedMin: space.densityCrowdedMin ?? undefined,
+          noiseQuietMaxDb:
+            space.noiseQuietMaxDb ??
+            space.stressComfortableMax ??
+            space.densitySparseMax ??
+            undefined,
+          noiseLoudMinDb:
+            space.noiseLoudMinDb ??
+            space.stressHighMin ??
+            space.densityCrowdedMin ??
+            undefined,
           spaceCapacity: space.spaceCapacity ?? undefined,
-          defaultDensityRatioWhenNull:
-            space.defaultDensityRatioWhenNull ?? undefined,
+          defaultDecibelWhenNull:
+            space.defaultDecibelWhenNull ??
+            space.defaultDensityRatioWhenNull ??
+            undefined,
           chillMoodCandidates: space.chillMoodCandidates?.length
             ? space.chillMoodCandidates
             : undefined,

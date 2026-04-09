@@ -126,13 +126,21 @@ export const EditStoreDrawer = ({
           energeticBpmMax: store.energeticBpmMax ?? undefined,
           pressureLowMax: store.pressureLowMax ?? undefined,
           pressureCriticalMin: store.pressureCriticalMin ?? undefined,
-          stressComfortableMax: store.stressComfortableMax ?? undefined,
-          stressHighMin: store.stressHighMin ?? undefined,
-          densitySparseMax: store.densitySparseMax ?? undefined,
-          densityCrowdedMin: store.densityCrowdedMin ?? undefined,
+          noiseQuietMaxDb:
+            store.noiseQuietMaxDb ??
+            store.stressComfortableMax ??
+            store.densitySparseMax ??
+            undefined,
+          noiseLoudMinDb:
+            store.noiseLoudMinDb ??
+            store.stressHighMin ??
+            store.densityCrowdedMin ??
+            undefined,
           spaceCapacity: store.spaceCapacity ?? undefined,
-          defaultDensityRatioWhenNull:
-            store.defaultDensityRatioWhenNull ?? undefined,
+          defaultDecibelWhenNull:
+            store.defaultDecibelWhenNull ??
+            store.defaultDensityRatioWhenNull ??
+            undefined,
           chillMoodCandidates: store.chillMoodCandidates?.length
             ? store.chillMoodCandidates
             : undefined,

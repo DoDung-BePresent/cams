@@ -29,17 +29,54 @@ export function pickStoreFuzzyOverrideBody(
   }
 
   const decimals: (keyof StoreFuzzyOverrideProfileRequest)[] = [
-    'stressComfortableMax',
-    'stressHighMin',
-    'densitySparseMax',
-    'densityCrowdedMin',
-    'defaultDensityRatioWhenNull',
+    'noiseQuietMaxDb',
+    'noiseLoudMinDb',
+    'defaultDecibelWhenNull',
   ];
   for (const k of decimals) {
     const v = fuzzy[k];
     if (typeof v === 'number' && !Number.isNaN(v)) {
       (out as Record<string, unknown>)[k] = v;
     }
+  }
+
+  // Backward compatibility for older form payloads still using legacy field names.
+  if (
+    out.noiseQuietMaxDb === undefined &&
+    typeof fuzzy.stressComfortableMax === 'number' &&
+    !Number.isNaN(fuzzy.stressComfortableMax)
+  ) {
+    out.noiseQuietMaxDb = fuzzy.stressComfortableMax;
+  }
+  if (
+    out.noiseQuietMaxDb === undefined &&
+    typeof fuzzy.densitySparseMax === 'number' &&
+    !Number.isNaN(fuzzy.densitySparseMax)
+  ) {
+    out.noiseQuietMaxDb = fuzzy.densitySparseMax;
+  }
+
+  if (
+    out.noiseLoudMinDb === undefined &&
+    typeof fuzzy.stressHighMin === 'number' &&
+    !Number.isNaN(fuzzy.stressHighMin)
+  ) {
+    out.noiseLoudMinDb = fuzzy.stressHighMin;
+  }
+  if (
+    out.noiseLoudMinDb === undefined &&
+    typeof fuzzy.densityCrowdedMin === 'number' &&
+    !Number.isNaN(fuzzy.densityCrowdedMin)
+  ) {
+    out.noiseLoudMinDb = fuzzy.densityCrowdedMin;
+  }
+
+  if (
+    out.defaultDecibelWhenNull === undefined &&
+    typeof fuzzy.defaultDensityRatioWhenNull === 'number' &&
+    !Number.isNaN(fuzzy.defaultDensityRatioWhenNull)
+  ) {
+    out.defaultDecibelWhenNull = fuzzy.defaultDensityRatioWhenNull;
   }
 
   if (

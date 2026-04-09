@@ -74,6 +74,9 @@ export type StoreDetailResponse = StoreListItem & {
   energeticBpmMax?: number | null;
   pressureLowMax?: number | null;
   pressureCriticalMin?: number | null;
+  noiseQuietMaxDb?: number | null;
+  noiseLoudMinDb?: number | null;
+  defaultDecibelWhenNull?: number | null;
   stressComfortableMax?: number | null;
   stressHighMin?: number | null;
   densitySparseMax?: number | null;
@@ -98,6 +101,9 @@ export type StoreFuzzyOverrideProfileRequest = {
   energeticBpmMax?: number;
   pressureLowMax?: number;
   pressureCriticalMin?: number;
+  noiseQuietMaxDb?: number;
+  noiseLoudMinDb?: number;
+  defaultDecibelWhenNull?: number;
   stressComfortableMax?: number;
   stressHighMin?: number;
   densitySparseMax?: number;
