@@ -28,6 +28,9 @@ export type BrandRequest = {
   energeticBpmMax?: number;
   pressureLowMax?: number;
   pressureCriticalMin?: number;
+  noiseQuietMaxDb?: number;
+  noiseLoudMinDb?: number;
+  defaultDecibelWhenNull?: number;
   stressComfortableMax?: number;
   stressHighMin?: number;
   densitySparseMax?: number;
@@ -77,6 +80,9 @@ export type BrandDetailResponse = BrandListItem & {
   energeticBpmMax?: number | null;
   pressureLowMax?: number | null;
   pressureCriticalMin?: number | null;
+  noiseQuietMaxDb?: number | null;
+  noiseLoudMinDb?: number | null;
+  defaultDecibelWhenNull?: number | null;
   stressComfortableMax?: number | null;
   stressHighMin?: number | null;
   densitySparseMax?: number | null;

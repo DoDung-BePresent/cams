@@ -133,7 +133,7 @@ export const StoreFuzzyOverrideFields = ({
         items={[
           {
             key: 'fuzzyAdvanced',
-            label: 'Threshold & BPM overrides (optional)',
+            label: 'Advanced mood thresholds & BPM (optional)',
             children: (
               <div
                 style={{
@@ -197,8 +197,9 @@ export const StoreFuzzyOverrideFields = ({
                   />
                 </Form.Item>
                 <Form.Item
-                  label='Pressure low max'
+                  label='People count: Low level max'
                   name={['fuzzy', 'pressureLowMax']}
+                  tooltip='If people count is below this value, CAMS treats crowd pressure as Low.'
                 >
                   <InputNumber
                     className='w-full!'
@@ -206,8 +207,9 @@ export const StoreFuzzyOverrideFields = ({
                   />
                 </Form.Item>
                 <Form.Item
-                  label='Pressure critical min'
+                  label='People count: Energetic trigger min'
                   name={['fuzzy', 'pressureCriticalMin']}
+                  tooltip='If people count is above this value, CAMS treats crowd pressure as Critical and prioritizes Energetic.'
                 >
                   <InputNumber
                     className='w-full!'
@@ -215,18 +217,9 @@ export const StoreFuzzyOverrideFields = ({
                   />
                 </Form.Item>
                 <Form.Item
-                  label='Stress comfortable max'
-                  name={['fuzzy', 'stressComfortableMax']}
-                >
-                  <InputNumber
-                    className='w-full!'
-                    min={0}
-                    step={0.01}
-                  />
-                </Form.Item>
-                <Form.Item
-                  label='Stress high min'
-                  name={['fuzzy', 'stressHighMin']}
+                  label='Noise threshold: Quiet max (dB)'
+                  name={['fuzzy', 'noiseQuietMaxDb']}
+                  tooltip='If decibel is below this value, CAMS classifies ambient noise as Quiet.'
                 >
                   <InputNumber
                     className='w-full!'
@@ -235,30 +228,20 @@ export const StoreFuzzyOverrideFields = ({
                   />
                 </Form.Item>
                 <Form.Item
-                  label='Density sparse max (0–1)'
-                  name={['fuzzy', 'densitySparseMax']}
+                  label='Noise threshold: Loud min (dB)'
+                  name={['fuzzy', 'noiseLoudMinDb']}
+                  tooltip='If decibel is above this value, CAMS classifies ambient noise as Loud.'
                 >
                   <InputNumber
                     className='w-full!'
                     min={0}
-                    max={1}
                     step={0.01}
                   />
                 </Form.Item>
                 <Form.Item
-                  label='Density crowded min (0–1)'
-                  name={['fuzzy', 'densityCrowdedMin']}
-                >
-                  <InputNumber
-                    className='w-full!'
-                    min={0}
-                    max={1}
-                    step={0.01}
-                  />
-                </Form.Item>
-                <Form.Item
-                  label='Space capacity'
+                  label='Space capacity (reference)'
                   name={['fuzzy', 'spaceCapacity']}
+                  tooltip='Reference capacity for this space/store profile.'
                 >
                   <InputNumber
                     className='w-full!'
@@ -266,13 +249,13 @@ export const StoreFuzzyOverrideFields = ({
                   />
                 </Form.Item>
                 <Form.Item
-                  label='Default density ratio when null (0–1)'
-                  name={['fuzzy', 'defaultDensityRatioWhenNull']}
+                  label='Fallback decibel when missing (dB)'
+                  name={['fuzzy', 'defaultDecibelWhenNull']}
+                  tooltip='Used only when telemetry payload does not include decibel.'
                 >
                   <InputNumber
                     className='w-full!'
                     min={0}
-                    max={1}
                     step={0.01}
                   />
                 </Form.Item>
