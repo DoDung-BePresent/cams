@@ -25,7 +25,7 @@ import {
 } from '../hooks';
 import { QueueList } from './QueueList';
 import { AudioMixerControls } from './AudioMixerControls';
-import { AddToQueueModal } from './AddToQueueModal';
+import { AddToQueueDrawer } from './AddToQueueDrawer';
 import type { QueueEndBehavior } from '../types';
 
 const { Title, Text } = Typography;
@@ -252,7 +252,7 @@ export const QueueManagementDrawer = ({
         </Space>
       </Drawer>
 
-      <AddToQueueModal
+      <AddToQueueDrawer
         open={addModalOpen}
         spaceId={spaceId}
         storeId={storeId}

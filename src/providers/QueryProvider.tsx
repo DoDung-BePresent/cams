@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { message } from 'antd';
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,10 +19,9 @@ export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           queries: {
             staleTime: 60 * 1000,
             gcTime: 1000 * 60 * 60 * 24,
-            retry: (failureCount, _error) => {
-              // Don't retry if offline
+            retry: (failureCount, error: any) => {
               if (!navigator.onLine) return false;
-              // Retry up to 2 times for other errors
+              if (error?.response?.status !== 500) return false;
               return failureCount < 2;
             },
             refetchOnWindowFocus: isOnline, // Only refetch if online
@@ -29,11 +29,12 @@ export const QueryProvider = ({ children }: { children: React.ReactNode }) => {
           },
           mutations: {
             // Block mutations when offline
-            retry: (failureCount, _error) => {
+            retry: (failureCount, error: any) => {
               if (!navigator.onLine) {
                 message.error('Cannot perform action while offline!');
                 return false;
               }
+              if (error?.response?.status !== 500) return false;
               return failureCount < 1;
             },
             onError: (_error) => {

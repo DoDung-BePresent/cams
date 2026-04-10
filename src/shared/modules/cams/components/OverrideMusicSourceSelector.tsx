@@ -42,20 +42,21 @@ const { Text } = Typography;
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
-    sourceTabs: css`
+    customTabs: css`
       .${prefixCls}-tabs-nav {
-        margin-bottom: 12px;
-      }
-
-      .${prefixCls}-tabs-nav-list {
-        display: flex;
-        gap: 8px;
-      }
-
-      .${prefixCls}-tabs-tab {
-        border-radius: 10px;
-        padding: 10px 16px;
-        margin: 0 !important;
+        margin-bottom: 0;
+        .${prefixCls}-tabs-nav-wrap {
+          .${prefixCls}-tabs-nav-list {
+            width: 100%;
+            .${prefixCls}-tabs-tab {
+              justify-content: center;
+              &:hover {
+                background-color: var(--ant-blue-1);
+                color: var(--ant-tabs-item-selected-color);
+              }
+            }
+          }
+        }
       }
     `,
   };
@@ -84,7 +85,6 @@ type OverrideMusicSourceSelectorProps = {
     refetch: () => void;
     selectedTrackIds: string[];
     setSelectedTrackIds: React.Dispatch<React.SetStateAction<string[]>>;
-    queuedTrackIds: Set<string>;
     defaultFilter: TrackFilter;
     onTableChange: (
       pagination: TablePaginationConfig,
@@ -260,8 +260,17 @@ export const OverrideMusicSourceSelector = ({
 
   return (
     <Tabs
-      className={styles.sourceTabs}
-      size='large'
+      className={styles.customTabs}
+      styles={{
+        item: {
+          width: 'fit-content',
+          paddingInline: 15,
+        },
+        content: {
+          paddingTop: 20,
+        },
+      }}
+      size='small'
       activeKey={activeTab}
       onChange={(key) => onTabChange(key as OverrideSourceTab)}
       items={[
@@ -445,18 +454,11 @@ export const OverrideMusicSourceSelector = ({
                     loading={track.isLoading}
                     rowSelection={{
                       selectedRowKeys: track.selectedTrackIds,
-                      getCheckboxProps: (record) => ({
-                        disabled: track.queuedTrackIds.has(record.id),
-                      }),
                       onChange: (selectedRowKeys) =>
                         track.setSelectedTrackIds(selectedRowKeys as string[]),
                     }}
                     onRow={(record) => ({
                       onClick: () => {
-                        if (track.queuedTrackIds.has(record.id)) {
-                          return;
-                        }
-
                         track.setSelectedTrackIds((prev) =>
                           prev.includes(record.id)
                             ? prev.filter((id) => id !== record.id)

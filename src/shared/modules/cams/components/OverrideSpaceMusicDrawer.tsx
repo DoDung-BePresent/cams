@@ -1,15 +1,15 @@
 import { useMemo, useState } from 'react';
-import { Flex, Input, Space, Tag, Typography } from 'antd';
-import { UnorderedListOutlined } from '@ant-design/icons';
+import { Input, Space, Typography, Drawer, Button, Flex } from 'antd';
 import { createStyles } from 'antd-style';
 
-import { AppModal, SettingSwitch } from '@/shared/components';
-import { MODAL_WIDTHS } from '@/config';
+import { SettingSwitch } from '@/shared/components';
+import { DRAWER_WIDTHS } from '@/config';
 import { useMoods } from '@/shared/modules/moods/hooks';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useTracks } from '@/shared/modules/tracks/hooks';
 import type { PlaylistFilter } from '@/shared/modules/playlists/types';
 import type { TrackFilter } from '@/shared/modules/tracks/types';
+import { isTrackPlaybackBlockedByCopyright } from '@/shared/modules/tracks/utils';
 import { useOverridePlaylist } from '../hooks';
 import {
   OverrideMusicSourceSelector,
@@ -43,11 +43,10 @@ const useStyle = createStyles(({ css }) => {
   };
 });
 
-interface OverrideSpaceMusicModalProps {
+interface OverrideSpaceMusicDrawerProps {
   open: boolean;
   spaceId: string;
   storeId: string;
-  queueTrackIds?: string[];
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -73,14 +72,13 @@ const defaultMoodFilter: MoodSelectorFilter = {
   pageSize: 10,
 };
 
-export const OverrideSpaceMusicModal = ({
+export const OverrideSpaceMusicDrawer = ({
   open,
   spaceId,
   storeId,
-  queueTrackIds,
   onClose,
   onSuccess,
-}: OverrideSpaceMusicModalProps) => {
+}: OverrideSpaceMusicDrawerProps) => {
   const { styles } = useStyle();
   const [activeTab, setActiveTab] = useState<OverrideSourceTab>('tracks');
   const [showTrackFilters, setShowTrackFilters] = useState(false);
@@ -89,6 +87,7 @@ export const OverrideSpaceMusicModal = ({
   const [reason, setReason] = useState('');
   const [isClearManagerSelectedQueues, setIsClearManagerSelectedQueues] =
     useState(false);
+  const [isCutOver, setIsCutOver] = useState(false);
 
   const [trackFilter, setTrackFilter] =
     useState<TrackFilter>(defaultTrackFilter);
@@ -142,11 +141,6 @@ export const OverrideSpaceMusicModal = ({
     }));
   }, [moods]);
 
-  const queuedTrackIds = useMemo(
-    () => new Set(queueTrackIds ?? []),
-    [queueTrackIds],
-  );
-
   const filteredMoods = useMemo(() => {
     const keyword = moodFilter.search?.trim().toLowerCase();
 
@@ -164,6 +158,15 @@ export const OverrideSpaceMusicModal = ({
       return matchActive && matchSearch && matchType;
     });
   }, [moodFilter.moodType, moodFilter.search, moods]);
+
+  const selectableTracks = useMemo(
+    () =>
+      (trackData?.items || []).filter(
+        (track) =>
+          !isTrackPlaybackBlockedByCopyright(track.copyrightClearanceStatus),
+      ),
+    [trackData?.items],
+  );
 
   const paginatedMoods = useMemo(() => {
     const start = (moodFilter.page - 1) * moodFilter.pageSize;
@@ -191,6 +194,7 @@ export const OverrideSpaceMusicModal = ({
     setShowMoodFilters(false);
     setReason('');
     setIsClearManagerSelectedQueues(false);
+    setIsCutOver(false);
 
     setTrackFilter(defaultTrackFilter);
     setPlaylistFilter(defaultPlaylistFilter);
@@ -207,16 +211,12 @@ export const OverrideSpaceMusicModal = ({
   };
 
   const handleSubmit = async () => {
-    const validSelectedTrackIds = selectedTrackIds.filter(
-      (trackId) => !queuedTrackIds.has(trackId),
-    );
-
     try {
       await overrideSpaceMusic.mutateAsync({
         spaceId,
         trackIds:
-          activeTab === 'tracks' && validSelectedTrackIds.length > 0
-            ? validSelectedTrackIds
+          activeTab === 'tracks' && selectedTrackIds.length > 0
+            ? selectedTrackIds
             : undefined,
         playlistId:
           activeTab === 'playlist' && selectedPlaylistId
@@ -225,6 +225,7 @@ export const OverrideSpaceMusicModal = ({
         moodId:
           activeTab === 'mood' && selectedMoodId ? selectedMoodId : undefined,
         isClearManagerSelectedQueues,
+        isCutOver,
         reason: reason.trim() || undefined,
       });
 
@@ -236,16 +237,34 @@ export const OverrideSpaceMusicModal = ({
   };
 
   return (
-    <AppModal
+    <Drawer
       open={open}
       title='Override Space Music'
-      size='large'
-      width={MODAL_WIDTHS.large}
-      onCancel={handleClose}
-      onOk={handleSubmit}
-      okText='Apply Override'
-      confirmLoading={overrideSpaceMusic.isPending}
+      width={DRAWER_WIDTHS.large}
+      onClose={handleClose}
+      closeIcon={null}
       destroyOnHidden
+      footer={
+        <Flex
+          justify='end'
+          gap='small'
+        >
+          <Button
+            size='large'
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
+            type='primary'
+            loading={overrideSpaceMusic.isPending}
+            onClick={handleSubmit}
+          >
+            {isCutOver ? 'Apply & Cut Over' : 'Apply Override'}
+          </Button>
+        </Flex>
+      }
     >
       <Space
         direction='vertical'
@@ -262,13 +281,12 @@ export const OverrideSpaceMusicModal = ({
               showFilters: showTrackFilters,
               setShowFilters: setShowTrackFilters,
               hasActiveFilters: !!hasActiveTrackFilters,
-              data: trackData?.items || [],
+              data: selectableTracks,
               total: trackData?.totalItems || 0,
               isLoading: isLoadingTracks,
               refetch: refetchTracks,
               selectedTrackIds,
               setSelectedTrackIds,
-              queuedTrackIds,
               defaultFilter: defaultTrackFilter,
               onTableChange: (pagination, _filters, sorter) => {
                 const currentSorter = Array.isArray(sorter)
@@ -334,41 +352,19 @@ export const OverrideSpaceMusicModal = ({
           />
         </div>
 
-        <div className={styles.statusStrip}>
-          <Flex
-            justify='space-between'
-            align='center'
-            wrap='wrap'
-            gap={8}
-          >
-            <Tag
-              icon={<UnorderedListOutlined />}
-              color='processing'
-            >
-              {activeTab === 'tracks'
-                ? `${selectedTrackIds.length} track(s) selected`
-                : activeTab === 'playlist'
-                  ? selectedPlaylistId
-                    ? '1 playlist selected'
-                    : 'No playlist selected'
-                  : selectedMoodId
-                    ? '1 mood selected'
-                    : 'No mood selected'}
-            </Tag>
-            {activeTab === 'tracks' && queuedTrackIds.size > 0 && (
-              <Text type='secondary'>
-                Tracks already in queue are disabled for selection.
-              </Text>
-            )}
-          </Flex>
-        </div>
-
         <div className={styles.sectionCard}>
           <SettingSwitch
             label='Clear manager-selected queue items'
             description='Enable to clear current manager-selected queue before applying override.'
             value={isClearManagerSelectedQueues}
             onChange={setIsClearManagerSelectedQueues}
+          />
+
+          <SettingSwitch
+            label='Cut over immediately'
+            description='Enable to skip the currently playing track and start the new override list now.'
+            value={isCutOver}
+            onChange={setIsCutOver}
           />
 
           <Text strong>Reason (optional)</Text>
@@ -383,6 +379,6 @@ export const OverrideSpaceMusicModal = ({
           />
         </div>
       </Space>
-    </AppModal>
+    </Drawer>
   );
 };

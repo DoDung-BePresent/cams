@@ -1,4 +1,5 @@
 import type { BaseResponse, EntityStatusEnum } from '@/shared/types';
+import type { MoodType } from '@/shared/modules/moods/types';
 
 // Enums
 export enum MoodTypeEnum {
@@ -61,6 +62,32 @@ export type StoreDetailResponse = StoreListItem & {
   currentMood: MoodTypeEnum | null; // Read-only, set by AI pipeline
   lastMoodUpdateAt: string | null; // Read-only, UTC timestamp
   fuzzyOverrideLevel: number;
+
+  activeFuzzyMusicProfileId?: string | null;
+  activeFuzzyProfileName?: string | null;
+
+  chillBpmMin?: number | null;
+  chillBpmMax?: number | null;
+  focusBpmMin?: number | null;
+  focusBpmMax?: number | null;
+  energeticBpmMin?: number | null;
+  energeticBpmMax?: number | null;
+  pressureLowMax?: number | null;
+  pressureCriticalMin?: number | null;
+  noiseQuietMaxDb?: number | null;
+  noiseLoudMinDb?: number | null;
+  defaultDecibelWhenNull?: number | null;
+  stressComfortableMax?: number | null;
+  stressHighMin?: number | null;
+  densitySparseMax?: number | null;
+  densityCrowdedMin?: number | null;
+  spaceCapacity?: number | null;
+  defaultDensityRatioWhenNull?: number | null;
+
+  chillMoodCandidates?: MoodType[] | null;
+  focusMoodCandidates?: MoodType[] | null;
+  energeticMoodCandidates?: MoodType[] | null;
+  allowedPlaylistIds?: string[] | null;
 };
 
 /** POST /api/stores/{id}/fuzzy-profiles */
@@ -74,11 +101,17 @@ export type StoreFuzzyOverrideProfileRequest = {
   energeticBpmMax?: number;
   pressureLowMax?: number;
   pressureCriticalMin?: number;
+  noiseQuietMaxDb?: number;
+  noiseLoudMinDb?: number;
+  defaultDecibelWhenNull?: number;
   stressComfortableMax?: number;
   stressHighMin?: number;
   densitySparseMax?: number;
   densityCrowdedMin?: number;
   spaceCapacity?: number;
   defaultDensityRatioWhenNull?: number;
+  chillMoodCandidates?: MoodType[];
+  focusMoodCandidates?: MoodType[];
+  energeticMoodCandidates?: MoodType[];
   allowedPlaylistIds?: string[];
 };

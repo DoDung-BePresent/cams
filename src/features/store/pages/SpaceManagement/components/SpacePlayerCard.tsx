@@ -8,7 +8,7 @@ import {
   Divider,
   Flex,
   message,
-  Tag,
+  App,
 } from 'antd';
 import {
   SettingOutlined,
@@ -19,8 +19,8 @@ import {
   SpacePlayer,
   AIExplainabilityPanel,
   QueueList,
-  OverrideSpaceMusicModal,
-  AddToQueueModal,
+  OverrideSpaceMusicDrawer,
+  AddToQueueDrawer,
 } from '@/shared/modules/cams/components';
 import {
   useSpaceState,
@@ -33,6 +33,7 @@ import {
   useClearQueue,
   useReorderQueue,
 } from '@/shared/modules/cams/hooks';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   PlaybackCommand,
   QueueItemSource,
@@ -44,8 +45,19 @@ import { isSpacePlaying } from '@/shared/modules/cams/utils';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { AppModal, SettingSwitch } from '@/shared/components';
+import { api } from '@/config';
+import type { Result } from '@/shared/types';
+import { showErrorMessage } from '@/shared/utils';
 
 const { Title, Text } = Typography;
+const STORE_CONFIG_ENDPOINT = '/api/cms/store-configs';
+const AUTO_VOLUME_KEY = 'Fuzzy:AutoVolumeEnabled';
+
+type StoreConfigItem = {
+  id: string;
+  key: string;
+  value: string;
+};
 
 interface SpacePlayerCardProps {
   space: SpaceListItem;
@@ -53,8 +65,9 @@ interface SpacePlayerCardProps {
 }
 
 export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
+  const { message: appMessage } = App.useApp();
   const [showSettings, setShowSettings] = useState(false);
-  const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
+  const [isOverrideDrawerOpen, setIsOverrideDrawerOpen] = useState(false);
   const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
 
   // Fetch space state from API (initial load only)
@@ -83,6 +96,57 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const removeQueueItems = useRemoveQueueItems();
   const clearQueue = useClearQueue();
   const reorderQueue = useReorderQueue();
+
+  const { data: storeConfigs = [], refetch: refetchAutoVolumeConfig } =
+    useQuery({
+      queryKey: ['space-player-auto-volume-config', storeId],
+      queryFn: async () => {
+        const response = await api.get<Result<StoreConfigItem[]>>(
+          `${STORE_CONFIG_ENDPOINT}/store/${storeId}?category=FuzzyLogic`,
+        );
+        return response.data.data || [];
+      },
+      enabled: !!storeId,
+    });
+
+  const autoVolumeConfig = storeConfigs.find((c) => c.key === AUTO_VOLUME_KEY);
+  const isAutoVolumeEnabled = autoVolumeConfig
+    ? autoVolumeConfig.value.toLowerCase() === 'true'
+    : true;
+
+  const toggleAutoVolume = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const payload = {
+        key: AUTO_VOLUME_KEY,
+        value: enabled ? 'true' : 'false',
+        category: 'FuzzyLogic',
+        dataType: 'bool',
+        description:
+          'Enable ambient-noise based automatic volume adjustments for CAMS.',
+      };
+
+      if (autoVolumeConfig?.id) {
+        await api.put<Result<StoreConfigItem>>(
+          `${STORE_CONFIG_ENDPOINT}/${autoVolumeConfig.id}`,
+          payload,
+        );
+      } else {
+        await api.post<Result<StoreConfigItem>>(STORE_CONFIG_ENDPOINT, {
+          storeId,
+          ...payload,
+        });
+      }
+    },
+    onSuccess: async (_, enabled) => {
+      appMessage.success(
+        enabled ? 'Auto volume enabled.' : 'Auto volume disabled.',
+      );
+      await refetchAutoVolumeConfig();
+    },
+    onError: (error) => {
+      showErrorMessage(error, 'Failed to update auto volume setting.');
+    },
+  });
 
   // Debounce ref for volume updates
   const volumeUpdateTimeoutRef = useRef<number | null>(null);
@@ -167,8 +231,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       coverImageUrl: i.coverImageUrl ?? null,
     } as SpaceQueueItemResponse;
   });
-
-  const queueTrackIds = queueItems.map((item) => item.trackId);
 
   // Playback control handlers
   const handlePlayPause = useCallback(() => {
@@ -415,7 +477,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const handleOverrideToggle = useCallback(
     (checked: boolean) => {
       if (checked) {
-        setIsOverrideModalOpen(true);
+        setIsOverrideDrawerOpen(true);
         return;
       }
 
@@ -461,21 +523,21 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         style={{ width: '100%' }}
         size='middle'
       >
-        <Flex
-          justify='space-between'
-          align='center'
-        >
-          <SettingSwitch
-            label='Manual Override'
-            description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
-            value={!!spaceState?.isManualOverride}
-            onChange={handleOverrideToggle}
-            disabled={overridePlaylist.isPending || cancelOverride.isPending}
-          />
-          {spaceState?.isManualOverride && (
-            <Tag color='warning'>Manual Override</Tag>
-          )}
-        </Flex>
+        <SettingSwitch
+          label='Auto Volume (by ambient noise)'
+          description='Automatically adjusts playback volume based on current noise level.'
+          value={isAutoVolumeEnabled}
+          onChange={(checked) => toggleAutoVolume.mutate(checked)}
+          disabled={toggleAutoVolume.isPending}
+        />
+
+        <SettingSwitch
+          label='Manual Override'
+          description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
+          value={!!spaceState?.isManualOverride}
+          onChange={handleOverrideToggle}
+          disabled={overridePlaylist.isPending || cancelOverride.isPending}
+        />
 
         {/* Playlist Selection (Settings) */}
         {showSettings && (
@@ -527,6 +589,12 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 >
                   <Text strong>Audio</Text>
                   <Space>
+                    <Text
+                      type='secondary'
+                      style={{ fontSize: 12 }}
+                    >
+                      Auto: {isAutoVolumeEnabled ? 'On' : 'Off'}
+                    </Text>
                     <Text
                       type='secondary'
                       style={{ fontSize: 12 }}
@@ -635,20 +703,18 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           onSkipToTrack={handleSkipToTrack}
         />
 
-        <AddToQueueModal
+        <AddToQueueDrawer
           open={isAddQueueModalOpen}
           spaceId={space.id}
           storeId={storeId}
-          queueTrackIds={queueTrackIds}
           onClose={() => setIsAddQueueModalOpen(false)}
         />
 
-        <OverrideSpaceMusicModal
-          open={isOverrideModalOpen}
+        <OverrideSpaceMusicDrawer
+          open={isOverrideDrawerOpen}
           spaceId={space.id}
           storeId={storeId}
-          queueTrackIds={queueTrackIds}
-          onClose={() => setIsOverrideModalOpen(false)}
+          onClose={() => setIsOverrideDrawerOpen(false)}
         />
       </Space>
     </Card>
