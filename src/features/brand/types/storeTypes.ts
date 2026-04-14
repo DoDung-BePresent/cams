@@ -115,3 +115,100 @@ export type StoreFuzzyOverrideProfileRequest = {
   energeticMoodCandidates?: MoodType[];
   allowedPlaylistIds?: string[];
 };
+
+export type StoreContextRawLogsFilter = {
+  page?: number;
+  pageSize?: number;
+  spaceId?: string;
+  fromUtc?: string;
+  toUtc?: string;
+};
+
+export type StoreContextRawLogItem = {
+  id: number;
+  spaceId?: string | null;
+  spaceName: string;
+  moodId?: string | null;
+  moodName: string;
+  measuredAtUtc: string;
+  avgTemperature?: number | null;
+  avgHumidity?: number | null;
+  avgNoise?: number | null;
+  crowdDensity?: number | null;
+  currentWeather?: string | null;
+};
+
+export type StoreContextTimeSeriesFilter = {
+  spaceId?: string;
+  fromUtc?: string;
+  toUtc?: string;
+  granularity?: 'hour' | 'day';
+};
+
+export type StoreContextTimeSeriesPoint = {
+  bucketStartUtc: string;
+  samples: number;
+  avgTemperature?: number | null;
+  avgHumidity?: number | null;
+  avgNoise?: number | null;
+  avgCrowdDensity?: number | null;
+};
+
+export type StoreContextTimeSeriesResponse = {
+  storeId: string;
+  spaceId?: string | null;
+  granularity: 'hour' | 'day';
+  fromUtc: string;
+  toUtc: string;
+  points: StoreContextTimeSeriesPoint[];
+};
+
+export type StoreContextAggregateFilter = {
+  spaceId?: string;
+  fromUtc?: string;
+  toUtc?: string;
+  compareFromUtc?: string;
+  compareToUtc?: string;
+};
+
+export type MetricMinMaxAvg = {
+  min?: number | null;
+  max?: number | null;
+  avg?: number | null;
+};
+
+export type MetricTrend = {
+  current?: number | null;
+  previous?: number | null;
+  delta?: number | null;
+  deltaPercent?: number | null;
+  isIncrease?: boolean | null;
+};
+
+export type StoreContextAggregateSummary = {
+  samples: number;
+  temperature: MetricMinMaxAvg;
+  humidity: MetricMinMaxAvg;
+  noise: MetricMinMaxAvg;
+  crowdDensity: MetricMinMaxAvg;
+};
+
+export type StoreContextTrendSummary = {
+  temperature: MetricTrend;
+  humidity: MetricTrend;
+  noise: MetricTrend;
+  crowdDensity: MetricTrend;
+  samples: MetricTrend;
+};
+
+export type StoreContextAggregateResponse = {
+  storeId: string;
+  spaceId?: string | null;
+  fromUtc: string;
+  toUtc: string;
+  compareFromUtc: string;
+  compareToUtc: string;
+  current: StoreContextAggregateSummary;
+  previous: StoreContextAggregateSummary;
+  trend: StoreContextTrendSummary;
+};
