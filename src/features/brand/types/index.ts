@@ -1,3 +1,4 @@
+export * from './billingTypes';
 export * from './staffTypes';
 export * from './storeTypes';
 export * from './deviceTypes';

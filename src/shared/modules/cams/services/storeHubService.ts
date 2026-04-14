@@ -24,6 +24,7 @@ type StoreHubEventHandlers = {
 class StoreHubService {
   private connection: HubConnection | null = null;
   private currentStoreId: string | null = null;
+  private joinedSpaceIds = new Set<string>();
   private eventHandlers: StoreHubEventHandlers = {};
 
   /**
@@ -183,6 +184,7 @@ class StoreHubService {
     try {
       console.log('🎵 Joining space group:', spaceId);
       await this.connection.invoke('JoinSpaceAsync', spaceId);
+      this.joinedSpaceIds.add(spaceId);
       console.log('✅ Joined space group successfully:', spaceId);
     } catch (error) {
       console.error('❌ Failed to join space group:', error);
@@ -206,6 +208,7 @@ class StoreHubService {
     try {
       console.log('👋 Leaving space group:', spaceId);
       await this.connection.invoke('LeaveSpaceAsync', spaceId);
+      this.joinedSpaceIds.delete(spaceId);
       console.log('✅ Left space group successfully:', spaceId);
     } catch (error) {
       console.error('❌ Failed to leave space group:', error);
@@ -249,15 +252,28 @@ class StoreHubService {
       this.eventHandlers.onReconnecting?.();
     });
 
-    this.connection.onreconnected(() => {
+    this.connection.onreconnected(async () => {
       console.log('✅ SignalR reconnected');
-      this.eventHandlers.onReconnected?.();
+      try {
+        // Rejoin manager room after reconnect
+        if (this.currentStoreId) {
+          await this.joinStore(this.currentStoreId);
+        }
 
-      // Rejoin manager room after reconnect
-      if (this.currentStoreId) {
-        this.joinStore(this.currentStoreId).catch((err) => {
-          console.error('❌ Failed to rejoin after reconnect:', err);
-        });
+        // Rejoin all active space groups after reconnect.
+        const spaceIds = Array.from(this.joinedSpaceIds);
+        await Promise.all(
+          spaceIds.map(async (spaceId) => {
+            try {
+              await this.connection?.invoke('JoinSpaceAsync', spaceId);
+              console.log('✅ Rejoined space group after reconnect:', spaceId);
+            } catch (err) {
+              console.error('❌ Failed to rejoin space group:', spaceId, err);
+            }
+          }),
+        );
+      } finally {
+        this.eventHandlers.onReconnected?.();
       }
     });
 
@@ -288,6 +304,7 @@ class StoreHubService {
     } finally {
       this.connection = null;
       this.currentStoreId = null;
+      this.joinedSpaceIds.clear();
       this.eventHandlers = {};
     }
   }

@@ -44,6 +44,11 @@ const AdminProfile = Loadable(
   'AdminProfile',
 );
 
+const BillingPackages = Loadable(
+  () => import('@/features/admin/pages/BillingPackages'),
+  'AdminBillingPackages',
+);
+
 export const adminRoutes = [
   {
     path: 'dashboard',
@@ -70,6 +75,10 @@ export const adminRoutes = [
     element: <PlaylistList />,
   },
   {
+    path: 'billing-packages',
+    element: <BillingPackages />,
+  },
+  {
     path: 'profile/*',
     element: <AdminProfile />,
   },
@@ -77,7 +86,7 @@ export const adminRoutes = [
     path: '*',
     element: (
       <Navigate
-        to='/store/dashboard'
+        to='/admin/dashboard'
         replace
       />
     ),
