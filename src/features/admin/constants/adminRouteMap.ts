@@ -6,4 +6,5 @@ export const ADMIN_ROUTE_MAP: Record<string, string> = {
   'ai-fuzzy-templates': '/admin/ai-fuzzy-templates',
   tracks: '/admin/tracks',
   playlists: '/admin/playlists',
+  'billing-packages': '/admin/billing-packages',
 };

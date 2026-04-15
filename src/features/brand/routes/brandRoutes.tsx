@@ -53,6 +53,11 @@ const SunoAI = Loadable(
   'SunoAI',
 );
 
+const TokenBilling = Loadable(
+  () => import('@/features/brand/pages/TokenBilling'),
+  'BrandTokenBilling',
+);
+
 export const brandRoutes = [
   {
     path: 'dashboard',
@@ -87,6 +92,10 @@ export const brandRoutes = [
     element: <SunoAI />,
   },
   {
+    path: 'tokens',
+    element: <TokenBilling />,
+  },
+  {
     path: 'profile/*',
     element: <BrandProfile />,
   },
@@ -94,7 +103,7 @@ export const brandRoutes = [
     path: '*',
     element: (
       <Navigate
-        to='/store/dashboard'
+        to='/brand/dashboard'
         replace
       />
     ),

@@ -6,6 +6,8 @@ export const BRAND_ROUTE_MAP: Record<string, string> = {
   playlists: '/brand/playlists',
   'config-management': '/brand/config-management',
   'suno-ai': '/brand/suno-ai',
+  tokens: '/brand/tokens',
+  'tokens-payment-return': '/brand/tokens/payment-return',
   devices: '/brand/devices',
   schedule: '/brand/schedule',
   'music-control': '/brand/music-control',
