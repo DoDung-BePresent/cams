@@ -10,6 +10,7 @@ import {
   DashboardOutlined,
   UserOutlined,
   ShopOutlined,
+  SettingOutlined,
   SlidersOutlined,
   CustomerServiceOutlined,
   UnorderedListOutlined,
@@ -30,6 +31,11 @@ export const ADMIN_MENU_ITEMS: ItemType[] = [
     key: 'brands',
     icon: <ShopOutlined />,
     label: 'Brand Management',
+  },
+  {
+    key: 'config-management',
+    icon: <SettingOutlined />,
+    label: 'Config Management',
   },
   {
     key: 'ai-fuzzy-templates',

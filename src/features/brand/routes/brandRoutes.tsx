@@ -33,6 +33,16 @@ const PlaylistList = Loadable(
   'PlaylistList',
 );
 
+const ScheduleList = Loadable(
+  () => import('@/features/brand/pages/ScheduleManagement/ScheduleList'),
+  'ScheduleList',
+);
+
+const ConfigList = Loadable(
+  () => import('@/features/brand/pages/ConfigManagement/ConfigList'),
+  'ConfigList',
+);
+
 const BrandProfile = Loadable(
   () => import('@/features/brand/pages/Profile/BrandProfile'),
   'BrandProfile',
@@ -63,6 +73,14 @@ export const brandRoutes = [
   {
     path: 'playlists',
     element: <PlaylistList />,
+  },
+  {
+    path: 'schedule',
+    element: <ScheduleList />,
+  },
+  {
+    path: 'config-management',
+    element: <ConfigList />,
   },
   {
     path: 'suno-ai',
