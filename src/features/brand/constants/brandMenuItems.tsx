@@ -12,6 +12,7 @@ import {
   TabletOutlined,
   CalendarOutlined,
   ControlOutlined,
+  SettingOutlined,
   ThunderboltOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
@@ -41,6 +42,11 @@ export const BRAND_MENU_ITEMS: ItemType[] = [
     key: 'playlists',
     icon: <UnorderedListOutlined />,
     label: 'Playlist Management',
+  },
+  {
+    key: 'config-management',
+    icon: <SettingOutlined />,
+    label: 'Config Management',
   },
   {
     key: 'suno-ai',

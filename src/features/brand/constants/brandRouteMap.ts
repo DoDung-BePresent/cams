@@ -4,6 +4,7 @@ export const BRAND_ROUTE_MAP: Record<string, string> = {
   staff: '/brand/staff',
   tracks: '/brand/tracks',
   playlists: '/brand/playlists',
+  'config-management': '/brand/config-management',
   'suno-ai': '/brand/suno-ai',
   tokens: '/brand/tokens',
   'tokens-payment-return': '/brand/tokens/payment-return',

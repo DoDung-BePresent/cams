@@ -1,4 +1,5 @@
 import type { BaseResponse, EntityStatusEnum } from '@/shared/types';
+import type { GovernanceModeEnum } from './configTypes';
 import type { MoodType } from '@/shared/modules/moods/types';
 
 // Enums
@@ -49,6 +50,7 @@ export type StoreListItem = BaseResponse & {
   address: string | null;
   city: string | null;
   district: string | null;
+  governanceMode: GovernanceModeEnum;
 };
 
 export type StoreDetailResponse = StoreListItem & {
@@ -62,6 +64,7 @@ export type StoreDetailResponse = StoreListItem & {
   currentMood: MoodTypeEnum | null; // Read-only, set by AI pipeline
   lastMoodUpdateAt: string | null; // Read-only, UTC timestamp
   fuzzyOverrideLevel: number;
+  governanceMode: GovernanceModeEnum;
 
   activeFuzzyMusicProfileId?: string | null;
   activeFuzzyProfileName?: string | null;
