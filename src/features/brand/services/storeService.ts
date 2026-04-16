@@ -45,6 +45,7 @@ export const storeService = {
     if (filter.district) params.append('district', filter.district);
     if (filter.status !== undefined)
       params.append('status', filter.status.toString());
+    filter.storeIds?.forEach((id) => params.append('storeIds', id));
 
     return api.get<PaginationResult<StoreListItem>>(
       `${STORE_ENDPOINTS.list}?${params.toString()}`,

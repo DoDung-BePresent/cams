@@ -1,5 +1,10 @@
-import { Button, Dropdown, Tag } from 'antd';
-import { EditOutlined, EyeOutlined, MoreOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Tag, Tooltip } from 'antd';
+import {
+  EditOutlined,
+  EyeOutlined,
+  LockOutlined,
+  MoreOutlined,
+} from '@ant-design/icons';
 
 import {
   CONFIG_DOMAIN_LABELS,
@@ -7,6 +12,7 @@ import {
   CONFIG_TIER_LABELS,
   CONFIG_VALUE_TYPE_LABELS,
 } from '@/features/brand/constants/configConstants';
+import { CONFIG_KEY_META } from '@/features/admin/constants';
 import type {
   ConfigDomainEnum,
   ConfigFlatRowItem,
@@ -58,11 +64,24 @@ export const getConfigColumns = ({
       dataIndex: 'key',
       key: 'key',
       sorter: true,
-      width: 280,
+      width: 300,
       ellipsis: true,
-      render: (value: string) => (
-        <span style={{ fontWeight: 500 }}>{value}</span>
-      ),
+      render: (value: string) => {
+        const meta = CONFIG_KEY_META[value];
+        return (
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontWeight: 500 }}>{value}</span>
+            {meta?.label && (
+              <Tag style={{ marginInlineEnd: 0 }}>{meta.label}</Tag>
+            )}
+            {meta?.hardLocked && (
+              <Tooltip title='Hard-locked — only writable by System Admin via policy'>
+                <LockOutlined style={{ color: '#ff4d4f' }} />
+              </Tooltip>
+            )}
+          </span>
+        );
+      },
     },
     {
       title: 'Domain',
