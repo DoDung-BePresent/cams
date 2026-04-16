@@ -85,3 +85,28 @@ export type UpsertSystemValueRequest = {
 export type ConfigSystemPaginationResult = PaginationResult<ConfigFlatRowItem>;
 export type ConfigPolicyPaginationResult =
   PaginationResult<ConfigPolicyRowItem>;
+
+// ── Config Detail DTOs (from per-scope detail endpoints) ──────────────────────
+
+export type ConfigBrandDetailItem = ConfigFlatRowItem & {
+  updatedAt?: string | null;
+  /** Store IDs within this brand that have AllowStoreOverride=true for this key. */
+  allowedStoreIds: string[];
+  lockReason?: string | null;
+};
+
+export type ConfigStoreDetailItem = ConfigFlatRowItem & {
+  updatedAt?: string | null;
+  /** Whether the brand granted this store permission to override this key. */
+  allowStoreOverride: boolean;
+  /** Space IDs within this store that have AllowSpaceOverride=true for this key. */
+  allowedSpaceIds: string[];
+  lockReason?: string | null;
+};
+
+export type ConfigSpaceDetailItem = ConfigFlatRowItem & {
+  updatedAt?: string | null;
+  /** Whether the parent store permits this space to override this key. */
+  allowSpaceOverride: boolean;
+  lockReason?: string | null;
+};

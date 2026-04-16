@@ -40,6 +40,8 @@ export type StoreFilter = {
   createdFrom?: string; // ISO 8601
   createdTo?: string; // ISO 8601
   storeManagerName?: string;
+  /** Resolve a known set of store IDs (e.g. config override allowedStoreIds). Sent as repeated query params. */
+  storeIds?: string[];
 };
 
 // Response DTOs

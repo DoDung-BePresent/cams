@@ -13,6 +13,10 @@ import type {
   ConfigDomainEnum,
   ConfigStoreFilter,
 } from '@/features/store/types';
+import {
+  CONFIG_KEY_SELECT_OPTIONS,
+  getConfigKeyLabel,
+} from '@/features/admin/constants';
 
 type ConfigFilterProps = {
   filter: ConfigStoreFilter;
@@ -34,7 +38,7 @@ export const ConfigFilter = ({
   onReset,
 }: ConfigFilterProps) => {
   const hasActiveFilters =
-    filter.search || filter.domain !== undefined || filter.keyPrefix;
+    filter.search || filter.domain !== undefined || filter.key;
 
   return (
     <Space
@@ -98,14 +102,16 @@ export const ConfigFilter = ({
             />
           </Col>
           <Col span={8}>
-            <Input
+            <Select
               size='large'
-              placeholder='Filter by key prefix (e.g., cams.)'
-              value={filter.keyPrefix}
-              onChange={(e) =>
-                onFilterChange('keyPrefix', e.target.value || undefined)
-              }
+              placeholder='Filter by key'
+              options={CONFIG_KEY_SELECT_OPTIONS}
+              value={filter.key}
+              onChange={(value) => onFilterChange('key', value)}
+              style={{ width: '100%' }}
               allowClear
+              showSearch
+              optionFilterProp='label'
             />
           </Col>
         </Row>
@@ -121,12 +127,12 @@ export const ConfigFilter = ({
               Domain: {CONFIG_DOMAIN_LABELS[filter.domain as ConfigDomainEnum]}
             </Tag>
           )}
-          {filter.keyPrefix && (
+          {filter.key && (
             <Tag
               closable
-              onClose={() => onFilterChange('keyPrefix', undefined)}
+              onClose={() => onFilterChange('key', undefined)}
             >
-              Key Prefix: {filter.keyPrefix}
+              Key: {getConfigKeyLabel(filter.key)}
             </Tag>
           )}
         </Space>
