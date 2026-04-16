@@ -189,6 +189,10 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
 
   // Debounce ref for volume updates
   const volumeUpdateTimeoutRef = useRef<number | null>(null);
+  // Previous-button double-tap: first tap seeks to beginning; second tap within this
+  // window goes to the actual previous track.
+  const prevTapTimestampRef = useRef<number>(0);
+  const PREV_DOUBLE_TAP_MS = 2000; // 2 s window
 
   // ✅ Use spaceState directly from React Query
   const hlsUrl = spaceState?.hlsUrl || null;
@@ -330,15 +334,27 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       return;
     }
 
-    // Attempt to jump to previous track (always jump when available).
-    // Find previous item by position
+    const now = Date.now();
+    const timeSinceLastTap = now - prevTapTimestampRef.current;
+    prevTapTimestampRef.current = now;
+
+    // First tap (or tap after window expired): seek to start of current track.
+    if (timeSinceLastTap > PREV_DOUBLE_TAP_MS) {
+      playbackControl.mutate({
+        spaceId: space.id,
+        command: PlaybackCommand.Seek,
+        seekPositionSeconds: 0,
+      });
+      return;
+    }
+
+    // Second tap within the window: jump to previous track.
     const currentPos = currentItem.position ?? 0;
     const previous = queueItems
       .filter((it) => it.position < currentPos)
       .sort((a, b) => b.position - a.position)[0];
 
     if (previous && previous.queueItemId) {
-      // Use SkipToTrack to explicitly jump to previous queue item
       playbackControl.mutate({
         spaceId: space.id,
         command: PlaybackCommand.SkipToTrack,
@@ -451,7 +467,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       playbackControl.mutate({
         spaceId: space.id,
         command: PlaybackCommand.Seek,
-        seekPositionSeconds: Math.max(0, Math.floor(seconds)),
+        seekPositionSeconds: Math.max(0, seconds),
       });
     },
     [space.id, isPending, playbackControl],
