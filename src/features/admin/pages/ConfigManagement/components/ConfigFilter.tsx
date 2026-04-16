@@ -8,12 +8,15 @@ import {
 import {
   CONFIG_DOMAIN_LABELS,
   CONFIG_DOMAIN_OPTIONS,
+  CONFIG_KEY_SELECT_OPTIONS,
+  getConfigKeyLabel,
 } from '@/features/admin/constants';
 import type { ConfigDomainEnum } from '@/features/admin/types';
 
 type ConfigFilterState = {
   search?: string;
   domain?: number;
+  key?: string;
   keyPrefix?: string;
 };
 
@@ -39,7 +42,10 @@ export const ConfigFilter = ({
   onReset,
 }: ConfigFilterProps) => {
   const hasActiveFilters =
-    filter.search || filter.domain !== undefined || filter.keyPrefix;
+    filter.search ||
+    filter.domain !== undefined ||
+    filter.key ||
+    filter.keyPrefix;
   const searchPlaceholder =
     mode === 'policy'
       ? 'Search policy by key...'
@@ -107,14 +113,16 @@ export const ConfigFilter = ({
             />
           </Col>
           <Col span={8}>
-            <Input
+            <Select
               size='large'
               placeholder='Filter by key prefix (e.g., cams.)'
-              value={filter.keyPrefix}
-              onChange={(e) =>
-                onFilterChange('keyPrefix', e.target.value || undefined)
-              }
+              options={CONFIG_KEY_SELECT_OPTIONS}
+              value={filter.key}
+              onChange={(value) => onFilterChange('key', value)}
+              style={{ width: '100%' }}
               allowClear
+              showSearch
+              optionFilterProp='label'
             />
           </Col>
         </Row>
@@ -130,12 +138,12 @@ export const ConfigFilter = ({
               Domain: {CONFIG_DOMAIN_LABELS[filter.domain as ConfigDomainEnum]}
             </Tag>
           )}
-          {filter.keyPrefix && (
+          {filter.key && (
             <Tag
               closable
-              onClose={() => onFilterChange('keyPrefix', undefined)}
+              onClose={() => onFilterChange('key', undefined)}
             >
-              Key Prefix: {filter.keyPrefix}
+              Key: {getConfigKeyLabel(filter.key)}
             </Tag>
           )}
         </Space>

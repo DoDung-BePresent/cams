@@ -1,4 +1,17 @@
-import { Descriptions, Divider, Drawer, Tag, Typography } from 'antd';
+import { useState } from 'react';
+import {
+  Alert,
+  Descriptions,
+  Divider,
+  Drawer,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from 'antd';
+import { LockOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 
 import {
   CONFIG_DOMAIN_LABELS,
@@ -14,6 +27,15 @@ import type {
   ConfigValueTypeEnum,
 } from '@/features/store/types';
 import { DRAWER_WIDTHS } from '@/config';
+import { CONFIG_KEY_META, getConfigKeyLabel } from '@/features/admin/constants';
+import { useConfigDetailByStore } from '@/features/admin/hooks/config';
+import { useSpaces } from '@/shared/modules/spaces/hooks';
+import type {
+  SpaceListItem,
+  SpaceTypeEnum,
+} from '@/shared/modules/spaces/types';
+import { SPACE_TYPE_LABELS } from '@/shared/modules/spaces/constants';
+import { EntityStatusEnum } from '@/shared/types';
 
 const { Text } = Typography;
 
@@ -46,18 +68,131 @@ export const ConfigDetailDrawer = ({
   data,
   onClose,
 }: ConfigDetailDrawerProps) => {
+  const [spaceListPage, setSpaceListPage] = useState(1);
+  const spaceListPageSize = 5;
+
+  const storeId = data?.scopeType === 2 ? data?.scopeId : undefined;
+
+  const { data: detail, isLoading: isDetailLoading } = useConfigDetailByStore(
+    data?.key,
+    storeId,
+    open,
+  );
+
+  const spaceListEnabled = !!detail?.allowedSpaceIds?.length;
+  const { data: spacesData, isLoading: isSpacesLoading } = useSpaces(
+    spaceListEnabled
+      ? {
+          spaceIds: detail!.allowedSpaceIds,
+          page: spaceListPage,
+          pageSize: spaceListPageSize,
+        }
+      : {},
+    spaceListEnabled,
+  );
+
+  const spaceColumns: ColumnsType<SpaceListItem> = [
+    {
+      title: 'Space Name',
+      dataIndex: 'name',
+      render: (_, record) => (
+        <Space
+          direction='vertical'
+          size={0}
+        >
+          <Typography.Text strong>{record.name}</Typography.Text>
+          <Typography.Text
+            type='secondary'
+            style={{ fontSize: 12 }}
+          >
+            {record.description || '-'}
+          </Typography.Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      width: 140,
+      render: (value: SpaceTypeEnum) => SPACE_TYPE_LABELS[value] || '-',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      width: 100,
+      render: (value: EntityStatusEnum) => (
+        <Tag color={value === EntityStatusEnum.Active ? 'green' : 'default'}>
+          {value === EntityStatusEnum.Active ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+  ];
+
   return (
     <Drawer
       closeIcon={null}
       title='Store Config Details'
       open={open}
-      width={DRAWER_WIDTHS.medium}
+      width={DRAWER_WIDTHS.large}
       onClose={onClose}
     >
       {!data ? (
         <Text type='secondary'>No data selected.</Text>
       ) : (
         <>
+          {/* Key meta card */}
+          {(() => {
+            const meta = CONFIG_KEY_META[data.key];
+            const label = getConfigKeyLabel(data.key);
+            const badges: React.ReactNode[] = [];
+            if (meta?.hardLocked)
+              badges.push(
+                <Tag
+                  key='hard'
+                  icon={<LockOutlined />}
+                  color='error'
+                >
+                  Hard Locked
+                </Tag>,
+              );
+            if (meta?.storeBlocked)
+              badges.push(
+                <Tag
+                  key='store'
+                  color='warning'
+                >
+                  Store Write Blocked
+                </Tag>,
+              );
+            if (meta?.spaceBlocked)
+              badges.push(
+                <Tag
+                  key='space'
+                  color='default'
+                >
+                  Space Blocked
+                </Tag>,
+              );
+            return (
+              <Alert
+                style={{ marginBottom: 16 }}
+                type={meta?.hardLocked ? 'error' : 'info'}
+                message={
+                  <Space>
+                    <Text strong>{label}</Text>
+                    <Text
+                      type='secondary'
+                      style={{ fontSize: 12 }}
+                    >
+                      {data.key}
+                    </Text>
+                    {badges}
+                  </Space>
+                }
+              />
+            );
+          })()}
+
           <Descriptions
             column={1}
             bordered
@@ -121,6 +256,54 @@ export const ConfigDetailDrawer = ({
               {data.brandLockReason || '-'}
             </Descriptions.Item>
           </Descriptions>
+
+          {/* Space override detail from store detail endpoint */}
+          {isDetailLoading ? (
+            <Spin style={{ marginTop: 16 }} />
+          ) : detail ? (
+            <>
+              <Divider />
+              <Descriptions
+                column={1}
+                bordered
+                size='small'
+                title='Space Override Grants'
+              >
+                <Descriptions.Item label='Brand Granted Override'>
+                  {detail.allowStoreOverride ? 'Yes' : 'No'}
+                </Descriptions.Item>
+                <Descriptions.Item label='Spaces Allowed to Override'>
+                  {detail.allowedSpaceIds.length === 0 ? (
+                    <Typography.Text type='secondary'>None</Typography.Text>
+                  ) : (
+                    <Table<SpaceListItem>
+                      rowKey='id'
+                      size='small'
+                      columns={spaceColumns}
+                      dataSource={spacesData?.items || []}
+                      loading={isSpacesLoading}
+                      pagination={{
+                        current: spaceListPage,
+                        pageSize: spaceListPageSize,
+                        total:
+                          spacesData?.totalItems ??
+                          detail.allowedSpaceIds.length,
+                        showSizeChanger: false,
+                        showTotal: (total) => `${total} spaces`,
+                        onChange: (page) => setSpaceListPage(page),
+                      }}
+                      style={{ marginTop: 8 }}
+                    />
+                  )}
+                </Descriptions.Item>
+                {detail.lockReason && (
+                  <Descriptions.Item label='Lock Reason'>
+                    {detail.lockReason}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </>
+          ) : null}
         </>
       )}
     </Drawer>

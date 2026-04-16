@@ -1,10 +1,21 @@
-import { Descriptions, Divider, Drawer, Tag, Typography } from 'antd';
+import {
+  Alert,
+  Descriptions,
+  Divider,
+  Drawer,
+  Space,
+  Tag,
+  Typography,
+} from 'antd';
+import { LockOutlined } from '@ant-design/icons';
 
 import {
   CONFIG_DOMAIN_LABELS,
+  CONFIG_KEY_META,
   CONFIG_SCOPE_LABELS,
   CONFIG_TIER_LABELS,
   CONFIG_VALUE_TYPE_LABELS,
+  getConfigKeyLabel,
 } from '@/features/admin/constants';
 import type {
   ConfigDomainEnum,
@@ -51,13 +62,74 @@ export const ConfigDetailDrawer = ({
       closeIcon={null}
       title='Config Details'
       open={open}
-      width={DRAWER_WIDTHS.medium}
+      width={DRAWER_WIDTHS.large}
       onClose={onClose}
     >
       {!data ? (
         <Text type='secondary'>No data selected.</Text>
       ) : (
         <>
+          {/* Key meta card */}
+          {(() => {
+            const meta = CONFIG_KEY_META[data.key];
+            const label = getConfigKeyLabel(data.key);
+            const badges: React.ReactNode[] = [];
+            if (meta?.hardLocked)
+              badges.push(
+                <Tag
+                  key='hard'
+                  icon={<LockOutlined />}
+                  color='error'
+                >
+                  Hard Locked
+                </Tag>,
+              );
+            if (meta?.brandBlocked)
+              badges.push(
+                <Tag
+                  key='brand'
+                  color='warning'
+                >
+                  Brand Blocked
+                </Tag>,
+              );
+            if (meta?.storeBlocked)
+              badges.push(
+                <Tag
+                  key='store'
+                  color='warning'
+                >
+                  Store Blocked
+                </Tag>,
+              );
+            if (meta?.spaceBlocked)
+              badges.push(
+                <Tag
+                  key='space'
+                  color='default'
+                >
+                  Space Blocked
+                </Tag>,
+              );
+            return (
+              <Alert
+                style={{ marginBottom: 16 }}
+                type={meta?.hardLocked ? 'error' : 'info'}
+                message={
+                  <Space>
+                    <Text strong>{label}</Text>
+                    <Text
+                      type='secondary'
+                      style={{ fontSize: 12 }}
+                    >
+                      {data.key}
+                    </Text>
+                    {badges}
+                  </Space>
+                }
+              />
+            );
+          })()}
           <Descriptions
             column={1}
             bordered

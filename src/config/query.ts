@@ -91,6 +91,13 @@ export const QUERY_KEYS = {
       ['config', 'brand', 'list', filter] as const,
     storeList: (filter?: Record<string, unknown>) =>
       ['config', 'store', 'list', filter] as const,
+    spaceList: (filter?: Record<string, unknown>) =>
+      ['config', 'space', 'list', filter] as const,
+    brandDetail: (key?: string) => ['config', 'brand', 'detail', key] as const,
+    storeDetail: (storeId?: string, key?: string) =>
+      ['config', 'store', 'detail', storeId, key] as const,
+    spaceDetail: (spaceId?: string, key?: string) =>
+      ['config', 'space', 'detail', spaceId, key] as const,
   },
   schedules: {
     all: ['schedules'] as const,

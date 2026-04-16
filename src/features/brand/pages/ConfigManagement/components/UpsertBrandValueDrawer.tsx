@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Button,
@@ -29,6 +29,7 @@ import type {
   UpsertBrandValueRequest,
 } from '@/features/brand/types';
 import { DRAWER_WIDTHS } from '@/config';
+import { useConfigDetailByBrand } from '@/features/admin/hooks/config';
 import { SelectAffectedStoresModal } from './SelectAffectedStoresModal';
 
 const { Text } = Typography;
@@ -100,6 +101,18 @@ export const UpsertBrandValueDrawer = ({
   const overrideIntent = Form.useWatch('overrideIntent', form);
   const [storeSelectorOpen, setStoreSelectorOpen] = useState(false);
   const [selectedStoreIds, setSelectedStoreIds] = useState<string[]>([]);
+
+  const { data: detail } = useConfigDetailByBrand(selectedConfig?.key, open);
+
+  // Sync selectedStoreIds from existing grants when detail loads
+  useEffect(() => {
+    if (open && detail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedStoreIds(detail.allowedStoreIds ?? []);
+    } else if (!open) {
+      setSelectedStoreIds([]);
+    }
+  }, [open, detail]);
 
   const handleCancel = () => {
     form.resetFields();
@@ -186,7 +199,6 @@ export const UpsertBrandValueDrawer = ({
 
         if (!selectedConfig) {
           form.resetFields();
-          setSelectedStoreIds([]);
           return;
         }
 
@@ -205,7 +217,6 @@ export const UpsertBrandValueDrawer = ({
           overrideReason: undefined,
           targetStoreIds: undefined,
         });
-        setSelectedStoreIds([]);
       }}
       footer={
         <Flex
@@ -335,7 +346,9 @@ export const UpsertBrandValueDrawer = ({
                   Select Affected Stores
                 </Button>
                 <Text type='secondary'>
-                  Selected stores: {selectedStoreIds.length}
+                  {selectedStoreIds.length > 0
+                    ? `${selectedStoreIds.length} store(s) selected`
+                    : 'No stores selected — intent applies to all child stores'}
                 </Text>
               </Space>
             </Form.Item>

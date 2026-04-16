@@ -138,4 +138,6 @@ export type SpaceFilter = {
   storeId?: string; // For Brand role to filter spaces by store
   createdFrom?: string; // ISO 8601
   createdTo?: string; // ISO 8601
+  /** Resolve a known set of space IDs (e.g. config override allowedSpaceIds). Sent as repeated query params. */
+  spaceIds?: string[];
 };

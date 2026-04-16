@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Button,
@@ -29,6 +29,7 @@ import type {
 } from '@/features/store/types';
 import { ConfigValueTypeEnum } from '@/features/store/types';
 import { DRAWER_WIDTHS } from '@/config';
+import { useConfigDetailByStore } from '@/features/admin/hooks/config';
 import { SelectAffectedSpacesModal } from './SelectAffectedSpacesModal';
 
 const { Text } = Typography;
@@ -100,6 +101,24 @@ export const UpsertStoreValueDrawer = ({
   const overrideIntent = Form.useWatch('overrideIntent', form);
   const [spaceSelectorOpen, setSpaceSelectorOpen] = useState(false);
   const [selectedSpaceIds, setSelectedSpaceIds] = useState<string[]>([]);
+
+  const storeId =
+    selectedConfig?.scopeType === 2 ? selectedConfig?.scopeId : undefined;
+  const { data: detail } = useConfigDetailByStore(
+    selectedConfig?.key,
+    storeId,
+    open,
+  );
+
+  // Sync selectedSpaceIds from existing grants when detail loads
+  useEffect(() => {
+    if (open && detail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedSpaceIds(detail.allowedSpaceIds ?? []);
+    } else if (!open) {
+      setSelectedSpaceIds([]);
+    }
+  }, [open, detail]);
 
   const handleCancel = () => {
     form.resetFields();
@@ -186,7 +205,6 @@ export const UpsertStoreValueDrawer = ({
 
         if (!selectedConfig) {
           form.resetFields();
-          setSelectedSpaceIds([]);
           return;
         }
 
@@ -205,7 +223,6 @@ export const UpsertStoreValueDrawer = ({
           overrideReason: undefined,
           targetSpaceIds: undefined,
         });
-        setSelectedSpaceIds([]);
       }}
       footer={
         <Flex
@@ -335,7 +352,9 @@ export const UpsertStoreValueDrawer = ({
                   Select Affected Spaces
                 </Button>
                 <Text type='secondary'>
-                  Selected spaces: {selectedSpaceIds.length}
+                  {selectedSpaceIds.length > 0
+                    ? `${selectedSpaceIds.length} space(s) selected`
+                    : 'No spaces selected — intent applies to all child spaces'}
                 </Text>
               </Space>
             </Form.Item>

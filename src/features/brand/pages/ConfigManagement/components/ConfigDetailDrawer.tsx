@@ -1,4 +1,17 @@
-import { Descriptions, Divider, Drawer, Tag, Typography } from 'antd';
+import { useState } from 'react';
+import {
+  Alert,
+  Descriptions,
+  Divider,
+  Drawer,
+  Space,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+} from 'antd';
+import { LockOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
 
 import {
   CONFIG_DOMAIN_LABELS,
@@ -12,8 +25,13 @@ import type {
   ConfigScopeTypeEnum,
   ConfigTierEnum,
   ConfigValueTypeEnum,
+  StoreListItem,
 } from '@/features/brand/types';
 import { DRAWER_WIDTHS } from '@/config';
+import { CONFIG_KEY_META, getConfigKeyLabel } from '@/features/admin/constants';
+import { useConfigDetailByBrand } from '@/features/admin/hooks/config';
+import { useStores } from '@/features/brand/hooks/store';
+import { EntityStatusEnum } from '@/shared/types';
 
 const { Text } = Typography;
 
@@ -46,18 +64,127 @@ export const ConfigDetailDrawer = ({
   data,
   onClose,
 }: ConfigDetailDrawerProps) => {
+  const [storeListPage, setStoreListPage] = useState(1);
+  const storeListPageSize = 5;
+
+  const { data: detail, isLoading: isDetailLoading } = useConfigDetailByBrand(
+    data?.key,
+    open,
+  );
+
+  const storeListEnabled = !!detail?.allowedStoreIds?.length;
+  const { data: storesData, isLoading: isStoresLoading } = useStores(
+    storeListEnabled
+      ? {
+          storeIds: detail!.allowedStoreIds,
+          page: storeListPage,
+          pageSize: storeListPageSize,
+        }
+      : {},
+  );
+
+  const storeColumns: ColumnsType<StoreListItem> = [
+    {
+      title: 'Store Name',
+      dataIndex: 'name',
+      render: (_, record) => (
+        <Space
+          direction='vertical'
+          size={0}
+        >
+          <Typography.Text strong>{record.name}</Typography.Text>
+          <Typography.Text
+            type='secondary'
+            style={{ fontSize: 12 }}
+          >
+            {record.address || '-'}
+          </Typography.Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'City',
+      dataIndex: 'city',
+      width: 120,
+      render: (value: string | null) => value || '-',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      width: 100,
+      render: (value: EntityStatusEnum) => (
+        <Tag color={value === EntityStatusEnum.Active ? 'green' : 'default'}>
+          {value === EntityStatusEnum.Active ? 'Active' : 'Inactive'}
+        </Tag>
+      ),
+    },
+  ];
+
   return (
     <Drawer
       closeIcon={null}
       title='Brand Config Details'
       open={open}
-      width={DRAWER_WIDTHS.medium}
+      width={DRAWER_WIDTHS.large}
       onClose={onClose}
     >
       {!data ? (
         <Text type='secondary'>No data selected.</Text>
       ) : (
         <>
+          {/* Key meta card */}
+          {(() => {
+            const meta = CONFIG_KEY_META[data.key];
+            const label = getConfigKeyLabel(data.key);
+            const badges: React.ReactNode[] = [];
+            if (meta?.hardLocked)
+              badges.push(
+                <Tag
+                  key='hard'
+                  icon={<LockOutlined />}
+                  color='error'
+                >
+                  Hard Locked
+                </Tag>,
+              );
+            if (meta?.storeBlocked)
+              badges.push(
+                <Tag
+                  key='store'
+                  color='warning'
+                >
+                  Store Blocked
+                </Tag>,
+              );
+            if (meta?.spaceBlocked)
+              badges.push(
+                <Tag
+                  key='space'
+                  color='default'
+                >
+                  Space Blocked
+                </Tag>,
+              );
+            return (
+              <Alert
+                style={{ marginBottom: 16 }}
+                type={meta?.hardLocked ? 'error' : 'info'}
+                message={
+                  <Space>
+                    <Text strong>{label}</Text>
+                    <Text
+                      type='secondary'
+                      style={{ fontSize: 12 }}
+                    >
+                      {data.key}
+                    </Text>
+                    {badges}
+                  </Space>
+                }
+              />
+            );
+          })()}
+
           <Descriptions
             column={1}
             bordered
@@ -121,6 +248,51 @@ export const ConfigDetailDrawer = ({
               {data.brandLockReason || '-'}
             </Descriptions.Item>
           </Descriptions>
+
+          {/* Store override detail from brand detail endpoint */}
+          {isDetailLoading ? (
+            <Spin style={{ marginTop: 16 }} />
+          ) : detail ? (
+            <>
+              <Divider />
+              <Descriptions
+                column={1}
+                bordered
+                size='small'
+                title='Store Override Grants'
+              >
+                <Descriptions.Item label='Stores Allowed to Override'>
+                  {detail.allowedStoreIds.length === 0 ? (
+                    <Typography.Text type='secondary'>None</Typography.Text>
+                  ) : (
+                    <Table<StoreListItem>
+                      rowKey='id'
+                      size='small'
+                      columns={storeColumns}
+                      dataSource={storesData?.items || []}
+                      loading={isStoresLoading}
+                      pagination={{
+                        current: storeListPage,
+                        pageSize: storeListPageSize,
+                        total:
+                          storesData?.totalItems ??
+                          detail.allowedStoreIds.length,
+                        showSizeChanger: false,
+                        showTotal: (total) => `${total} stores`,
+                        onChange: (page) => setStoreListPage(page),
+                      }}
+                      style={{ marginTop: 8 }}
+                    />
+                  )}
+                </Descriptions.Item>
+                {detail.lockReason && (
+                  <Descriptions.Item label='Lock Reason'>
+                    {detail.lockReason}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </>
+          ) : null}
         </>
       )}
     </Drawer>

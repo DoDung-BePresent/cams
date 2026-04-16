@@ -324,6 +324,7 @@ export const SelectAffectedStoresModal = ({
         loading={isLoading}
         rowSelection={{
           selectedRowKeys: draftSelectedStoreIds,
+          preserveSelectedRowKeys: true,
           onChange: (selectedRowKeys) =>
             setDraftSelectedStoreIds(selectedRowKeys as string[]),
         }}

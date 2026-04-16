@@ -266,6 +266,7 @@ export const SelectAffectedSpacesModal = ({
         loading={isLoading}
         rowSelection={{
           selectedRowKeys: draftSelectedSpaceIds,
+          preserveSelectedRowKeys: true,
           onChange: (selectedRowKeys) =>
             setDraftSelectedSpaceIds(selectedRowKeys as string[]),
         }}
