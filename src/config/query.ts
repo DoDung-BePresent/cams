@@ -81,6 +81,27 @@ export const QUERY_KEYS = {
       ['fuzzy-profile-templates', 'manage', page, pageSize] as const,
     detail: (id?: string) => ['fuzzy-profile-templates', 'detail', id] as const,
   },
+  config: {
+    all: ['config'] as const,
+    systemList: (filter?: Record<string, unknown>) =>
+      ['config', 'system', 'list', filter] as const,
+    policyList: (filter?: Record<string, unknown>) =>
+      ['config', 'policy', 'list', filter] as const,
+    brandList: (filter?: Record<string, unknown>) =>
+      ['config', 'brand', 'list', filter] as const,
+    storeList: (filter?: Record<string, unknown>) =>
+      ['config', 'store', 'list', filter] as const,
+  },
+  schedules: {
+    all: ['schedules'] as const,
+    brand: ['schedules', 'brand'] as const,
+    bootstrap: (spaceId?: string) =>
+      ['schedules', 'space', 'bootstrap', spaceId] as const,
+    library: (brandId?: string) =>
+      ['schedules', 'brand', 'library', brandId] as const,
+    templates: (brandId?: string) =>
+      ['schedules', 'brand', 'templates', brandId] as const,
+  },
   // CAMS
   cams: {
     all: ['cams'] as const, // NEW (2026-03-23): For queue management invalidation
