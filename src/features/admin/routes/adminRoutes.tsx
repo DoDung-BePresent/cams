@@ -29,6 +29,11 @@ const AccountList = Loadable(
   'AccountList',
 );
 
+const ConfigList = Loadable(
+  () => import('@/features/admin/pages/ConfigManagement/ConfigList'),
+  'ConfigList',
+);
+
 const TrackList = Loadable(
   () => import('@/features/admin/pages/TrackManagement/TrackList'),
   'TrackList',
@@ -65,6 +70,10 @@ export const adminRoutes = [
   {
     path: 'accounts',
     element: <AccountList />,
+  },
+  {
+    path: 'config-management',
+    element: <ConfigList />,
   },
   {
     path: 'tracks',

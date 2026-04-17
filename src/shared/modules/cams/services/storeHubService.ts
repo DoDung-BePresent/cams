@@ -28,6 +28,18 @@ class StoreHubService {
   private eventHandlers: StoreHubEventHandlers = {};
 
   /**
+   * Clock offset in ms: clientNow - serverNow at connection time.
+   * Positive means client clock is ahead of server.
+   * Used by getEffectiveSeekOffset to correct seek positions.
+   */
+  private _serverClockOffsetMs = 0;
+
+  /** Exposed to playbackHelpers so seek math can compensate for clock skew. */
+  public get serverClockOffsetMs(): number {
+    return this._serverClockOffsetMs;
+  }
+
+  /**
    * Check if connection is active
    */
   public isConnected(): boolean {
@@ -223,7 +235,18 @@ class StoreHubService {
     if (!this.connection) return;
 
     // Server ack after JoinSpaceAsync / JoinManagerRoomAsync (camelCase over the wire)
-    this.connection.on('connectionconfirmed', () => {});
+    this.connection.on(
+      'connectionconfirmed',
+      (data: { serverTimeUtc?: string } | null) => {
+        if (data?.serverTimeUtc) {
+          const serverMs = new Date(data.serverTimeUtc).getTime();
+          this._serverClockOffsetMs = Date.now() - serverMs;
+          console.log(
+            `🕐 Server clock offset computed: ${this._serverClockOffsetMs.toFixed(0)}ms (client − server)`,
+          );
+        }
+      },
+    );
 
     // PlayStream event (new track/playlist)
     this.connection.on('PlayStream', (payload: PlayStreamPayload) => {
