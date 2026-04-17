@@ -184,6 +184,8 @@ export const PlaylistList = () => {
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
     onAddTracks: handleAddTracks,
+    // Guard: shared playlists (brandId === null) are read-only for Store Managers
+    isActionAllowed: (record) => !!record.brandId,
   });
 
   // Transform moods data to options

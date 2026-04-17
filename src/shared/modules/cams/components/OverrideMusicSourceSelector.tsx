@@ -165,7 +165,17 @@ export const OverrideMusicSourceSelector = ({
           direction='vertical'
           size={0}
         >
-          <Text strong>{record.title}</Text>
+          <Space size={4}>
+            <Text strong>{record.title}</Text>
+            {!record.brandId && (
+              <Tag
+                color='purple'
+                style={{ fontSize: 10, padding: '0 4px', lineHeight: '16px' }}
+              >
+                Shared
+              </Tag>
+            )}
+          </Space>
           <Text type='secondary'>{record.artist || 'Unknown artist'}</Text>
         </Space>
       ),
@@ -202,7 +212,17 @@ export const OverrideMusicSourceSelector = ({
           direction='vertical'
           size={0}
         >
-          <Text strong>{record.name || 'Unnamed playlist'}</Text>
+          <Space size={4}>
+            <Text strong>{record.name || 'Unnamed playlist'}</Text>
+            {!record.storeId && !record.brandId && (
+              <Tag
+                color='purple'
+                style={{ fontSize: 10, padding: '0 4px', lineHeight: '16px' }}
+              >
+                Shared
+              </Tag>
+            )}
+          </Space>
           <Text type='secondary'>{record.moodName || 'No mood'}</Text>
         </Space>
       ),
