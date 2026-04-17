@@ -35,6 +35,8 @@ interface PlaylistColumnActions {
   onDelete?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
   onAddTracks?: (id: string) => void;
+  /** If provided, edit/delete/toggle/addTracks actions are only shown when this returns true */
+  isActionAllowed?: (record: PlaylistListItem) => boolean;
 }
 
 export const getPlaylistColumns = ({
@@ -43,6 +45,7 @@ export const getPlaylistColumns = ({
   onDelete,
   onToggleStatus,
   onAddTracks,
+  isActionAllowed,
 }: PlaylistColumnActions): ColumnsType<PlaylistListItem> => [
   {
     title: 'No.',
@@ -62,11 +65,18 @@ export const getPlaylistColumns = ({
         size={0}
       >
         <span style={{ fontWeight: 500 }}>{name}</span>
-        {record.storeName && (
+        {!record.storeId && !record.brandId ? (
+          <Tag
+            color='purple'
+            style={{ fontSize: 11, marginTop: 2 }}
+          >
+            Shared
+          </Tag>
+        ) : record.storeName ? (
           <span style={{ fontSize: 12, color: '#999' }}>
             Store: {record.storeName}
           </span>
-        )}
+        ) : null}
       </Space>
     ),
   },
@@ -132,12 +142,17 @@ export const getPlaylistColumns = ({
         },
       ];
 
+      const actionAllowed = !isActionAllowed || isActionAllowed(record);
+
       // Add management actions if handlers provided
-      if (onEdit || onAddTracks || onToggleStatus || onDelete) {
+      if (
+        actionAllowed &&
+        (onEdit || onAddTracks || onToggleStatus || onDelete)
+      ) {
         menuItems.push({ type: 'divider' });
       }
 
-      if (onEdit) {
+      if (onEdit && actionAllowed) {
         menuItems.push({
           key: 'edit',
           icon: <EditOutlined />,
@@ -146,7 +161,7 @@ export const getPlaylistColumns = ({
         });
       }
 
-      if (onAddTracks) {
+      if (onAddTracks && actionAllowed) {
         menuItems.push({
           key: 'add-tracks',
           icon: <PlusOutlined />,
@@ -155,7 +170,7 @@ export const getPlaylistColumns = ({
         });
       }
 
-      if (onToggleStatus) {
+      if (onToggleStatus && actionAllowed) {
         menuItems.push({
           key: 'toggle',
           icon: <PoweroffOutlined />,
@@ -164,7 +179,7 @@ export const getPlaylistColumns = ({
         });
       }
 
-      if (onDelete) {
+      if (onDelete && actionAllowed) {
         menuItems.push({ type: 'divider' });
         menuItems.push({
           key: 'delete',

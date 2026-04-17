@@ -19,7 +19,7 @@ export enum PlaylistTypeEnum {
  */
 export interface CreatePlaylistRequest {
   name: string;
-  storeId: string;
+  storeId?: string; // Optional — omit for system-wide shared playlists (SystemAdmin only)
   moodId?: string;
   description?: string;
   isDefault?: boolean;
@@ -61,6 +61,7 @@ export interface PlaylistFilter {
   storeId?: string;
   moodId?: string;
   isDefault?: boolean;
+  includeShared?: boolean; // Include playlists with brandId=null (system-wide shared)
   createdFrom?: string;
   createdTo?: string;
 }
