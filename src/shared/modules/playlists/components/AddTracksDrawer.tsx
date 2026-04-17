@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Drawer,
   Button,
@@ -65,6 +65,17 @@ export const AddTracksDrawer = ({
   const [searchValue, setSearchValue] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('available');
 
+  // Reset state when drawer opens (render-phase adjustment avoids setState-in-effect lint rule)
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) {
+      setSelectedTrackIds([]);
+      setSearchValue('');
+      setViewMode('available');
+    }
+  }
+
   const { data: playlist, isLoading: isLoadingPlaylist } = usePlaylist(
     playlistId,
     open,
@@ -78,15 +89,6 @@ export const AddTracksDrawer = ({
   });
 
   const addTracks = useAddTracksToPlaylist();
-
-  // Reset state when drawer opens
-  useEffect(() => {
-    if (open) {
-      setSelectedTrackIds([]);
-      setSearchValue('');
-      setViewMode('available');
-    }
-  }, [open]);
 
   const handleSubmit = () => {
     if (!playlistId || selectedTrackIds.length === 0) {
@@ -103,9 +105,12 @@ export const AddTracksDrawer = ({
           handleCancel();
           onSuccess?.();
         },
-        onError: (error: any) => {
-          const errorCode = error.response?.data?.errorCode;
-          const errorMessage = error.response?.data?.message;
+        onError: (error: unknown) => {
+          const axiosError = error as {
+            response?: { data?: { errorCode?: string; message?: string } };
+          };
+          const errorCode = axiosError.response?.data?.errorCode;
+          const errorMessage = axiosError.response?.data?.message;
 
           if (errorCode === ErrorCodeEnum.Forbidden) {
             if (errorMessage === 'Exception_Playlist_Modify_ActiveStream') {
@@ -146,8 +151,14 @@ export const AddTracksDrawer = ({
     (track) => !existingTrackIds.includes(track.id),
   );
 
+  // For shared playlists, only allow shared tracks (brandId=null)
+  const isSharedPlaylist = !playlist?.brandId;
+  const filteredAvailableTracks = isSharedPlaylist
+    ? availableTracks.filter((t) => !t.brandId)
+    : availableTracks;
+
   // Get selected tracks details
-  const selectedTracks = availableTracks.filter((track) =>
+  const selectedTracks = filteredAvailableTracks.filter((track) =>
     selectedTrackIds.includes(track.id),
   );
 
@@ -282,7 +293,7 @@ export const AddTracksDrawer = ({
             onChange={(value) => setViewMode(value as ViewMode)}
             options={[
               {
-                label: `Available Tracks (${availableTracks.length})`,
+                label: `Available Tracks (${filteredAvailableTracks.length})`,
                 value: 'available',
               },
               {
@@ -299,14 +310,14 @@ export const AddTracksDrawer = ({
               <Spin size='large' />
             </div>
           ) : viewMode === 'available' ? (
-            availableTracks.length === 0 ? (
+            filteredAvailableTracks.length === 0 ? (
               <Empty
                 description='No available tracks to add'
                 style={{ marginTop: 48 }}
               />
             ) : (
               <List
-                dataSource={availableTracks}
+                dataSource={filteredAvailableTracks}
                 renderItem={renderTrackItem}
                 style={{
                   maxHeight: 500,

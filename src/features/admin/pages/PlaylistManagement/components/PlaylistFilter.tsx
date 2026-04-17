@@ -1,4 +1,4 @@
-import { Input, Space, Flex, Button, Select, Tag, Row, Col, Alert } from 'antd';
+import { Input, Space, Flex, Button, Select, Tag, Row, Col } from 'antd';
 
 /**
  * Icons
@@ -7,7 +7,6 @@ import {
   SearchOutlined,
   ReloadOutlined,
   FilterOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -47,9 +46,29 @@ export const PlaylistFilter = ({
   const hasActiveFilters =
     filter.search ||
     filter.brandId ||
+    filter.includeShared ||
     filter.moodId ||
     filter.status !== undefined ||
     filter.isDefault !== undefined;
+
+  // Compute the value shown in the Brand Select (sentinel '__shared__' when includeShared is active)
+  const brandSelectValue =
+    filter.includeShared && !filter.brandId ? '__shared__' : filter.brandId;
+
+  const handleBrandChange = (value: string | undefined) => {
+    if (value === '__shared__') {
+      onFilterChange('brandId', undefined);
+      onFilterChange('includeShared', true);
+    } else {
+      onFilterChange('brandId', value);
+      onFilterChange('includeShared', undefined);
+    }
+  };
+
+  const brandOptionsWithShared = [
+    { label: '— Shared (System) —', value: '__shared__' },
+    ...brands,
+  ];
 
   return (
     <Space
@@ -57,16 +76,6 @@ export const PlaylistFilter = ({
       size='middle'
       style={{ width: '100%' }}
     >
-      {/* Read-Only Notice */}
-      <Alert
-        message='System Administrator View'
-        description='You can view all playlists across all brands but cannot modify them. Playlist management is handled by Brand and Store Managers.'
-        type='info'
-        icon={<InfoCircleOutlined />}
-        showIcon
-        closable
-      />
-
       {/* Search Bar & Action Buttons */}
       <Flex
         justify='space-between'
@@ -117,9 +126,9 @@ export const PlaylistFilter = ({
             <Select
               size='large'
               placeholder='Filter by Brand'
-              options={brands}
-              value={filter.brandId}
-              onChange={(value) => onFilterChange('brandId', value)}
+              options={brandOptionsWithShared}
+              value={brandSelectValue}
+              onChange={handleBrandChange}
               style={{ width: '100%' }}
               allowClear
               showSearch
@@ -171,6 +180,14 @@ export const PlaylistFilter = ({
       {/* Active Filters Display */}
       {hasActiveFilters && (
         <Space wrap>
+          {filter.includeShared && !filter.brandId && (
+            <Tag
+              closable
+              onClose={() => onFilterChange('includeShared', undefined)}
+            >
+              Shared (System)
+            </Tag>
+          )}
           {filter.brandId && (
             <Tag
               closable

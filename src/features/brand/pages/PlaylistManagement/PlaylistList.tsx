@@ -190,6 +190,8 @@ export const PlaylistList = () => {
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
     onAddTracks: handleAddTracks,
+    // Guard: shared playlists (brandId === null) are read-only for Brand Managers
+    isActionAllowed: (record) => !!record.brandId,
   });
 
   // Transform stores data to options

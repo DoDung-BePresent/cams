@@ -127,6 +127,8 @@ export const trackService = {
       params.append('isAiGenerated', filter.isAiGenerated.toString());
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
+    if (filter.includeShared !== undefined)
+      params.append('includeShared', filter.includeShared.toString());
 
     return api.get<PaginationResult<TrackListItem>>(
       `${TRACK_ENDPOINTS.list}?${params.toString()}`,
