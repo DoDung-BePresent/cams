@@ -121,7 +121,7 @@ const appError = (props: AppModalProps) => {
 };
 
 const appWarning = (props: AppModalProps) => {
-  return Modal.warning({
+  return Modal.confirm({
     ...baseModalConfig,
     ...props,
     icon: props.icon ?? (

@@ -197,7 +197,7 @@ export const SpaceList = () => {
     const space = data?.items.find((s) => s.id === spaceId);
     const action = space?.status === 1 ? 'deactivate' : 'activate';
 
-    AppModal.confirm({
+    AppModal.warning({
       title: 'Toggle Space Status',
       content: `Are you sure you want to ${action} "${space?.name}"?`,
       okText: action.charAt(0).toUpperCase() + action.slice(1),
