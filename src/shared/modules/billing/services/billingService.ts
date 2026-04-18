@@ -6,8 +6,11 @@ import type {
   BillingPackageItem,
   BillingPackageUpdateRequest,
   BillingSettlementView,
+  BillingTopUpHistoryView,
+  BillingUsageCostConfigView,
   BillingUsageFilter,
   BillingUsageView,
+  BillingWalletAdminRow,
   BillingWalletView,
   MoMoTopUpCallbackRequest,
 } from '../types/billingTypes';
@@ -22,6 +25,70 @@ export const billingService = {
     api.put<Result<BillingPackageItem[]>>(
       `${BILLING_BASE}/admin/packages`,
       packages,
+    ),
+
+  adminGetUsageCosts: () =>
+    api.get<Result<BillingUsageCostConfigView>>(
+      `${BILLING_BASE}/admin/usage-costs`,
+    ),
+
+  adminUpsertUsageCosts: (body: BillingUsageCostConfigView) =>
+    api.put<Result<BillingUsageCostConfigView>>(
+      `${BILLING_BASE}/admin/usage-costs`,
+      body,
+    ),
+
+  adminGetWallets: (params: {
+    lockedOnly?: boolean;
+    negativeBalanceOnly?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params.lockedOnly !== undefined)
+      qs.append('lockedOnly', String(params.lockedOnly));
+    if (params.negativeBalanceOnly !== undefined)
+      qs.append('negativeBalanceOnly', String(params.negativeBalanceOnly));
+    if (params.page) qs.append('page', String(params.page));
+    if (params.pageSize) qs.append('pageSize', String(params.pageSize));
+    return api.get<Result<BillingWalletAdminRow[]>>(
+      `${BILLING_BASE}/admin/wallets?${qs.toString()}`,
+    );
+  },
+
+  adminCreditTokens: (
+    brandId: string,
+    body: { tokens: number; note?: string },
+  ) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/credit-tokens`,
+      body,
+    ),
+
+  adminDebitTokens: (
+    brandId: string,
+    body: { tokens: number; note?: string },
+  ) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/debit-tokens`,
+      body,
+    ),
+
+  adminForceLockWallet: (brandId: string, body: { reason?: string }) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/force-lock`,
+      body,
+    ),
+
+  adminForceUnlockWallet: (brandId: string, body: { reason?: string }) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/force-unlock`,
+      body,
+    ),
+
+  adminGetTopupHistory: (brandId: string, limit = 50) =>
+    api.get<Result<BillingTopUpHistoryView[]>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/topup-history?limit=${limit}`,
     ),
 
   getWallet: (brandId?: string) => {

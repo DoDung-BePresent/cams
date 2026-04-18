@@ -81,3 +81,34 @@ export type BillingUsageFilter = {
   toBusinessDate?: string;
   limit?: number;
 };
+
+export type BillingWalletAdminRow = {
+  brandId: string;
+  brandName: string;
+  balanceTokens: number;
+  lockStatus: string;
+  isLockedToday: boolean;
+  lockedFromBusinessDate: string | null;
+  lastDebtBusinessDate: string | null;
+  walletUpdatedAtUtc: string;
+};
+
+export type BillingTopUpHistoryView = {
+  id: string;
+  brandId: string;
+  packageCode: string;
+  tokensCredited: number;
+  amount: number;
+  currency: string;
+  paymentProvider: string | null;
+  externalTransactionId: string | null;
+  topUpDateUtc: string;
+  createdByUserId: string | null;
+};
+
+export type BillingUsageCostConfigView = {
+  streamingSpaceDailyTokens: number;
+  aiGenerationSunoTokens: number;
+  aiGenerationBrandModelTokens: number;
+  manualUploadCopyrightScanTokens: number;
+};
