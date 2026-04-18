@@ -347,7 +347,7 @@ export const EditBrandDrawer = ({
                   name='contactPhone'
                   rules={brandValidation.contactPhone}
                 >
-                  <Input placeholder='+84 901 234 567' />
+                  <Input placeholder='0901234567' />
                 </Form.Item>
               </Col>
             </Row>

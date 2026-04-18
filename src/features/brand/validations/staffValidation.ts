@@ -21,7 +21,7 @@ export const createStaffValidation = {
     {
       pattern:
         /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
-      message: 'Please enter a valid phone number! (e.g., +84901234567)',
+      message: 'Please enter a valid phone number! (e.g., 0901234567)',
     },
   ] as Rule[],
   storeId: [
@@ -32,6 +32,7 @@ export const createStaffValidation = {
   ] as Rule[],
   avatar: [
     {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       validator: (_: any, value: File) => {
         if (!value) return Promise.resolve();
 
@@ -89,6 +90,7 @@ export const resetPasswordValidation = {
 export const assignStoreValidation = {
   newStoreId: [
     {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       validator: (_: any, value: string | null) => {
         // Allow null for unassigning
         if (value === null || value === undefined || value.trim() === '') {
