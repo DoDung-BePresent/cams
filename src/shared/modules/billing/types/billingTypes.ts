@@ -76,9 +76,19 @@ export type BillingSettlementView = {
 
 export type BillingUsageFilter = {
   brandId?: string;
+  /** Single store (backward compatible). Ignored when `storeIds` is set. */
   storeId?: string;
+  /** Filter to these stores (OR). Omit for all stores under the brand. */
+  storeIds?: string[];
   fromBusinessDate?: string;
   toBusinessDate?: string;
+  limit?: number;
+};
+
+export type BillingTopUpHistoryFilter = {
+  brandId?: string;
+  fromUtc?: string;
+  toUtc?: string;
   limit?: number;
 };
 

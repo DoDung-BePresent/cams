@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
+  Alert,
   Drawer,
   Button,
   Flex,
@@ -26,6 +27,7 @@ import { useAddTracksToQueue, useAddPlaylistToQueue } from '../hooks';
 import { QueueInsertMode } from '../types';
 import { DRAWER_WIDTHS } from '@/config';
 import { createStyles } from 'antd-style';
+import { getErrorData } from '@/shared/utils/errorHandler';
 import {
   OverrideMusicSourceSelector,
   type OverrideSourceTab,
@@ -41,6 +43,11 @@ interface AddToQueueDrawerProps {
   onClose: () => void;
   onSuccess?: () => void;
 }
+
+type QueueRestrictionHint = {
+  kind: 'policy' | 'billing';
+  message: string;
+};
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
@@ -141,6 +148,8 @@ export const AddToQueueDrawer = ({
   const [reason, setReason] = useState('');
   const [mode, setMode] = useState<QueueInsertMode>(QueueInsertMode.AddToQueue);
   const [isClearExistingQueue, setIsClearExistingQueue] = useState(false);
+  const [queueRestrictionHint, setQueueRestrictionHint] =
+    useState<QueueRestrictionHint | null>(null);
 
   const [trackFilter, setTrackFilter] =
     useState<TrackFilter>(defaultTrackFilter);
@@ -211,9 +220,11 @@ export const AddToQueueDrawer = ({
     setPlaylistFilter(defaultPlaylistFilter);
     setSelectedTrackIds([]);
     setSelectedPlaylistId(undefined);
+    setQueueRestrictionHint(null);
   };
 
   const handleSubmit = async () => {
+    setQueueRestrictionHint(null);
     try {
       if (activeTab === 'tracks') {
         if (selectedTrackIds.length === 0) {
@@ -250,8 +261,37 @@ export const AddToQueueDrawer = ({
       resetState();
       onSuccess?.();
       onClose();
-    } catch {
-      // Error handled by mutation hooks
+    } catch (error) {
+      // Generic toast is handled by mutation hooks. Here we add contextual UI hint.
+      const errorData = getErrorData(error);
+      const isNoValidTracksByPolicy =
+        errorData?.errorCode === 'InvalidInput' &&
+        typeof errorData.message === 'string' &&
+        errorData.message.includes(
+          'No valid tracks found from the selected source',
+        );
+
+      if (isNoValidTracksByPolicy) {
+        setQueueRestrictionHint({
+          kind: 'policy',
+          message:
+            'These tracks are not in playlists allowed by the active brand/store policy for this space. Please choose tracks from allowed playlists or update the policy scope.',
+        });
+        return;
+      }
+
+      const isBillingBlocked =
+        errorData?.errorCode === 'BusinessRuleViolation' &&
+        typeof errorData.message === 'string' &&
+        errorData.message.toLowerCase().includes('top up');
+
+      if (isBillingBlocked) {
+        setQueueRestrictionHint({
+          kind: 'billing',
+          message:
+            'Wallet is blocked because token balance is negative from a previous period. Please top up tokens to continue playback.',
+        });
+      }
     }
   };
 
@@ -363,6 +403,18 @@ export const AddToQueueDrawer = ({
             }}
           />
         </div>
+        {queueRestrictionHint && (
+          <Alert
+            type={queueRestrictionHint.kind === 'billing' ? 'error' : 'warning'}
+            showIcon
+            message={
+              queueRestrictionHint.kind === 'billing'
+                ? 'Token billing restriction'
+                : 'Queue policy restriction'
+            }
+            description={queueRestrictionHint.message}
+          />
+        )}
 
         <div className={styles.sectionCard}>
           <Text strong>Queue Mode</Text>

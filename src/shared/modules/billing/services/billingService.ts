@@ -6,6 +6,7 @@ import type {
   BillingPackageItem,
   BillingPackageUpdateRequest,
   BillingSettlementView,
+  BillingTopUpHistoryFilter,
   BillingTopUpHistoryView,
   BillingUsageCostConfigView,
   BillingUsageFilter,
@@ -86,10 +87,34 @@ export const billingService = {
       body,
     ),
 
-  adminGetTopupHistory: (brandId: string, limit = 50) =>
-    api.get<Result<BillingTopUpHistoryView[]>>(
-      `${BILLING_BASE}/admin/brands/${brandId}/topup-history?limit=${limit}`,
-    ),
+  adminGetTopupHistory: (
+    brandId: string,
+    limit = 50,
+    params?: { fromUtc?: string; toUtc?: string },
+  ) => {
+    const qs = new URLSearchParams();
+    qs.append('limit', String(limit));
+    if (params?.fromUtc) qs.append('fromUtc', params.fromUtc);
+    if (params?.toUtc) qs.append('toUtc', params.toUtc);
+    return api.get<Result<BillingTopUpHistoryView[]>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/topup-history?${qs.toString()}`,
+    );
+  },
+
+  /** Brand / store manager: MoMo and credit top-ups for the scoped brand (not split by store). */
+  getTopupHistory: (filter: BillingTopUpHistoryFilter = {}) => {
+    const params = new URLSearchParams();
+    if (filter.brandId) params.append('brandId', filter.brandId);
+    if (filter.fromUtc) params.append('fromUtc', filter.fromUtc);
+    if (filter.toUtc) params.append('toUtc', filter.toUtc);
+    if (filter.limit) params.append('limit', String(filter.limit));
+    const qs = params.toString();
+    return api.get<Result<BillingTopUpHistoryView[]>>(
+      qs
+        ? `${BILLING_BASE}/topup-history?${qs}`
+        : `${BILLING_BASE}/topup-history`,
+    );
+  },
 
   getWallet: (brandId?: string) => {
     const params = new URLSearchParams();
@@ -103,7 +128,11 @@ export const billingService = {
   getUsage: (filter: BillingUsageFilter = {}) => {
     const params = new URLSearchParams();
     if (filter.brandId) params.append('brandId', filter.brandId);
-    if (filter.storeId) params.append('storeId', filter.storeId);
+    if (filter.storeIds?.length) {
+      filter.storeIds.forEach((id) => params.append('storeIds', id));
+    } else if (filter.storeId) {
+      params.append('storeId', filter.storeId);
+    }
     if (filter.fromBusinessDate)
       params.append('fromBusinessDate', filter.fromBusinessDate);
     if (filter.toBusinessDate)
