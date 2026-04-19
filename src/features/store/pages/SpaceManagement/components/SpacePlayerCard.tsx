@@ -52,19 +52,10 @@ import {
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { AppModal, SettingSwitch } from '@/shared/components';
-import { api } from '@/config';
-import type { Result } from '@/shared/types';
 import { showErrorMessage } from '@/shared/utils';
+import { fuzzyProfileService } from '@/features/store/services/fuzzyProfileService';
 
 const { Title, Text } = Typography;
-const STORE_CONFIG_ENDPOINT = '/api/cms/store-configs';
-const AUTO_VOLUME_KEY = 'Fuzzy:AutoVolumeEnabled';
-
-type StoreConfigItem = {
-  id: string;
-  key: string;
-  value: string;
-};
 
 const SCHEDULING_ORIGIN_LABELS: Record<SchedulingSlotOrigin, string> = {
   [SchedulingSlotOrigin.Space]: 'Space Schedule',
@@ -136,51 +127,26 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     };
   }, [spaceState?.manualOverrideExpiresAtUtc, spaceState?.schedulingEndsAtUtc]);
 
-  const { data: storeConfigs = [], refetch: refetchAutoVolumeConfig } =
-    useQuery({
-      queryKey: ['space-player-auto-volume-config', storeId],
-      queryFn: async () => {
-        const response = await api.get<Result<StoreConfigItem[]>>(
-          `${STORE_CONFIG_ENDPOINT}/store/${storeId}?category=FuzzyLogic`,
-        );
-        return response.data.data || [];
-      },
-      enabled: !!storeId,
-    });
+  const { data: fuzzyProfile, refetch: refetchFuzzyProfile } = useQuery({
+    queryKey: ['space-player-fuzzy-profile', space.id],
+    queryFn: async () => {
+      const response = await fuzzyProfileService.getBySpace(space.id);
+      return response.data.data ?? null;
+    },
+    enabled: !!space.id,
+  });
 
-  const autoVolumeConfig = storeConfigs.find((c) => c.key === AUTO_VOLUME_KEY);
-  const isAutoVolumeEnabled = autoVolumeConfig
-    ? autoVolumeConfig.value.toLowerCase() === 'true'
-    : true;
+  const isAutoVolumeEnabled = fuzzyProfile?.autoVolumeEnabled ?? true;
 
   const toggleAutoVolume = useMutation({
     mutationFn: async (enabled: boolean) => {
-      const payload = {
-        key: AUTO_VOLUME_KEY,
-        value: enabled ? 'true' : 'false',
-        category: 'FuzzyLogic',
-        dataType: 'bool',
-        description:
-          'Enable ambient-noise based automatic volume adjustments for CAMS.',
-      };
-
-      if (autoVolumeConfig?.id) {
-        await api.put<Result<StoreConfigItem>>(
-          `${STORE_CONFIG_ENDPOINT}/${autoVolumeConfig.id}`,
-          payload,
-        );
-      } else {
-        await api.post<Result<StoreConfigItem>>(STORE_CONFIG_ENDPOINT, {
-          storeId,
-          ...payload,
-        });
-      }
+      await fuzzyProfileService.patchAutoVolumeBySpace(space.id, enabled);
     },
     onSuccess: async (_, enabled) => {
       appMessage.success(
         enabled ? 'Auto volume enabled.' : 'Auto volume disabled.',
       );
-      await refetchAutoVolumeConfig();
+      await refetchFuzzyProfile();
     },
     onError: (error) => {
       showErrorMessage(error, 'Failed to update auto volume setting.');

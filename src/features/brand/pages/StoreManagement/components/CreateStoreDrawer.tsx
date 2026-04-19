@@ -245,7 +245,7 @@ export const CreateStoreDrawer = ({
             name='contactNumber'
             rules={createStoreValidation.contactNumber}
           >
-            <Input placeholder='+84283456789 or 0283456789' />
+            <Input placeholder='0283456789' />
           </Form.Item>
 
           <Form.Item
