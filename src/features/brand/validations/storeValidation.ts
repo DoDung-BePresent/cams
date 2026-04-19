@@ -18,8 +18,7 @@ export const createStoreValidation = {
     {
       pattern:
         /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/,
-      message:
-        'Please enter a valid phone number! (e.g., +84283456789 or 0283456789)',
+      message: 'Please enter a valid phone number! (e.g., 0283456789)',
     },
   ] as Rule[],
   latitude: [

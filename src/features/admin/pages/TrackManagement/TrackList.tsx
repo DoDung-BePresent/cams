@@ -168,7 +168,7 @@ export const TrackList = () => {
   };
 
   const handleToggleStatus = (id: string) => {
-    AppModal.confirm({
+    AppModal.warning({
       title: 'Toggle Track Status',
       content: 'Are you sure you want to change the status of this track?',
       okText: 'Confirm',

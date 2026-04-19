@@ -120,7 +120,7 @@ export const StoreList = () => {
   const handleToggleStatus = (storeId: string) => {
     const store = data?.items.find((s) => s.id === storeId);
 
-    AppModal.confirm({
+    AppModal.warning({
       title: 'Toggle Store Status',
       content: `Are you sure you want to change status of "${store?.name}"?`,
       okText: 'Yes',

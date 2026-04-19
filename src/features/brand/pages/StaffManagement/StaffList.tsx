@@ -107,7 +107,7 @@ export const StaffList = () => {
     const staff = data?.items.find((s) => s.id === staffId);
     const action = staff?.status === 1 ? 'deactivate' : 'activate';
 
-    AppModal.confirm({
+    AppModal.warning({
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} Staff`,
       content: `Are you sure you want to ${action} "${staff?.fullName}"?`,
       okText: action.charAt(0).toUpperCase() + action.slice(1),

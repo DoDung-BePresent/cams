@@ -121,16 +121,23 @@ const appError = (props: AppModalProps) => {
 };
 
 const appWarning = (props: AppModalProps) => {
-  return Modal.warning({
+  return Modal.confirm({
     ...baseModalConfig,
     ...props,
     icon: props.icon ?? (
-      <ExclamationCircleOutlined style={{ fontSize: 24, color: '#faad14' }} />
+      <div className='mx-auto flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-yellow-100'>
+        <ExclamationCircleOutlined style={{ fontSize: 32, color: '#faad14' }} />
+      </div>
     ),
-    okText: props.okText || 'OK',
+    okText: props.okText || 'Confirm',
+    cancelText: props.cancelText || 'Cancel',
     okButtonProps: {
       ...baseModalConfig.okButtonProps,
       ...props.okButtonProps,
+    },
+    cancelButtonProps: {
+      ...baseModalConfig.cancelButtonProps,
+      ...props.cancelButtonProps,
     },
   });
 };
