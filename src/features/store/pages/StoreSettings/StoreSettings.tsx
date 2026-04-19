@@ -29,39 +29,28 @@ import { useStore } from '@/features/brand/hooks/store';
 import { PageHeader } from '@/shared/components';
 
 /**
- * Config
- */
-import { api } from '@/config';
-
-/**
  * Types
  */
 import type { Dayjs } from 'dayjs';
-import type { Result } from '@/shared/types';
+
+/**
+ * Services / types
+ */
+import { configService } from '@/features/store/services/configService';
+import { ConfigDomainEnum, ConfigValueTypeEnum } from '@/features/store/types';
 
 /**
  * Utils
  */
 import { showErrorMessage } from '@/shared/utils';
 
-type StoreConfigItem = {
-  id: string;
-  storeId: string;
-  key: string;
-  value: string;
-  description?: string | null;
-  category?: string | null;
-  dataType?: string | null;
-};
-
 type BusinessHoursForm = {
   openTime?: Dayjs;
   closeTime?: Dayjs;
 };
 
-const STORE_CONFIG_ENDPOINT = '/api/cms/store-configs';
-const OPEN_KEY = 'Store:OpenTime';
-const CLOSE_KEY = 'Store:CloseTime';
+const OPEN_KEY = 'ops.openTime';
+const CLOSE_KEY = 'ops.closeTime';
 
 const parseTime = (value?: string | null) => {
   if (!value) return undefined;
@@ -112,13 +101,9 @@ export const StoreSettings = () => {
     isRefetching,
   } = useQuery({
     queryKey: ['store-settings', 'business-hours', storeId],
-    queryFn: async () => {
-      const response = await api.get<Result<StoreConfigItem[]>>(
-        `${STORE_CONFIG_ENDPOINT}/store/${storeId}`,
-      );
-      return response.data.data || [];
-    },
+    queryFn: () => configService.getStoreList({ keyPrefix: 'ops.' }),
     enabled: !!storeId,
+    select: (data) => data.data?.items ?? [],
   });
 
   const openConfig = useMemo(
@@ -190,35 +175,18 @@ export const StoreSettings = () => {
       const openValue = values.openTime.format('HH:mm');
       const closeValue = values.closeTime.format('HH:mm');
 
-      const upsert = async (
-        key: string,
-        value: string,
-        currentConfig?: StoreConfigItem,
-      ) => {
-        const payload = {
-          key,
-          value,
-          description: 'Store business hours',
-          category: 'CAMS',
-          dataType: 'time',
-        };
-
-        if (currentConfig) {
-          await api.put<Result<StoreConfigItem>>(
-            `${STORE_CONFIG_ENDPOINT}/${currentConfig.id}`,
-            payload,
-          );
-          return;
-        }
-
-        await api.post<Result<StoreConfigItem>>(STORE_CONFIG_ENDPOINT, {
-          storeId,
-          ...payload,
-        });
-      };
-
-      await upsert(OPEN_KEY, openValue, openConfig);
-      await upsert(CLOSE_KEY, closeValue, closeConfig);
+      await configService.upsertStoreValue({
+        key: OPEN_KEY,
+        domain: ConfigDomainEnum.Ops,
+        valueType: ConfigValueTypeEnum.String,
+        value: openValue,
+      });
+      await configService.upsertStoreValue({
+        key: CLOSE_KEY,
+        domain: ConfigDomainEnum.Ops,
+        valueType: ConfigValueTypeEnum.String,
+        value: closeValue,
+      });
     },
     onSuccess: async () => {
       message.success('Business hours updated successfully.');
