@@ -99,7 +99,7 @@ export const getFuzzyTemplateColumns = ({
       title: 'Actions',
       key: 'actions',
       fixed: 'right',
-      width: 80,
+      width: 100,
       render: (_, record) => (
         <Dropdown
           menu={{ items: getActionMenuItems(record) }}

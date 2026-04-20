@@ -14,6 +14,7 @@ import {
   useUpdateFuzzyProfileTemplate,
 } from '@/features/admin/hooks';
 import {
+  FuzzyTemplateFilter,
   getFuzzyTemplateColumns,
   UpsertFuzzyTemplateDrawer,
 } from './components';
@@ -23,6 +24,7 @@ export const FuzzyProfileTemplateList = () => {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [searchValue, setSearchValue] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');
   const [editingId, setEditingId] = useState<string | undefined>();
@@ -42,6 +44,16 @@ export const FuzzyProfileTemplateList = () => {
   const updateMut = useUpdateFuzzyProfileTemplate();
   const deleteMut = useDeleteFuzzyProfileTemplate();
 
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearchValue('');
+    setPage(1);
+  };
+
   const handleCreate = () => {
     setMode('create');
     setEditingId(undefined);
@@ -56,6 +68,7 @@ export const FuzzyProfileTemplateList = () => {
 
   const handleDelete = (record: FuzzyProfileTemplateListItem) => {
     AppModal.confirm({
+      type: 'warning',
       title: 'Delete Template',
       content: (
         <>
@@ -155,6 +168,16 @@ export const FuzzyProfileTemplateList = () => {
     pageSize,
   });
 
+  // Filter data based on search
+  const filteredData = (data?.items ?? []).filter((item) => {
+    if (!searchValue) return true;
+    const search = searchValue.toLowerCase();
+    return (
+      item.templateKey.toLowerCase().includes(search) ||
+      item.displayName.toLowerCase().includes(search)
+    );
+  });
+
   const breadcrumbs = [
     {
       title: 'Dashboard',
@@ -189,14 +212,22 @@ export const FuzzyProfileTemplateList = () => {
       />
 
       <DataTable<FuzzyProfileTemplateListItem>
+        filter={
+          <FuzzyTemplateFilter
+            searchValue={searchValue}
+            onSearch={handleSearch}
+            onRefresh={refetch}
+            onReset={handleReset}
+          />
+        }
         columns={columns}
-        dataSource={data?.items ?? []}
+        dataSource={filteredData}
         rowKey='id'
         loading={isLoading}
         pagination={{
-          current: data?.currentPage ?? page,
-          pageSize: data?.pageSize ?? pageSize,
-          total: data?.totalItems ?? 0,
+          current: page,
+          pageSize,
+          total: filteredData.length,
           showSizeChanger: true,
           pageSizeOptions: PAGINATION_SIZES,
           showTotal: (total) => `Total ${total} templates`,

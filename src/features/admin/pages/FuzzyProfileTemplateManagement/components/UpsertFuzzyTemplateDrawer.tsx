@@ -1,19 +1,8 @@
 import { useEffect } from 'react';
-import {
-  Button,
-  Drawer,
-  Form,
-  Input,
-  InputNumber,
-  Space,
-  Switch,
-  Typography,
-} from 'antd';
+import { Button, Drawer, Flex, Form, Input, InputNumber, Switch } from 'antd';
 
 import type { FuzzyProfileTemplateDetail } from '@/features/admin/types';
 import { DRAWER_WIDTHS } from '@/config';
-
-const { Title } = Typography;
 
 type UpsertFuzzyTemplateDrawerProps = {
   open: boolean;
@@ -90,35 +79,56 @@ export const UpsertFuzzyTemplateDrawer = ({
     }
   }, [open, mode, selectedTemplate, form]);
 
-  const handleSubmit = async () => {
-    const values = await form.validateFields();
+  const handleCancel = () => {
+    form.resetFields();
+    onClose();
+  };
+
+  const handleFinish = async (values: Record<string, unknown>) => {
     await onSubmit(values);
   };
 
   return (
     <Drawer
+      closeIcon={null}
       title={mode === 'create' ? 'Create Template' : 'Edit Template'}
-      width={DRAWER_WIDTHS.large}
+      width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={onClose}
-      destroyOnClose
-      extra={
-        <Space>
-          <Button onClick={onClose}>Cancel</Button>
+      destroyOnHidden
+      onClose={handleCancel}
+      footer={
+        <Flex
+          justify='end'
+          gap='small'
+        >
           <Button
+            size='large'
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
             type='primary'
             loading={loading}
-            onClick={handleSubmit}
+            onClick={() => form.submit()}
           >
-            Save
+            Save Template
           </Button>
-        </Space>
+        </Flex>
       }
     >
       <Form
+        size='large'
         form={form}
         layout='vertical'
+        onFinish={handleFinish}
         disabled={loading}
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           name='templateKey'
@@ -175,8 +185,6 @@ export const UpsertFuzzyTemplateDrawer = ({
           </Form.Item>
         )}
 
-        <Title level={5}>Mood Descriptions</Title>
-
         <div style={gridStyle}>
           <Form.Item
             name='chillMoodDescription'
@@ -218,13 +226,11 @@ export const UpsertFuzzyTemplateDrawer = ({
           />
         </Form.Item>
 
-        <Title level={5}>BPM Ranges</Title>
-
         <div style={gridStyle}>
           <Form.Item
             name='chillBpmMin'
             label='Chill BPM Min'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -235,7 +241,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='chillBpmMax'
             label='Chill BPM Max'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -246,7 +252,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='focusBpmMin'
             label='Focus BPM Min'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -257,7 +263,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='focusBpmMax'
             label='Focus BPM Max'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -268,7 +274,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='energeticBpmMin'
             label='Energetic BPM Min'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -279,23 +285,18 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='energeticBpmMax'
             label='Energetic BPM Max'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
               min={1}
             />
           </Form.Item>
-        </div>
 
-        <Title level={5}>Thresholds & Capacity</Title>
-
-        <div style={gridStyle}>
           <Form.Item
             name='pressureLowMax'
             label='People Count: Low Level Max'
-            tooltip='If people count is below this value, CAMS treats crowd pressure as Low.'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -306,8 +307,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='pressureCriticalMin'
             label='People Count: Energetic Trigger Min'
-            tooltip='If people count is above this value, CAMS treats crowd pressure as Critical and prioritizes Energetic.'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -318,8 +318,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='noiseQuietMaxDb'
             label='Noise Threshold: Quiet Max (dB)'
-            tooltip='If decibel is below this value, CAMS classifies ambient noise as Quiet.'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -331,8 +330,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='noiseLoudMinDb'
             label='Noise Threshold: Loud Min (dB)'
-            tooltip='If decibel is above this value, CAMS classifies ambient noise as Loud.'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -344,8 +342,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='spaceCapacity'
             label='Space Capacity (Reference)'
-            tooltip='Reference capacity for this template profile.'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
@@ -356,8 +353,7 @@ export const UpsertFuzzyTemplateDrawer = ({
           <Form.Item
             name='defaultDecibelWhenNull'
             label='Fallback Decibel When Missing (dB)'
-            tooltip='Used only when telemetry payload does not include decibel.'
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Required' }]}
           >
             <InputNumber
               className='w-full!'
