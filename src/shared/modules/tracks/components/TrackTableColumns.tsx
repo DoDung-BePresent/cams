@@ -144,7 +144,7 @@ export const getTrackColumns = ({
     title: 'Duration',
     dataIndex: 'durationSec',
     key: 'durationSec',
-    width: 100,
+    width: 120,
     sorter: true,
     render: (duration: number) => formatDuration(duration),
   },
@@ -210,7 +210,7 @@ export const getTrackColumns = ({
     title: 'Actions',
     key: 'actions',
     fixed: 'right',
-    width: 80,
+    width: 100,
     render: (_, record: TrackListItem) => {
       const menuItems: MenuProps['items'] = [
         {

@@ -68,18 +68,22 @@ export const FuzzyProfileTemplateList = () => {
 
   const handleDelete = (record: FuzzyProfileTemplateListItem) => {
     AppModal.confirm({
-      type: 'warning',
       title: 'Delete Template',
       content: (
-        <>
+        <div>
           Are you sure you want to delete template{' '}
           <strong>{record.displayName}</strong>?
           <br />
           <br />
           This will soft-delete the template (hidden from pickers). Existing
           brand keys may still resolve.
-        </>
+        </div>
       ),
+      okText: 'Delete',
+      okButtonProps: {
+        danger: true,
+      },
+      cancelText: 'Cancel',
       onOk: async () => {
         try {
           const res = await deleteMut.mutateAsync(record.id);
