@@ -1,5 +1,14 @@
 import { useEffect } from 'react';
-import { Button, Drawer, Flex, Form, Input, InputNumber, Switch } from 'antd';
+import {
+  Button,
+  Collapse,
+  Drawer,
+  Flex,
+  Form,
+  Input,
+  InputNumber,
+  Switch,
+} from 'antd';
 
 import type { FuzzyProfileTemplateDetail } from '@/features/admin/types';
 import { DRAWER_WIDTHS } from '@/config';
@@ -94,7 +103,7 @@ export const UpsertFuzzyTemplateDrawer = ({
       title={mode === 'create' ? 'Create Template' : 'Edit Template'}
       width={DRAWER_WIDTHS.medium}
       open={open}
-      destroyOnHidden
+      destroyOnClose
       onClose={handleCancel}
       footer={
         <Flex
@@ -137,9 +146,8 @@ export const UpsertFuzzyTemplateDrawer = ({
             { required: true, message: 'Required' },
             { max: 64, message: 'Max 64 characters' },
           ]}
-          extra='Stable identifier stored on brands (e.g. LuxuryRestaurant). Changing the key does not update existing brands.'
         >
-          <Input placeholder='Unique key' />
+          <Input placeholder='e.g., LuxuryRestaurant' />
         </Form.Item>
 
         <Form.Item
@@ -147,20 +155,19 @@ export const UpsertFuzzyTemplateDrawer = ({
           label='Display Name'
           rules={[{ required: true, message: 'Required' }]}
         >
-          <Input placeholder='Shown in dropdowns' />
+          <Input placeholder='e.g., Luxury Restaurant' />
         </Form.Item>
 
         <Form.Item
           name='profileDescription'
           label='Profile Description'
           rules={[{ max: 1000, message: 'Max 1000 characters' }]}
-          extra='Explain the business intent of this template so non-technical users understand when to use it.'
         >
           <Input.TextArea
             rows={3}
             showCount
             maxLength={1000}
-            placeholder='Example: Balanced coffee-shop profile for calm mornings, focused work sessions, and gentle peak-hour acceleration.'
+            placeholder='Describe the business intent of this template'
           />
         </Form.Item>
 
@@ -185,183 +192,200 @@ export const UpsertFuzzyTemplateDrawer = ({
           </Form.Item>
         )}
 
-        <div style={gridStyle}>
-          <Form.Item
-            name='chillMoodDescription'
-            label='Chill Mood Description'
-            rules={[{ max: 1000, message: 'Max 1000 characters' }]}
-          >
-            <Input.TextArea
-              rows={3}
-              showCount
-              maxLength={1000}
-              placeholder='Describe the sonic character and purpose of chill mode.'
-            />
-          </Form.Item>
+        <Collapse
+          items={[
+            {
+              key: 'mood',
+              label: 'Mood Descriptions (Optional)',
+              children: (
+                <>
+                  <div style={gridStyle}>
+                    <Form.Item
+                      name='chillMoodDescription'
+                      label='Chill Mood'
+                      rules={[{ max: 1000, message: 'Max 1000 characters' }]}
+                    >
+                      <Input.TextArea
+                        rows={3}
+                        showCount
+                        maxLength={1000}
+                        placeholder='Describe chill mode'
+                      />
+                    </Form.Item>
 
-          <Form.Item
-            name='focusMoodDescription'
-            label='Focus Mood Description'
-            rules={[{ max: 1000, message: 'Max 1000 characters' }]}
-          >
-            <Input.TextArea
-              rows={3}
-              showCount
-              maxLength={1000}
-              placeholder='Describe how focus mode should feel in-store.'
-            />
-          </Form.Item>
-        </div>
+                    <Form.Item
+                      name='focusMoodDescription'
+                      label='Focus Mood'
+                      rules={[{ max: 1000, message: 'Max 1000 characters' }]}
+                    >
+                      <Input.TextArea
+                        rows={3}
+                        showCount
+                        maxLength={1000}
+                        placeholder='Describe focus mode'
+                      />
+                    </Form.Item>
+                  </div>
 
-        <Form.Item
-          name='energeticMoodDescription'
-          label='Energetic Mood Description'
-          rules={[{ max: 1000, message: 'Max 1000 characters' }]}
-        >
-          <Input.TextArea
-            rows={3}
-            showCount
-            maxLength={1000}
-            placeholder='Describe energetic mode for rush/promotions while preserving brand identity.'
-          />
-        </Form.Item>
+                  <Form.Item
+                    name='energeticMoodDescription'
+                    label='Energetic Mood'
+                    rules={[{ max: 1000, message: 'Max 1000 characters' }]}
+                  >
+                    <Input.TextArea
+                      rows={3}
+                      showCount
+                      maxLength={1000}
+                      placeholder='Describe energetic mode'
+                    />
+                  </Form.Item>
+                </>
+              ),
+            },
+            {
+              key: 'advanced',
+              label: 'Advanced Settings (BPM, Thresholds & Capacity)',
+              children: (
+                <div style={gridStyle}>
+                  <Form.Item
+                    name='chillBpmMin'
+                    label='Chill BPM Min'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={1}
+                    />
+                  </Form.Item>
 
-        <div style={gridStyle}>
-          <Form.Item
-            name='chillBpmMin'
-            label='Chill BPM Min'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={1}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='chillBpmMax'
+                    label='Chill BPM Max'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={1}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='chillBpmMax'
-            label='Chill BPM Max'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={1}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='focusBpmMin'
+                    label='Focus BPM Min'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={1}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='focusBpmMin'
-            label='Focus BPM Min'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={1}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='focusBpmMax'
+                    label='Focus BPM Max'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={1}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='focusBpmMax'
-            label='Focus BPM Max'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={1}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='energeticBpmMin'
+                    label='Energetic BPM Min'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={1}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='energeticBpmMin'
-            label='Energetic BPM Min'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={1}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='energeticBpmMax'
+                    label='Energetic BPM Max'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={1}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='energeticBpmMax'
-            label='Energetic BPM Max'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={1}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='pressureLowMax'
+                    label='People Count: Low Max'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={0}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='pressureLowMax'
-            label='People Count: Low Level Max'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={0}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='pressureCriticalMin'
+                    label='People Count: Critical Min'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={0}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='pressureCriticalMin'
-            label='People Count: Energetic Trigger Min'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={0}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='noiseQuietMaxDb'
+                    label='Noise: Quiet Max (dB)'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={0}
+                      step={0.01}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='noiseQuietMaxDb'
-            label='Noise Threshold: Quiet Max (dB)'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={0}
-              step={0.01}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='noiseLoudMinDb'
+                    label='Noise: Loud Min (dB)'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={0}
+                      step={0.01}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='noiseLoudMinDb'
-            label='Noise Threshold: Loud Min (dB)'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={0}
-              step={0.01}
-            />
-          </Form.Item>
+                  <Form.Item
+                    name='spaceCapacity'
+                    label='Space Capacity'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={0}
+                    />
+                  </Form.Item>
 
-          <Form.Item
-            name='spaceCapacity'
-            label='Space Capacity (Reference)'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={0}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name='defaultDecibelWhenNull'
-            label='Fallback Decibel When Missing (dB)'
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <InputNumber
-              className='w-full!'
-              min={0}
-              step={0.01}
-            />
-          </Form.Item>
-        </div>
+                  <Form.Item
+                    name='defaultDecibelWhenNull'
+                    label='Fallback Decibel (dB)'
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <InputNumber
+                      className='w-full!'
+                      min={0}
+                      step={0.01}
+                    />
+                  </Form.Item>
+                </div>
+              ),
+            },
+          ]}
+        />
       </Form>
     </Drawer>
   );
