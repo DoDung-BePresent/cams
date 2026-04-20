@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, message, Space } from 'antd';
+import { Button, Input, InputNumber, message, Space } from 'antd';
 import { DeleteOutlined, PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { useCallback, useMemo, useState } from 'react';
 import type { ColumnsType } from 'antd/es/table';
@@ -10,7 +10,6 @@ import {
   billingService,
   type BillingPackageItem,
 } from '@/shared/modules/billing';
-import { EditableCell, EditableRow } from './components';
 
 type Row = BillingPackageItem & { key: string };
 
@@ -62,11 +61,11 @@ export const AdminBillingPackages = () => {
     onError: (e: Error) => message.error(e.message),
   });
 
-  const handleSave = useCallback(
-    (row: Row) => {
+  const updateRow = useCallback(
+    (key: string, patch: Partial<BillingPackageItem>) => {
       setDraftRows((prev) => {
         const current = prev ?? serverRows;
-        return current.map((r) => (r.key === row.key ? row : r));
+        return current.map((r) => (r.key === key ? { ...r, ...patch } : r));
       });
     },
     [serverRows],
@@ -94,9 +93,6 @@ export const AdminBillingPackages = () => {
         type: 'warning',
         title: 'Delete Package',
         content: 'Are you sure you want to delete this package?',
-        okButtonProps: {
-          danger: true,
-        },
         onOk: () => {
           setDraftRows((prev) => {
             const current = prev ?? serverRows;
@@ -135,15 +131,10 @@ export const AdminBillingPackages = () => {
     );
   };
 
-  const defaultColumns: (ColumnsType<Row>[number] & {
-    editable?: boolean;
-    dataIndex?: string;
-    inputType?: 'text' | 'number';
-  })[] = [
+  const columns: ColumnsType<Row> = [
     {
       title: 'No.',
       key: 'index',
-      dataIndex: 'key',
       width: 70,
       render: (_text, _record, index) => index + 1,
     },
@@ -152,39 +143,61 @@ export const AdminBillingPackages = () => {
       dataIndex: 'code',
       key: 'code',
       width: 200,
-      editable: true,
-      inputType: 'text',
+      render: (_, record) => (
+        <Input
+          value={record.code}
+          placeholder='e.g., TOKEN_20K'
+          onChange={(e) => updateRow(record.key, { code: e.target.value })}
+        />
+      ),
     },
     {
       title: 'Tokens',
       dataIndex: 'tokens',
       key: 'tokens',
       width: 150,
-      editable: true,
-      inputType: 'number',
-      render: (value: number) => value.toLocaleString(),
+      render: (_, record) => (
+        <InputNumber
+          style={{ width: '100%' }}
+          value={record.tokens}
+          min={1}
+          step={1000}
+          onChange={(v) => updateRow(record.key, { tokens: Number(v) || 0 })}
+        />
+      ),
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
       width: 150,
-      editable: true,
-      inputType: 'number',
-      render: (value: number) => value.toLocaleString(),
+      render: (_, record) => (
+        <InputNumber
+          style={{ width: '100%' }}
+          value={record.amount}
+          min={1}
+          step={1000}
+          onChange={(v) => updateRow(record.key, { amount: Number(v) || 0 })}
+        />
+      ),
     },
     {
       title: 'Currency',
       dataIndex: 'currency',
       key: 'currency',
       width: 120,
-      editable: true,
-      inputType: 'text',
+      render: (_, record) => (
+        <Input
+          value={record.currency}
+          maxLength={8}
+          placeholder='VND'
+          onChange={(e) => updateRow(record.key, { currency: e.target.value })}
+        />
+      ),
     },
     {
       title: 'Actions',
       key: 'actions',
-      dataIndex: 'key',
       fixed: 'right',
       width: 100,
       render: (_, record) => (
@@ -199,31 +212,6 @@ export const AdminBillingPackages = () => {
       ),
     },
   ];
-
-  const components = {
-    body: {
-      row: EditableRow,
-      cell: EditableCell,
-    },
-  };
-
-  const columns = defaultColumns.map((col) => {
-    if (!col.editable) {
-      return col;
-    }
-    return {
-      ...col,
-      onCell: (record: Row) => ({
-        record,
-        editable: col.editable,
-        dataIndex: col.dataIndex,
-        title: col.title,
-        inputType: col.inputType,
-        handleSave,
-        step: col.inputType === 'number' ? 1000 : undefined,
-      }),
-    };
-  });
 
   const breadcrumbs = [{ title: 'Dashboard' }, { title: 'Token Packages' }];
 
@@ -260,9 +248,7 @@ export const AdminBillingPackages = () => {
       />
 
       <DataTable<Row>
-        components={components}
-        rowClassName={() => 'editable-row'}
-        columns={columns as ColumnsType<Row>}
+        columns={columns}
         dataSource={rows}
         rowKey='key'
         loading={packagesQuery.isLoading}
