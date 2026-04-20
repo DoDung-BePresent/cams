@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { Tabs, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { createStyles } from 'antd-style';
 
 /**
  * Components
@@ -41,7 +42,31 @@ import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
+const useStyle = createStyles(({ css, prefixCls }) => {
+  return {
+    customTabs: css`
+      .${prefixCls}-tabs-nav {
+        margin-bottom: 0;
+        .${prefixCls}-tabs-nav-wrap {
+          .${prefixCls}-tabs-nav-list {
+            width: 100%;
+            .${prefixCls}-tabs-tab {
+              padding-inline: 15px;
+              justify-content: center;
+              &:hover {
+                background-color: var(--ant-blue-1);
+                color: var(--ant-tabs-item-selected-color);
+              }
+            }
+          }
+        }
+      }
+    `,
+  };
+});
+
 export const TrackList = () => {
+  const { styles } = useStyle();
   const navigate = useNavigate();
   const [activeTabKey, setActiveTabKey] = useState<'all' | 'blocked'>('all');
 
@@ -261,6 +286,7 @@ export const TrackList = () => {
       {/* Filter Component */}
       <Tabs
         activeKey={activeTabKey}
+        className={styles.customTabs}
         onChange={(key) => setActiveTabKey(key as 'all' | 'blocked')}
         items={[
           {

@@ -128,6 +128,31 @@ export const TrackDetailsDrawer = ({
       width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={onClose}
+      footer={
+        canReviewCopyright ? (
+          <Flex
+            justify='end'
+            gap='small'
+          >
+            <Button
+              size='large'
+              danger
+              onClick={() => handleSetCopyrightClearance(false)}
+              loading={setTrackCopyrightClearance.isPending}
+            >
+              Reject Track
+            </Button>
+            <Button
+              size='large'
+              type='primary'
+              onClick={() => handleSetCopyrightClearance(true)}
+              loading={setTrackCopyrightClearance.isPending}
+            >
+              Approve Track
+            </Button>
+          </Flex>
+        ) : null
+      }
     >
       {isLoading && (
         <div style={{ textAlign: 'center', padding: 48 }}>
@@ -170,30 +195,6 @@ export const TrackDetailsDrawer = ({
               message='Playback blocked by copyright policy'
               description={blockedMessage}
             />
-          )}
-
-          {canReviewCopyright && (
-            <Flex
-              justify='end'
-              gap='small'
-            >
-              <Button
-                size='large'
-                danger
-                onClick={() => handleSetCopyrightClearance(false)}
-                loading={setTrackCopyrightClearance.isPending}
-              >
-                Reject Track
-              </Button>
-              <Button
-                size='large'
-                type='primary'
-                onClick={() => handleSetCopyrightClearance(true)}
-                loading={setTrackCopyrightClearance.isPending}
-              >
-                Approve Track
-              </Button>
-            </Flex>
           )}
 
           {/* Audio Player */}

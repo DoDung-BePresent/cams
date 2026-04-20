@@ -1,4 +1,4 @@
-import { Alert, Collapse, Form, InputNumber, Select, Typography } from 'antd';
+import { Collapse, Form, InputNumber, Select, Typography } from 'antd';
 
 import type { FuzzyProfileTemplateOption } from '@/features/admin/types';
 
@@ -15,11 +15,6 @@ const MOOD_CANDIDATE_OPTIONS = Object.values(MoodType)
     label: MOOD_TYPE_LABELS[value],
     value,
   }));
-
-const formatRange = (min?: number, max?: number) => {
-  if (min == null || max == null) return 'Not configured';
-  return `${min} - ${max} BPM`;
-};
 
 type BrandMusicPolicyFieldsProps = {
   /** Create brand only picks profile template; policy tuning is handled later. */
@@ -39,7 +34,6 @@ export const BrandMusicPolicyFields = ({
 
   const requireMusicPolicy = variant === 'create';
   const showPolicyFields = variant === 'edit';
-  const selectedTemplateKey = Form.useWatch('fuzzyProfileTemplate');
 
   const detailedTemplateOptions: FuzzyProfileTemplateOption[] =
     !templatesError && !templatesLoading && templateOptionsFromApi.length > 0
@@ -65,10 +59,6 @@ export const BrandMusicPolicyFields = ({
     value: t.templateKey,
   }));
 
-  const selectedTemplate = detailedTemplateOptions.find(
-    (t) => t.templateKey === selectedTemplateKey,
-  );
-
   return (
     <div style={{ marginBottom: 24 }}>
       <Typography.Title
@@ -88,7 +78,6 @@ export const BrandMusicPolicyFields = ({
             ? [{ required: true, message: 'Please select a template' }]
             : undefined
         }
-        extra='Select the base music profile for this brand. Detailed mood behavior appears below.'
       >
         <Select
           size='large'
@@ -99,118 +88,75 @@ export const BrandMusicPolicyFields = ({
         />
       </Form.Item>
 
-      {variant === 'create' && selectedTemplate ? (
-        <Alert
-          type='info'
-          showIcon
-          style={{ marginBottom: 16 }}
-          message='Template detail preview'
-          description={
-            <div>
-              <div style={{ marginBottom: 4 }}>
-                <strong>Profile intent:</strong>{' '}
-                {selectedTemplate.profileDescription ?? 'No description yet.'}
-              </div>
-              <div style={{ marginBottom: 4 }}>
-                <strong>
-                  Chill mood (
-                  {formatRange(
-                    selectedTemplate.chillBpmMin,
-                    selectedTemplate.chillBpmMax,
-                  )}
-                  ):
-                </strong>{' '}
-                {selectedTemplate.chillMoodDescription ?? 'No description yet.'}
-              </div>
-              <div style={{ marginBottom: 4 }}>
-                <strong>
-                  Focus mood (
-                  {formatRange(
-                    selectedTemplate.focusBpmMin,
-                    selectedTemplate.focusBpmMax,
-                  )}
-                  ):
-                </strong>{' '}
-                {selectedTemplate.focusMoodDescription ?? 'No description yet.'}
-              </div>
-              <div>
-                <strong>
-                  Energetic mood (
-                  {formatRange(
-                    selectedTemplate.energeticBpmMin,
-                    selectedTemplate.energeticBpmMax,
-                  )}
-                  ):
-                </strong>{' '}
-                {selectedTemplate.energeticMoodDescription ??
-                  'No description yet.'}
-              </div>
-            </div>
-          }
-        />
-      ) : null}
-
       {showPolicyFields ? (
         <>
-          <Form.Item
-            label='Chill mood candidates'
-            name='chillMoodCandidates'
-            tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0 16px',
+            }}
           >
-            <Select
-              size='large'
-              mode='multiple'
-              allowClear
-              placeholder='Optional - moods allowed for Chill lane'
-              options={MOOD_CANDIDATE_OPTIONS}
-              optionFilterProp='label'
-            />
-          </Form.Item>
+            <Form.Item
+              label='Chill mood candidates'
+              name='chillMoodCandidates'
+              tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+            >
+              <Select
+                size='large'
+                mode='multiple'
+                allowClear
+                placeholder='Optional - moods allowed for Chill lane'
+                options={MOOD_CANDIDATE_OPTIONS}
+                optionFilterProp='label'
+              />
+            </Form.Item>
 
-          <Form.Item
-            label='Focus mood candidates'
-            name='focusMoodCandidates'
-            tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
-          >
-            <Select
-              size='large'
-              mode='multiple'
-              allowClear
-              placeholder='Optional - moods allowed for Focus lane'
-              options={MOOD_CANDIDATE_OPTIONS}
-              optionFilterProp='label'
-            />
-          </Form.Item>
+            <Form.Item
+              label='Focus mood candidates'
+              name='focusMoodCandidates'
+              tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+            >
+              <Select
+                size='large'
+                mode='multiple'
+                allowClear
+                placeholder='Optional - moods allowed for Focus lane'
+                options={MOOD_CANDIDATE_OPTIONS}
+                optionFilterProp='label'
+              />
+            </Form.Item>
 
-          <Form.Item
-            label='Energetic mood candidates'
-            name='energeticMoodCandidates'
-            tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
-          >
-            <Select
-              size='large'
-              mode='multiple'
-              allowClear
-              placeholder='Optional - moods allowed for Energetic lane'
-              options={MOOD_CANDIDATE_OPTIONS}
-              optionFilterProp='label'
-            />
-          </Form.Item>
+            <Form.Item
+              label='Energetic mood candidates'
+              name='energeticMoodCandidates'
+              tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+            >
+              <Select
+                size='large'
+                mode='multiple'
+                allowClear
+                placeholder='Optional - moods allowed for Energetic lane'
+                options={MOOD_CANDIDATE_OPTIONS}
+                optionFilterProp='label'
+              />
+            </Form.Item>
 
-          <Form.Item
-            label='Allowed playlists (optional)'
-            name='allowedPlaylistIds'
-            tooltip='Leave empty so AI is not restricted to specific playlists. Duplicates are rejected by the API.'
-          >
-            <Select
-              mode='multiple'
-              allowClear
-              placeholder='Restrict AI track pick to these playlists'
-              options={playlistOptions}
-              loading={playlistsLoading}
-              optionFilterProp='label'
-            />
-          </Form.Item>
+            <Form.Item
+              label='Allowed playlists (optional)'
+              name='allowedPlaylistIds'
+              tooltip='Leave empty so AI is not restricted to specific playlists. Duplicates are rejected by the API.'
+            >
+              <Select
+                mode='multiple'
+                allowClear
+                placeholder='Restrict AI track pick to these playlists'
+                options={playlistOptions}
+                loading={playlistsLoading}
+                optionFilterProp='label'
+              />
+            </Form.Item>
+          </div>
 
           <Collapse
             bordered={false}

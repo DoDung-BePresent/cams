@@ -184,6 +184,7 @@ export const UpsertSystemValueDrawer = ({
       }
       open={open}
       onClose={handleCancel}
+      destroyOnHidden
       width={DRAWER_WIDTHS.medium}
       footer={
         <Flex
