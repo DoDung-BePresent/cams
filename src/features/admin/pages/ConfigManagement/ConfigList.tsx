@@ -236,11 +236,15 @@ export const ConfigList = () => {
   const systemColumns = getConfigColumns({
     onView: handleViewSystemDetails,
     onEditSystemValue: handleEditSystemValue,
+    currentPage: systemFilter.page ?? 1,
+    pageSize: systemFilter.pageSize ?? 10,
   });
 
   const policyColumns = getConfigPolicyColumns({
     onView: handleViewPolicyDetails,
     onEdit: handleEditPolicy,
+    currentPage: policyFilter.page ?? 1,
+    pageSize: policyFilter.pageSize ?? 10,
   });
 
   const headerAction =

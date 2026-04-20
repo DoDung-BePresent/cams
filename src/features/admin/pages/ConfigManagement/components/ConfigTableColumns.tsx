@@ -26,11 +26,15 @@ import type { MenuProps } from 'antd';
 type GetColumnsProps = {
   onView: (record: ConfigFlatRowItem) => void;
   onEditSystemValue: (record: ConfigFlatRowItem) => void;
+  currentPage: number;
+  pageSize: number;
 };
 
 export const getConfigColumns = ({
   onView,
   onEditSystemValue,
+  currentPage,
+  pageSize,
 }: GetColumnsProps): ColumnsType<ConfigFlatRowItem> => {
   const getActionMenuItems = (
     record: ConfigFlatRowItem,
@@ -57,7 +61,8 @@ export const getConfigColumns = ({
       title: 'No.',
       key: 'index',
       width: 70,
-      render: (_text, _record, index) => index + 1,
+      render: (_text, _record, index) =>
+        (currentPage - 1) * pageSize + index + 1,
     },
     {
       title: 'Key',

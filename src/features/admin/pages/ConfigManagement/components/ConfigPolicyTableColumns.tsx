@@ -27,6 +27,8 @@ import type { MenuProps } from 'antd';
 type GetPolicyColumnsProps = {
   onView: (record: ConfigPolicyRowItem) => void;
   onEdit: (record: ConfigPolicyRowItem) => void;
+  currentPage: number;
+  pageSize: number;
 };
 
 const getValueTypeIcon = (valueType: ConfigValueTypeEnum) => {
@@ -47,6 +49,8 @@ const getValueTypeIcon = (valueType: ConfigValueTypeEnum) => {
 export const getConfigPolicyColumns = ({
   onView,
   onEdit,
+  currentPage,
+  pageSize,
 }: GetPolicyColumnsProps): ColumnsType<ConfigPolicyRowItem> => {
   const getActionMenuItems = (
     record: ConfigPolicyRowItem,
@@ -73,7 +77,8 @@ export const getConfigPolicyColumns = ({
       title: 'No.',
       key: 'index',
       width: 70,
-      render: (_text, _record, index) => index + 1,
+      render: (_text, _record, index) =>
+        (currentPage - 1) * pageSize + index + 1,
     },
     {
       title: 'Key',
