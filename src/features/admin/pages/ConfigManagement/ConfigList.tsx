@@ -22,6 +22,7 @@ import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { PAGINATION_SIZES } from '@/shared/constants';
 import { DataTable, PageHeader } from '@/shared/components';
+import { createStyles } from 'antd-style';
 
 type ConfigTabKey = 'system' | 'policy';
 
@@ -32,7 +33,31 @@ const DEFAULT_FILTER: ConfigSystemFilter = {
   isAscending: true,
 };
 
+const useStyle = createStyles(({ css, prefixCls }) => {
+  return {
+    customTabs: css`
+      .${prefixCls}-tabs-nav {
+        margin-bottom: 0;
+        .${prefixCls}-tabs-nav-wrap {
+          .${prefixCls}-tabs-nav-list {
+            width: 100%;
+            .${prefixCls}-tabs-tab {
+              padding-inline: 15px;
+              justify-content: center;
+              &:hover {
+                background-color: var(--ant-blue-1);
+                color: var(--ant-tabs-item-selected-color);
+              }
+            }
+          }
+        }
+      }
+    `,
+  };
+});
+
 export const ConfigList = () => {
+  const { styles } = useStyle();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<ConfigTabKey>('system');
@@ -328,6 +353,7 @@ export const ConfigList = () => {
 
       <Tabs
         activeKey={activeTab}
+        className={styles.customTabs}
         onChange={(key) => setActiveTab(key as ConfigTabKey)}
         items={tabItems}
       />

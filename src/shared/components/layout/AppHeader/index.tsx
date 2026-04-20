@@ -14,7 +14,6 @@ import {
   FullscreenOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MessageOutlined,
   UserOutlined,
 } from '@ant-design/icons';
 
@@ -102,11 +101,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
                 <BellOutlined />
               </Badge>
             }
-            style={{ width: 36, height: 36 }}
-          />
-          <Button
-            type='text'
-            icon={<MessageOutlined />}
             style={{ width: 36, height: 36 }}
           />
           <Button
