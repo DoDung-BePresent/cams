@@ -114,6 +114,8 @@ export const ConfigList = () => {
   const columns = getConfigColumns({
     onView: handleViewDetails,
     onEditStoreValue: handleEditStoreValue,
+    currentPage: filter.page ?? 1,
+    pageSize: filter.pageSize ?? 10,
   });
 
   return (
