@@ -8,6 +8,7 @@ import {
   ConfigFilter as ConfigFilterComponent,
   getConfigColumns,
   getConfigPolicyColumns,
+  PolicyDetailDrawer,
   UpsertConfigPolicyDrawer,
   UpsertSystemValueDrawer,
 } from './components';
@@ -72,6 +73,7 @@ export const ConfigList = () => {
   const [policyDrawerOpen, setPolicyDrawerOpen] = useState(false);
   const [systemValueDrawerOpen, setSystemValueDrawerOpen] = useState(false);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [policyDetailDrawerOpen, setPolicyDetailDrawerOpen] = useState(false);
 
   const [selectedSystemConfig, setSelectedSystemConfig] =
     useState<ConfigFlatRowItem | null>(null);
@@ -195,6 +197,11 @@ export const ConfigList = () => {
     setDetailDrawerOpen(true);
   };
 
+  const handleViewPolicyDetails = (record: ConfigPolicyRowItem) => {
+    setSelectedPolicy(record);
+    setPolicyDetailDrawerOpen(true);
+  };
+
   const handleClosePolicyDrawer = () => {
     setPolicyDrawerOpen(false);
     setSelectedPolicy(null);
@@ -208,6 +215,11 @@ export const ConfigList = () => {
   const handleCloseDetailDrawer = () => {
     setDetailDrawerOpen(false);
     setSelectedSystemConfig(null);
+  };
+
+  const handleClosePolicyDetailDrawer = () => {
+    setPolicyDetailDrawerOpen(false);
+    setSelectedPolicy(null);
   };
 
   const breadcrumbs = [
@@ -227,6 +239,7 @@ export const ConfigList = () => {
   });
 
   const policyColumns = getConfigPolicyColumns({
+    onView: handleViewPolicyDetails,
     onEdit: handleEditPolicy,
   });
 
@@ -382,6 +395,12 @@ export const ConfigList = () => {
         open={detailDrawerOpen}
         data={selectedSystemConfig}
         onClose={handleCloseDetailDrawer}
+      />
+
+      <PolicyDetailDrawer
+        open={policyDetailDrawerOpen}
+        data={selectedPolicy}
+        onClose={handleClosePolicyDetailDrawer}
       />
     </div>
   );
