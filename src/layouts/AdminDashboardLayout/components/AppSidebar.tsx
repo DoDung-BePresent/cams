@@ -60,11 +60,11 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       collapsible
       collapsed={collapsed}
     >
-      <Flex className={cn('p-4!', collapsed && 'px-2.5!')}>
+      <Flex className={cn('p-2.5! px-3.5!', collapsed && 'px-2.5!')}>
         <Logo isIcon={collapsed} />
       </Flex>
       <SimpleBar
-        style={{ maxHeight: '100vh' }}
+        style={{ height: 'calc(100vh - 60px)' }}
         className='custom-sidebar-scrollbar'
       >
         <Menu

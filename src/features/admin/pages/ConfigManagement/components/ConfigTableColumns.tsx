@@ -26,11 +26,15 @@ import type { MenuProps } from 'antd';
 type GetColumnsProps = {
   onView: (record: ConfigFlatRowItem) => void;
   onEditSystemValue: (record: ConfigFlatRowItem) => void;
+  currentPage: number;
+  pageSize: number;
 };
 
 export const getConfigColumns = ({
   onView,
   onEditSystemValue,
+  currentPage,
+  pageSize,
 }: GetColumnsProps): ColumnsType<ConfigFlatRowItem> => {
   const getActionMenuItems = (
     record: ConfigFlatRowItem,
@@ -57,14 +61,15 @@ export const getConfigColumns = ({
       title: 'No.',
       key: 'index',
       width: 70,
-      render: (_text, _record, index) => index + 1,
+      render: (_text, _record, index) =>
+        (currentPage - 1) * pageSize + index + 1,
     },
     {
       title: 'Key',
       dataIndex: 'key',
       key: 'key',
       sorter: true,
-      width: 280,
+      width: 300,
       ellipsis: true,
       render: (value: string) => {
         const meta = CONFIG_KEY_META[value];
@@ -87,14 +92,14 @@ export const getConfigColumns = ({
       title: 'Domain',
       dataIndex: 'domain',
       key: 'domain',
-      width: 130,
+      width: 100,
       render: (domain: ConfigDomainEnum) => CONFIG_DOMAIN_LABELS[domain],
     },
     {
       title: 'Scope',
       dataIndex: 'scopeType',
       key: 'scopeType',
-      width: 110,
+      width: 100,
       render: (scopeType: ConfigScopeTypeEnum) => (
         <Tag color='blue'>{CONFIG_SCOPE_LABELS[scopeType]}</Tag>
       ),
@@ -103,6 +108,7 @@ export const getConfigColumns = ({
       title: 'System Value',
       dataIndex: 'value',
       key: 'value',
+      width: 100,
       ellipsis: true,
       render: (value?: string | null) => value || '-',
     },
@@ -138,6 +144,7 @@ export const getConfigColumns = ({
       title: 'Policy Default',
       dataIndex: 'policyDefaultValue',
       key: 'policyDefaultValue',
+      width: 120,
       ellipsis: true,
       render: (value?: string | null) => value || '-',
     },
