@@ -54,6 +54,7 @@ type RangeValue = [dayjs.Dayjs, dayjs.Dayjs];
 
 const LIVE_POLL_MS = 5000;
 const LIVE_PAGE_SIZE = 300;
+const TOKEN_USAGE_TABLE_PAGE_SIZE = 8;
 
 /** Map telemetry group key (id or name) to space GUID for CAMS state API */
 const resolveSpaceIdForPlayback = (
@@ -116,6 +117,12 @@ const NowPlayingBanner = ({
   const hasStream = Boolean(s?.hlsUrl);
   const trackTitle = s?.currentTrackName?.trim();
   const idle = !hasStream && !trackTitle;
+  const iotStatusTag =
+    s?.isIotDeviceOffline == null ? null : s.isIotDeviceOffline ? (
+      <Tag color='error'>IoT Offline</Tag>
+    ) : (
+      <Tag color='success'>IoT Online</Tag>
+    );
 
   if (idle) {
     return (
@@ -136,6 +143,13 @@ const NowPlayingBanner = ({
           <div>
             <Typography.Text type='secondary'>No track playing</Typography.Text>
           </div>
+          <Space
+            size={[6, 6]}
+            wrap
+            style={{ marginTop: 6 }}
+          >
+            {iotStatusTag}
+          </Space>
         </div>
       </Flex>
     );
@@ -186,6 +200,7 @@ const NowPlayingBanner = ({
           )}
           {s?.isMuted && <Tag>Muted</Tag>}
           {s?.isManualOverride && <Tag color='magenta'>Manual override</Tag>}
+          {iotStatusTag}
           {s?.fuzzyRule && (
             <Tooltip title={s.fuzzyReason || undefined}>
               <Tag>{s.fuzzyRule}</Tag>
@@ -1080,7 +1095,7 @@ export const StoreDashboard = () => {
 
   const rawColumns: ColumnsType<StoreContextRawLogItem> = [
     {
-      title: 'Measured At (UTC)',
+      title: 'Analyzed At (UTC)',
       dataIndex: 'measuredAtUtc',
       key: 'measuredAtUtc',
       render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm:ss'),
@@ -1099,7 +1114,7 @@ export const StoreDashboard = () => {
       width: 140,
     },
     {
-      title: 'Noise',
+      title: 'Noise (dB)',
       dataIndex: 'avgNoise',
       key: 'avgNoise',
       render: (value?: number | null) => `${formatValue(value)} dB`,
@@ -1113,7 +1128,7 @@ export const StoreDashboard = () => {
       width: 100,
     },
     {
-      title: 'Weather',
+      title: 'Rule',
       dataIndex: 'currentWeather',
       key: 'currentWeather',
       render: (value?: string | null) => value || '--',
@@ -1315,9 +1330,15 @@ export const StoreDashboard = () => {
           <Table<BillingUsageView>
             size='small'
             rowKey={(r, i) => `${r.chargedAtUtc}-${i}`}
-            pagination={false}
+            pagination={{
+              pageSize: TOKEN_USAGE_TABLE_PAGE_SIZE,
+              showSizeChanger: true,
+              pageSizeOptions: ['8', '20', '50'],
+              showTotal: (total) => `${total} records`,
+            }}
             dataSource={usageLogQuery.data ?? []}
             columns={tokenUsageColumns}
+            scroll={{ x: 900, y: 380 }}
             locale={{ emptyText: 'No token charges for this store yet.' }}
           />
         )}
@@ -1554,7 +1575,7 @@ export const StoreDashboard = () => {
       </Row>
 
       <Card
-        title='Live telemetry — Crowd, Noise & playback'
+        title='Live telemetry — Crowd, Noise, playback & IoT status'
         style={{ marginTop: 16 }}
         extra={
           <Space>
@@ -1705,7 +1726,7 @@ export const StoreDashboard = () => {
 
       <Card
         style={{ marginTop: 16 }}
-        title='Raw context logs'
+        title='Raw context logs (analysis results)'
         extra={
           <Button
             type={showRawLogs ? 'default' : 'primary'}
