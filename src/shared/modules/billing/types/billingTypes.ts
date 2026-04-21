@@ -76,8 +76,49 @@ export type BillingSettlementView = {
 
 export type BillingUsageFilter = {
   brandId?: string;
+  /** Single store (backward compatible). Ignored when `storeIds` is set. */
   storeId?: string;
+  /** Filter to these stores (OR). Omit for all stores under the brand. */
+  storeIds?: string[];
   fromBusinessDate?: string;
   toBusinessDate?: string;
   limit?: number;
+};
+
+export type BillingTopUpHistoryFilter = {
+  brandId?: string;
+  fromUtc?: string;
+  toUtc?: string;
+  limit?: number;
+};
+
+export type BillingWalletAdminRow = {
+  brandId: string;
+  brandName: string;
+  balanceTokens: number;
+  lockStatus: string;
+  isLockedToday: boolean;
+  lockedFromBusinessDate: string | null;
+  lastDebtBusinessDate: string | null;
+  walletUpdatedAtUtc: string;
+};
+
+export type BillingTopUpHistoryView = {
+  id: string;
+  brandId: string;
+  packageCode: string;
+  tokensCredited: number;
+  amount: number;
+  currency: string;
+  paymentProvider: string | null;
+  externalTransactionId: string | null;
+  topUpDateUtc: string;
+  createdByUserId: string | null;
+};
+
+export type BillingUsageCostConfigView = {
+  streamingSpaceDailyTokens: number;
+  aiGenerationSunoTokens: number;
+  aiGenerationBrandModelTokens: number;
+  manualUploadCopyrightScanTokens: number;
 };
