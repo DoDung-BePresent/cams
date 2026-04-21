@@ -6,8 +6,12 @@ import type {
   BillingPackageItem,
   BillingPackageUpdateRequest,
   BillingSettlementView,
+  BillingTopUpHistoryFilter,
+  BillingTopUpHistoryView,
+  BillingUsageCostConfigView,
   BillingUsageFilter,
   BillingUsageView,
+  BillingWalletAdminRow,
   BillingWalletView,
   MoMoTopUpCallbackRequest,
 } from '../types/billingTypes';
@@ -24,6 +28,94 @@ export const billingService = {
       packages,
     ),
 
+  adminGetUsageCosts: () =>
+    api.get<Result<BillingUsageCostConfigView>>(
+      `${BILLING_BASE}/admin/usage-costs`,
+    ),
+
+  adminUpsertUsageCosts: (body: BillingUsageCostConfigView) =>
+    api.put<Result<BillingUsageCostConfigView>>(
+      `${BILLING_BASE}/admin/usage-costs`,
+      body,
+    ),
+
+  adminGetWallets: (params: {
+    lockedOnly?: boolean;
+    negativeBalanceOnly?: boolean;
+    page?: number;
+    pageSize?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (params.lockedOnly !== undefined)
+      qs.append('lockedOnly', String(params.lockedOnly));
+    if (params.negativeBalanceOnly !== undefined)
+      qs.append('negativeBalanceOnly', String(params.negativeBalanceOnly));
+    if (params.page) qs.append('page', String(params.page));
+    if (params.pageSize) qs.append('pageSize', String(params.pageSize));
+    return api.get<Result<BillingWalletAdminRow[]>>(
+      `${BILLING_BASE}/admin/wallets?${qs.toString()}`,
+    );
+  },
+
+  adminCreditTokens: (
+    brandId: string,
+    body: { tokens: number; note?: string },
+  ) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/credit-tokens`,
+      body,
+    ),
+
+  adminDebitTokens: (
+    brandId: string,
+    body: { tokens: number; note?: string },
+  ) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/debit-tokens`,
+      body,
+    ),
+
+  adminForceLockWallet: (brandId: string, body: { reason?: string }) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/force-lock`,
+      body,
+    ),
+
+  adminForceUnlockWallet: (brandId: string, body: { reason?: string }) =>
+    api.post<Result<BillingWalletView>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/force-unlock`,
+      body,
+    ),
+
+  adminGetTopupHistory: (
+    brandId: string,
+    limit = 50,
+    params?: { fromUtc?: string; toUtc?: string },
+  ) => {
+    const qs = new URLSearchParams();
+    qs.append('limit', String(limit));
+    if (params?.fromUtc) qs.append('fromUtc', params.fromUtc);
+    if (params?.toUtc) qs.append('toUtc', params.toUtc);
+    return api.get<Result<BillingTopUpHistoryView[]>>(
+      `${BILLING_BASE}/admin/brands/${brandId}/topup-history?${qs.toString()}`,
+    );
+  },
+
+  /** Brand / store manager: MoMo and credit top-ups for the scoped brand (not split by store). */
+  getTopupHistory: (filter: BillingTopUpHistoryFilter = {}) => {
+    const params = new URLSearchParams();
+    if (filter.brandId) params.append('brandId', filter.brandId);
+    if (filter.fromUtc) params.append('fromUtc', filter.fromUtc);
+    if (filter.toUtc) params.append('toUtc', filter.toUtc);
+    if (filter.limit) params.append('limit', String(filter.limit));
+    const qs = params.toString();
+    return api.get<Result<BillingTopUpHistoryView[]>>(
+      qs
+        ? `${BILLING_BASE}/topup-history?${qs}`
+        : `${BILLING_BASE}/topup-history`,
+    );
+  },
+
   getWallet: (brandId?: string) => {
     const params = new URLSearchParams();
     if (brandId) params.append('brandId', brandId);
@@ -36,7 +128,11 @@ export const billingService = {
   getUsage: (filter: BillingUsageFilter = {}) => {
     const params = new URLSearchParams();
     if (filter.brandId) params.append('brandId', filter.brandId);
-    if (filter.storeId) params.append('storeId', filter.storeId);
+    if (filter.storeIds?.length) {
+      filter.storeIds.forEach((id) => params.append('storeIds', id));
+    } else if (filter.storeId) {
+      params.append('storeId', filter.storeId);
+    }
     if (filter.fromBusinessDate)
       params.append('fromBusinessDate', filter.fromBusinessDate);
     if (filter.toBusinessDate)
