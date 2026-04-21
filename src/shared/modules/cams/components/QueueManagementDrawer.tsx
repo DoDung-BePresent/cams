@@ -160,6 +160,7 @@ export const QueueManagementDrawer = ({
         title='Queue Management'
         closeIcon={null}
         placement='right'
+        destroyOnHidden
         width={DRAWER_WIDTHS.medium}
         open={open}
         onClose={onClose}

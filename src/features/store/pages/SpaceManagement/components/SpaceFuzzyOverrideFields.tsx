@@ -67,7 +67,7 @@ export const SpaceFuzzyOverrideFields = ({
           title='Allowed playlists can be selected when the store id is available.'
           type='warning'
           showIcon
-          className='mt-5!'
+          className='mb-5!'
         />
       )}
 
