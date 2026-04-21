@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Drawer,
@@ -10,8 +10,8 @@ import {
   Spin,
   Row,
   Col,
-  Divider,
-  Typography,
+  Segmented,
+  Space,
 } from 'antd';
 
 /**
@@ -71,6 +71,7 @@ export const EditSpaceDrawer = ({
   onSuccess,
 }: EditSpaceDrawerProps) => {
   const [form] = Form.useForm<EditSpaceFormValues>();
+  const [activeTab, setActiveTab] = useState<'basic' | 'fuzzy'>('basic');
   const {
     data: space,
     isLoading,
@@ -175,6 +176,7 @@ export const EditSpaceDrawer = ({
 
   const handleCancel = () => {
     form.resetFields();
+    setActiveTab('basic');
     onClose();
   };
 
@@ -226,98 +228,103 @@ export const EditSpaceDrawer = ({
             },
           }}
         >
-          <Form.Item
-            label='Space Name'
-            name='name'
-            rules={updateSpaceValidation.name}
-          >
-            <Input placeholder='e.g., Main Counter, VIP Hall' />
-          </Form.Item>
-
-          <Form.Item
-            label='Space Type'
-            name='type'
-          >
-            <Select
-              placeholder='Select space type'
-              options={SPACE_TYPE_OPTIONS}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label='Description'
-            name='description'
-            rules={updateSpaceValidation.description}
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder='Brief description of this space...'
-            />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label='Max Occupancy'
-                name='maxOccupancy'
-                rules={updateSpaceValidation.maxOccupancy}
-              >
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder='e.g., 50'
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label='Critical Queue Threshold'
-                name='criticalQueueThreshold'
-                rules={updateSpaceValidation.criticalQueueThreshold}
-              >
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder='e.g., 10'
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item
-            label='IoT Device ID'
-            name='ioTDeviceId'
-            tooltip='Device identifier used by CAMS telemetry query for this space'
-          >
-            <Input placeholder='e.g., esp32-people-counter' />
-          </Form.Item>
-
-          <Divider />
-
-          <Typography.Title
-            level={5}
-            style={{ marginBottom: 8 }}
-          >
-            Space fuzzy override
-          </Typography.Title>
-          <Typography.Paragraph type='secondary'>
-            Creates and activates a profile via{' '}
-            <Typography.Text code>
-              POST /api/spaces/:id/fuzzy-profiles
-            </Typography.Text>
-            .
-          </Typography.Paragraph>
-
-          <SpaceFuzzyOverrideFields storeIdForPlaylists={space?.storeId} />
-
-          <Button
+          <Segmented
+            block
             size='large'
-            type='primary'
-            onClick={handleCreateFuzzyOverride}
-            loading={createFuzzyProfile.isPending}
-          >
-            Create &amp; Activate Space Profile
-          </Button>
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as 'basic' | 'fuzzy')}
+            options={[
+              { label: 'Basic Information', value: 'basic' },
+              { label: 'Fuzzy Profile', value: 'fuzzy' },
+            ]}
+            style={{ marginBottom: 24 }}
+          />
+
+          {activeTab === 'basic' ? (
+            <>
+              <Form.Item
+                label='Space Name'
+                name='name'
+                rules={updateSpaceValidation.name}
+              >
+                <Input placeholder='e.g., Main Counter, VIP Hall' />
+              </Form.Item>
+
+              <Form.Item
+                label='Space Type'
+                name='type'
+              >
+                <Select
+                  placeholder='Select space type'
+                  options={SPACE_TYPE_OPTIONS}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label='Description'
+                name='description'
+                rules={updateSpaceValidation.description}
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder='Brief description of this space...'
+                />
+              </Form.Item>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    label='Max Occupancy'
+                    name='maxOccupancy'
+                    rules={updateSpaceValidation.maxOccupancy}
+                  >
+                    <InputNumber
+                      min={1}
+                      style={{ width: '100%' }}
+                      placeholder='e.g., 50'
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label='Critical Queue Threshold'
+                    name='criticalQueueThreshold'
+                    rules={updateSpaceValidation.criticalQueueThreshold}
+                  >
+                    <InputNumber
+                      min={1}
+                      style={{ width: '100%' }}
+                      placeholder='e.g., 10'
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item
+                label='IoT Device ID'
+                name='ioTDeviceId'
+                tooltip='Device identifier used by CAMS telemetry query for this space'
+              >
+                <Input placeholder='e.g., esp32-people-counter' />
+              </Form.Item>
+            </>
+          ) : (
+            <>
+              <SpaceFuzzyOverrideFields storeIdForPlaylists={space?.storeId} />
+
+              <Space>
+                <Button
+                  size='large'
+                  type='primary'
+                  onClick={handleCreateFuzzyOverride}
+                  loading={createFuzzyProfile.isPending}
+                  block
+                >
+                  Create &amp; Activate Space Profile
+                </Button>
+              </Space>
+            </>
+          )}
         </Form>
       )}
     </Drawer>
