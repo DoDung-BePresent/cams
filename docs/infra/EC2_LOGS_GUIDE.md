@@ -432,7 +432,7 @@ exit
   1. `aws ssm start-session --target <INSTANCE_ID>` (hoặc Console → Session Manager → Start session).
   2. Trên EC2:
   - `cd /opt/logaicams`
-  - `docker logs -f logaicams-api` (runtime)
+  - `sudo docker logs -f logaicams-api` (runtime)
   - hoặc `tail -n 200 /opt/logaicams/logs/<file>.log` (file log).
   3. `exit` để thoát session.
 - Nếu cần teammate vào HTTPS:

@@ -206,7 +206,7 @@ export const CreateStaffDrawer = ({
             name='phoneNumber'
             rules={createStaffValidation.phoneNumber}
           >
-            <Input placeholder='+84901234567 or 0901234567' />
+            <Input placeholder='0901234567' />
           </Form.Item>
         </div>
 

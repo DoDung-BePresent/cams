@@ -75,6 +75,7 @@ export const EditStaffDrawer = ({
         email: staff.email,
         phoneNumber: nullToUndefined(staff.phoneNumber),
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExistingAvatarUrl(staff.avatarUrl);
     }
   }, [staff, open, form]);
@@ -215,7 +216,7 @@ export const EditStaffDrawer = ({
               name='phoneNumber'
               rules={updateStaffValidation.phoneNumber}
             >
-              <Input placeholder='+84901234567 or 0901234567' />
+              <Input placeholder='0901234567' />
             </Form.Item>
 
             {/* ✅ Use shared ImageDragger */}

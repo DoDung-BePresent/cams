@@ -26,7 +26,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ColumnsType } from 'antd/es/table';
 
 import { STALE_TIME } from '@/config';
-import { PageHeader } from '@/shared/components';
+import { AppModal, PageHeader } from '@/shared/components';
 import {
   billingService,
   type BillingPackageItem,
@@ -87,7 +87,7 @@ export const AdminBillingPackages = () => {
       return res.data.data;
     },
     onSuccess: () => {
-      message.success('Package catalog saved.');
+      message.success('Package catalog saved');
       setDraftRows(null);
       queryClient.invalidateQueries({
         queryKey: ['billing', 'admin', 'packages'],
@@ -293,15 +293,22 @@ export const AdminBillingPackages = () => {
 
   const removeRow = useCallback(
     (key: string) => {
-      setDraftRows((prev) => {
-        const current = prev ?? serverRows;
-        return current.filter((r) => r.key !== key);
+      AppModal.confirm({
+        type: 'warning',
+        title: 'Delete Package',
+        content: 'Are you sure you want to delete this package?',
+        onOk: () => {
+          setDraftRows((prev) => {
+            const current = prev ?? serverRows;
+            return current.filter((r) => r.key !== key);
+          });
+        },
       });
     },
     [serverRows],
   );
 
-  const handleSave = () => {
+  const handleSaveAll = () => {
     const invalid = rows.some(
       (r) =>
         !r.code?.trim() ||
@@ -310,14 +317,12 @@ export const AdminBillingPackages = () => {
         !r.currency?.trim(),
     );
     if (invalid) {
-      message.warning(
-        'Each row needs code, tokens & amount > 0, and currency.',
-      );
+      message.warning('Each row needs code, tokens & amount > 0, and currency');
       return;
     }
     const codes = rows.map((r) => r.code.trim().toUpperCase());
     if (new Set(codes).size !== codes.length) {
-      message.warning('Package codes must be unique.');
+      message.warning('Package codes must be unique');
       return;
     }
     saveMutation.mutate(
@@ -332,67 +337,82 @@ export const AdminBillingPackages = () => {
 
   const columns: ColumnsType<Row> = [
     {
-      title: 'Code',
+      title: 'No.',
+      key: 'index',
+      width: 70,
+      render: (_text, _record, index) => index + 1,
+    },
+    {
+      title: 'Package Code',
       dataIndex: 'code',
-      width: 160,
-      render: (_, r) => (
+      key: 'code',
+      width: 200,
+      render: (_, record) => (
         <Input
-          value={r.code}
-          placeholder='TOKEN_20K'
-          onChange={(e) => updateRow(r.key, { code: e.target.value })}
+          value={record.code}
+          placeholder='e.g., TOKEN_20K'
+          onChange={(e) => updateRow(record.key, { code: e.target.value })}
         />
       ),
     },
     {
       title: 'Tokens',
       dataIndex: 'tokens',
-      width: 130,
-      render: (_, r) => (
+      key: 'tokens',
+      width: 150,
+      render: (_, record) => (
         <InputNumber
-          min={1}
           style={{ width: '100%' }}
-          value={r.tokens}
-          onChange={(v) => updateRow(r.key, { tokens: Number(v) || 0 })}
+          value={record.tokens}
+          min={1}
+          step={1000}
+          onChange={(v) => updateRow(record.key, { tokens: Number(v) || 0 })}
         />
       ),
     },
     {
       title: 'Amount',
       dataIndex: 'amount',
-      width: 140,
-      render: (_, r) => (
+      key: 'amount',
+      width: 150,
+      render: (_, record) => (
         <InputNumber
-          min={1}
           style={{ width: '100%' }}
-          value={r.amount}
-          onChange={(v) => updateRow(r.key, { amount: Number(v) || 0 })}
+          value={record.amount}
+          min={1}
+          step={1000}
+          onChange={(v) => updateRow(record.key, { amount: Number(v) || 0 })}
         />
       ),
     },
     {
       title: 'Currency',
       dataIndex: 'currency',
-      width: 100,
-      render: (_, r) => (
+      key: 'currency',
+      width: 120,
+      render: (_, record) => (
         <Input
+          value={record.currency}
           maxLength={8}
-          value={r.currency}
-          onChange={(e) => updateRow(r.key, { currency: e.target.value })}
+          placeholder='VND'
+          onChange={(e) => updateRow(record.key, { currency: e.target.value })}
         />
       ),
     },
     {
-      title: '',
+      title: 'Actions',
       key: 'actions',
-      width: 56,
-      render: (_, r) => (
+      fixed: 'right',
+      width: 100,
+      render: (_, record) => (
         <Button
           type='text'
           danger
           icon={<DeleteOutlined />}
-          onClick={() => removeRow(r.key)}
-          aria-label='Remove row'
-        />
+          onClick={() => removeRow(record.key)}
+        >
+          Delete
+        </Button>
       ),
     },
   ];
@@ -609,14 +629,16 @@ export const AdminBillingPackages = () => {
     URL.revokeObjectURL(url);
   };
 
+  const breadcrumbs = [{ title: 'Dashboard' }, { title: 'Token Packages' }];
+
   return (
     <div>
       <PageHeader
-        title='Token packages'
-        breadcrumbs={[{ title: 'Admin' }, { title: 'Token packages' }]}
+        title='Token Packages'
+        breadcrumbs={breadcrumbs}
         seo={{
-          description: 'Configure token bundles for MoMo top-up.',
-          keywords: 'billing, packages, admin',
+          description: 'Configure token bundles for MoMo top-up',
+          keywords: 'billing, packages, admin, tokens',
         }}
       />
 
@@ -662,7 +684,7 @@ export const AdminBillingPackages = () => {
                         loading={
                           saveMutation.isPending || packagesQuery.isLoading
                         }
-                        onClick={handleSave}
+                        onClick={handleSaveAll}
                       >
                         Save catalog
                       </Button>

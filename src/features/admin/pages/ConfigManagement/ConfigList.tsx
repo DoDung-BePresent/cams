@@ -8,6 +8,7 @@ import {
   ConfigFilter as ConfigFilterComponent,
   getConfigColumns,
   getConfigPolicyColumns,
+  PolicyDetailDrawer,
   UpsertConfigPolicyDrawer,
   UpsertSystemValueDrawer,
 } from './components';
@@ -22,6 +23,7 @@ import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { PAGINATION_SIZES } from '@/shared/constants';
 import { DataTable, PageHeader } from '@/shared/components';
+import { createStyles } from 'antd-style';
 
 type ConfigTabKey = 'system' | 'policy';
 
@@ -32,7 +34,31 @@ const DEFAULT_FILTER: ConfigSystemFilter = {
   isAscending: true,
 };
 
+const useStyle = createStyles(({ css, prefixCls }) => {
+  return {
+    customTabs: css`
+      .${prefixCls}-tabs-nav {
+        margin-bottom: 0;
+        .${prefixCls}-tabs-nav-wrap {
+          .${prefixCls}-tabs-nav-list {
+            width: 100%;
+            .${prefixCls}-tabs-tab {
+              padding-inline: 15px;
+              justify-content: center;
+              &:hover {
+                background-color: var(--ant-blue-1);
+                color: var(--ant-tabs-item-selected-color);
+              }
+            }
+          }
+        }
+      }
+    `,
+  };
+});
+
 export const ConfigList = () => {
+  const { styles } = useStyle();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<ConfigTabKey>('system');
@@ -47,6 +73,7 @@ export const ConfigList = () => {
   const [policyDrawerOpen, setPolicyDrawerOpen] = useState(false);
   const [systemValueDrawerOpen, setSystemValueDrawerOpen] = useState(false);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [policyDetailDrawerOpen, setPolicyDetailDrawerOpen] = useState(false);
 
   const [selectedSystemConfig, setSelectedSystemConfig] =
     useState<ConfigFlatRowItem | null>(null);
@@ -170,6 +197,11 @@ export const ConfigList = () => {
     setDetailDrawerOpen(true);
   };
 
+  const handleViewPolicyDetails = (record: ConfigPolicyRowItem) => {
+    setSelectedPolicy(record);
+    setPolicyDetailDrawerOpen(true);
+  };
+
   const handleClosePolicyDrawer = () => {
     setPolicyDrawerOpen(false);
     setSelectedPolicy(null);
@@ -183,6 +215,11 @@ export const ConfigList = () => {
   const handleCloseDetailDrawer = () => {
     setDetailDrawerOpen(false);
     setSelectedSystemConfig(null);
+  };
+
+  const handleClosePolicyDetailDrawer = () => {
+    setPolicyDetailDrawerOpen(false);
+    setSelectedPolicy(null);
   };
 
   const breadcrumbs = [
@@ -199,10 +236,15 @@ export const ConfigList = () => {
   const systemColumns = getConfigColumns({
     onView: handleViewSystemDetails,
     onEditSystemValue: handleEditSystemValue,
+    currentPage: systemFilter.page ?? 1,
+    pageSize: systemFilter.pageSize ?? 10,
   });
 
   const policyColumns = getConfigPolicyColumns({
+    onView: handleViewPolicyDetails,
     onEdit: handleEditPolicy,
+    currentPage: policyFilter.page ?? 1,
+    pageSize: policyFilter.pageSize ?? 10,
   });
 
   const headerAction =
@@ -328,6 +370,7 @@ export const ConfigList = () => {
 
       <Tabs
         activeKey={activeTab}
+        className={styles.customTabs}
         onChange={(key) => setActiveTab(key as ConfigTabKey)}
         items={tabItems}
       />
@@ -356,6 +399,12 @@ export const ConfigList = () => {
         open={detailDrawerOpen}
         data={selectedSystemConfig}
         onClose={handleCloseDetailDrawer}
+      />
+
+      <PolicyDetailDrawer
+        open={policyDetailDrawerOpen}
+        data={selectedPolicy}
+        onClose={handleClosePolicyDetailDrawer}
       />
     </div>
   );

@@ -63,6 +63,7 @@ export const TrackList = () => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFilterChange = (key: keyof TrackFilter, value: any) => {
     setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
@@ -112,7 +113,7 @@ export const TrackList = () => {
   };
 
   const handleToggleStatus = (id: string) => {
-    AppModal.confirm({
+    AppModal.warning({
       title: 'Toggle Track Status',
       content: 'Are you sure you want to change this track status?',
       okText: 'Confirm',

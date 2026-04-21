@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Tabs } from 'antd';
+import { Tabs, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { createStyles } from 'antd-style';
 
 /**
  * Components
@@ -11,14 +13,22 @@ import { getTrackColumns } from '@/shared/modules/tracks/components';
 import {
   TrackDetailsDrawer,
   TrackFilter as TrackFilterComponent,
+  CreateSharedTrackDrawer,
+  EditSharedTrackDrawer,
 } from './components';
 
 /**
  * Hooks
  */
-import { useTracks } from '@/shared/modules/tracks/hooks';
+import {
+  useTracks,
+  useDeleteTrack,
+  useToggleTrackStatus,
+} from '@/shared/modules/tracks/hooks';
 import { useBlockedTracksForAdmin } from '@/shared/modules/tracks/hooks';
 import { useBrands } from '@/features/admin/hooks';
+
+import { AppModal } from '@/shared/components';
 
 /**
  * Constants
@@ -32,7 +42,31 @@ import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
 import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 
+const useStyle = createStyles(({ css, prefixCls }) => {
+  return {
+    customTabs: css`
+      .${prefixCls}-tabs-nav {
+        margin-bottom: 0;
+        .${prefixCls}-tabs-nav-wrap {
+          .${prefixCls}-tabs-nav-list {
+            width: 100%;
+            .${prefixCls}-tabs-tab {
+              padding-inline: 15px;
+              justify-content: center;
+              &:hover {
+                background-color: var(--ant-blue-1);
+                color: var(--ant-tabs-item-selected-color);
+              }
+            }
+          }
+        }
+      }
+    `,
+  };
+});
+
 export const TrackList = () => {
+  const { styles } = useStyle();
   const navigate = useNavigate();
   const [activeTabKey, setActiveTabKey] = useState<'all' | 'blocked'>('all');
 
@@ -53,6 +87,12 @@ export const TrackList = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<string>();
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [editTrackId, setEditTrackId] = useState<string>();
+
+  const deleteTrack = useDeleteTrack();
+  const toggleTrackStatus = useToggleTrackStatus();
 
   const {
     data: allData,
@@ -136,6 +176,31 @@ export const TrackList = () => {
     setDetailsDrawerOpen(true);
   };
 
+  const handleEdit = (id: string) => {
+    setEditTrackId(id);
+    setEditDrawerOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    AppModal.confirm({
+      title: 'Delete Track',
+      content:
+        'Are you sure you want to delete this track? This action cannot be undone.',
+      okText: 'Delete',
+      okButtonProps: { danger: true },
+      onOk: () => deleteTrack.mutate(id),
+    });
+  };
+
+  const handleToggleStatus = (id: string) => {
+    AppModal.warning({
+      title: 'Toggle Track Status',
+      content: 'Are you sure you want to change the status of this track?',
+      okText: 'Confirm',
+      onOk: () => toggleTrackStatus.mutate(id),
+    });
+  };
+
   const handleReset = () => {
     const defaultSortBy = activeTabKey === 'blocked' ? 'brandId' : 'createdAt';
     const defaultIsAscending = activeTabKey === 'blocked';
@@ -163,6 +228,10 @@ export const TrackList = () => {
     const baseColumns = getTrackColumns({
       onView: handleView,
       onPreview: handlePreview,
+      onEdit: handleEdit,
+      onDelete: handleDelete,
+      onToggleStatus: handleToggleStatus,
+      isActionAllowed: (record) => !record.brandId,
     });
 
     if (activeTabKey !== 'blocked') {
@@ -185,18 +254,39 @@ export const TrackList = () => {
       brandColumn,
       ...baseColumns.slice(insertAt),
     ];
-  }, [activeTabKey, brandNameById, handleView, handlePreview]);
+  }, [
+    activeTabKey,
+    brandNameById,
+    handleView,
+    handlePreview,
+    handleEdit,
+    handleDelete,
+    handleToggleStatus,
+  ]);
 
   return (
     <div>
       <PageHeader
         title='Track Library'
         breadcrumbs={breadcrumbs}
+        extra={
+          activeTabKey === 'all' && (
+            <Button
+              type='primary'
+              size='large'
+              icon={<PlusOutlined />}
+              onClick={() => setCreateDrawerOpen(true)}
+            >
+              Create Shared Track
+            </Button>
+          )
+        }
       />
 
       {/* Filter Component */}
       <Tabs
         activeKey={activeTabKey}
+        className={styles.customTabs}
         onChange={(key) => setActiveTabKey(key as 'all' | 'blocked')}
         items={[
           {
@@ -259,6 +349,27 @@ export const TrackList = () => {
         onClose={() => {
           setDetailsDrawerOpen(false);
           setSelectedTrackId(undefined);
+        }}
+      />
+
+      {/* Create Shared Track Drawer */}
+      <CreateSharedTrackDrawer
+        open={createDrawerOpen}
+        onClose={() => setCreateDrawerOpen(false)}
+        onSuccess={() => setCreateDrawerOpen(false)}
+      />
+
+      {/* Edit Shared Track Drawer */}
+      <EditSharedTrackDrawer
+        open={editDrawerOpen}
+        trackId={editTrackId}
+        onClose={() => {
+          setEditDrawerOpen(false);
+          setEditTrackId(undefined);
+        }}
+        onSuccess={() => {
+          setEditDrawerOpen(false);
+          setEditTrackId(undefined);
         }}
       />
     </div>

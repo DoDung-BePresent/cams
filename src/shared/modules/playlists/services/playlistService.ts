@@ -45,10 +45,13 @@ export const playlistService = {
       params.append('isAscending', filter.isAscending.toString());
     if (filter.status !== undefined)
       params.append('status', filter.status.toString());
+    if (filter.brandId) params.append('brandId', filter.brandId);
     if (filter.storeId) params.append('storeId', filter.storeId);
     if (filter.moodId) params.append('moodId', filter.moodId);
     if (filter.isDefault !== undefined)
       params.append('isDefault', filter.isDefault.toString());
+    if (filter.includeShared !== undefined)
+      params.append('includeShared', filter.includeShared.toString());
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
 

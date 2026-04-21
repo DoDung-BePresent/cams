@@ -49,6 +49,8 @@ interface TrackColumnActions {
   onDelete?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
   onPreview?: (id: string) => void;
+  /** If provided, edit/delete/toggle actions are only shown when this returns true */
+  isActionAllowed?: (record: TrackListItem) => boolean;
 }
 
 export const getTrackColumns = ({
@@ -56,6 +58,7 @@ export const getTrackColumns = ({
   onEdit,
   onDelete,
   onToggleStatus,
+  isActionAllowed,
 }: TrackColumnActions): ColumnsType<TrackListItem> => [
   {
     title: 'No.',
@@ -105,7 +108,17 @@ export const getTrackColumns = ({
         direction='vertical'
         size={0}
       >
-        <span style={{ fontWeight: 500 }}>{title}</span>
+        <Space size={4}>
+          <span style={{ fontWeight: 500 }}>{title}</span>
+          {!record.brandId && (
+            <Tag
+              color='purple'
+              style={{ fontSize: 10, padding: '0 4px', lineHeight: '16px' }}
+            >
+              Shared
+            </Tag>
+          )}
+        </Space>
         {record.artist && (
           <span style={{ fontSize: 12, color: '#999' }}>{record.artist}</span>
         )}
@@ -131,7 +144,7 @@ export const getTrackColumns = ({
     title: 'Duration',
     dataIndex: 'durationSec',
     key: 'durationSec',
-    width: 100,
+    width: 120,
     sorter: true,
     render: (duration: number) => formatDuration(duration),
   },
@@ -197,7 +210,7 @@ export const getTrackColumns = ({
     title: 'Actions',
     key: 'actions',
     fixed: 'right',
-    width: 80,
+    width: 100,
     render: (_, record: TrackListItem) => {
       const menuItems: MenuProps['items'] = [
         {
@@ -208,11 +221,13 @@ export const getTrackColumns = ({
         },
       ];
 
+      const actionAllowed = !isActionAllowed || isActionAllowed(record);
+
       if (onEdit || onToggleStatus || onDelete) {
-        menuItems.push({ type: 'divider' });
+        if (actionAllowed) menuItems.push({ type: 'divider' });
       }
 
-      if (onEdit) {
+      if (onEdit && actionAllowed) {
         menuItems.push({
           key: 'edit',
           icon: <EditOutlined />,
@@ -221,7 +236,7 @@ export const getTrackColumns = ({
         });
       }
 
-      if (onToggleStatus) {
+      if (onToggleStatus && actionAllowed) {
         menuItems.push({
           key: 'toggle',
           icon: <PoweroffOutlined />,
@@ -230,7 +245,7 @@ export const getTrackColumns = ({
         });
       }
 
-      if (onDelete) {
+      if (onDelete && actionAllowed) {
         if (onEdit || onToggleStatus) {
           menuItems.push({ type: 'divider' });
         }

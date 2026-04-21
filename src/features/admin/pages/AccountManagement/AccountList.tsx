@@ -109,7 +109,7 @@ export const AccountList = () => {
     const account = data?.items.find((a) => a.id === accountId);
     const action = account?.status === 1 ? 'deactivate' : 'activate';
 
-    AppModal.confirm({
+    AppModal.warning({
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} Account`,
       content: `Are you sure you want to ${action} account "${account?.fullName}"?`,
       okText: action.charAt(0).toUpperCase() + action.slice(1),

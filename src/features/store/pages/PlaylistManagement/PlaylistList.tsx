@@ -142,7 +142,7 @@ export const PlaylistList = () => {
     const playlist = data?.items.find((p) => p.id === id);
     const action = playlist?.status === 1 ? 'deactivate' : 'activate';
 
-    AppModal.confirm({
+    AppModal.warning({
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} Playlist`,
       content: `Are you sure you want to ${action} playlist "${playlist?.name}"?`,
       okText: action.charAt(0).toUpperCase() + action.slice(1),
@@ -184,6 +184,8 @@ export const PlaylistList = () => {
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
     onAddTracks: handleAddTracks,
+    // Guard: shared playlists (brandId === null) are read-only for Store Managers
+    isActionAllowed: (record) => !!record.brandId,
   });
 
   // Transform moods data to options
