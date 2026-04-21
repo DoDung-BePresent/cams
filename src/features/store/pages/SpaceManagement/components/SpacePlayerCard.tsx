@@ -13,6 +13,8 @@ import {
   Segmented,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 import {
   SpacePlayer,
   AIExplainabilityPanel,
@@ -704,13 +706,15 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
               </Button>
             </Space>
           </Flex>
-          <QueueList
-            items={queueItems}
-            onRemove={handleRemoveQueueItem}
-            onRemoveMany={handleRemoveQueueItems}
-            onReorder={handleReorderQueue}
-            onSkipToTrack={handleSkipToTrack}
-          />
+          <SimpleBar style={{ maxHeight: '500px' }}>
+            <QueueList
+              items={queueItems}
+              onRemove={handleRemoveQueueItem}
+              onRemoveMany={handleRemoveQueueItems}
+              onReorder={handleReorderQueue}
+              onSkipToTrack={handleSkipToTrack}
+            />
+          </SimpleBar>
         </Space>
       ) : (
         <Space
