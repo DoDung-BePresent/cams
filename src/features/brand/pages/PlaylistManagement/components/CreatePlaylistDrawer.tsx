@@ -1,14 +1,5 @@
 import { useEffect } from 'react';
-import {
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Switch,
-  Button,
-  Flex,
-  Typography,
-} from 'antd';
+import { Drawer, Form, Input, Select, Button, Flex, Typography } from 'antd';
 
 /**
  * Hooks
@@ -31,6 +22,11 @@ import type { CreatePlaylistRequest } from '@/shared/modules/playlists/types';
  * Configs
  */
 import { DRAWER_WIDTHS } from '@/config';
+
+/**
+ * Components
+ */
+import { SettingSwitch } from '@/shared/components';
 
 const { Title } = Typography;
 
@@ -93,6 +89,7 @@ export const CreatePlaylistDrawer = ({
       closeIcon={null}
       title='Create New Playlist'
       placement='right'
+      destroyOnHidden
       width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
@@ -203,13 +200,14 @@ export const CreatePlaylistDrawer = ({
           </Title>
 
           <Form.Item
-            label='Default Playlist'
             name='isDefault'
             valuePropName='checked'
+            style={{ marginBottom: 0 }}
           >
-            <Switch
-              checkedChildren='Yes'
-              unCheckedChildren='No'
+            <SettingSwitch
+              label='Default Playlist'
+              description='Set this playlist as the default for the store'
+              className='pt-0!'
             />
           </Form.Item>
         </div>
