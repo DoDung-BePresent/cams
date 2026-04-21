@@ -641,6 +641,15 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           />
         )}
 
+        {spaceState?.isIotDeviceOffline && (
+          <Alert
+            type='error'
+            showIcon
+            message={<Text strong>IoT device offline</Text>}
+            description='Latest IoT telemetry reports this device is offline. CAMS has switched to fallback/default mode until the device is online again.'
+          />
+        )}
+
         {spaceState?.isScheduling && (
           <Alert
             type='info'
