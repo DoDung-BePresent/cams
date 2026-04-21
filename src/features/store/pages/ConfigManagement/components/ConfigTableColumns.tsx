@@ -4,6 +4,10 @@ import {
   EyeOutlined,
   LockOutlined,
   MoreOutlined,
+  NumberOutlined,
+  FontSizeOutlined,
+  CheckSquareOutlined,
+  FieldNumberOutlined,
 } from '@ant-design/icons';
 
 import {
@@ -26,11 +30,30 @@ import type { MenuProps } from 'antd';
 type GetColumnsProps = {
   onView: (record: ConfigFlatRowItem) => void;
   onEditStoreValue: (record: ConfigFlatRowItem) => void;
+  currentPage: number;
+  pageSize: number;
+};
+
+const getValueTypeIcon = (valueType: ConfigValueTypeEnum) => {
+  switch (valueType) {
+    case 1: // String
+      return <FontSizeOutlined style={{ color: '#722ed1' }} />;
+    case 2: // Number
+      return <NumberOutlined style={{ color: '#1890ff' }} />;
+    case 3: // Boolean
+      return <CheckSquareOutlined style={{ color: '#fa8c16' }} />;
+    case 4: // DateTime
+      return <FieldNumberOutlined style={{ color: '#52c41a' }} />;
+    default:
+      return null;
+  }
 };
 
 export const getConfigColumns = ({
   onView,
   onEditStoreValue,
+  currentPage,
+  pageSize,
 }: GetColumnsProps): ColumnsType<ConfigFlatRowItem> => {
   const getActionMenuItems = (
     record: ConfigFlatRowItem,
@@ -57,7 +80,8 @@ export const getConfigColumns = ({
       title: 'No.',
       key: 'index',
       width: 70,
-      render: (_text, _record, index) => index + 1,
+      render: (_text, _record, index) =>
+        (currentPage - 1) * pageSize + index + 1,
     },
     {
       title: 'Key',
@@ -103,6 +127,7 @@ export const getConfigColumns = ({
       title: 'Store Value',
       dataIndex: 'value',
       key: 'value',
+      width: 150,
       ellipsis: true,
       render: (value?: string | null) => value || '-',
     },
@@ -129,15 +154,23 @@ export const getConfigColumns = ({
       width: 130,
       render: (valueType?: ConfigValueTypeEnum | null) => {
         if (valueType === null || valueType === undefined) {
-          return '-';
+          return '—';
         }
-        return CONFIG_VALUE_TYPE_LABELS[valueType];
+        return (
+          <Tooltip title={CONFIG_VALUE_TYPE_LABELS[valueType]}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {getValueTypeIcon(valueType)}
+              <span>{CONFIG_VALUE_TYPE_LABELS[valueType]}</span>
+            </span>
+          </Tooltip>
+        );
       },
     },
     {
       title: 'Policy Default',
       dataIndex: 'policyDefaultValue',
       key: 'policyDefaultValue',
+      width: 120,
       ellipsis: true,
       render: (value?: string | null) => value || '-',
     },

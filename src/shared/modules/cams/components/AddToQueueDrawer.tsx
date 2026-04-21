@@ -51,23 +51,11 @@ type QueueRestrictionHint = {
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
-    selectorBlock: css`
-      border: 1px solid var(--ant-color-border-secondary);
-      border-radius: 12px;
-      background: var(--ant-color-bg-container);
-      padding: 10px;
-    `,
     statusStrip: css`
       border: 1px solid var(--ant-color-border-secondary);
       border-radius: 12px;
       background: var(--ant-color-fill-tertiary);
       padding: 10px 12px;
-    `,
-    sectionCard: css`
-      border: 1px solid var(--ant-color-border-secondary);
-      border-radius: 12px;
-      background: var(--ant-color-bg-container);
-      padding: 12px;
     `,
     queueModeRadio: css`
       display: flex;
@@ -337,7 +325,7 @@ export const AddToQueueDrawer = ({
         size='large'
         style={{ width: '100%' }}
       >
-        <div className={styles.selectorBlock}>
+        <div>
           <OverrideMusicSourceSelector
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -416,7 +404,7 @@ export const AddToQueueDrawer = ({
           />
         )}
 
-        <div className={styles.sectionCard}>
+        <div>
           <Text strong>Queue Mode</Text>
           <Radio.Group
             className={styles.queueModeRadio}
@@ -439,7 +427,7 @@ export const AddToQueueDrawer = ({
           />
         </div>
 
-        <div className={styles.sectionCard}>
+        <div>
           <SettingSwitch
             label='Clear existing queue before adding'
             description='Remove all current tracks from the queue before adding new ones'
@@ -448,7 +436,7 @@ export const AddToQueueDrawer = ({
             className='mb-2! pt-0!'
           />
 
-          <Text strong>Reason (Optional)</Text>
+          <Text strong>Reason</Text>
           <TextArea
             size='large'
             placeholder='Why are you adding this to the queue?'
