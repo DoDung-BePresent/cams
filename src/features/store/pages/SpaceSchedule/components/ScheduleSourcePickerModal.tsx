@@ -14,6 +14,7 @@ type ScheduleSourcePickerModalProps = {
   loading?: boolean;
   librarySources: ScheduleSourceItem[];
   templateSources: ScheduleSourceItem[];
+  showTemplates?: boolean;
   onClose: () => void;
   onSelect: (sourceId: string) => void;
 };
@@ -23,6 +24,7 @@ export const ScheduleSourcePickerModal = ({
   loading,
   librarySources,
   templateSources,
+  showTemplates = true,
   onClose,
   onSelect,
 }: ScheduleSourcePickerModalProps) => {
@@ -90,14 +92,16 @@ export const ScheduleSourcePickerModal = ({
         size='middle'
         style={{ width: '100%' }}
       >
-        <Segmented<ScheduleSourceType>
-          value={activeType}
-          onChange={(value) => setActiveType(value)}
-          options={[
-            { label: 'Library', value: 'library' },
-            { label: 'Templates', value: 'template' },
-          ]}
-        />
+        {showTemplates && (
+          <Segmented<ScheduleSourceType>
+            value={activeType}
+            onChange={(value) => setActiveType(value)}
+            options={[
+              { label: 'Library', value: 'library' },
+              { label: 'Templates', value: 'template' },
+            ]}
+          />
+        )}
 
         <Input
           size='large'

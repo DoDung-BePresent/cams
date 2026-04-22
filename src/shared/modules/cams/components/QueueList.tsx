@@ -104,11 +104,15 @@ const getStatusColor = (status: QueueItemStatus) => {
 };
 
 const getSourceLabel = (source: QueueItemSource) => {
-  return source === QueueItemSource.AI ? 'AI' : 'Manager';
+  if (source === QueueItemSource.AI) return 'AI';
+  if (source === QueueItemSource.Scheduling) return 'Schedule';
+  return 'Manager';
 };
 
 const getSourceColor = (source: QueueItemSource) => {
-  return source === QueueItemSource.AI ? 'purple' : 'blue';
+  if (source === QueueItemSource.AI) return 'purple';
+  if (source === QueueItemSource.Scheduling) return 'green';
+  return 'blue';
 };
 
 // Visual clone rendered in DragOverlay — no sortable hooks, renders as portal above list

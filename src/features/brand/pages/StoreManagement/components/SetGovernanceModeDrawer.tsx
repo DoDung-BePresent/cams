@@ -1,4 +1,13 @@
-import { Button, Drawer, Flex, Radio, Space, Typography, Alert } from 'antd';
+import {
+  Button,
+  Drawer,
+  Flex,
+  Radio,
+  Select,
+  Space,
+  Typography,
+  Alert,
+} from 'antd';
 import { useState } from 'react';
 
 /**
@@ -9,7 +18,10 @@ import { ControlOutlined } from '@ant-design/icons';
 /**
  * Hooks
  */
-import { useSetStoreGovernanceMode } from '@/features/brand/hooks';
+import {
+  useSetStoreGovernanceMode,
+  useBrandScheduleTemplates,
+} from '@/features/brand/hooks';
 
 /**
  * Types
@@ -24,6 +36,11 @@ import {
  * Config
  */
 import { DRAWER_WIDTHS } from '@/config';
+
+/**
+ * Providers
+ */
+import { useAuth } from '@/providers';
 
 const { Text } = Typography;
 
@@ -42,21 +59,44 @@ export const SetGovernanceModeDrawer = ({
   currentMode,
   onClose,
 }: SetGovernanceModeDrawerProps) => {
+  const { user } = useAuth();
+  const brandId = user?.brandId ?? undefined;
+
   const [selectedMode, setSelectedMode] = useState<GovernanceModeEnum>(
     currentMode ?? GovernanceModeEnum.Freedom,
   );
+  const [selectedTemplateId, setSelectedTemplateId] = useState<
+    string | undefined
+  >(undefined);
 
   const setGovernanceMode = useSetStoreGovernanceMode();
+  const { data: templates = [], isLoading: templatesLoading } =
+    useBrandScheduleTemplates(
+      brandId,
+      open && selectedMode === GovernanceModeEnum.StrictSync,
+    );
+
+  const templateOptions = templates.map((t) => ({
+    label: t.title,
+    value: t.id,
+  }));
 
   const handleSubmit = () => {
     setGovernanceMode.mutate(
-      { storeIds: [storeId], mode: selectedMode },
+      {
+        storeIds: [storeId],
+        mode: selectedMode,
+        ...(selectedMode === GovernanceModeEnum.StrictSync && selectedTemplateId
+          ? { sourceId: selectedTemplateId }
+          : {}),
+      },
       { onSuccess: onClose },
     );
   };
 
   const handleClose = () => {
     setSelectedMode(currentMode ?? GovernanceModeEnum.Freedom);
+    setSelectedTemplateId(undefined);
     onClose();
   };
 
@@ -83,6 +123,7 @@ export const SetGovernanceModeDrawer = ({
       afterOpenChange={(nextOpen) => {
         if (nextOpen) {
           setSelectedMode(currentMode ?? GovernanceModeEnum.Freedom);
+          setSelectedTemplateId(undefined);
         }
       }}
       width={DRAWER_WIDTHS.small}
@@ -166,6 +207,38 @@ export const SetGovernanceModeDrawer = ({
             showIcon
             message='Switching to Strict Sync will immediately enqueue a schedule-sync job for this store.'
           />
+        )}
+
+        {selectedMode === GovernanceModeEnum.StrictSync && (
+          <Space
+            direction='vertical'
+            size={4}
+            style={{ width: '100%' }}
+          >
+            <Text>
+              Brand Schedule Template <Text type='secondary'>(optional)</Text>
+            </Text>
+            <Select
+              size='large'
+              placeholder='Select a brand schedule template to apply...'
+              options={templateOptions}
+              value={selectedTemplateId}
+              onChange={setSelectedTemplateId}
+              loading={templatesLoading}
+              allowClear
+              showSearch
+              optionFilterProp='label'
+              style={{ width: '100%' }}
+            />
+            <Text
+              type='secondary'
+              style={{ fontSize: 12 }}
+            >
+              If selected, this template's slots will be linked to all spaces in
+              this store, allowing brand execution jobs to be built immediately
+              after sync.
+            </Text>
+          </Space>
         )}
 
         {selectedMode === GovernanceModeEnum.AIMode && (
