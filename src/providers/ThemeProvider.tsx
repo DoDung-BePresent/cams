@@ -13,7 +13,7 @@ type ThemeMode = 'light' | 'dark';
 
 type ThemeContextType = {
   mode: ThemeMode;
-  toggleTheme: () => void;
+  toggleTheme: (event?: React.MouseEvent) => void;
   setTheme: (mode: ThemeMode) => void;
 };
 
@@ -39,8 +39,45 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     document.documentElement.setAttribute('data-theme', mode);
   }, [mode]);
 
-  const toggleTheme = () => {
-    setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+  const toggleTheme = (event?: React.MouseEvent) => {
+    const newMode = mode === 'light' ? 'dark' : 'light';
+
+    // Check if View Transitions API is supported
+    if (!document.startViewTransition || !event) {
+      setMode(newMode);
+      return;
+    }
+
+    // Get click position for circular reveal animation
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y),
+    );
+
+    // Start view transition with circular reveal effect
+    const transition = document.startViewTransition(() => {
+      setMode(newMode);
+    });
+
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+
+      document.documentElement.animate(
+        {
+          clipPath: clipPath,
+        },
+        {
+          duration: 300,
+          easing: 'ease-in-out',
+          pseudoElement: '::view-transition-new(root)',
+        },
+      );
+    });
   };
 
   const setTheme = (newMode: ThemeMode) => {

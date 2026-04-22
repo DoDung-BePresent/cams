@@ -15,8 +15,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
-  BulbOutlined,
-  BulbFilled,
+  MoonOutlined,
+  SunOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -106,8 +106,8 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
           />
           <Button
             type='text'
-            onClick={toggleTheme}
-            icon={mode === 'dark' ? <BulbFilled /> : <BulbOutlined />}
+            onClick={(e) => toggleTheme(e)}
+            icon={mode === 'dark' ? <MoonOutlined /> : <SunOutlined />}
             style={{ width: 36, height: 36 }}
           />
           <Button
