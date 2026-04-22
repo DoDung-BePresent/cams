@@ -7,7 +7,6 @@ const { Text, Link } = Typography;
 const { Footer } = Layout;
 
 const footerStyle: React.CSSProperties = {
-  background: '#FAFAFB',
   // marginBottom: 92,
 };
 

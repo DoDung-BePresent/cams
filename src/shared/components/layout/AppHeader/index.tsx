@@ -15,12 +15,14 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
+  MoonOutlined,
+  SunOutlined,
 } from '@ant-design/icons';
 
 /**
  * Hooks
  */
-import { useAuth } from '@/providers';
+import { useAuth, useTheme } from '@/providers';
 import { useFullscreen, useNetworkStatus } from '@/shared/hooks';
 
 /**
@@ -41,9 +43,7 @@ type AppHeaderProps = {
 const { Header } = Layout;
 
 const headerStyle: React.CSSProperties = {
-  background: 'white',
   height: 60,
-  borderBottom: '1px solid #F0F0F0',
   display: 'flex',
   alignItems: 'center',
   paddingInline: 10,
@@ -57,6 +57,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user } = useAuth();
   const { isOnline } = useNetworkStatus();
+  const { mode, toggleTheme } = useTheme();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -105,6 +106,12 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
           />
           <Button
             type='text'
+            onClick={(e) => toggleTheme(e)}
+            icon={mode === 'dark' ? <MoonOutlined /> : <SunOutlined />}
+            style={{ width: 36, height: 36 }}
+          />
+          <Button
+            type='text'
             onClick={toggleFullscreen}
             icon={
               isFullscreen ? <FullscreenExitOutlined /> : <FullscreenOutlined />
@@ -122,7 +129,10 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             placement='bottomRight'
             dropdownRender={() => (
               <div
-                className='overflow-hidden rounded-sm bg-white shadow-md'
+                className='overflow-hidden rounded-sm shadow-md'
+                style={{
+                  backgroundColor: 'var(--ant-color-bg-elevated)',
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <UserDropdownContent />

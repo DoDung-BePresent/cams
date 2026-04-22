@@ -2,11 +2,6 @@ import { Button, Drawer, Flex, Radio, Space, Typography, Alert } from 'antd';
 import { useState } from 'react';
 
 /**
- * Icons
- */
-import { ControlOutlined } from '@ant-design/icons';
-
-/**
  * Hooks
  */
 import { useSetStoreGovernanceMode } from '@/features/brand/hooks';
@@ -38,7 +33,6 @@ type SetGovernanceModeDrawerProps = {
 export const SetGovernanceModeDrawer = ({
   open,
   storeId,
-  storeName,
   currentMode,
   onClose,
 }: SetGovernanceModeDrawerProps) => {
@@ -69,15 +63,7 @@ export const SetGovernanceModeDrawer = ({
   return (
     <Drawer
       closeIcon={null}
-      title={
-        <Flex
-          align='center'
-          gap={8}
-        >
-          <ControlOutlined />
-          <span>Set Governance Mode</span>
-        </Flex>
-      }
+      title='Set Governance Mode'
       open={open}
       onClose={handleClose}
       afterOpenChange={(nextOpen) => {
@@ -113,15 +99,19 @@ export const SetGovernanceModeDrawer = ({
         size='large'
         style={{ width: '100%' }}
       >
-        {storeName && (
+        {selectedMode === GovernanceModeEnum.StrictSync && (
+          <Alert
+            type='warning'
+            showIcon
+            message='Switching to Strict Sync will immediately enqueue a schedule-sync job for this store.'
+          />
+        )}
+
+        {selectedMode === GovernanceModeEnum.AIMode && (
           <Alert
             type='info'
             showIcon
-            message={
-              <span>
-                Applying to store: <Text strong>{storeName}</Text>
-              </span>
-            }
+            message='AI Mode allows bounded AI playback with temporary manager interventions.'
           />
         )}
 
@@ -159,22 +149,6 @@ export const SetGovernanceModeDrawer = ({
             ))}
           </Space>
         </Radio.Group>
-
-        {selectedMode === GovernanceModeEnum.StrictSync && (
-          <Alert
-            type='warning'
-            showIcon
-            message='Switching to Strict Sync will immediately enqueue a schedule-sync job for this store.'
-          />
-        )}
-
-        {selectedMode === GovernanceModeEnum.AIMode && (
-          <Alert
-            type='info'
-            showIcon
-            message='AI Mode allows bounded AI playback with temporary manager interventions.'
-          />
-        )}
       </Space>
     </Drawer>
   );
