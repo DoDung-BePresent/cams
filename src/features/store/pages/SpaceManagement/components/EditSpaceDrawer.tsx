@@ -145,17 +145,22 @@ export const EditSpaceDrawer = ({
     if (!spaceId) return;
 
     const { fuzzy, ...spacePayload } = values;
-    void fuzzy;
+    const fuzzyBody = pickSpaceFuzzyOverrideBody(fuzzy);
 
-    updateSpace.mutate(
-      { id: spaceId, data: spacePayload },
-      {
-        onSuccess: () => {
-          handleCancel();
-          onSuccess();
-        },
-      },
-    );
+    try {
+      await updateSpace.mutateAsync({ id: spaceId, data: spacePayload });
+
+      // Keep user expectation simple: if fuzzy values are present in this form,
+      // apply + activate the space override profile in the same Update action.
+      if (Object.keys(fuzzyBody).length > 0) {
+        await createFuzzyProfile.mutateAsync({ spaceId, body: fuzzyBody });
+      }
+
+      handleCancel();
+      onSuccess();
+    } catch {
+      // Error messages are already handled in mutation hooks.
+    }
   };
 
   const handleCreateFuzzyOverride = () => {
@@ -203,7 +208,7 @@ export const EditSpaceDrawer = ({
             size='large'
             type='primary'
             onClick={() => form.submit()}
-            loading={updateSpace.isPending}
+            loading={updateSpace.isPending || createFuzzyProfile.isPending}
             disabled={isLoading}
           >
             Update Space
