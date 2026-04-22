@@ -67,6 +67,10 @@ export const DataTable = <T extends AnyObject = any>({
         <Table
           {...tableProps}
           className={styles.customTable}
+          showSorterTooltip={false}
+          sticky={{
+            offsetHeader: 60,
+          }}
           styles={{
             pagination: {
               root: {

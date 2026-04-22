@@ -11,6 +11,7 @@ import { cn } from '@/shared/lib';
  * Hooks
  */
 import { useMenuNavigation } from '@/shared/hooks';
+import { useThemeMode } from '@/providers';
 
 /**
  * Constants
@@ -41,10 +42,12 @@ const siderStyle: React.CSSProperties = {
   top: 0,
   left: 0,
   bottom: 0,
-  borderRight: '1px solid #F0F0F0',
+  borderRight: '1px solid var(--app-border-color)',
+  background: 'var(--app-sidebar-bg)',
 };
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
+  const { isSpotifyMode } = useThemeMode();
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
     menuItems: ADMIN_MENU_ITEMS,
     routeMap: ADMIN_ROUTE_MAP,
@@ -54,7 +57,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
     <Sider
       trigger={null}
       style={siderStyle}
-      theme='light'
+      theme={isSpotifyMode ? 'dark' : 'light'}
       width={SIDEBAR_WIDTHS.width}
       collapsedWidth={SIDEBAR_WIDTHS.collapsedWidth}
       collapsible
@@ -68,7 +71,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
         className='custom-sidebar-scrollbar'
       >
         <Menu
-          theme='light'
+          theme={isSpotifyMode ? 'dark' : 'light'}
           mode='inline'
           className='border-none!'
           selectedKeys={selectedKeys}

@@ -14,7 +14,14 @@ export const Logo = ({ isIcon = true }: LogoProps) => {
   return (
     <div className='flex items-center gap-3'>
       <LogoIcon className='size-10' />
-      {!isIcon && <span className='text-3xl font-semibold'>CAMS</span>}
+      {!isIcon && (
+        <span
+          className='text-3xl font-semibold'
+          style={{ color: 'var(--app-text-color)' }}
+        >
+          CAMS
+        </span>
+      )}
     </div>
   );
 };

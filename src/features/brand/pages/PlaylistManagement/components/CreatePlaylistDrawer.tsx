@@ -1,5 +1,13 @@
 import { useEffect } from 'react';
-import { Drawer, Form, Input, Select, Button, Flex, Typography } from 'antd';
+import {
+  Drawer,
+  Form,
+  Input,
+  Select,
+  Button,
+  Flex,
+  Typography,
+} from 'antd';
 
 /**
  * Hooks
@@ -54,9 +62,6 @@ export const CreatePlaylistDrawer = ({
   useEffect(() => {
     if (open) {
       form.resetFields();
-      form.setFieldsValue({
-        isDefault: false,
-      });
     }
   }, [open, form]);
 
@@ -190,27 +195,7 @@ export const CreatePlaylistDrawer = ({
           </Form.Item>
         </div>
 
-        {/* Configuration */}
-        <div>
-          <Title
-            level={5}
-            style={{ marginBottom: 16 }}
-          >
-            Configuration
-          </Title>
-
-          <Form.Item
-            name='isDefault'
-            valuePropName='checked'
-            style={{ marginBottom: 0 }}
-          >
-            <SettingSwitch
-              label='Default Playlist'
-              description='Set this playlist as the default for the store'
-              className='pt-0!'
-            />
-          </Form.Item>
-        </div>
+    
       </Form>
     </Drawer>
   );

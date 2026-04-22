@@ -246,7 +246,7 @@ export const PlaylistList = () => {
           },
         }}
         onChange={handleTableChange}
-        scroll={{ x: 1400 }}
+        scroll={{ x: 'max-content' }}
       />
 
       {/* Details Drawer (View Only) */}

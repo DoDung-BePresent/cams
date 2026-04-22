@@ -335,6 +335,10 @@ export const SpaceList = () => {
         dataSource={data?.items || []}
         rowKey='id'
         loading={isLoading}
+        onRow={(record) => ({
+          onClick: () => handleManageMusic(record.id),
+          style: { cursor: 'pointer' },
+        })}
         pagination={{
           current: filter.page,
           pageSize: filter.pageSize,

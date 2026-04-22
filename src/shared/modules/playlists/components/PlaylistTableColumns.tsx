@@ -37,6 +37,7 @@ interface PlaylistColumnActions {
   onAddTracks?: (id: string) => void;
   /** If provided, edit/delete/toggle/addTracks actions are only shown when this returns true */
   isActionAllowed?: (record: PlaylistListItem) => boolean;
+  hiddenColumns?: Array<'default'>;
 }
 
 export const getPlaylistColumns = ({
@@ -46,18 +47,19 @@ export const getPlaylistColumns = ({
   onToggleStatus,
   onAddTracks,
   isActionAllowed,
+  hiddenColumns = [],
 }: PlaylistColumnActions): ColumnsType<PlaylistListItem> => [
   {
     title: 'No.',
     key: 'index',
-    width: 70,
+    width: 56,
     render: (_text, _record, index) => index + 1,
   },
   {
     title: 'Name',
     dataIndex: 'name',
     key: 'name',
-    width: 250,
+    width: 220,
     sorter: true,
     render: (name: string, record: PlaylistListItem) => (
       <Space
@@ -84,7 +86,7 @@ export const getPlaylistColumns = ({
     title: 'Mood',
     dataIndex: 'moodName',
     key: 'moodName',
-    width: 120,
+    width: 110,
     render: (moodName: string) =>
       moodName ? <Tag color='blue'>{moodName}</Tag> : '—',
   },
@@ -92,7 +94,7 @@ export const getPlaylistColumns = ({
     title: 'Tracks',
     dataIndex: 'trackCount',
     key: 'trackCount',
-    width: 100,
+    width: 88,
     sorter: true,
     align: 'center',
     render: (count: number) => (
@@ -103,8 +105,9 @@ export const getPlaylistColumns = ({
     title: 'Default',
     dataIndex: 'isDefault',
     key: 'isDefault',
-    width: 100,
+    width: 96,
     align: 'center',
+    hidden: hiddenColumns.includes('default'),
     render: (isDefault: boolean) =>
       isDefault ? <Tag color='gold'>Default</Tag> : '—',
   },
@@ -112,7 +115,7 @@ export const getPlaylistColumns = ({
     title: 'Status',
     dataIndex: 'status',
     key: 'status',
-    width: 100,
+    width: 96,
     render: (status: EntityStatusEnum) => (
       <Tag color={ENTITY_STATUS_COLORS[status]}>
         {ENTITY_STATUS_LABELS[status]}
@@ -123,7 +126,7 @@ export const getPlaylistColumns = ({
     title: 'Created At',
     dataIndex: 'createdAt',
     key: 'createdAt',
-    width: 160,
+    width: 144,
     sorter: true,
     render: (date: string) => formatDateTime(date),
   },
@@ -131,7 +134,7 @@ export const getPlaylistColumns = ({
     title: 'Actions',
     key: 'actions',
     fixed: 'right',
-    width: 80,
+    width: 64,
     render: (_, record: PlaylistListItem) => {
       const menuItems: MenuProps['items'] = [
         {

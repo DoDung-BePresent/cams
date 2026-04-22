@@ -7,10 +7,11 @@ import { Helmet } from 'react-helmet-async';
 import type { BreadcrumbItemType } from 'antd/es/breadcrumb/Breadcrumb';
 import type { ReactNode } from 'react';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 type PageHeaderProps = {
   title: string;
+  description?: ReactNode;
   breadcrumbs?: BreadcrumbItemType[];
   extra?: ReactNode;
   /**
@@ -24,6 +25,7 @@ type PageHeaderProps = {
 
 export const PageHeader = ({
   title,
+  description,
   breadcrumbs,
   extra,
   seo,
@@ -59,11 +61,20 @@ export const PageHeader = ({
       <Flex
         justify='space-between'
         align='center'
-        className='mb-6!'
+        className={description ? 'mb-1!' : 'mb-6!'}
       >
         <Title level={2}>{title}</Title>
         {extra}
       </Flex>
+
+      {description && (
+        <Text
+          type='secondary'
+          className='mb-6! block'
+        >
+          {description}
+        </Text>
+      )}
     </>
   );
 };

@@ -174,7 +174,7 @@ export const ConfigList = () => {
           },
         }}
         onChange={handleTableChange}
-        scroll={{ x: 1700 }}
+        scroll={{ x: 'max-content' }}
       />
 
       <UpsertStoreValueDrawer

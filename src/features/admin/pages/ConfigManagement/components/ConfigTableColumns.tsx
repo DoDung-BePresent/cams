@@ -11,14 +11,12 @@ import {
   CONFIG_KEY_META,
   CONFIG_SCOPE_LABELS,
   CONFIG_TIER_LABELS,
-  CONFIG_VALUE_TYPE_LABELS,
 } from '@/features/admin/constants';
 import type {
   ConfigDomainEnum,
   ConfigFlatRowItem,
   ConfigScopeTypeEnum,
   ConfigTierEnum,
-  ConfigValueTypeEnum,
 } from '@/features/admin/types';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
@@ -126,18 +124,6 @@ export const getConfigColumns = ({
             {CONFIG_TIER_LABELS[tier]}
           </Tag>
         );
-      },
-    },
-    {
-      title: 'Default Type',
-      dataIndex: 'policyDefaultValueType',
-      key: 'policyDefaultValueType',
-      width: 130,
-      render: (valueType?: ConfigValueTypeEnum | null) => {
-        if (valueType === null || valueType === undefined) {
-          return '-';
-        }
-        return CONFIG_VALUE_TYPE_LABELS[valueType];
       },
     },
     {

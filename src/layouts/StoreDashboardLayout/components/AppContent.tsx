@@ -6,7 +6,7 @@ import { Layout } from 'antd';
 const { Content } = Layout;
 
 const contentStyle: React.CSSProperties = {
-  background: '#FAFAFB',
+  background: 'var(--app-content-bg)',
   padding: '20px 40px',
 };
 

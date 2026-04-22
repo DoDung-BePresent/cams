@@ -4,17 +4,12 @@ import {
   EyeOutlined,
   LockOutlined,
   MoreOutlined,
-  NumberOutlined,
-  FontSizeOutlined,
-  CheckSquareOutlined,
-  FieldNumberOutlined,
 } from '@ant-design/icons';
 
 import {
   CONFIG_DOMAIN_LABELS,
   CONFIG_SCOPE_LABELS,
   CONFIG_TIER_LABELS,
-  CONFIG_VALUE_TYPE_LABELS,
 } from '@/features/store/constants/configConstants';
 import { CONFIG_KEY_META } from '@/features/admin/constants';
 import type {
@@ -22,7 +17,6 @@ import type {
   ConfigFlatRowItem,
   ConfigScopeTypeEnum,
   ConfigTierEnum,
-  ConfigValueTypeEnum,
 } from '@/features/store/types';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
@@ -32,21 +26,6 @@ type GetColumnsProps = {
   onEditStoreValue: (record: ConfigFlatRowItem) => void;
   currentPage: number;
   pageSize: number;
-};
-
-const getValueTypeIcon = (valueType: ConfigValueTypeEnum) => {
-  switch (valueType) {
-    case 1: // String
-      return <FontSizeOutlined style={{ color: '#722ed1' }} />;
-    case 2: // Number
-      return <NumberOutlined style={{ color: '#1890ff' }} />;
-    case 3: // Boolean
-      return <CheckSquareOutlined style={{ color: '#fa8c16' }} />;
-    case 4: // DateTime
-      return <FieldNumberOutlined style={{ color: '#52c41a' }} />;
-    default:
-      return null;
-  }
 };
 
 export const getConfigColumns = ({
@@ -84,7 +63,7 @@ export const getConfigColumns = ({
         (currentPage - 1) * pageSize + index + 1,
     },
     {
-      title: 'Key',
+      title: 'Setting',
       dataIndex: 'key',
       key: 'key',
       sorter: true,
@@ -93,15 +72,24 @@ export const getConfigColumns = ({
       render: (value: string) => {
         const meta = CONFIG_KEY_META[value];
         return (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontWeight: 500 }}>{value}</span>
-            {meta?.label && (
-              <Tag style={{ marginInlineEnd: 0 }}>{meta.label}</Tag>
-            )}
-            {meta?.hardLocked && (
-              <Tooltip title='Hard-locked — only writable by System Admin via policy'>
-                <LockOutlined style={{ color: '#ff4d4f' }} />
-              </Tooltip>
+          <span
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              gap: 2,
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontWeight: 500 }}>{meta?.label || value}</span>
+              {meta?.hardLocked && (
+                <Tooltip title='Hard-locked - only writable by System Admin via policy'>
+                  <LockOutlined style={{ color: '#ff4d4f' }} />
+                </Tooltip>
+              )}
+            </span>
+            {meta?.label && meta.label !== value && (
+              <span style={{ fontSize: 12, color: '#999' }}>{value}</span>
             )}
           </span>
         );
@@ -144,25 +132,6 @@ export const getConfigColumns = ({
           <Tag color={tier === 0 ? 'red' : 'gold'}>
             {CONFIG_TIER_LABELS[tier]}
           </Tag>
-        );
-      },
-    },
-    {
-      title: 'Default Type',
-      dataIndex: 'policyDefaultValueType',
-      key: 'policyDefaultValueType',
-      width: 130,
-      render: (valueType?: ConfigValueTypeEnum | null) => {
-        if (valueType === null || valueType === undefined) {
-          return '—';
-        }
-        return (
-          <Tooltip title={CONFIG_VALUE_TYPE_LABELS[valueType]}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {getValueTypeIcon(valueType)}
-              <span>{CONFIG_VALUE_TYPE_LABELS[valueType]}</span>
-            </span>
-          </Tooltip>
         );
       },
     },

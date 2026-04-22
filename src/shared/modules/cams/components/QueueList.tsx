@@ -111,6 +111,49 @@ const getSourceColor = (source: QueueItemSource) => {
   return source === QueueItemSource.AI ? 'purple' : 'blue';
 };
 
+const getQueueItemPalette = (
+  status: QueueItemStatus,
+  selected: boolean,
+): {
+  background: string;
+  border: string;
+  title: string;
+  subtitle: string;
+  placeholder: string;
+  drag: string;
+} => {
+  if (selected) {
+    return {
+      background: 'rgba(22, 119, 255, 0.14)',
+      border: 'rgba(22, 119, 255, 0.42)',
+      title: '#f5f5f5',
+      subtitle: 'rgba(255, 255, 255, 0.78)',
+      placeholder: 'rgba(255, 255, 255, 0.08)',
+      drag: '#69b1ff',
+    };
+  }
+
+  if (status === QueueItemStatus.Playing) {
+    return {
+      background: 'rgba(82, 196, 26, 0.12)',
+      border: 'rgba(82, 196, 26, 0.42)',
+      title: '#f5f5f5',
+      subtitle: 'rgba(255, 255, 255, 0.78)',
+      placeholder: 'rgba(255, 255, 255, 0.08)',
+      drag: '#73d13d',
+    };
+  }
+
+  return {
+    background: 'transparent',
+    border: 'transparent',
+    title: '#f5f5f5',
+    subtitle: 'rgba(255, 255, 255, 0.72)',
+    placeholder: 'rgba(255, 255, 255, 0.08)',
+    drag: '#69b1ff',
+  };
+};
+
 // Visual clone rendered in DragOverlay — no sortable hooks, renders as portal above list
 const DragOverlayItem = ({
   item,
@@ -124,11 +167,15 @@ const DragOverlayItem = ({
       display: 'flex',
       alignItems: 'center',
       padding: '12px 16px',
-      backgroundColor: selected ? '#e6f4ff' : '#ffffff',
+      backgroundColor: selected
+        ? 'rgba(22, 119, 255, 0.18)'
+        : 'rgba(24, 24, 24, 0.98)',
       boxShadow:
         '0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08)',
       borderRadius: 8,
-      border: '1px solid #bfdbfe',
+      border: selected
+        ? '1px solid rgba(22, 119, 255, 0.42)'
+        : '1px solid rgba(255, 255, 255, 0.08)',
       cursor: 'grabbing',
       gap: 12,
     }}
@@ -152,7 +199,7 @@ const DragOverlayItem = ({
           style={{
             width: 40,
             height: 40,
-            background: '#fafafa',
+            background: 'rgba(255, 255, 255, 0.08)',
             borderRadius: 4,
           }}
         />
@@ -161,7 +208,7 @@ const DragOverlayItem = ({
     <div style={{ flex: 1, minWidth: 0 }}>
       <Space>
         {getStatusIcon(item.queueStatus)}
-        <Text>{item.trackName}</Text>
+        <Text style={{ color: '#f5f5f5' }}>{item.trackName}</Text>
       </Space>
       <div style={{ marginTop: 4 }}>
         <Space size='small'>
@@ -218,15 +265,14 @@ const SortableItem = memo(function SortableItem({
     transform: CSS.Transform.toString(transform),
     transition,
     padding: '12px 16px',
-    borderBottom: '1px solid #f0f0f0',
-    backgroundColor: selected
-      ? '#e6f4ff'
-      : item.queueStatus === QueueItemStatus.Playing
-        ? '#f6ffed'
-        : 'transparent',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    borderLeft: `3px solid ${getQueueItemPalette(item.queueStatus, selected).border}`,
+    backgroundColor: getQueueItemPalette(item.queueStatus, selected).background,
     // Hide original slot while DragOverlay follows the cursor
     opacity: isDragging ? 0 : 1,
   };
+
+  const palette = getQueueItemPalette(item.queueStatus, selected);
 
   return (
     <List.Item
@@ -283,7 +329,7 @@ const SortableItem = memo(function SortableItem({
                 transition: 'opacity 0.15s ease',
               }}
             >
-              <DragOutlined style={{ color: '#1890ff' }} />
+              <DragOutlined style={{ color: palette.drag }} />
             </div>
             <Checkbox
               checked={selected}
@@ -309,7 +355,7 @@ const SortableItem = memo(function SortableItem({
                 style={{
                   width: 40,
                   height: 40,
-                  background: '#fafafa',
+                  background: palette.placeholder,
                   borderRadius: 4,
                 }}
               />
@@ -319,32 +365,34 @@ const SortableItem = memo(function SortableItem({
         title={
           <Space>
             {getStatusIcon(item.queueStatus)}
-            <Text>{item.trackName}</Text>
+            <Text style={{ color: palette.title }}>{item.trackName}</Text>
           </Space>
         }
         description={
-          <Space size='small'>
-            <Tag
-              color={getStatusColor(item.queueStatus)}
-              style={{ fontSize: 11 }}
-            >
-              {getStatusLabel(item.queueStatus)}
-            </Tag>
-            <Tag
-              color={getSourceColor(item.source)}
-              style={{ fontSize: 11 }}
-            >
-              {getSourceLabel(item.source)}
-            </Tag>
-            {!item.isReadyToStream && (
+          <div style={{ color: palette.subtitle }}>
+            <Space size='small'>
               <Tag
-                color='warning'
+                color={getStatusColor(item.queueStatus)}
                 style={{ fontSize: 11 }}
               >
-                Transcoding...
+                {getStatusLabel(item.queueStatus)}
               </Tag>
-            )}
-          </Space>
+              <Tag
+                color={getSourceColor(item.source)}
+                style={{ fontSize: 11 }}
+              >
+                {getSourceLabel(item.source)}
+              </Tag>
+              {!item.isReadyToStream && (
+                <Tag
+                  color='warning'
+                  style={{ fontSize: 11 }}
+                >
+                  Transcoding...
+                </Tag>
+              )}
+            </Space>
+          </div>
         }
       />
     </List.Item>

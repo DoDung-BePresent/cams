@@ -194,6 +194,7 @@ export const getSpaceColumns = ({
           <Button
             type='text'
             icon={<MoreOutlined />}
+            onClick={(event) => event.stopPropagation()}
           />
         </Dropdown>
       );

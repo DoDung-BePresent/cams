@@ -154,6 +154,7 @@ export const TrackList = () => {
     onEdit: handleEdit,
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
+    hiddenColumns: ['mood', 'provider', 'metadata'],
   });
 
   return (

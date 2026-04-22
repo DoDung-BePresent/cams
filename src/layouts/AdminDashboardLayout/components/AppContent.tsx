@@ -7,7 +7,7 @@ const { Content } = Layout;
 
 // TODO: Dùng màu có sẵn của antd thay thế hardcore
 const contentStyle: React.CSSProperties = {
-  background: '#FAFAFB',
+  background: 'var(--app-content-bg)',
   padding: '20px 40px',
 };
 

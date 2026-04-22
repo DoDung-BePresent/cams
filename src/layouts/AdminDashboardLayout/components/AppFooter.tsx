@@ -8,7 +8,7 @@ const { Footer } = Layout;
 
 // TODO: Dùng màu có sẵn của antd thay thế hardcore
 const footerStyle: React.CSSProperties = {
-  background: '#FAFAFB',
+  background: 'var(--app-content-bg)',
 };
 
 export const AppFooter = () => {
