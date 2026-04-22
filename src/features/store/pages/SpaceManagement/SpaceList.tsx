@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, App, Button, Descriptions, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router';
@@ -80,6 +80,7 @@ export const SpaceList = () => {
   const [queueDrawerOpen, setQueueDrawerOpen] = useState(false);
   const [pairDeviceModalOpen, setPairDeviceModalOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const ignoreNextRowClickRef = useRef(false);
   const [lastAnalysis, setLastAnalysis] = useState<
     (ContextAnalysisResponse & { spaceName?: string }) | null
   >(null);
@@ -89,6 +90,21 @@ export const SpaceList = () => {
   const deleteSpace = useDeleteSpace();
   const toggleStatus = useToggleSpaceStatus();
   const triggerAnalysis = useTriggerAnalysis();
+
+  const closeSpaceOverlays = () => {
+    setDetailsDrawerOpen(false);
+    setMusicDrawerOpen(false);
+    setQueueDrawerOpen(false);
+    setPairDeviceModalOpen(false);
+    setEditDrawerOpen(false);
+  };
+
+  const suppressNextRowClick = () => {
+    ignoreNextRowClickRef.current = true;
+    window.setTimeout(() => {
+      ignoreNextRowClickRef.current = false;
+    }, 0);
+  };
 
   const handleSearch = (value: string) => {
     setFilter((prev) => ({ ...prev, search: value, page: 1 }));
@@ -116,11 +132,13 @@ export const SpaceList = () => {
   };
 
   const handleView = (id: string) => {
+    closeSpaceOverlays();
     setSelectedSpaceId(id);
     setDetailsDrawerOpen(true);
   };
 
   const handleManageMusic = (id: string) => {
+    closeSpaceOverlays();
     setSelectedSpaceId(id);
     setMusicDrawerOpen(true);
   };
@@ -130,11 +148,13 @@ export const SpaceList = () => {
   };
 
   const handleManageQueue = (id: string) => {
+    closeSpaceOverlays();
     setSelectedSpaceId(id);
     setQueueDrawerOpen(true);
   };
 
   const handlePairDevice = (id: string) => {
+    closeSpaceOverlays();
     setSelectedSpaceId(id);
     setPairDeviceModalOpen(true);
   };
@@ -164,6 +184,7 @@ export const SpaceList = () => {
             ...analysis,
             spaceName,
           });
+          closeSpaceOverlays();
           setSelectedSpaceId(spaceId);
           setDetailsDrawerOpen(true);
         },
@@ -172,6 +193,7 @@ export const SpaceList = () => {
   };
 
   const handleEdit = (spaceId: string) => {
+    closeSpaceOverlays();
     setSelectedSpaceId(spaceId);
     setEditDrawerOpen(true);
   };
@@ -232,6 +254,7 @@ export const SpaceList = () => {
   ];
 
   const columns = getSpaceColumns({
+    onActionIntent: suppressNextRowClick,
     onView: handleView,
     onManageSchedule: handleManageSchedule,
     onManageMusic: handleManageMusic,
@@ -335,6 +358,20 @@ export const SpaceList = () => {
         dataSource={data?.items || []}
         rowKey='id'
         loading={isLoading}
+        onRow={(record) => ({
+          onClick: (event) => {
+            if (ignoreNextRowClickRef.current) {
+              ignoreNextRowClickRef.current = false;
+              return;
+            }
+            const target = event.target as HTMLElement | null;
+            if (target?.closest('.space-actions-trigger')) {
+              return;
+            }
+            handleManageMusic(record.id);
+          },
+          style: { cursor: 'pointer' },
+        })}
         pagination={{
           current: filter.page,
           pageSize: filter.pageSize,

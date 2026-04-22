@@ -72,11 +72,6 @@ export const TrackList = () => {
     setDetailsDrawerOpen(true);
   };
 
-  const handlePreview = (id: string) => {
-    setSelectedTrackId(id);
-    setDetailsDrawerOpen(true);
-  };
-
   const handleReset = () => {
     setFilter({
       page: 1,
@@ -99,7 +94,15 @@ export const TrackList = () => {
 
   const columns = getTrackColumns({
     onView: handleView,
-    onPreview: handlePreview,
+    hiddenColumns: [
+      'index',
+      'mood',
+      'provider',
+      'metadata',
+      'plays',
+      'createdAt',
+      'actions',
+    ],
   });
 
   return (
@@ -126,6 +129,10 @@ export const TrackList = () => {
         dataSource={data?.items || []}
         loading={isLoading}
         rowKey='id'
+        onRow={(record) => ({
+          onClick: () => handleView(record.id),
+          style: { cursor: 'pointer' },
+        })}
         pagination={{
           current: filter.page,
           pageSize: filter.pageSize,
@@ -138,7 +145,7 @@ export const TrackList = () => {
           },
         }}
         onChange={handleTableChange}
-        scroll={{ x: 1400 }}
+        scroll={{ x: 'max-content' }}
       />
 
       {/* Details Drawer (View Only) */}

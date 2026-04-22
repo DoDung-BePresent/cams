@@ -2,7 +2,16 @@
  * Node modules
  */
 import { useState } from 'react';
-import { Avatar, Badge, Button, Dropdown, Flex, Layout, Tag } from 'antd';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Dropdown,
+  Flex,
+  Layout,
+  Segmented,
+  Tag,
+} from 'antd';
 
 /**
  * Icons
@@ -15,14 +24,12 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
-  MoonOutlined,
-  SunOutlined,
 } from '@ant-design/icons';
 
 /**
  * Hooks
  */
-import { useAuth, useTheme } from '@/providers';
+import { useAuth, useThemeMode } from '@/providers';
 import { useFullscreen, useNetworkStatus } from '@/shared/hooks';
 
 /**
@@ -43,7 +50,9 @@ type AppHeaderProps = {
 const { Header } = Layout;
 
 const headerStyle: React.CSSProperties = {
+  background: 'var(--app-header-bg)',
   height: 60,
+  borderBottom: '1px solid var(--app-border-color)',
   display: 'flex',
   alignItems: 'center',
   paddingInline: 10,
@@ -56,8 +65,8 @@ const headerStyle: React.CSSProperties = {
 export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user } = useAuth();
+  const { colorMode, setColorMode } = useThemeMode();
   const { isOnline } = useNetworkStatus();
-  const { mode, toggleTheme } = useTheme();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -90,7 +99,23 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
         </Flex>
 
         {/* Right */}
-        <Flex gap='small'>
+        <Flex
+          gap='small'
+          align='center'
+        >
+          <Segmented
+            size='small'
+            value={colorMode}
+            onChange={(value) => setColorMode(value as 'default' | 'spotify')}
+            options={[
+              { label: 'Current', value: 'default' },
+              { label: 'Spotify', value: 'spotify' },
+            ]}
+            style={{
+              background: 'var(--app-control-bg)',
+              color: 'var(--app-text-muted)',
+            }}
+          />
           <Button
             type='text'
             icon={
@@ -102,12 +127,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
                 <BellOutlined />
               </Badge>
             }
-            style={{ width: 36, height: 36 }}
-          />
-          <Button
-            type='text'
-            onClick={(e) => toggleTheme(e)}
-            icon={mode === 'dark' ? <MoonOutlined /> : <SunOutlined />}
             style={{ width: 36, height: 36 }}
           />
           <Button
@@ -129,10 +148,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             placement='bottomRight'
             dropdownRender={() => (
               <div
-                className='overflow-hidden rounded-sm shadow-md'
-                style={{
-                  backgroundColor: 'var(--ant-color-bg-elevated)',
-                }}
+                className='overflow-hidden rounded-sm bg-[var(--app-elevated-bg)] shadow-md'
                 onClick={(e) => e.stopPropagation()}
               >
                 <UserDropdownContent />

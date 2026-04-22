@@ -31,6 +31,7 @@ import {
 } from '@/features/store/constants';
 
 type SpaceColumnActions = {
+  onActionIntent: () => void;
   onView: (id: string) => void;
   onManageSchedule: (id: string) => void;
   onManageMusic: (id: string) => void;
@@ -43,6 +44,7 @@ type SpaceColumnActions = {
 };
 
 export const getSpaceColumns = ({
+  onActionIntent,
   onView,
   onManageSchedule,
   onManageMusic,
@@ -122,43 +124,71 @@ export const getSpaceColumns = ({
           key: 'view',
           icon: <EyeOutlined />,
           label: 'View Details',
-          onClick: () => onView(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onView(record.id);
+          },
         },
         {
           key: 'manage-schedule',
           icon: <CalendarOutlined />,
           label: 'Manage Schedule',
-          onClick: () => onManageSchedule(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onManageSchedule(record.id);
+          },
         },
         {
           key: 'manage-music',
           icon: <SoundOutlined />,
           label: 'Manage Music',
-          onClick: () => onManageMusic(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onManageMusic(record.id);
+          },
         },
         {
           key: 'manage-queue',
           icon: <UnorderedListOutlined />,
           label: 'Manage Queue',
-          onClick: () => onManageQueue(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onManageQueue(record.id);
+          },
         },
         {
           key: 'pair-device',
           icon: <QrcodeOutlined />,
           label: 'Pair Device',
-          onClick: () => onPairDevice(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onPairDevice(record.id);
+          },
         },
         {
           key: 'trigger-analysis',
           icon: <ExperimentOutlined />,
           label: 'Trigger AI Analysis',
-          onClick: () => onTriggerAnalysis(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onTriggerAnalysis(record.id);
+          },
         },
         {
           key: 'edit',
           icon: <EditOutlined />,
           label: 'Edit Space',
-          onClick: () => onEdit(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onEdit(record.id);
+          },
         },
         {
           type: 'divider',
@@ -170,7 +200,11 @@ export const getSpaceColumns = ({
             record.status === EntityStatusEnum.Active
               ? 'Deactivate'
               : 'Activate',
-          onClick: () => onToggleStatus(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onToggleStatus(record.id);
+          },
           danger: record.status === EntityStatusEnum.Active,
         },
         {
@@ -180,7 +214,11 @@ export const getSpaceColumns = ({
           key: 'delete',
           icon: <DeleteOutlined />,
           label: 'Delete Space',
-          onClick: () => onDelete(record.id),
+          onClick: (info) => {
+            onActionIntent();
+            info.domEvent.stopPropagation();
+            onDelete(record.id);
+          },
           danger: true,
         },
       ];
@@ -194,6 +232,15 @@ export const getSpaceColumns = ({
           <Button
             type='text'
             icon={<MoreOutlined />}
+            className='space-actions-trigger'
+            onMouseDown={(event) => {
+              onActionIntent();
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              onActionIntent();
+              event.stopPropagation();
+            }}
           />
         </Dropdown>
       );

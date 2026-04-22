@@ -184,6 +184,7 @@ export const PlaylistList = () => {
     onDelete: handleDelete,
     onToggleStatus: handleToggleStatus,
     onAddTracks: handleAddTracks,
+    hiddenColumns: ['default'],
     // Guard: shared playlists (brandId === null) are read-only for Store Managers
     isActionAllowed: (record) => !!record.brandId,
   });
@@ -241,7 +242,7 @@ export const PlaylistList = () => {
           },
         }}
         onChange={handleTableChange}
-        scroll={{ x: 1400 }}
+        scroll={{ x: 'max-content' }}
       />
 
       {/* Create Playlist Drawer */}

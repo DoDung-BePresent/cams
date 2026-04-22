@@ -4,7 +4,6 @@ import {
   Form,
   Input,
   Select,
-  Switch,
   Button,
   Flex,
   Spin,
@@ -68,7 +67,6 @@ export const EditPlaylistDrawer = ({
         name: playlist.name,
         moodId: playlist.moodId || undefined,
         description: playlist.description || undefined,
-        isDefault: playlist.isDefault,
       });
     }
   }, [open, playlist, form]);
@@ -199,27 +197,6 @@ export const EditPlaylistDrawer = ({
                 rows={4}
                 maxLength={2000}
                 showCount
-              />
-            </Form.Item>
-          </div>
-
-          {/* Configuration */}
-          <div style={{ marginBottom: 24 }}>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Configuration
-            </Title>
-
-            <Form.Item
-              label='Default Playlist'
-              name='isDefault'
-              valuePropName='checked'
-            >
-              <Switch
-                checkedChildren='Yes'
-                unCheckedChildren='No'
               />
             </Form.Item>
           </div>

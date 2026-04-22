@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Tabs, Space, Card } from 'antd';
-import { createStyles } from 'antd-style';
+import { Tabs, Space } from 'antd';
 import { useNavigate } from 'react-router';
 
 /**
@@ -14,30 +13,7 @@ import { ThunderboltOutlined, HistoryOutlined } from '@ant-design/icons';
 import { PageHeader } from '@/shared/components';
 import { SunoGenerationList, GenerateTab } from './components';
 
-const useStyle = createStyles(({ css, prefixCls }) => {
-  return {
-    customTabs: css`
-      .${prefixCls}-tabs-nav {
-        margin-bottom: 0;
-        .${prefixCls}-tabs-nav-wrap {
-          .${prefixCls}-tabs-nav-list {
-            width: 100%;
-            .${prefixCls}-tabs-tab {
-              justify-content: center;
-              &:hover {
-                background-color: var(--ant-blue-1);
-                color: var(--ant-tabs-item-selected-color);
-              }
-            }
-          }
-        }
-      }
-    `,
-  };
-});
-
 export const SunoAI = () => {
-  const { styles } = useStyle();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('generate');
   const [refreshKey, setRefreshKey] = useState(0);
@@ -47,17 +23,16 @@ export const SunoAI = () => {
 
   const breadcrumbs = [
     {
-      title: 'Dashboard',
+      title: 'Home',
       onClick: () => navigate('/brand/dashboard'),
       className: 'cursor-pointer',
     },
     {
-      title: 'Suno AI Music Generator',
+      title: 'AI music',
     },
   ];
 
   const handleGenerationSuccess = (generationId: string) => {
-    // Switch to history tab to show the new generation
     setLastGenerationId(generationId);
     setActiveTab('history');
     setRefreshKey((prev) => prev + 1);
@@ -69,7 +44,7 @@ export const SunoAI = () => {
       label: (
         <Space>
           <ThunderboltOutlined />
-          Generate Music
+          New track
         </Space>
       ),
       children: <GenerateTab onSuccess={handleGenerationSuccess} />,
@@ -79,7 +54,7 @@ export const SunoAI = () => {
       label: (
         <Space>
           <HistoryOutlined />
-          Generation History
+          History
         </Space>
       ),
       children: (
@@ -94,27 +69,18 @@ export const SunoAI = () => {
   return (
     <div>
       <PageHeader
-        title='Suno AI Music Generator'
+        title='AI music'
+        description='Let AI write a track for you. Pick a model, tell it the vibe, and we will drop the finished track into your library.'
         breadcrumbs={breadcrumbs}
+        seo={{ description: 'AI Music Generator' }}
       />
 
-      <Card>
-        <Tabs
-          className={styles.customTabs}
-          styles={{
-            item: {
-              width: 'fit-content',
-              paddingInline: 20,
-            },
-            content: {
-              paddingTop: 20,
-            },
-          }}
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={tabItems}
-        />
-      </Card>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={tabItems}
+        tabBarGutter={32}
+      />
     </div>
   );
 };

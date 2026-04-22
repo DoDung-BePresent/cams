@@ -51,6 +51,15 @@ interface TrackColumnActions {
   onPreview?: (id: string) => void;
   /** If provided, edit/delete/toggle actions are only shown when this returns true */
   isActionAllowed?: (record: TrackListItem) => boolean;
+  hiddenColumns?: Array<
+    | 'index'
+    | 'mood'
+    | 'provider'
+    | 'metadata'
+    | 'plays'
+    | 'createdAt'
+    | 'actions'
+  >;
 }
 
 export const getTrackColumns = ({
@@ -59,11 +68,13 @@ export const getTrackColumns = ({
   onDelete,
   onToggleStatus,
   isActionAllowed,
+  hiddenColumns = [],
 }: TrackColumnActions): ColumnsType<TrackListItem> => [
   {
     title: 'No.',
     key: 'index',
     width: 70,
+    hidden: hiddenColumns.includes('index'),
     render: (_text, _record, index) => index + 1,
   },
   {
@@ -137,6 +148,7 @@ export const getTrackColumns = ({
     dataIndex: 'moodName',
     key: 'moodName',
     width: 120,
+    hidden: hiddenColumns.includes('mood'),
     render: (moodName: string) =>
       moodName && <Tag color='blue'>{moodName}</Tag>,
   },
@@ -153,6 +165,7 @@ export const getTrackColumns = ({
     dataIndex: 'provider',
     key: 'provider',
     width: 120,
+    hidden: hiddenColumns.includes('provider'),
     render: (provider: MusicProviderEnum) =>
       provider !== undefined && (
         <Tag color={MUSIC_PROVIDER_COLORS[provider]}>
@@ -164,6 +177,7 @@ export const getTrackColumns = ({
     title: 'Metadata',
     key: 'metadata',
     width: 150,
+    hidden: hiddenColumns.includes('metadata'),
     render: (_: unknown, record: TrackListItem) => (
       <MetadataStatusBadge track={record} />
     ),
@@ -184,6 +198,7 @@ export const getTrackColumns = ({
     dataIndex: 'playCount',
     key: 'playCount',
     width: 100,
+    hidden: hiddenColumns.includes('plays'),
     sorter: true,
     align: 'right',
   },
@@ -203,6 +218,7 @@ export const getTrackColumns = ({
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 160,
+    hidden: hiddenColumns.includes('createdAt'),
     sorter: true,
     render: (date: string) => formatDateTime(date),
   },
@@ -211,6 +227,7 @@ export const getTrackColumns = ({
     key: 'actions',
     fixed: 'right',
     width: 100,
+    hidden: hiddenColumns.includes('actions'),
     render: (_, record: TrackListItem) => {
       const menuItems: MenuProps['items'] = [
         {
@@ -266,6 +283,7 @@ export const getTrackColumns = ({
           <Button
             type='text'
             icon={<MoreOutlined />}
+            onClick={(event) => event.stopPropagation()}
           />
         </Dropdown>
       );

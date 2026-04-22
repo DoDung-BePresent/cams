@@ -10,7 +10,18 @@ import fileImage from '@/assets/images/files.png';
 
 export const NavCard = () => {
   return (
-    <Card className='m-3! mx-5!'>
+    <Card
+      className='m-3! mx-5!'
+      styles={{
+        body: {
+          background: 'var(--app-elevated-bg)',
+        },
+      }}
+      style={{
+        background: 'var(--app-elevated-bg)',
+        borderColor: 'var(--app-border-color)',
+      }}
+    >
       <Flex
         vertical
         align='center'

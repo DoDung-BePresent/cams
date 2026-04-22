@@ -33,6 +33,19 @@ export default defineConfig(() => {
       host: '127.0.0.1',
       port: 5173,
       strictPort: true,
+      proxy: {
+        '/api': {
+          target: 'https://logcams.cloud',
+          changeOrigin: true,
+          secure: true,
+        },
+        '/hubs': {
+          target: 'https://logcams.cloud',
+          changeOrigin: true,
+          secure: true,
+          ws: true,
+        },
+      },
     },
     optimizeDeps: {
       // Reduce stale optimized-deps state between frequent restarts.
