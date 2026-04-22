@@ -1,4 +1,4 @@
-import { Flex, Layout, Menu } from 'antd';
+import { Flex, Layout, Menu, theme } from 'antd';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
@@ -28,6 +28,7 @@ type AppSidebarProps = {
 };
 
 const { Sider } = Layout;
+const { useToken } = theme;
 
 const siderStyle: React.CSSProperties = {
   overflowY: 'hidden',
@@ -37,10 +38,10 @@ const siderStyle: React.CSSProperties = {
   top: 0,
   left: 0,
   bottom: 0,
-  borderRight: '1px solid #F0F0F0',
 };
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
+  const { token } = useToken();
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
     menuItems: BRAND_MENU_ITEMS,
     routeMap: BRAND_ROUTE_MAP,
@@ -71,6 +72,9 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           defaultOpenKeys={openKeys}
           items={BRAND_MENU_ITEMS}
           onClick={({ key }) => handleMenuClick(key)}
+          style={{
+            backgroundColor: token.Layout?.siderBg,
+          }}
         />
         {!collapsed && <NavCard />}
       </SimpleBar>
