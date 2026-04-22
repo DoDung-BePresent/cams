@@ -1,20 +1,5 @@
 import { useEffect } from 'react';
-import {
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Switch,
-  Button,
-  Flex,
-  Typography,
-  Alert,
-} from 'antd';
-
-/**
- * Icons
- */
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { Drawer, Form, Input, Select, Button, Flex, Typography } from 'antd';
 
 /**
  * Hooks
@@ -36,6 +21,11 @@ import type { CreatePlaylistRequest } from '@/shared/modules/playlists/types';
  * Configs
  */
 import { DRAWER_WIDTHS } from '@/config';
+
+/**
+ * Components
+ */
+import { SettingSwitch } from '@/shared/components';
 
 const { Title } = Typography;
 
@@ -89,6 +79,7 @@ export const CreatePlaylistDrawer = ({
       closeIcon={null}
       title='Create New Playlist'
       placement='right'
+      destroyOnHidden
       width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
@@ -147,15 +138,6 @@ export const CreatePlaylistDrawer = ({
             />
           </Form.Item>
 
-          <Alert
-            message='Store Assignment'
-            description='This playlist will be automatically assigned to your store.'
-            type='info'
-            icon={<InfoCircleOutlined />}
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-
           <Form.Item
             label='Mood'
             name='moodId'
@@ -195,14 +177,14 @@ export const CreatePlaylistDrawer = ({
           </Title>
 
           <Form.Item
-            label='Default Playlist'
             name='isDefault'
             valuePropName='checked'
-            tooltip='Set as the default playlist for your store'
+            style={{ marginBottom: 0 }}
           >
-            <Switch
-              checkedChildren='Yes'
-              unCheckedChildren='No'
+            <SettingSwitch
+              label='Default Playlist'
+              description='Set this playlist as the default for the store'
+              className='pt-0!'
             />
           </Form.Item>
         </div>

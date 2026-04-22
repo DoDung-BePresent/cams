@@ -1,4 +1,4 @@
-import { Flex, Layout, Menu } from 'antd';
+import { Flex, Layout, Menu, theme } from 'antd';
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
@@ -33,6 +33,7 @@ type AppSidebarProps = {
 };
 
 const { Sider } = Layout;
+const { useToken } = theme;
 
 const siderStyle: React.CSSProperties = {
   overflowY: 'hidden',
@@ -42,10 +43,10 @@ const siderStyle: React.CSSProperties = {
   top: 0,
   left: 0,
   bottom: 0,
-  borderRight: '1px solid #F0F0F0',
 };
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
+  const { token } = useToken();
   const { selectedKeys, openKeys, handleMenuClick } = useMenuNavigation({
     menuItems: STORE_MENU_ITEMS,
     routeMap: STORE_ROUTE_MAP,
@@ -61,11 +62,11 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
       collapsible
       collapsed={collapsed}
     >
-      <Flex className={cn('p-4!', collapsed && 'px-2.5!')}>
+      <Flex className={cn('p-2.5! px-3.5!', collapsed && 'px-2.5!')}>
         <Logo isIcon={collapsed} />
       </Flex>
       <SimpleBar
-        style={{ maxHeight: '100vh' }}
+        style={{ height: 'calc(100vh - 60px)' }}
         className='custom-sidebar-scrollbar'
       >
         <Menu
@@ -76,6 +77,9 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           defaultOpenKeys={openKeys}
           items={STORE_MENU_ITEMS}
           onClick={({ key }) => handleMenuClick(key)}
+          style={{
+            backgroundColor: token.Layout?.siderBg,
+          }}
         />
         {!collapsed && <NavCard />}
       </SimpleBar>

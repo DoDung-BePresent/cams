@@ -14,6 +14,21 @@ const { Text } = Typography;
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
     queueBehaviorRadio: css`
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      .${prefixCls}-radio-button-wrapper {
+        flex: 1;
+        min-width: 160px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        margin-inline-start: 0;
+      }
+
       .${prefixCls}-radio-button-wrapper-checked {
         .${prefixCls}-typography {
           color: #fff !important;
@@ -41,17 +56,35 @@ const queueEndBehaviorOptions = [
   {
     label: 'Stop',
     value: QueueEndBehavior.Stop,
-    icon: <MutedOutlined />,
+    icon: (
+      <MutedOutlined
+        style={{
+          fontSize: 16,
+        }}
+      />
+    ),
   },
   {
     label: 'Repeat Queue',
     value: QueueEndBehavior.RepeatQueue,
-    icon: <RetweetOutlined />,
+    icon: (
+      <RetweetOutlined
+        style={{
+          fontSize: 16,
+        }}
+      />
+    ),
   },
   {
     label: 'Return to Schedule',
     value: QueueEndBehavior.ReturnToSchedule,
-    icon: <ControlOutlined />,
+    icon: (
+      <ControlOutlined
+        style={{
+          fontSize: 16,
+        }}
+      />
+    ),
   },
 ];
 
@@ -147,32 +180,27 @@ export const AudioMixerControls = ({
               </div>
 
               {/* Queue End Behavior */}
-              <Space
-                direction='vertical'
-                size='small'
-                style={{ width: '100%' }}
-              >
+              <div>
                 <Text strong>Queue End Behavior</Text>
                 <Radio.Group
                   className={styles.queueBehaviorRadio}
+                  style={{ marginTop: 10 }}
                   value={queueEndBehavior}
                   onChange={(e) => onQueueEndBehaviorChange(e.target.value)}
                   disabled={loading}
-                  style={{ width: '100%' }}
                   options={queueEndBehaviorOptions.map((option) => ({
                     label: (
-                      <Space>
+                      <Space size={6}>
                         {option.icon}
                         <Text>{option.label}</Text>
                       </Space>
                     ),
                     value: option.value,
                   }))}
-                  size='large'
                   optionType='button'
                   buttonStyle='solid'
                 />
-              </Space>
+              </div>
             </Space>
           ),
         },

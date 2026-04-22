@@ -1,12 +1,4 @@
-import {
-  Alert,
-  Descriptions,
-  Divider,
-  Drawer,
-  Space,
-  Tag,
-  Typography,
-} from 'antd';
+import { Alert, Descriptions, Drawer, Space, Tag, Typography } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
 
 import {
@@ -36,7 +28,7 @@ type ConfigDetailDrawerProps = {
 
 const renderOptionalValueType = (valueType?: ConfigValueTypeEnum | null) => {
   if (valueType === null || valueType === undefined) {
-    return '-';
+    return '—';
   }
 
   return CONFIG_VALUE_TYPE_LABELS[valueType];
@@ -44,7 +36,7 @@ const renderOptionalValueType = (valueType?: ConfigValueTypeEnum | null) => {
 
 const renderOptionalTier = (tier?: ConfigTierEnum | null) => {
   if (tier === null || tier === undefined) {
-    return '-';
+    return '—';
   }
 
   return (
@@ -62,13 +54,17 @@ export const ConfigDetailDrawer = ({
       closeIcon={null}
       title='Config Details'
       open={open}
-      width={DRAWER_WIDTHS.large}
+      width={DRAWER_WIDTHS.medium}
       onClose={onClose}
     >
       {!data ? (
         <Text type='secondary'>No data selected.</Text>
       ) : (
-        <>
+        <Space
+          direction='vertical'
+          size='large'
+          style={{ width: '100%' }}
+        >
           {/* Key meta card */}
           {(() => {
             const meta = CONFIG_KEY_META[data.key];
@@ -113,7 +109,6 @@ export const ConfigDetailDrawer = ({
               );
             return (
               <Alert
-                style={{ marginBottom: 16 }}
                 type={meta?.hardLocked ? 'error' : 'info'}
                 message={
                   <Space>
@@ -130,11 +125,12 @@ export const ConfigDetailDrawer = ({
               />
             );
           })()}
+
+          {/* System Config Snapshot */}
           <Descriptions
+            title='System Config Snapshot'
             column={1}
             bordered
-            size='small'
-            title='System Config Snapshot'
           >
             <Descriptions.Item label='Key'>{data.key}</Descriptions.Item>
             <Descriptions.Item label='Domain'>
@@ -149,20 +145,18 @@ export const ConfigDetailDrawer = ({
               {data.scopeId}
             </Descriptions.Item>
             <Descriptions.Item label='Current Value'>
-              {data.value || '-'}
+              {data.value || '—'}
             </Descriptions.Item>
             <Descriptions.Item label='Current Value Type'>
               {renderOptionalValueType(data.valueType)}
             </Descriptions.Item>
           </Descriptions>
 
-          <Divider />
-
+          {/* Policy Metadata */}
           <Descriptions
+            title='Policy Metadata'
             column={1}
             bordered
-            size='small'
-            title='Policy Metadata'
           >
             <Descriptions.Item label='Policy Tier'>
               {renderOptionalTier(data.policyTier)}
@@ -171,12 +165,12 @@ export const ConfigDetailDrawer = ({
               {renderOptionalValueType(data.policyDefaultValueType)}
             </Descriptions.Item>
             <Descriptions.Item label='Policy Default Value'>
-              {data.policyDefaultValue || '-'}
+              {data.policyDefaultValue || '—'}
             </Descriptions.Item>
             <Descriptions.Item label='Allow Store Override'>
               {data.allowStoreOverride === null ||
               data.allowStoreOverride === undefined
-                ? '-'
+                ? '—'
                 : data.allowStoreOverride
                   ? 'Yes'
                   : 'No'}
@@ -184,16 +178,16 @@ export const ConfigDetailDrawer = ({
             <Descriptions.Item label='Allow Space Override'>
               {data.allowSpaceOverride === null ||
               data.allowSpaceOverride === undefined
-                ? '-'
+                ? '—'
                 : data.allowSpaceOverride
                   ? 'Yes'
                   : 'No'}
             </Descriptions.Item>
             <Descriptions.Item label='Brand Lock Reason'>
-              {data.brandLockReason || '-'}
+              {data.brandLockReason || '—'}
             </Descriptions.Item>
           </Descriptions>
-        </>
+        </Space>
       )}
     </Drawer>
   );

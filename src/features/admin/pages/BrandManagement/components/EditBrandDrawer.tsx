@@ -5,10 +5,10 @@ import {
   Form,
   Input,
   Select,
+  Segmented,
   message,
   Row,
   Col,
-  Typography,
   Flex,
   Spin,
 } from 'antd';
@@ -53,7 +53,6 @@ import { BrandMusicPolicyFields } from './BrandMusicPolicyFields';
 import { DRAWER_WIDTHS } from '@/config';
 
 const { TextArea } = Input;
-const { Title } = Typography;
 
 type EditBrandDrawerProps = {
   open: boolean;
@@ -61,6 +60,8 @@ type EditBrandDrawerProps = {
   onClose: () => void;
   onSuccess: () => void;
 };
+
+type TabKey = 'basic' | 'music';
 
 export const EditBrandDrawer = ({
   open,
@@ -70,6 +71,7 @@ export const EditBrandDrawer = ({
 }: EditBrandDrawerProps) => {
   const [form] = Form.useForm<BrandRequest>();
   const [logoFile, setLogoFile] = useState<UploadFile | null>(null);
+  const [activeTab, setActiveTab] = useState<TabKey>('basic');
 
   const { data: brand, isLoading: isFetching } = useBrand(
     brandId || undefined,
@@ -182,6 +184,7 @@ export const EditBrandDrawer = ({
   const handleCancel = () => {
     form.resetFields();
     setLogoFile(null);
+    setActiveTab('basic');
     onClose();
   };
 
@@ -204,6 +207,7 @@ export const EditBrandDrawer = ({
       placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
+      destroyOnHidden
       onClose={handleCancel}
       footer={
         <Flex
@@ -236,177 +240,165 @@ export const EditBrandDrawer = ({
           <Spin size='large' />
         </Flex>
       ) : (
-        <Form
-          size='large'
-          form={form}
-          layout='vertical'
-          onFinish={handleSubmit}
-          onFinishFailed={handleSubmitFailed}
-          styles={{
-            label: {
-              height: 22,
-            },
-          }}
-        >
-          {/* Basic Information Section */}
-          <div style={{ marginBottom: 24 }}>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Basic Information
-            </Title>
+        <>
+          <Segmented
+            block
+            size='large'
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as TabKey)}
+            options={[
+              { label: 'Basic Information', value: 'basic' },
+              { label: 'Music Policy', value: 'music' },
+            ]}
+            style={{ marginBottom: 24 }}
+          />
 
-            <Form.Item
-              label='Brand Name'
-              name='name'
-              rules={brandValidation.name}
-            >
-              <Input placeholder='e.g., Moonlight Coffee' />
-            </Form.Item>
-
-            <Row gutter={16}>
-              <Col span={12}>
+          <Form
+            size='large'
+            form={form}
+            layout='vertical'
+            onFinish={handleSubmit}
+            onFinishFailed={handleSubmitFailed}
+            styles={{
+              label: {
+                height: 22,
+              },
+            }}
+          >
+            {activeTab === 'basic' ? (
+              <>
                 <Form.Item
-                  label='Industry'
-                  name='industry'
-                  rules={brandValidation.industry}
+                  label='Brand Name'
+                  name='name'
+                  rules={brandValidation.name}
                 >
-                  <Select
-                    placeholder='Select industry'
-                    options={INDUSTRY_OPTIONS}
+                  <Input placeholder='e.g., Moonlight Coffee' />
+                </Form.Item>
+
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Industry'
+                      name='industry'
+                      rules={brandValidation.industry}
+                    >
+                      <Select
+                        placeholder='Select industry'
+                        options={INDUSTRY_OPTIONS}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Website'
+                      name='website'
+                      rules={brandValidation.website}
+                    >
+                      <Input placeholder='https://example.com' />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Form.Item
+                  label='Logo'
+                  name='logo'
+                  valuePropName='file'
+                >
+                  <ImageDragger
+                    previewUrl={getPreviewUrl()}
+                    uploadProps={uploadProps}
                   />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
+
                 <Form.Item
-                  label='Website'
-                  name='website'
-                  rules={brandValidation.website}
+                  label='Description'
+                  name='description'
+                  rules={brandValidation.description}
                 >
-                  <Input placeholder='https://example.com' />
+                  <TextArea
+                    rows={3}
+                    placeholder='Brief description of the brand'
+                    maxLength={2000}
+                    showCount
+                  />
                 </Form.Item>
-              </Col>
-            </Row>
 
-            <Form.Item
-              label='Logo'
-              name='logo'
-              valuePropName='file'
-            >
-              <ImageDragger
-                previewUrl={getPreviewUrl()}
-                uploadProps={uploadProps}
-              />
-            </Form.Item>
-
-            <Form.Item
-              label='Description'
-              name='description'
-              rules={brandValidation.description}
-            >
-              <TextArea
-                rows={3}
-                placeholder='Brief description of the brand'
-                maxLength={2000}
-                showCount
-              />
-            </Form.Item>
-          </div>
-
-          {/* Contact Information Section */}
-          <div style={{ marginBottom: 24 }}>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Contact Information
-            </Title>
-
-            <Form.Item
-              label='Primary Contact Name'
-              name='primaryContactName'
-              rules={brandValidation.primaryContactName}
-            >
-              <Input placeholder='e.g., John Doe' />
-            </Form.Item>
-
-            <Row gutter={16}>
-              <Col span={12}>
                 <Form.Item
-                  label='Contact Email'
-                  name='contactEmail'
-                  rules={brandValidation.contactEmail}
+                  label='Primary Contact Name'
+                  name='primaryContactName'
+                  rules={brandValidation.primaryContactName}
                 >
-                  <Input placeholder='contact@example.com' />
+                  <Input placeholder='e.g., John Doe' />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
+
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Contact Email'
+                      name='contactEmail'
+                      rules={brandValidation.contactEmail}
+                    >
+                      <Input placeholder='contact@example.com' />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Contact Phone'
+                      name='contactPhone'
+                      rules={brandValidation.contactPhone}
+                    >
+                      <Input placeholder='0901234567' />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
                 <Form.Item
-                  label='Contact Phone'
-                  name='contactPhone'
-                  rules={brandValidation.contactPhone}
+                  label='Technical Contact Email'
+                  name='technicalContactEmail'
+                  rules={brandValidation.technicalContactEmail}
                 >
-                  <Input placeholder='0901234567' />
+                  <Input placeholder='tech@example.com' />
                 </Form.Item>
-              </Col>
-            </Row>
 
-            <Form.Item
-              label='Technical Contact Email'
-              name='technicalContactEmail'
-              rules={brandValidation.technicalContactEmail}
-            >
-              <Input placeholder='tech@example.com' />
-            </Form.Item>
-          </div>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Legal Name'
+                      name='legalName'
+                      rules={brandValidation.legalName}
+                    >
+                      <Input placeholder='Official company name' />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Tax Code'
+                      name='taxCode'
+                      rules={brandValidation.taxCode}
+                    >
+                      <Input placeholder='e.g., 0123456789' />
+                    </Form.Item>
+                  </Col>
+                </Row>
 
-          {/* Legal & Billing Section */}
-          <div style={{ marginBottom: 24 }}>
-            <Title
-              level={5}
-              style={{ marginBottom: 16 }}
-            >
-              Legal & Billing Information
-            </Title>
-
-            <Row gutter={16}>
-              <Col span={12}>
                 <Form.Item
-                  label='Legal Name'
-                  name='legalName'
-                  rules={brandValidation.legalName}
+                  label='Billing Address'
+                  name='billingAddress'
+                  rules={brandValidation.billingAddress}
                 >
-                  <Input placeholder='Official company name' />
+                  <TextArea
+                    rows={2}
+                    placeholder='Full billing address'
+                    maxLength={500}
+                    showCount
+                  />
                 </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label='Tax Code'
-                  name='taxCode'
-                  rules={brandValidation.taxCode}
-                >
-                  <Input placeholder='e.g., 0123456789' />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Form.Item
-              label='Billing Address'
-              name='billingAddress'
-              rules={brandValidation.billingAddress}
-            >
-              <TextArea
-                rows={2}
-                placeholder='Full billing address'
-                maxLength={500}
-                showCount
-              />
-            </Form.Item>
-          </div>
-
-          <BrandMusicPolicyFields variant='edit' />
-        </Form>
+              </>
+            ) : (
+              <BrandMusicPolicyFields variant='edit' />
+            )}
+          </Form>
+        </>
       )}
     </Drawer>
   );

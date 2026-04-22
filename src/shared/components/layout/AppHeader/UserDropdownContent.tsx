@@ -83,11 +83,6 @@ export const UserDropdownContent = () => {
       onClick: () => navigate(`${basePath}/profile`),
     },
     {
-      key: 'view-profile',
-      label: 'View Profile',
-      icon: <UserOutlined style={{ fontSize: 14 }} />,
-    },
-    {
       key: 'logout',
       label: 'Logout',
       icon: <LogoutOutlined style={{ fontSize: 14 }} />,

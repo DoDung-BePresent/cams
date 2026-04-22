@@ -228,14 +228,6 @@ export const PlaylistDetailsDrawer = ({
                                 {formatDuration(track.durationSec)}
                               </Text>
                             )}
-                            {track.coverImageUrl && (
-                              <Text
-                                type='secondary'
-                                ellipsis={{ tooltip: track.coverImageUrl }}
-                              >
-                                Cover: {track.coverImageUrl}
-                              </Text>
-                            )}
                             <Text type='secondary'>
                               Offset: {formatDuration(track.seekOffsetSeconds)}
                             </Text>

@@ -1,8 +1,7 @@
+import { useState } from 'react';
 import {
   App,
-  Alert,
   Button,
-  Checkbox,
   Drawer,
   Form,
   Input,
@@ -11,8 +10,7 @@ import {
   Flex,
   Row,
   Col,
-  Divider,
-  Typography,
+  Segmented,
 } from 'antd';
 
 /**
@@ -46,6 +44,11 @@ import { pickSpaceFuzzyOverrideBody } from './spaceFuzzyOverrideUtils';
  */
 import { DRAWER_WIDTHS } from '@/config';
 
+/**
+ * Components
+ */
+import { SettingSwitch } from '@/shared/components';
+
 type CreateSpaceDrawerProps = {
   open: boolean;
   onClose: () => void;
@@ -65,6 +68,7 @@ export const CreateSpaceDrawer = ({
   const { message } = App.useApp();
   const [form] = Form.useForm<CreateSpaceFormValues>();
   const createSpace = useCreateSpace();
+  const [activeTab, setActiveTab] = useState<'basic' | 'fuzzy'>('basic');
 
   const handleSubmit = async (values: CreateSpaceFormValues) => {
     const { applyFuzzyAfterCreate, fuzzy, ...spaceValues } = values;
@@ -109,6 +113,7 @@ export const CreateSpaceDrawer = ({
 
   const handleCancel = () => {
     form.resetFields();
+    setActiveTab('basic');
     onClose();
   };
 
@@ -119,6 +124,7 @@ export const CreateSpaceDrawer = ({
       placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
+      destroyOnHidden
       onClose={handleCancel}
       footer={
         <Flex
@@ -154,114 +160,116 @@ export const CreateSpaceDrawer = ({
           },
         }}
       >
-        <Form.Item
-          label='Space Name'
-          name='name'
-          rules={createSpaceValidation.name}
-        >
-          <Input placeholder='e.g., Main Counter, VIP Hall' />
-        </Form.Item>
-
-        <Form.Item
-          label='Space Type'
-          name='type'
-          rules={createSpaceValidation.type}
-        >
-          <Select
-            placeholder='Select space type'
-            options={SPACE_TYPE_OPTIONS}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label='Description'
-          name='description'
-          rules={createSpaceValidation.description}
-        >
-          <Input.TextArea
-            rows={3}
-            placeholder='Brief description of this space...'
-          />
-        </Form.Item>
-
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              label='Max Occupancy'
-              name='maxOccupancy'
-              rules={createSpaceValidation.maxOccupancy}
-            >
-              <InputNumber
-                min={1}
-                style={{ width: '100%' }}
-                placeholder='e.g., 50'
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label='Critical Queue Threshold'
-              name='criticalQueueThreshold'
-              rules={createSpaceValidation.criticalQueueThreshold}
-            >
-              <InputNumber
-                min={1}
-                style={{ width: '100%' }}
-                placeholder='e.g., 10'
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        <Form.Item
-          label='IoT Device ID'
-          name='ioTDeviceId'
-          tooltip='Device identifier used by CAMS telemetry query for this space'
-        >
-          <Input placeholder='e.g., esp32-people-counter' />
-        </Form.Item>
-
-        <Divider />
-
-        <Alert
-          type='info'
-          showIcon
-          style={{ marginBottom: 12 }}
-          message='Optional after-create action'
-          description='Create and activate a space fuzzy profile immediately after space creation.'
+        <Segmented
+          block
+          size='large'
+          value={activeTab}
+          onChange={(value) => setActiveTab(value as 'basic' | 'fuzzy')}
+          options={[
+            { label: 'Basic Information', value: 'basic' },
+            { label: 'Fuzzy Profile', value: 'fuzzy' },
+          ]}
+          style={{ marginBottom: 24 }}
         />
 
-        <Form.Item
-          name='applyFuzzyAfterCreate'
-          valuePropName='checked'
-          initialValue={false}
-        >
-          <Checkbox>
-            Create &amp; activate space fuzzy profile after create
-          </Checkbox>
-        </Form.Item>
+        {activeTab === 'basic' ? (
+          <>
+            <Form.Item
+              label='Space Name'
+              name='name'
+              rules={createSpaceValidation.name}
+            >
+              <Input placeholder='e.g., Main Counter, VIP Hall' />
+            </Form.Item>
 
-        <Form.Item
-          noStyle
-          shouldUpdate={(prev, cur) =>
-            prev.applyFuzzyAfterCreate !== cur.applyFuzzyAfterCreate
-          }
-        >
-          {({ getFieldValue }) =>
-            getFieldValue('applyFuzzyAfterCreate') ? (
-              <>
-                <Typography.Paragraph type='secondary'>
-                  Profile is created through{' '}
-                  <Typography.Text code>
-                    POST /api/spaces/:id/fuzzy-profiles
-                  </Typography.Text>
-                  . Allowed playlists can be configured later in Edit space.
-                </Typography.Paragraph>
-                <SpaceFuzzyOverrideFields />
-              </>
-            ) : null
-          }
-        </Form.Item>
+            <Form.Item
+              label='Space Type'
+              name='type'
+              rules={createSpaceValidation.type}
+            >
+              <Select
+                placeholder='Select space type'
+                options={SPACE_TYPE_OPTIONS}
+              />
+            </Form.Item>
+
+            <Form.Item
+              label='Description'
+              name='description'
+              rules={createSpaceValidation.description}
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder='Brief description of this space...'
+              />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label='Max Occupancy'
+                  name='maxOccupancy'
+                  rules={createSpaceValidation.maxOccupancy}
+                >
+                  <InputNumber
+                    min={1}
+                    style={{ width: '100%' }}
+                    placeholder='e.g., 50'
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label='Critical Queue Threshold'
+                  name='criticalQueueThreshold'
+                  rules={createSpaceValidation.criticalQueueThreshold}
+                >
+                  <InputNumber
+                    min={1}
+                    style={{ width: '100%' }}
+                    placeholder='e.g., 10'
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item
+              label='IoT Device ID'
+              name='ioTDeviceId'
+              tooltip='Device identifier used by CAMS telemetry query for this space'
+            >
+              <Input placeholder='e.g., esp32-people-counter' />
+            </Form.Item>
+          </>
+        ) : (
+          <>
+            <Form.Item
+              name='applyFuzzyAfterCreate'
+              valuePropName='checked'
+              initialValue={false}
+              style={{ marginBottom: 16 }}
+            >
+              <SettingSwitch
+                label='Create & Activate Fuzzy Profile'
+                description='Automatically create and activate a space fuzzy profile after space creation'
+                className='pt-0!'
+              />
+            </Form.Item>
+
+            <Form.Item
+              noStyle
+              shouldUpdate={(prev, cur) =>
+                prev.applyFuzzyAfterCreate !== cur.applyFuzzyAfterCreate
+              }
+            >
+              {({ getFieldValue }) =>
+                getFieldValue('applyFuzzyAfterCreate') ? (
+                  <SpaceFuzzyOverrideFields />
+                ) : null
+              }
+            </Form.Item>
+          </>
+        )}
       </Form>
     </Drawer>
   );

@@ -160,6 +160,7 @@ export interface SpaceStateDto {
   pendingQueueItemId: string | null; // Changed from pendingPlaylistId
   pendingOverrideReason: string | null;
   volumePercent: number; // NEW: 0-100
+  isIotDeviceOffline?: boolean; // NEW: Latest telemetry reports device offline
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
@@ -332,6 +333,7 @@ export interface SpaceStateResponse {
   pendingQueueItemId: string | null; // Changed from pendingPlaylistId
   pendingOverrideReason: string | null;
   volumePercent: number; // NEW: 0-100
+  isIotDeviceOffline?: boolean; // Latest telemetry reports device offline
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array

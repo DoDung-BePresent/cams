@@ -10,7 +10,7 @@ import fileImage from '@/assets/images/files.png';
 
 export const NavCard = () => {
   return (
-    <Card className='m-3! mx-5! bg-gray-50!'>
+    <Card className='m-3! mx-5!'>
       <Flex
         vertical
         align='center'
