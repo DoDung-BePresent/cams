@@ -328,6 +328,7 @@ export const SpaceSchedulePage = () => {
         loading={isLoading || applySourceMutation.isPending}
         librarySources={bootstrap?.librarySources || []}
         templateSources={bootstrap?.templateSources || []}
+        showTemplates={false}
         onClose={() => setSourcePickerOpen(false)}
         onSelect={(sourceId) => {
           applySourceMutation.mutate(

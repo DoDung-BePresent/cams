@@ -81,6 +81,7 @@ export enum QueueItemStatus {
 export enum QueueItemSource {
   AI = 0,
   Manager = 1,
+  Scheduling = 2,
 }
 
 /**
