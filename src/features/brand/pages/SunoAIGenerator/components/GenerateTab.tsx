@@ -4,7 +4,10 @@ import { ClockCircleOutlined } from '@ant-design/icons';
 /**
  * Components
  */
-import { SunoGenerationForm } from '@/shared/modules/suno/components';
+import {
+  SunoConfigForm,
+  SunoGenerationForm,
+} from '@/shared/modules/suno/components';
 
 const { Title, Text } = Typography;
 
@@ -35,11 +38,13 @@ export const GenerateTab = ({ onSuccess }: GenerateTabProps) => {
               Generate AI Music
             </Title>
             <Text type='secondary'>
-              Create original music tracks powered by Suno AI. Choose between a
+              Create original music tracks powered by AI. Choose between a
               custom prompt or let CAMS auto-build one from your brand's music
               profile.
             </Text>
           </Flex>
+
+          <SunoConfigForm />
 
           <Alert
             icon={<ClockCircleOutlined />}
