@@ -255,7 +255,6 @@ export const CreateStoreDrawer = ({
               label='Contact Number'
               name='contactNumber'
               rules={createStoreValidation.contactNumber}
-              required
             >
               <Input placeholder='0283456789' />
             </Form.Item>
@@ -274,7 +273,6 @@ export const CreateStoreDrawer = ({
               label='Address'
               name='address'
               rules={createStoreValidation.address}
-              required
               extra='You can search on the map below to auto-fill this field'
             >
               <TextArea
@@ -289,7 +287,6 @@ export const CreateStoreDrawer = ({
                   label='City'
                   name='city'
                   rules={createStoreValidation.city}
-                  required
                 >
                   <Select
                     placeholder='Select city'
@@ -304,7 +301,6 @@ export const CreateStoreDrawer = ({
                   label='District'
                   name='district'
                   rules={createStoreValidation.district}
-                  required
                 >
                   <Select
                     placeholder='Select district'
@@ -375,7 +371,6 @@ export const CreateStoreDrawer = ({
                   label='Area (m²)'
                   name='areaSquareMeters'
                   rules={createStoreValidation.areaSquareMeters}
-                  required
                 >
                   <InputNumber
                     className='w-full!'
@@ -390,7 +385,6 @@ export const CreateStoreDrawer = ({
                   label='Max Capacity'
                   name='maxCapacity'
                   rules={createStoreValidation.maxCapacity}
-                  required
                 >
                   <InputNumber
                     className='w-full!'
