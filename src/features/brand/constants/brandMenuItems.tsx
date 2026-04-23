@@ -9,9 +9,7 @@ import {
   TeamOutlined,
   CustomerServiceOutlined,
   UnorderedListOutlined,
-  TabletOutlined,
   CalendarOutlined,
-  ControlOutlined,
   SettingOutlined,
   ThunderboltOutlined,
   WalletOutlined,
@@ -59,18 +57,8 @@ export const BRAND_MENU_ITEMS: ItemType[] = [
     label: 'Tokens & top-up',
   },
   {
-    key: 'devices',
-    icon: <TabletOutlined />,
-    label: 'Device Management',
-  },
-  {
     key: 'schedule',
     icon: <CalendarOutlined />,
     label: 'Schedule',
-  },
-  {
-    key: 'music-control',
-    icon: <ControlOutlined />,
-    label: 'Music Control',
   },
 ];
