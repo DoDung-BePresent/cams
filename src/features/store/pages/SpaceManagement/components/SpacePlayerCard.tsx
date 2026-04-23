@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Space,
+  Select,
   Tag,
   Typography,
   Divider,
@@ -46,6 +47,7 @@ import {
   formatPlaybackTime,
   isSpacePlaying,
 } from '@/shared/modules/cams/utils';
+import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { AppModal, SettingSwitch } from '@/shared/components';
 import { showErrorMessage } from '@/shared/utils';
@@ -65,6 +67,9 @@ interface SpacePlayerCardProps {
 
 export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const { message: appMessage } = App.useApp();
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<
+    string | undefined
+  >(undefined);
   const [activeTab, setActiveTab] = useState<'player' | 'settings'>('player');
   const [isOverrideDrawerOpen, setIsOverrideDrawerOpen] = useState(false);
   const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
@@ -75,6 +80,17 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     space.id,
     true,
   );
+
+  // ✅ Use spaceState directly - no need for intermediate state
+  // The component will re-render when spaceState changes from React Query
+
+  // Fetch available playlists for this store
+  const { data: playlistsData } = usePlaylists({
+    page: 1,
+    pageSize: 100,
+    status: 1,
+    storeId,
+  });
 
   // Mutations
   const playbackControl = usePlaybackControl();
@@ -477,6 +493,23 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     [space.id, updateAudio],
   );
 
+  // Override playlist handler (Mode 1: Playlist)
+  const handlePlaylistChange = useCallback(
+    (playlistId: string) => {
+      if (!playlistId) {
+        message.warning('Please select a playlist');
+        return;
+      }
+
+      setSelectedPlaylistId(playlistId);
+      overridePlaylist.mutate({
+        spaceId: space.id,
+        playlistId,
+      });
+    },
+    [space.id, overridePlaylist],
+  );
+
   const handleOverrideToggle = useCallback(
     (checked: boolean) => {
       if (checked) {
@@ -498,142 +531,127 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     [cancelOverride, space.id],
   );
 
+  // Playlist options for Select
+  const playlistOptions = (playlistsData?.items || []).map((playlist) => ({
+    label: playlist.name,
+    value: playlist.id,
+  }));
+
   return (
     <Space
       direction='vertical'
       style={{ width: '100%' }}
       size='large'
     >
-      <Space
-        direction='vertical'
-        style={{ width: '100%' }}
-        size='middle'
-      >
-        <SettingSwitch
-          label='Auto Volume (by ambient noise)'
-          description='Automatically adjusts playback volume based on current noise level.'
-          value={isAutoVolumeEnabled}
-          onChange={(checked) => toggleAutoVolume.mutate(checked)}
-          disabled={toggleAutoVolume.isPending}
-        />
+      <Segmented
+        block
+        size='large'
+        value={activeTab}
+        onChange={(value) => setActiveTab(value as 'player' | 'settings')}
+        options={[
+          { label: 'Player', value: 'player' },
+          { label: 'Settings', value: 'settings' },
+        ]}
+      />
 
-        <SettingSwitch
-          label='Manual Override'
-          description='Turn on to select tracks/playlist/mood manually. Turn off to resume AI control.'
-          value={!!spaceState?.isManualOverride}
-          onChange={handleOverrideToggle}
-          disabled={overridePlaylist.isPending || cancelOverride.isPending}
-        />
+      {activeTab === 'player' ? (
+        <Space
+          direction='vertical'
+          style={{ width: '100%' }}
+          size='middle'
+        >
+          {/* Playlist Selection */}
+          <div>
+            <Text
+              strong
+              style={{ display: 'block', marginBottom: 8 }}
+            >
+              Select Playlist to Play
+            </Text>
 
-        <SettingSwitch
-          label='Scheduling Mode'
-          description='Switch runtime ownership between normal playback flow and schedule-driven playback for the active time slot.'
-          value={!!spaceState?.isScheduling}
-          onChange={(checked) => {
-            updateSchedulingState.mutate({
-              spaceId: space.id,
-              data: { isScheduling: checked },
-            });
-          }}
-          disabled={updateSchedulingState.isPending}
-          loading={updateSchedulingState.isPending}
-        />
+            <Select
+              size='large'
+              placeholder='Choose a playlist'
+              options={playlistOptions}
+              value={selectedPlaylistId}
+              onChange={handlePlaylistChange}
+              style={{ width: '100%' }}
+              loading={overridePlaylist.isPending || isLoadingState}
+              disabled={overridePlaylist.isPending || cancelOverride.isPending}
+              showSearch
+              optionFilterProp='label'
+              allowClear={false}
+            />
+          </div>
 
-        {spaceState?.isManualOverride && (
-          <Alert
-            type='warning'
-            showIcon
-            message={
-              <Space wrap>
-                <Text strong>Manual Override Active</Text>
-                {spaceState.overrideMode != null && (
-                  <Tag color='orange'>Mode {spaceState.overrideMode}</Tag>
-                )}
-                {manualOverrideRemainingSeconds != null && (
-                  <Tag color='red'>
-                    TTL {formatPlaybackTime(manualOverrideRemainingSeconds)}
-                  </Tag>
-                )}
-              </Space>
-            }
-            description={
-              <Space
-                direction='vertical'
-                size={2}
-              >
-                {spaceState.overrideReason && (
-                  <Text>Reason: {spaceState.overrideReason}</Text>
-                )}
-                {spaceState.manualOverrideActivatedAtUtc && (
-                  <Text type='secondary'>
-                    Activated:{' '}
-                    {formatStatusDateTime(
-                      spaceState.manualOverrideActivatedAtUtc,
-                    )}
-                  </Text>
-                )}
-                {spaceState.manualOverrideExpiresAtUtc && (
-                  <Text type='secondary'>
-                    Expires:{' '}
-                    {formatStatusDateTime(
-                      spaceState.manualOverrideExpiresAtUtc,
-                    )}
-                  </Text>
-                )}
-              </Space>
-            }
-          />
-        )}
+          {/* Status Alerts */}
+          {spaceState?.isManualOverride && (
+            <Alert
+              type='warning'
+              showIcon
+              message={
+                <Space wrap>
+                  <Text strong>Manual Override Active</Text>
+                  {spaceState.overrideMode != null && (
+                    <Tag color='orange'>Mode {spaceState.overrideMode}</Tag>
+                  )}
+                  {manualOverrideRemainingSeconds != null && (
+                    <Tag color='red'>
+                      TTL {formatPlaybackTime(manualOverrideRemainingSeconds)}
+                    </Tag>
+                  )}
+                </Space>
+              }
+            />
+          )}
 
-        {spaceState && (
-          <Alert
-            type={
-              spaceState.isIotDeviceAssigned === false
-                ? 'warning'
-                : spaceState.isIotDeviceOffline
-                  ? 'error'
-                  : 'success'
-            }
-            showIcon
-            message={
-              <Text strong>
-                {spaceState.isIotDeviceAssigned === false
-                  ? 'IoT device not assigned'
-                  : spaceState.isIotDeviceOffline
-                    ? 'IoT device offline'
-                    : 'IoT device online'}
-              </Text>
-            }
-            description={
-              spaceState.isIotDeviceAssigned === false
-                ? 'This space has no IoT device mapping yet. Assign an IoT device ID to enable live telemetry analysis.'
-                : spaceState.isIotDeviceOffline
-                  ? 'Latest IoT telemetry reports this device is offline. CAMS has switched to fallback/default mode until the device is online again.'
-                  : 'Latest IoT telemetry reports this device is online. CAMS is using live telemetry for mood analysis.'
-            }
-          />
-        )}
+          {spaceState?.isScheduling && (
+            <Alert
+              type='info'
+              showIcon
+              message={
+                <Space wrap>
+                  <Text strong>Scheduling Runtime Active</Text>
+                  {spaceState.schedulingSlotOrigin != null && (
+                    <Tag color='blue'>
+                      {
+                        SCHEDULING_ORIGIN_LABELS[
+                          spaceState.schedulingSlotOrigin
+                        ]
+                      }
+                    </Tag>
+                  )}
+                  {schedulingRemainingSeconds != null && (
+                    <Tag color='cyan'>
+                      Ends in {formatPlaybackTime(schedulingRemainingSeconds)}
+                    </Tag>
+                  )}
+                </Space>
+              }
+            />
+          )}
 
-        {spaceState?.isSuggestOnly && !spaceState?.isManualOverride && (
-          <Alert
-            type='warning'
-            showIcon
-            message={<Text strong>AI Suggest-only mode</Text>}
-            description={
-              <Space
-                direction='vertical'
-                size={2}
-              >
-                <Text>
-                  Confidence is low or mood cooldown is active, so CAMS is not
-                  auto-transitioning right now.
-                </Text>
-                {spaceState?.fuzzyConfidence != null && (
-                  <Text type='secondary'>
-                    Confidence: {Math.round(spaceState.fuzzyConfidence * 100)}%
-                  </Text>
-                )}
-              </Space>
+          {/* Player Controls */}
+          <SpacePlayer
+            spaceId={space.id}
+            hlsUrl={hlsUrl}
+            state={spaceState}
+            isPlaying={isPlaying}
+            isLoading={
+              isLoadingState ||
+              playbackControl.isPending ||
+              overridePlaylist.isPending
+            }
+            onPlayPause={handlePlayPause}
+            onSkipNext={handleSkipNext}
+            onSkipPrevious={handleSkipPrevious}
+            onSeek={handleSeek}
+            onRewind10={handleRewind10}
+            onForward10={handleForward10}
+            onVolumeChangeComplete={handleVolumeChangeBackend}
+            onToggleMute={handleToggleMute}
+            onQueueEndBehaviorChange={(next) =>
+              handleQueueEndBehaviorChange(next as QueueEndBehavior)
             }
             isPreviousDisabled={
               queueItems.length === 0 ||

@@ -11,18 +11,27 @@ import {
   Typography,
   Segmented,
   Spin,
-  Flex,
 } from 'antd';
 
 /**
  * Icons
  */
-import { ThunderboltOutlined, CopyOutlined } from '@ant-design/icons';
+import {
+  ThunderboltOutlined,
+  CopyOutlined,
+  SettingOutlined,
+} from '@ant-design/icons';
+
+/**
+ * Configs
+ */
+import { MODAL_WIDTHS } from '@/config';
 
 /**
  * Components
  */
-import { SettingSwitch } from '@/shared/components';
+import { AppModal, SettingSwitch } from '@/shared/components';
+import { SunoConfigForm } from './SunoConfigForm';
 
 /**
  * Hooks
@@ -51,7 +60,6 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 type PromptMode = 'manual' | 'brandProfile';
-type VocalMode = 'instrumental' | 'withLyrics';
 
 interface SunoGenerationFormProps {
   onSuccess?: (generationId: string) => void;
@@ -60,7 +68,6 @@ interface SunoGenerationFormProps {
 type SunoGenerationFormValues = SunoGenerationCreateRequest & {
   genre?: string | null;
   profileMood?: BrandProfileSunoMood;
-  vocalMode?: VocalMode;
 };
 
 const storeOverrideLabels: Record<number, string> = {
@@ -72,6 +79,7 @@ const storeOverrideLabels: Record<number, string> = {
 export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const [form] = Form.useForm<SunoGenerationFormValues>();
   const [promptMode, setPromptMode] = useState<PromptMode>('manual');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { user } = useAuth();
   const brandId = user?.brandId ?? undefined;
@@ -111,7 +119,6 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const watchedTitle = Form.useWatch('title', form);
   const watchedGenre = Form.useWatch('genre', form);
   const watchedArtist = Form.useWatch('artist', form);
-  const watchedVocalMode = Form.useWatch('vocalMode', form) ?? 'instrumental';
 
   const generatedPrompt = useMemo(() => {
     if (
@@ -148,8 +155,6 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
         targetPlaylistId: config.sunoDefaultPlaylistId,
         autoAddToTargetPlaylist: true,
         profileMood: 'focus',
-        vocalMode: 'instrumental',
-        instrumental: true,
       });
     }
   }, [config, form]);
@@ -168,17 +173,10 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     const { genre: _genre, profileMood: _profileMood, ...payload } = values;
     void _genre;
     void _profileMood;
-    const vocalMode = values.vocalMode ?? 'instrumental';
-    const instrumental = vocalMode === 'instrumental';
-    const normalizedLyrics = instrumental
-      ? null
-      : values.lyrics?.trim() || null;
 
     const result = await createGeneration.mutateAsync({
       ...payload,
       prompt: finalPrompt,
-      instrumental,
-      lyrics: normalizedLyrics,
     });
 
     if (result && onSuccess) {
@@ -190,8 +188,6 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       targetPlaylistId: config?.sunoDefaultPlaylistId,
       autoAddToTargetPlaylist: true,
       profileMood: 'focus',
-      vocalMode: 'instrumental',
-      instrumental: true,
     });
     setPromptMode(
       hasBrandMusicProfileData(musicSnapshot ?? undefined)
@@ -233,7 +229,16 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
 
   return (
     <>
-      <Card title='Generate AI Music'>
+      <Card
+        title='Generate AI Music'
+        extra={
+          <Button
+            type='text'
+            icon={<SettingOutlined />}
+            onClick={() => setSettingsOpen(true)}
+          />
+        }
+      >
         {isResolvingProfile && (
           <div style={{ marginBottom: 16 }}>
             <Spin size='small' />{' '}
@@ -344,66 +349,52 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
                 />
               </Form.Item>
 
-              <Flex
-                gap={16}
-                justify='space-between'
+              <Form.Item
+                name='title'
+                label='Track title'
+                rules={[
+                  { required: true, message: 'Please enter track title' },
+                  { max: 300, message: 'Title too long' },
+                ]}
               >
-                <Form.Item
-                  name='title'
-                  label='Track title'
-                  rules={[
-                    { required: true, message: 'Please enter track title' },
-                    { max: 300, message: 'Title too long' },
-                  ]}
-                  className='w-full!'
-                >
-                  <Input
-                    placeholder='e.g., Morning Focus In-Store'
-                    maxLength={300}
-                  />
-                </Form.Item>
+                <Input
+                  placeholder='e.g., Morning Focus In-Store'
+                  maxLength={300}
+                />
+              </Form.Item>
 
-                <Form.Item
-                  name='genre'
-                  label='Genre'
-                  rules={[{ max: 120, message: 'Genre too long' }]}
-                  className='w-full!'
-                >
-                  <Input
-                    placeholder='e.g., ambient, lo-fi, soft jazz'
-                    maxLength={120}
-                  />
-                </Form.Item>
-              </Flex>
-
-              <Flex
-                gap={16}
-                justify='space-between'
+              <Form.Item
+                name='genre'
+                label='Genre'
+                rules={[{ max: 120, message: 'Genre too long' }]}
               >
-                <Form.Item
-                  name='artist'
-                  label='Artist / style hint'
-                  rules={[{ max: 300, message: 'Too long' }]}
-                  className='w-full!'
-                >
-                  <Input
-                    placeholder='e.g., subtle piano, no vocals'
-                    maxLength={300}
-                  />
-                </Form.Item>
+                <Input
+                  placeholder='e.g., ambient, lo-fi, soft jazz'
+                  maxLength={120}
+                />
+              </Form.Item>
 
-                <Form.Item
-                  name='moodId'
-                  label='Catalog mood (optional)'
-                  className='w-full!'
-                >
-                  <Select
-                    placeholder='Select mood'
-                    options={moodOptions}
-                    allowClear
-                  />
-                </Form.Item>
-              </Flex>
+              <Form.Item
+                name='artist'
+                label='Artist / style hint'
+                rules={[{ max: 300, message: 'Too long' }]}
+              >
+                <Input
+                  placeholder='e.g., subtle piano, no vocals'
+                  maxLength={300}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name='moodId'
+                label='Catalog mood (optional)'
+              >
+                <Select
+                  placeholder='Select mood'
+                  options={moodOptions}
+                  allowClear
+                />
+              </Form.Item>
 
               <Form.Item
                 label={
@@ -474,50 +465,6 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
             <input type='hidden' />
           </Form.Item>
 
-          <Form.Item
-            label='Vocal mode'
-            name='vocalMode'
-            initialValue='instrumental'
-            className='mb-3!'
-          >
-            <Segmented<VocalMode>
-              options={[
-                { label: 'Instrumental (no lyrics)', value: 'instrumental' },
-                { label: 'Music with lyrics', value: 'withLyrics' },
-              ]}
-              onChange={(value) => {
-                const nextInstrumental = value === 'instrumental';
-                form.setFieldValue('instrumental', nextInstrumental);
-                if (nextInstrumental) {
-                  form.setFieldValue('lyrics', null);
-                }
-              }}
-            />
-          </Form.Item>
-
-          {watchedVocalMode === 'withLyrics' && (
-            <Form.Item
-              name='lyrics'
-              label='Lyrics'
-              rules={[{ max: 8000, message: 'Lyrics too long' }]}
-            >
-              <TextArea
-                rows={5}
-                placeholder='Optional: enter lyrics for this track...'
-                maxLength={8000}
-                showCount
-              />
-            </Form.Item>
-          )}
-
-          <Form.Item
-            name='instrumental'
-            hidden
-            initialValue={true}
-          >
-            <input type='hidden' />
-          </Form.Item>
-
           <Form.Item>
             <Button
               type='primary'
@@ -538,6 +485,16 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
           </Form.Item>
         </Form>
       </Card>
+
+      <AppModal
+        open={settingsOpen}
+        onCancel={() => setSettingsOpen(false)}
+        footer={null}
+        width={MODAL_WIDTHS.large}
+        title='Suno AI Settings'
+      >
+        <SunoConfigForm />
+      </AppModal>
     </>
   );
 };
