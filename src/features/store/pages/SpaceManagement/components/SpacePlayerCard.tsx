@@ -3,7 +3,6 @@ import {
   Alert,
   Button,
   Space,
-  Select,
   Tag,
   Typography,
   Divider,
@@ -47,7 +46,6 @@ import {
   formatPlaybackTime,
   isSpacePlaying,
 } from '@/shared/modules/cams/utils';
-import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { AppModal, SettingSwitch } from '@/shared/components';
 import { showErrorMessage } from '@/shared/utils';
@@ -67,9 +65,6 @@ interface SpacePlayerCardProps {
 
 export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const { message: appMessage } = App.useApp();
-  const [selectedPlaylistId, setSelectedPlaylistId] = useState<
-    string | undefined
-  >(undefined);
   const [activeTab, setActiveTab] = useState<'player' | 'settings'>('player');
   const [isOverrideDrawerOpen, setIsOverrideDrawerOpen] = useState(false);
   const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
@@ -80,17 +75,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     space.id,
     true,
   );
-
-  // ✅ Use spaceState directly - no need for intermediate state
-  // The component will re-render when spaceState changes from React Query
-
-  // Fetch available playlists for this store
-  const { data: playlistsData } = usePlaylists({
-    page: 1,
-    pageSize: 100,
-    status: 1,
-    storeId,
-  });
 
   // Mutations
   const playbackControl = usePlaybackControl();
@@ -493,23 +477,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     [space.id, updateAudio],
   );
 
-  // Override playlist handler (Mode 1: Playlist)
-  const handlePlaylistChange = useCallback(
-    (playlistId: string) => {
-      if (!playlistId) {
-        message.warning('Please select a playlist');
-        return;
-      }
-
-      setSelectedPlaylistId(playlistId);
-      overridePlaylist.mutate({
-        spaceId: space.id,
-        playlistId,
-      });
-    },
-    [space.id, overridePlaylist],
-  );
-
   const handleOverrideToggle = useCallback(
     (checked: boolean) => {
       if (checked) {
@@ -530,12 +497,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     },
     [cancelOverride, space.id],
   );
-
-  // Playlist options for Select
-  const playlistOptions = (playlistsData?.items || []).map((playlist) => ({
-    label: playlist.name,
-    value: playlist.id,
-  }));
 
   return (
     <Space
@@ -560,30 +521,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           style={{ width: '100%' }}
           size='middle'
         >
-          {/* Playlist Selection */}
-          <div>
-            <Text
-              strong
-              style={{ display: 'block', marginBottom: 8 }}
-            >
-              Select Playlist to Play
-            </Text>
-
-            <Select
-              size='large'
-              placeholder='Choose a playlist'
-              options={playlistOptions}
-              value={selectedPlaylistId}
-              onChange={handlePlaylistChange}
-              style={{ width: '100%' }}
-              loading={overridePlaylist.isPending || isLoadingState}
-              disabled={overridePlaylist.isPending || cancelOverride.isPending}
-              showSearch
-              optionFilterProp='label'
-              allowClear={false}
-            />
-          </div>
-
           {/* Status Alerts */}
           {spaceState?.isManualOverride && (
             <Alert

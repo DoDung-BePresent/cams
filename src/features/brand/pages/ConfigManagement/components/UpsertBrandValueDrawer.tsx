@@ -189,6 +189,7 @@ export const UpsertBrandValueDrawer = ({
       title={
         selectedConfig ? 'Edit Brand Config Value' : 'Create Brand Config Value'
       }
+      destroyOnHidden
       open={open}
       onClose={handleCancel}
       width={DRAWER_WIDTHS.medium}
