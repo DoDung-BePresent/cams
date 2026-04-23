@@ -641,21 +641,55 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
           />
         )}
 
-        {spaceState?.isIotDeviceOffline != null && (
+        {spaceState && (
           <Alert
-            type={spaceState.isIotDeviceOffline ? 'error' : 'success'}
+            type={
+              spaceState.isIotDeviceAssigned === false
+                ? 'warning'
+                : spaceState.isIotDeviceOffline
+                  ? 'error'
+                  : 'success'
+            }
             showIcon
             message={
               <Text strong>
-                {spaceState.isIotDeviceOffline
-                  ? 'IoT device offline'
-                  : 'IoT device online'}
+                {spaceState.isIotDeviceAssigned === false
+                  ? 'IoT device not assigned'
+                  : spaceState.isIotDeviceOffline
+                    ? 'IoT device offline'
+                    : 'IoT device online'}
               </Text>
             }
             description={
-              spaceState.isIotDeviceOffline
-                ? 'Latest IoT telemetry reports this device is offline. CAMS has switched to fallback/default mode until the device is online again.'
-                : 'Latest IoT telemetry reports this device is online. CAMS is using live telemetry for mood analysis.'
+              spaceState.isIotDeviceAssigned === false
+                ? 'This space has no IoT device mapping yet. Assign an IoT device ID to enable live telemetry analysis.'
+                : spaceState.isIotDeviceOffline
+                  ? 'Latest IoT telemetry reports this device is offline. CAMS has switched to fallback/default mode until the device is online again.'
+                  : 'Latest IoT telemetry reports this device is online. CAMS is using live telemetry for mood analysis.'
+            }
+          />
+        )}
+
+        {spaceState?.isSuggestOnly && !spaceState?.isManualOverride && (
+          <Alert
+            type='warning'
+            showIcon
+            message={<Text strong>AI Suggest-only mode</Text>}
+            description={
+              <Space
+                direction='vertical'
+                size={2}
+              >
+                <Text>
+                  Confidence is low or mood cooldown is active, so CAMS is not
+                  auto-transitioning right now.
+                </Text>
+                {spaceState?.fuzzyConfidence != null && (
+                  <Text type='secondary'>
+                    Confidence: {Math.round(spaceState.fuzzyConfidence * 100)}%
+                  </Text>
+                )}
+              </Space>
             }
           />
         )}

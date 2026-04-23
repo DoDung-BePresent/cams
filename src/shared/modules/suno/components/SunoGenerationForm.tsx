@@ -60,6 +60,7 @@ const { TextArea } = Input;
 const { Text } = Typography;
 
 type PromptMode = 'manual' | 'brandProfile';
+type VocalMode = 'instrumental' | 'withLyrics';
 
 interface SunoGenerationFormProps {
   onSuccess?: (generationId: string) => void;
@@ -68,6 +69,7 @@ interface SunoGenerationFormProps {
 type SunoGenerationFormValues = SunoGenerationCreateRequest & {
   genre?: string | null;
   profileMood?: BrandProfileSunoMood;
+  vocalMode?: VocalMode;
 };
 
 const storeOverrideLabels: Record<number, string> = {
@@ -119,6 +121,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const watchedTitle = Form.useWatch('title', form);
   const watchedGenre = Form.useWatch('genre', form);
   const watchedArtist = Form.useWatch('artist', form);
+  const watchedVocalMode = Form.useWatch('vocalMode', form) ?? 'instrumental';
 
   const generatedPrompt = useMemo(() => {
     if (
@@ -155,6 +158,8 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
         targetPlaylistId: config.sunoDefaultPlaylistId,
         autoAddToTargetPlaylist: true,
         profileMood: 'focus',
+        vocalMode: 'instrumental',
+        instrumental: true,
       });
     }
   }, [config, form]);
@@ -173,10 +178,17 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     const { genre: _genre, profileMood: _profileMood, ...payload } = values;
     void _genre;
     void _profileMood;
+    const vocalMode = values.vocalMode ?? 'instrumental';
+    const instrumental = vocalMode === 'instrumental';
+    const normalizedLyrics = instrumental
+      ? null
+      : values.lyrics?.trim() || null;
 
     const result = await createGeneration.mutateAsync({
       ...payload,
       prompt: finalPrompt,
+      instrumental,
+      lyrics: normalizedLyrics,
     });
 
     if (result && onSuccess) {
@@ -188,6 +200,8 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       targetPlaylistId: config?.sunoDefaultPlaylistId,
       autoAddToTargetPlaylist: true,
       profileMood: 'focus',
+      vocalMode: 'instrumental',
+      instrumental: true,
     });
     setPromptMode(
       hasBrandMusicProfileData(musicSnapshot ?? undefined)
@@ -459,6 +473,50 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
 
           <Form.Item
             name='autoAddToTargetPlaylist'
+            hidden
+            initialValue={true}
+          >
+            <input type='hidden' />
+          </Form.Item>
+
+          <Form.Item
+            label='Vocal mode'
+            name='vocalMode'
+            initialValue='instrumental'
+            className='mb-3!'
+          >
+            <Segmented<VocalMode>
+              options={[
+                { label: 'Instrumental (no lyrics)', value: 'instrumental' },
+                { label: 'Music with lyrics', value: 'withLyrics' },
+              ]}
+              onChange={(value) => {
+                const nextInstrumental = value === 'instrumental';
+                form.setFieldValue('instrumental', nextInstrumental);
+                if (nextInstrumental) {
+                  form.setFieldValue('lyrics', null);
+                }
+              }}
+            />
+          </Form.Item>
+
+          {watchedVocalMode === 'withLyrics' && (
+            <Form.Item
+              name='lyrics'
+              label='Lyrics'
+              rules={[{ max: 8000, message: 'Lyrics too long' }]}
+            >
+              <TextArea
+                rows={5}
+                placeholder='Optional: enter lyrics for this track...'
+                maxLength={8000}
+                showCount
+              />
+            </Form.Item>
+          )}
+
+          <Form.Item
+            name='instrumental'
             hidden
             initialValue={true}
           >

@@ -27,6 +27,8 @@ const STORE_ENDPOINTS = {
   toggleStatus: (id: string) => `/api/stores/${id}/toggle-status`,
   fuzzyProfiles: (id: string) => `/api/stores/${id}/fuzzy-profiles`,
   contextLogs: (id: string) => `/api/stores/${id}/context-logs`,
+  contextLogsExportScoringCsv: (id: string) =>
+    `/api/stores/${id}/context-logs/export-scoring-csv`,
   contextTimeSeries: (id: string) => `/api/stores/${id}/context-timeseries`,
   contextAggregate: (id: string) => `/api/stores/${id}/context-aggregate`,
 } as const;
@@ -89,6 +91,24 @@ export const storeService = {
 
     return api.get<PaginationResult<StoreContextRawLogItem>>(
       `${STORE_ENDPOINTS.contextLogs(storeId)}?${params.toString()}`,
+    );
+  },
+
+  exportContextScoringLogsCsv: (
+    storeId: string,
+    filter: StoreContextRawLogsFilter = {},
+    maxRows?: number,
+  ) => {
+    const params = new URLSearchParams();
+
+    if (filter.spaceId) params.append('spaceId', filter.spaceId);
+    if (filter.fromUtc) params.append('fromUtc', filter.fromUtc);
+    if (filter.toUtc) params.append('toUtc', filter.toUtc);
+    if (maxRows && maxRows > 0) params.append('maxRows', maxRows.toString());
+
+    return api.get<Blob>(
+      `${STORE_ENDPOINTS.contextLogsExportScoringCsv(storeId)}?${params.toString()}`,
+      { responseType: 'blob' },
     );
   },
 
