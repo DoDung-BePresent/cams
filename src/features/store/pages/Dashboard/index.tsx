@@ -118,7 +118,9 @@ const NowPlayingBanner = ({
   const trackTitle = s?.currentTrackName?.trim();
   const idle = !hasStream && !trackTitle;
   const iotStatusTag =
-    s?.isIotDeviceOffline == null ? null : s.isIotDeviceOffline ? (
+    s?.isIotDeviceAssigned === false ? (
+      <Tag color='warning'>IoT Unassigned</Tag>
+    ) : s?.isIotDeviceOffline == null ? null : s.isIotDeviceOffline ? (
       <Tag color='error'>IoT Offline</Tag>
     ) : (
       <Tag color='success'>IoT Online</Tag>
@@ -962,13 +964,6 @@ export const StoreDashboard = () => {
 
   const liveChartsBySpace = useMemo(() => {
     const items = liveLogsQuery.data?.items ?? [];
-    if (items.length === 0) {
-      return [] as {
-        key: string;
-        title: string;
-        rows: StoreContextRawLogItem[];
-      }[];
-    }
 
     if (spaceId) {
       const filtered = items.filter((r) => r.spaceId === spaceId);
@@ -983,6 +978,12 @@ export const StoreDashboard = () => {
       string,
       { title: string; rows: StoreContextRawLogItem[] }
     >();
+
+    // Always include all active spaces, even when telemetry is empty in current window.
+    (spaces ?? []).forEach((s) => {
+      map.set(s.id, { title: s.name, rows: [] });
+    });
+
     for (const r of items) {
       const key = r.spaceId || r.spaceName;
       if (!map.has(key)) {
