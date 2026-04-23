@@ -105,6 +105,7 @@ export function buildBrandProfileSunoPrompt(
   mood: BrandProfileSunoMood,
   extras: { title?: string; genre?: string; artist?: string },
   sunoPromptTemplate: string | null | undefined,
+  maxLength = 4000,
 ): string {
   const templateKey = brand.fuzzyProfileTemplate?.trim() || 'brand profile';
 
@@ -177,8 +178,8 @@ export function buildBrandProfileSunoPrompt(
       bpmBand,
     );
 
-    return joinPromptWithinLimit(camsSummary, fromTemplate, 4000);
+    return joinPromptWithinLimit(camsSummary, fromTemplate, maxLength);
   }
 
-  return defaultNarrative.slice(0, 4000);
+  return defaultNarrative.slice(0, maxLength);
 }
