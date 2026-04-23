@@ -173,10 +173,12 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     const normalizedLyrics = instrumental
       ? null
       : values.lyrics?.trim() || null;
+    const customMode = !instrumental;
 
     const result = await createGeneration.mutateAsync({
       ...payload,
       prompt: finalPrompt,
+      customMode,
       instrumental,
       lyrics: normalizedLyrics,
     });
