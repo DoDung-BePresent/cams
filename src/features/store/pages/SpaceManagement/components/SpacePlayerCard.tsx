@@ -170,14 +170,20 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     return parsed.toLocaleString();
   };
 
-  const extendedState = spaceState as
-    | (typeof spaceState & {
-        isIotDeviceAssigned?: boolean;
-        isSuggestOnly?: boolean;
-        fuzzyConfidence?: number | null;
-      })
-    | null
-    | undefined;
+  const rawState = (spaceState ?? {}) as Record<string, unknown>;
+  const extendedState = {
+    isIotDeviceAssigned:
+      (spaceState as { isIotDeviceAssigned?: boolean } | undefined)
+        ?.isIotDeviceAssigned ??
+      (rawState.is_iot_device_assigned as boolean | undefined),
+    isSuggestOnly:
+      (spaceState as { isSuggestOnly?: boolean } | undefined)?.isSuggestOnly ??
+      (rawState.is_suggest_only as boolean | undefined),
+    fuzzyConfidence:
+      (spaceState as { fuzzyConfidence?: number | null } | undefined)
+        ?.fuzzyConfidence ??
+      (rawState.fuzzy_confidence as number | null | undefined),
+  };
 
   // Normalize queue items: accept either `position` or `orderIndex`, accept optional queueStatus from server
   const normalizedQueue = (
@@ -494,6 +500,59 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         ]}
       />
 
+      {spaceState && (
+        <Alert
+          type={
+            extendedState?.isIotDeviceAssigned === false
+              ? 'warning'
+              : spaceState.isIotDeviceOffline
+                ? 'error'
+                : 'success'
+          }
+          showIcon
+          message={
+            <Text strong>
+              {extendedState?.isIotDeviceAssigned === false
+                ? 'IoT device not assigned'
+                : spaceState.isIotDeviceOffline
+                  ? 'IoT device offline'
+                  : 'IoT device online'}
+            </Text>
+          }
+          description={
+            extendedState?.isIotDeviceAssigned === false
+              ? 'This space has no IoT device mapping yet. Assign an IoT device ID to enable live telemetry analysis.'
+              : spaceState.isIotDeviceOffline
+                ? 'Latest IoT telemetry reports this device is offline. CAMS has switched to fallback/default mode until the device is online again.'
+                : 'Latest IoT telemetry reports this device is online. CAMS is using live telemetry for mood analysis.'
+          }
+        />
+      )}
+
+      {extendedState?.isSuggestOnly && !spaceState?.isManualOverride && (
+        <Alert
+          type='warning'
+          showIcon
+          message={<Text strong>AI Suggest-only mode</Text>}
+          description={
+            <Space
+              direction='vertical'
+              size={2}
+            >
+              <Text>
+                Confidence is low or mood cooldown is active, so CAMS is not
+                auto-transitioning right now.
+              </Text>
+              {extendedState?.fuzzyConfidence != null && (
+                <Text type='secondary'>
+                  Confidence: {Math.round(extendedState.fuzzyConfidence * 100)}%
+                </Text>
+              )}
+            </Space>
+          }
+        />
+      )}
+
       {activeTab === 'player' ? (
         <Space
           direction='vertical'
@@ -566,60 +625,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                     <Tag color='cyan'>
                       Ends in {formatPlaybackTime(schedulingRemainingSeconds)}
                     </Tag>
-                  )}
-                </Space>
-              }
-            />
-          )}
-
-          {spaceState && (
-            <Alert
-              type={
-                extendedState?.isIotDeviceAssigned === false
-                  ? 'warning'
-                  : spaceState.isIotDeviceOffline
-                    ? 'error'
-                    : 'success'
-              }
-              showIcon
-              message={
-                <Text strong>
-                  {extendedState?.isIotDeviceAssigned === false
-                    ? 'IoT device not assigned'
-                    : spaceState.isIotDeviceOffline
-                      ? 'IoT device offline'
-                      : 'IoT device online'}
-                </Text>
-              }
-              description={
-                extendedState?.isIotDeviceAssigned === false
-                  ? 'This space has no IoT device mapping yet. Assign an IoT device ID to enable live telemetry analysis.'
-                  : spaceState.isIotDeviceOffline
-                    ? 'Latest IoT telemetry reports this device is offline. CAMS has switched to fallback/default mode until the device is online again.'
-                    : 'Latest IoT telemetry reports this device is online. CAMS is using live telemetry for mood analysis.'
-              }
-            />
-          )}
-
-          {extendedState?.isSuggestOnly && !spaceState?.isManualOverride && (
-            <Alert
-              type='warning'
-              showIcon
-              message={<Text strong>AI Suggest-only mode</Text>}
-              description={
-                <Space
-                  direction='vertical'
-                  size={2}
-                >
-                  <Text>
-                    Confidence is low or mood cooldown is active, so CAMS is not
-                    auto-transitioning right now.
-                  </Text>
-                  {extendedState?.fuzzyConfidence != null && (
-                    <Text type='secondary'>
-                      Confidence:{' '}
-                      {Math.round(extendedState.fuzzyConfidence * 100)}%
-                    </Text>
                   )}
                 </Space>
               }
