@@ -20,6 +20,7 @@ import {
   Typography,
 } from 'antd';
 import {
+  DownloadOutlined,
   LockOutlined,
   ReloadOutlined,
   SoundOutlined,
@@ -118,7 +119,9 @@ const NowPlayingBanner = ({
   const trackTitle = s?.currentTrackName?.trim();
   const idle = !hasStream && !trackTitle;
   const iotStatusTag =
-    s?.isIotDeviceOffline == null ? null : s.isIotDeviceOffline ? (
+    s?.isIotDeviceAssigned === false ? (
+      <Tag color='warning'>IoT Unassigned</Tag>
+    ) : s?.isIotDeviceOffline == null ? null : s.isIotDeviceOffline ? (
       <Tag color='error'>IoT Offline</Tag>
     ) : (
       <Tag color='success'>IoT Online</Tag>
@@ -914,6 +917,31 @@ export const StoreDashboard = () => {
     staleTime: STALE_TIME.short,
   });
 
+  const handleExportScoringCsv = async () => {
+    if (!storeId) return;
+
+    const response = await storeService.exportContextScoringLogsCsv(
+      storeId,
+      {
+        spaceId,
+        fromUtc,
+        toUtc,
+      },
+      10000,
+    );
+
+    const blob = response.data;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const timestamp = dayjs().format('YYYYMMDDHHmmss');
+    a.href = url;
+    a.download = `store-${storeId}-scoring-logs-${timestamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
   const timeSeriesQuery = useQuery({
     queryKey: [
       'store-dashboard',
@@ -962,12 +990,17 @@ export const StoreDashboard = () => {
 
   const liveChartsBySpace = useMemo(() => {
     const items = liveLogsQuery.data?.items ?? [];
-    if (items.length === 0) {
-      return [] as {
-        key: string;
-        title: string;
-        rows: StoreContextRawLogItem[];
-      }[];
+    const blocksFromItems = new Map<
+      string,
+      { title: string; rows: StoreContextRawLogItem[] }
+    >();
+
+    for (const r of items) {
+      const key = r.spaceId || r.spaceName;
+      if (!blocksFromItems.has(key)) {
+        blocksFromItems.set(key, { title: r.spaceName, rows: [] });
+      }
+      blocksFromItems.get(key)!.rows.push(r);
     }
 
     if (spaceId) {
@@ -979,19 +1012,23 @@ export const StoreDashboard = () => {
       return [{ key: spaceId, title, rows: filtered }];
     }
 
-    const map = new Map<
-      string,
-      { title: string; rows: StoreContextRawLogItem[] }
-    >();
-    for (const r of items) {
-      const key = r.spaceId || r.spaceName;
-      if (!map.has(key)) {
-        map.set(key, { title: r.spaceName, rows: [] });
-      }
-      map.get(key)!.rows.push(r);
+    // Always render all active spaces for this store.
+    // Spaces without telemetry in the selected window still appear with empty rows,
+    // so users can clearly see missing telemetry instead of "missing cards".
+    if ((spaces?.length ?? 0) > 0) {
+      return (spaces ?? []).map((space) => {
+        const fromSpaceId = blocksFromItems.get(space.id);
+        const fromSpaceName = blocksFromItems.get(space.name);
+        const block = fromSpaceId ?? fromSpaceName;
+        return {
+          key: space.id,
+          title: space.name,
+          rows: block?.rows ?? [],
+        };
+      });
     }
 
-    return Array.from(map.entries()).map(([key, v]) => ({
+    return Array.from(blocksFromItems.entries()).map(([key, v]) => ({
       key,
       title: v.title,
       rows: v.rows,
@@ -1133,6 +1170,30 @@ export const StoreDashboard = () => {
       key: 'currentWeather',
       render: (value?: string | null) => value || '--',
       width: 140,
+    },
+    {
+      title: 'Confidence',
+      dataIndex: 'fuzzyConfidence',
+      key: 'fuzzyConfidence',
+      width: 120,
+      render: (value?: number | null) =>
+        value == null ? '--' : `${Math.round(value * 100)}%`,
+    },
+    {
+      title: 'Suggest-only',
+      dataIndex: 'isSuggestOnly',
+      key: 'isSuggestOnly',
+      width: 120,
+      render: (value?: boolean) =>
+        value ? <Tag color='orange'>Yes</Tag> : <Tag color='green'>No</Tag>,
+    },
+    {
+      title: 'Reason',
+      dataIndex: 'fuzzyReason',
+      key: 'fuzzyReason',
+      render: (value?: string | null) => value || '--',
+      width: 260,
+      ellipsis: true,
     },
   ];
 
@@ -1728,13 +1789,22 @@ export const StoreDashboard = () => {
         style={{ marginTop: 16 }}
         title='Raw context logs (analysis results)'
         extra={
-          <Button
-            type={showRawLogs ? 'default' : 'primary'}
-            icon={<TableOutlined />}
-            onClick={() => setShowRawLogs((v) => !v)}
-          >
-            {showRawLogs ? 'Hide table' : 'Show raw log table'}
-          </Button>
+          <Space>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleExportScoringCsv}
+              disabled={!storeId}
+            >
+              Export scoring CSV
+            </Button>
+            <Button
+              type={showRawLogs ? 'default' : 'primary'}
+              icon={<TableOutlined />}
+              onClick={() => setShowRawLogs((v) => !v)}
+            >
+              {showRawLogs ? 'Hide table' : 'Show raw log table'}
+            </Button>
+          </Space>
         }
       >
         {showRawLogs ? (

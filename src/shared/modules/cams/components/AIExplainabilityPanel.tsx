@@ -1,4 +1,14 @@
-import { Card, Descriptions, Tag, Alert, Space, Tooltip } from 'antd';
+import {
+  Card,
+  Descriptions,
+  Tag,
+  Alert,
+  Space,
+  Tooltip,
+  Progress,
+  Typography,
+  Table,
+} from 'antd';
 import {
   ThunderboltOutlined,
   FireOutlined,
@@ -7,6 +17,8 @@ import {
   SoundOutlined,
 } from '@ant-design/icons';
 import type { SpaceStateDto, SpaceStateResponse } from '../types';
+
+const { Text } = Typography;
 
 interface AIExplainabilityPanelProps {
   spaceState: SpaceStateDto | SpaceStateResponse;
@@ -22,6 +34,68 @@ export const AIExplainabilityPanel = ({
   spaceState,
   compact = false,
 }: AIExplainabilityPanelProps) => {
+  const formatSignalLabel = (raw: string) => {
+    const match = raw.match(/^([^(]+)\s*\((.+)\)$/);
+    const key = (match?.[1] ?? raw).trim();
+    const detail = match?.[2]?.trim();
+
+    const title = key
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/^./, (c) => c.toUpperCase());
+
+    return { title, detail };
+  };
+
+  const contributionColumns = [
+    {
+      title: 'Signal',
+      key: 'signal',
+      width: 180,
+      render: (_: unknown, item: { signal: string }) => (
+        <Text strong>{formatSignalLabel(item.signal).title}</Text>
+      ),
+    },
+    {
+      title: 'Live value',
+      key: 'liveValue',
+      width: 280,
+      render: (_: unknown, item: { signal: string }) => (
+        <Text type='secondary'>
+          {formatSignalLabel(item.signal).detail ?? '-'}
+        </Text>
+      ),
+    },
+    {
+      title: 'Impact',
+      key: 'impact',
+      render: (
+        _: unknown,
+        item: {
+          chillDelta: number;
+          focusDelta: number;
+          energeticDelta: number;
+        },
+      ) => (
+        <Space
+          size={6}
+          wrap
+        >
+          <Tag color='blue'>
+            Chill {item.chillDelta >= 0 ? '+' : ''}
+            {item.chillDelta.toFixed(2)}
+          </Tag>
+          <Tag color='purple'>
+            Focus {item.focusDelta >= 0 ? '+' : ''}
+            {item.focusDelta.toFixed(2)}
+          </Tag>
+          <Tag color='gold'>
+            Energetic {item.energeticDelta >= 0 ? '+' : ''}
+            {item.energeticDelta.toFixed(2)}
+          </Tag>
+        </Space>
+      ),
+    },
+  ];
   const inferBpmRangeFromMood = (moodName?: string | null) => {
     const mood = moodName?.toLowerCase() || '';
 
@@ -53,9 +127,32 @@ export const AIExplainabilityPanel = ({
   const hasBpmRange = bpmMin !== null && bpmMax !== null;
   const hasFuzzyInfo = spaceState.fuzzyRule || spaceState.fuzzyReason;
   const isFallback = spaceState.isBpmFallback === true;
+  const scoreBreakdown = spaceState.fuzzyScoreBreakdown ?? null;
+  const confidence = spaceState.fuzzyConfidence ?? null;
+  const confidencePercent =
+    confidence == null
+      ? null
+      : Math.max(0, Math.min(100, Math.round(confidence * 100)));
+  const confidenceStatus =
+    confidencePercent == null
+      ? 'normal'
+      : confidencePercent < 40
+        ? 'exception'
+        : confidencePercent < 65
+          ? 'active'
+          : 'success';
+  const hasScoreBreakdown = !!scoreBreakdown;
+  const isSuggestOnly = spaceState.isSuggestOnly === true;
 
   // Don't show panel if no AI info available
-  if (!hasBpmRange && !hasFuzzyInfo && !isFallback) {
+  if (
+    !hasBpmRange &&
+    !hasFuzzyInfo &&
+    !isFallback &&
+    !hasScoreBreakdown &&
+    confidencePercent == null &&
+    !isSuggestOnly
+  ) {
     return null;
   }
 
@@ -116,6 +213,20 @@ export const AIExplainabilityPanel = ({
                 Mood-only
               </Tag>
             )}
+            {confidencePercent != null && (
+              <Tag
+                color={
+                  confidencePercent >= 65
+                    ? 'green'
+                    : confidencePercent >= 40
+                      ? 'orange'
+                      : 'red'
+                }
+              >
+                Confidence: {confidencePercent}%
+              </Tag>
+            )}
+            {isSuggestOnly && <Tag color='orange'>Suggest-only</Tag>}
           </Space>
         }
       />
@@ -151,6 +262,33 @@ export const AIExplainabilityPanel = ({
               >
                 {spaceState.moodName}
               </Tag>
+            </Descriptions.Item>
+          )}
+
+          {confidencePercent != null && (
+            <Descriptions.Item
+              label={
+                <Tooltip title='Model confidence from top-1 vs top-2 mood score gap'>
+                  <Space size={4}>
+                    <span>Confidence</span>
+                    <InfoCircleOutlined style={{ color: '#999' }} />
+                  </Space>
+                </Tooltip>
+              }
+            >
+              <Space
+                direction='vertical'
+                style={{ width: '100%' }}
+                size={4}
+              >
+                <Text strong>{confidencePercent}%</Text>
+                <Progress
+                  percent={confidencePercent}
+                  status={confidenceStatus}
+                  size='small'
+                  showInfo={false}
+                />
+              </Space>
             </Descriptions.Item>
           )}
 
@@ -205,6 +343,61 @@ export const AIExplainabilityPanel = ({
           )}
         </Descriptions>
 
+        {hasScoreBreakdown && scoreBreakdown && (
+          <Card
+            size='small'
+            title='Mood score breakdown'
+          >
+            <Space
+              direction='vertical'
+              style={{ width: '100%' }}
+              size='small'
+            >
+              <div>
+                <Text type='secondary'>Chill</Text>
+                <Progress
+                  percent={Math.round(scoreBreakdown.chillScore * 100)}
+                  size='small'
+                  showInfo
+                />
+              </div>
+              <div>
+                <Text type='secondary'>Focus</Text>
+                <Progress
+                  percent={Math.round(scoreBreakdown.focusScore * 100)}
+                  size='small'
+                  showInfo
+                />
+              </div>
+              <div>
+                <Text type='secondary'>Energetic</Text>
+                <Progress
+                  percent={Math.round(scoreBreakdown.energeticScore * 100)}
+                  size='small'
+                  showInfo
+                />
+              </div>
+
+              {scoreBreakdown.contributions?.length > 0 && (
+                <Space
+                  direction='vertical'
+                  size={8}
+                  style={{ width: '100%' }}
+                >
+                  <Text strong>Signal contributions</Text>
+                  <Table
+                    size='small'
+                    pagination={false}
+                    rowKey={(row) => row.signal}
+                    columns={contributionColumns}
+                    dataSource={scoreBreakdown.contributions}
+                  />
+                </Space>
+              )}
+            </Space>
+          </Card>
+        )}
+
         {/* Fallback Warning */}
         {isFallback && (
           <Alert
@@ -212,6 +405,16 @@ export const AIExplainabilityPanel = ({
             showIcon
             message='Using mood-only selection'
             description='Not enough tracks with BPM metadata in the selected range. AI is using mood-only selection to maintain queue stability.'
+            style={{ fontSize: 12 }}
+          />
+        )}
+
+        {isSuggestOnly && (
+          <Alert
+            type='warning'
+            showIcon
+            message='Suggest-only mode active'
+            description='Confidence is low or cooldown is active, so automatic mood transition is temporarily suppressed.'
             style={{ fontSize: 12 }}
           />
         )}

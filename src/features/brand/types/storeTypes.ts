@@ -141,6 +141,10 @@ export type StoreContextRawLogItem = {
   avgNoise?: number | null;
   crowdDensity?: number | null;
   currentWeather?: string | null;
+  fuzzyReason?: string | null;
+  fuzzyConfidence?: number | null;
+  isSuggestOnly?: boolean;
+  fuzzyScoreJson?: string | null;
 };
 
 export type StoreContextTimeSeriesFilter = {
