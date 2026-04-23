@@ -3,13 +3,13 @@ import {
   Alert,
   Button,
   Space,
-  Segmented,
   Tag,
   Typography,
   Divider,
   Flex,
   message,
   App,
+  Segmented,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import SimpleBar from 'simplebar-react';
@@ -130,14 +130,21 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     },
   });
 
+  // Debounce ref for volume updates
+  const volumeUpdateTimeoutRef = useRef<number | null>(null);
+  // Previous-button double-tap: first tap seeks to beginning; second tap within this
+  // window goes to the actual previous track.
+  const prevTapTimestampRef = useRef<number>(0);
+  const PREV_DOUBLE_TAP_MS = 2000; // 2 s window
+
   // ✅ Use spaceState directly from React Query
   const hlsUrl = spaceState?.hlsUrl || null;
   const hasActiveTrack = !!spaceState?.currentQueueItemId;
   const isPending = !!spaceState?.pendingQueueItemId;
   const rawQueue = spaceState?.spaceQueueItems || [];
   // queue presence is derived where needed
-  const volumeUpdateTimeoutRef = useRef<number | null>(null);
 
+  // ✅ Calculate if currently playing - prioritize isPaused flag from server
   const isPlaying = spaceState
     ? !spaceState.isPaused && isSpacePlaying(spaceState)
     : false;
@@ -162,28 +169,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         ),
       )
     : (spaceState?.schedulingRemainingSeconds ?? null);
-
-  const formatStatusDateTime = (value?: string | null) => {
-    if (!value) return 'N/A';
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return value;
-    return parsed.toLocaleString();
-  };
-
-  const rawState = (spaceState ?? {}) as Record<string, unknown>;
-  const extendedState = {
-    isIotDeviceAssigned:
-      (spaceState as { isIotDeviceAssigned?: boolean } | undefined)
-        ?.isIotDeviceAssigned ??
-      (rawState.is_iot_device_assigned as boolean | undefined),
-    isSuggestOnly:
-      (spaceState as { isSuggestOnly?: boolean } | undefined)?.isSuggestOnly ??
-      (rawState.is_suggest_only as boolean | undefined),
-    fuzzyConfidence:
-      (spaceState as { fuzzyConfidence?: number | null } | undefined)
-        ?.fuzzyConfidence ??
-      (rawState.fuzzy_confidence as number | null | undefined),
-  };
 
   // Normalize queue items: accept either `position` or `orderIndex`, accept optional queueStatus from server
   const normalizedQueue = (
@@ -254,31 +239,26 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     } as SpaceQueueItemResponse;
   });
 
-  const isPreviousDisabled =
-    queueItems.length === 0 ||
-    queueItems.filter((it) => it.position < (currentItem.position ?? 0))
-      .length === 0;
-  const isNextDisabled =
-    queueItems.length === 0 ||
-    (queueItems.filter((it) => it.position > (currentItem.position ?? 0))
-      .length === 0 &&
-      (spaceState?.queueEndBehavior ?? QueueEndBehavior.Stop) !==
-        QueueEndBehavior.RepeatQueue);
-
+  // Playback control handlers
   const handlePlayPause = useCallback(() => {
     if (!hasActiveTrack) {
       message.warning('Please select a playlist first');
       return;
     }
+
     if (isPending) {
       message.info('Playlist is being prepared. Please wait...');
       return;
     }
+
+    // Toggle based on current playing state
+    const command = isPlaying ? PlaybackCommand.Pause : PlaybackCommand.Resume;
+
     playbackControl.mutate({
       spaceId: space.id,
-      command: isPlaying ? PlaybackCommand.Pause : PlaybackCommand.Resume,
+      command,
     });
-  }, [space.id, hasActiveTrack, isPending, isPlaying, playbackControl]);
+  }, [space.id, isPlaying, hasActiveTrack, isPending, playbackControl]);
 
   const handleSkipNext = useCallback(() => {
     if (isPending) {
@@ -296,85 +276,42 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
       message.info('Playlist is being prepared. Please wait...');
       return;
     }
+
+    const now = Date.now();
+    const timeSinceLastTap = now - prevTapTimestampRef.current;
+    prevTapTimestampRef.current = now;
+
+    // First tap (or tap after window expired): seek to start of current track.
+    if (timeSinceLastTap > PREV_DOUBLE_TAP_MS) {
+      playbackControl.mutate({
+        spaceId: space.id,
+        command: PlaybackCommand.Seek,
+        seekPositionSeconds: 0,
+      });
+      return;
+    }
+
+    // Second tap within the window: jump to previous track.
+    const currentPos = currentItem.position ?? 0;
+    const previous = queueItems
+      .filter((it) => it.position < currentPos)
+      .sort((a, b) => b.position - a.position)[0];
+
+    if (previous && previous.queueItemId) {
+      playbackControl.mutate({
+        spaceId: space.id,
+        command: PlaybackCommand.SkipToTrack,
+        targetQueueItemId: previous.queueItemId,
+      });
+      return;
+    }
+
+    // Fallback: no previous found — send regular SkipPrevious
     playbackControl.mutate({
       spaceId: space.id,
       command: PlaybackCommand.SkipPrevious,
     });
-  }, [space.id, isPending, playbackControl]);
-
-  const handleSeek = useCallback(
-    (seconds: number) => {
-      if (isPending) {
-        message.info('Playlist is being prepared. Please wait...');
-        return;
-      }
-      playbackControl.mutate({
-        spaceId: space.id,
-        command: PlaybackCommand.Seek,
-        seekPositionSeconds: Math.max(0, seconds),
-      });
-    },
-    [space.id, isPending, playbackControl],
-  );
-
-  const handleRewind10 = useCallback(() => {
-    if (isPending) {
-      message.info('Playlist is being prepared. Please wait...');
-      return;
-    }
-    playbackControl.mutate({
-      spaceId: space.id,
-      command: PlaybackCommand.SeekBackward,
-      seekPositionSeconds: 10,
-    });
-  }, [space.id, isPending, playbackControl]);
-
-  const handleForward10 = useCallback(() => {
-    if (isPending) {
-      message.info('Playlist is being prepared. Please wait...');
-      return;
-    }
-    playbackControl.mutate({
-      spaceId: space.id,
-      command: PlaybackCommand.SeekForward,
-      seekPositionSeconds: 10,
-    });
-  }, [space.id, isPending, playbackControl]);
-
-  const handleVolumeChangeBackend = useCallback(
-    (volume: number) => {
-      if (volumeUpdateTimeoutRef.current) {
-        clearTimeout(volumeUpdateTimeoutRef.current);
-      }
-      volumeUpdateTimeoutRef.current = window.setTimeout(() => {
-        updateAudio.mutate({
-          spaceId: space.id,
-          data: {
-            volumePercent: Math.max(0, Math.min(100, Math.floor(volume))),
-          },
-        });
-        volumeUpdateTimeoutRef.current = null;
-      }, 300);
-    },
-    [space.id, updateAudio],
-  );
-
-  const handleToggleMute = useCallback(() => {
-    updateAudio.mutate({
-      spaceId: space.id,
-      data: { isMuted: !spaceState?.isMuted },
-    });
-  }, [space.id, spaceState?.isMuted, updateAudio]);
-
-  const handleQueueEndBehaviorChange = useCallback(
-    (value: number) => {
-      updateAudio.mutate({
-        spaceId: space.id,
-        data: { queueEndBehavior: value as QueueEndBehavior },
-      });
-    },
-    [space.id, updateAudio],
-  );
+  }, [space.id, isPending, playbackControl, currentItem.position, queueItems]);
 
   const handleSkipToTrack = useCallback(
     (_queueItemId: string, trackId?: string) => {
@@ -462,6 +399,84 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     });
   }, [clearQueue, space.id]);
 
+  // Seek (absolute) from player slider (debounced on after-change)
+  const handleSeek = useCallback(
+    (seconds: number) => {
+      if (isPending) {
+        message.info('Playlist is being prepared. Please wait...');
+        return;
+      }
+
+      playbackControl.mutate({
+        spaceId: space.id,
+        command: PlaybackCommand.Seek,
+        seekPositionSeconds: Math.max(0, seconds),
+      });
+    },
+    [space.id, isPending, playbackControl],
+  );
+
+  const handleRewind10 = useCallback(() => {
+    if (isPending) {
+      message.info('Playlist is being prepared. Please wait...');
+      return;
+    }
+    playbackControl.mutate({
+      spaceId: space.id,
+      command: PlaybackCommand.SeekBackward,
+      seekPositionSeconds: 10,
+    });
+  }, [space.id, isPending, playbackControl]);
+
+  const handleForward10 = useCallback(() => {
+    if (isPending) {
+      message.info('Playlist is being prepared. Please wait...');
+      return;
+    }
+    playbackControl.mutate({
+      spaceId: space.id,
+      command: PlaybackCommand.SeekForward,
+      seekPositionSeconds: 10,
+    });
+  }, [space.id, isPending, playbackControl]);
+
+  // Volume / Mute / Queue behavior handlers
+  const handleVolumeChangeBackend = useCallback(
+    (volume: number) => {
+      if (volumeUpdateTimeoutRef.current) {
+        clearTimeout(volumeUpdateTimeoutRef.current);
+        volumeUpdateTimeoutRef.current = null;
+      }
+      volumeUpdateTimeoutRef.current = window.setTimeout(() => {
+        updateAudio.mutate({
+          spaceId: space.id,
+          data: {
+            volumePercent: Math.max(0, Math.min(100, Math.floor(volume))),
+          },
+        });
+        volumeUpdateTimeoutRef.current = null;
+      }, 400);
+    },
+    [space.id, updateAudio],
+  );
+
+  const handleToggleMute = useCallback(() => {
+    updateAudio.mutate({
+      spaceId: space.id,
+      data: { isMuted: !spaceState?.isMuted },
+    });
+  }, [space.id, spaceState?.isMuted, updateAudio]);
+
+  const handleQueueEndBehaviorChange = useCallback(
+    (value: QueueEndBehavior) => {
+      updateAudio.mutate({
+        spaceId: space.id,
+        data: { queueEndBehavior: value },
+      });
+    },
+    [space.id, updateAudio],
+  );
+
   const handleOverrideToggle = useCallback(
     (checked: boolean) => {
       if (checked) {
@@ -500,65 +515,13 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         ]}
       />
 
-      {spaceState && (
-        <Alert
-          type={
-            extendedState?.isIotDeviceAssigned === false
-              ? 'warning'
-              : spaceState.isIotDeviceOffline
-                ? 'error'
-                : 'success'
-          }
-          showIcon
-          message={
-            <Text strong>
-              {extendedState?.isIotDeviceAssigned === false
-                ? 'IoT device not assigned'
-                : spaceState.isIotDeviceOffline
-                  ? 'IoT device offline'
-                  : 'IoT device online'}
-            </Text>
-          }
-          description={
-            extendedState?.isIotDeviceAssigned === false
-              ? 'This space has no IoT device mapping yet. Assign an IoT device ID to enable live telemetry analysis.'
-              : spaceState.isIotDeviceOffline
-                ? 'Latest IoT telemetry reports this device is offline. CAMS has switched to fallback/default mode until the device is online again.'
-                : 'Latest IoT telemetry reports this device is online. CAMS is using live telemetry for mood analysis.'
-          }
-        />
-      )}
-
-      {extendedState?.isSuggestOnly && !spaceState?.isManualOverride && (
-        <Alert
-          type='warning'
-          showIcon
-          message={<Text strong>AI Suggest-only mode</Text>}
-          description={
-            <Space
-              direction='vertical'
-              size={2}
-            >
-              <Text>
-                Confidence is low or mood cooldown is active, so CAMS is not
-                auto-transitioning right now.
-              </Text>
-              {extendedState?.fuzzyConfidence != null && (
-                <Text type='secondary'>
-                  Confidence: {Math.round(extendedState.fuzzyConfidence * 100)}%
-                </Text>
-              )}
-            </Space>
-          }
-        />
-      )}
-
-      {activeTab === 'player' ? (
+      <div style={{ display: activeTab === 'player' ? 'block' : 'none' }}>
         <Space
           direction='vertical'
           style={{ width: '100%' }}
           size='middle'
         >
+          {/* Status Alerts */}
           {spaceState?.isManualOverride && (
             <Alert
               type='warning'
@@ -573,32 +536,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                     <Tag color='red'>
                       TTL {formatPlaybackTime(manualOverrideRemainingSeconds)}
                     </Tag>
-                  )}
-                </Space>
-              }
-              description={
-                <Space
-                  direction='vertical'
-                  size={2}
-                >
-                  {spaceState.overrideReason && (
-                    <Text>Reason: {spaceState.overrideReason}</Text>
-                  )}
-                  {spaceState.manualOverrideActivatedAtUtc && (
-                    <Text type='secondary'>
-                      Activated:{' '}
-                      {formatStatusDateTime(
-                        spaceState.manualOverrideActivatedAtUtc,
-                      )}
-                    </Text>
-                  )}
-                  {spaceState.manualOverrideExpiresAtUtc && (
-                    <Text type='secondary'>
-                      Expires:{' '}
-                      {formatStatusDateTime(
-                        spaceState.manualOverrideExpiresAtUtc,
-                      )}
-                    </Text>
                   )}
                 </Space>
               }
@@ -631,6 +568,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             />
           )}
 
+          {/* Player Controls */}
           <SpacePlayer
             spaceId={space.id}
             hlsUrl={hlsUrl}
@@ -649,11 +587,26 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             onForward10={handleForward10}
             onVolumeChangeComplete={handleVolumeChangeBackend}
             onToggleMute={handleToggleMute}
-            isPreviousDisabled={isPreviousDisabled}
-            isNextDisabled={isNextDisabled}
-            onQueueEndBehaviorChange={handleQueueEndBehaviorChange}
+            onQueueEndBehaviorChange={(next) =>
+              handleQueueEndBehaviorChange(next as QueueEndBehavior)
+            }
+            isPreviousDisabled={
+              queueItems.length === 0 ||
+              queueItems.filter(
+                (it) => it.position < (currentItem.position ?? 0),
+              ).length === 0
+            }
+            isNextDisabled={
+              queueItems.length === 0 ||
+              (queueItems.filter(
+                (it) => it.position > (currentItem.position ?? 0),
+              ).length === 0 &&
+                (spaceState?.queueEndBehavior ?? QueueEndBehavior.Stop) !==
+                  QueueEndBehavior.RepeatQueue)
+            }
           />
 
+          {/* AI Explainability Panel */}
           {spaceState && !spaceState.isManualOverride && (
             <>
               <Divider style={{ margin: '8px 0' }} />
@@ -661,6 +614,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             </>
           )}
 
+          {/* Queue Management */}
           <Divider style={{ margin: '8px 0' }} />
           <Flex
             justify='space-between'
@@ -699,43 +653,52 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             />
           </SimpleBar>
         </Space>
-      ) : (
+      </div>
+
+      <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
         <Space
           direction='vertical'
           style={{ width: '100%' }}
           size='middle'
         >
-          <SettingSwitch
-            label='Auto Volume'
-            description='Adjust volume based on ambient noise level'
-            value={isAutoVolumeEnabled}
-            onChange={(checked) => toggleAutoVolume.mutate(checked)}
-            disabled={toggleAutoVolume.isPending}
-          />
+          <Space
+            direction='vertical'
+            style={{ width: '100%' }}
+            size={0}
+          >
+            {/* Settings Switches */}
+            <SettingSwitch
+              label='Auto Volume'
+              description='Adjust volume based on ambient noise level'
+              value={isAutoVolumeEnabled}
+              onChange={(checked) => toggleAutoVolume.mutate(checked)}
+              disabled={toggleAutoVolume.isPending}
+            />
 
-          <SettingSwitch
-            label='Manual Override'
-            description='Manually control music selection instead of AI'
-            value={!!spaceState?.isManualOverride}
-            onChange={handleOverrideToggle}
-            disabled={overridePlaylist.isPending || cancelOverride.isPending}
-          />
+            <SettingSwitch
+              label='Manual Override'
+              description='Manually control music selection instead of AI'
+              value={!!spaceState?.isManualOverride}
+              onChange={handleOverrideToggle}
+              disabled={overridePlaylist.isPending || cancelOverride.isPending}
+            />
 
-          <SettingSwitch
-            label='Scheduling Mode'
-            description='Use schedule-driven playback for active time slots'
-            value={!!spaceState?.isScheduling}
-            onChange={(checked) => {
-              updateSchedulingState.mutate({
-                spaceId: space.id,
-                data: { isScheduling: checked },
-              });
-            }}
-            disabled={updateSchedulingState.isPending}
-            loading={updateSchedulingState.isPending}
-          />
+            <SettingSwitch
+              label='Scheduling Mode'
+              description='Use schedule-driven playback for active time slots'
+              value={!!spaceState?.isScheduling}
+              onChange={(checked) => {
+                updateSchedulingState.mutate({
+                  spaceId: space.id,
+                  data: { isScheduling: checked },
+                });
+              }}
+              disabled={updateSchedulingState.isPending}
+              loading={updateSchedulingState.isPending}
+            />
+          </Space>
         </Space>
-      )}
+      </div>
 
       <AddToQueueDrawer
         open={isAddQueueModalOpen}
