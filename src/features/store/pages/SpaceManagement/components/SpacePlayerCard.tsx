@@ -515,7 +515,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         ]}
       />
 
-      {activeTab === 'player' ? (
+      <div style={{ display: activeTab === 'player' ? 'block' : 'none' }}>
         <Space
           direction='vertical'
           style={{ width: '100%' }}
@@ -653,7 +653,9 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             />
           </SimpleBar>
         </Space>
-      ) : (
+      </div>
+
+      <div style={{ display: activeTab === 'settings' ? 'block' : 'none' }}>
         <Space
           direction='vertical'
           style={{ width: '100%' }}
@@ -696,7 +698,7 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
             />
           </Space>
         </Space>
-      )}
+      </div>
 
       <AddToQueueDrawer
         open={isAddQueueModalOpen}

@@ -153,106 +153,106 @@ export const UpsertFuzzyTemplateDrawer = ({
           style={{ marginBottom: 24 }}
         />
 
-        {activeTab === 'basic' ? (
-          <>
-            {mode === 'edit' && (
-              <Form.Item
-                name='isActive'
-                valuePropName='checked'
-                className='mb-0!'
-              >
-                <SettingSwitch
-                  label='Active'
-                  description='Enable or disable this template'
-                />
-              </Form.Item>
-            )}
-
+        <div style={{ display: activeTab === 'basic' ? 'block' : 'none' }}>
+          {mode === 'edit' && (
             <Form.Item
-              name='templateKey'
-              label='Template Key'
-              rules={[
-                { required: true, message: 'Required' },
-                { max: 64, message: 'Max 64 characters' },
-              ]}
+              name='isActive'
+              valuePropName='checked'
+              className='mb-0!'
             >
-              <Input placeholder='e.g., LuxuryRestaurant' />
+              <SettingSwitch
+                label='Active'
+                description='Enable or disable this template'
+              />
             </Form.Item>
+          )}
 
-            <Form.Item
-              name='displayName'
-              label='Display Name'
-              rules={[{ required: true, message: 'Required' }]}
-            >
-              <Input placeholder='e.g., Luxury Restaurant' />
-            </Form.Item>
+          <Form.Item
+            name='templateKey'
+            label='Template Key'
+            rules={[
+              { required: true, message: 'Required' },
+              { max: 64, message: 'Max 64 characters' },
+            ]}
+          >
+            <Input placeholder='e.g., LuxuryRestaurant' />
+          </Form.Item>
 
+          <Form.Item
+            name='displayName'
+            label='Display Name'
+            rules={[{ required: true, message: 'Required' }]}
+          >
+            <Input placeholder='e.g., Luxury Restaurant' />
+          </Form.Item>
+
+          <Form.Item
+            name='profileDescription'
+            label='Profile Description'
+            rules={[{ max: 1000, message: 'Max 1000 characters' }]}
+          >
+            <Input.TextArea
+              rows={3}
+              showCount
+              maxLength={1000}
+              placeholder='Describe the business intent of this template'
+            />
+          </Form.Item>
+
+          <Form.Item
+            name='sortOrder'
+            label='Sort Order'
+            rules={[{ required: true, message: 'Required' }]}
+          >
+            <InputNumber
+              className='w-full!'
+              min={0}
+            />
+          </Form.Item>
+
+          <div style={gridStyle}>
             <Form.Item
-              name='profileDescription'
-              label='Profile Description'
+              name='chillMoodDescription'
+              label='Chill Mood Description'
               rules={[{ max: 1000, message: 'Max 1000 characters' }]}
             >
               <Input.TextArea
                 rows={3}
                 showCount
                 maxLength={1000}
-                placeholder='Describe the business intent of this template'
+                placeholder='Describe chill mode'
               />
             </Form.Item>
 
             <Form.Item
-              name='sortOrder'
-              label='Sort Order'
-              rules={[{ required: true, message: 'Required' }]}
-            >
-              <InputNumber
-                className='w-full!'
-                min={0}
-              />
-            </Form.Item>
-
-            <div style={gridStyle}>
-              <Form.Item
-                name='chillMoodDescription'
-                label='Chill Mood Description'
-                rules={[{ max: 1000, message: 'Max 1000 characters' }]}
-              >
-                <Input.TextArea
-                  rows={3}
-                  showCount
-                  maxLength={1000}
-                  placeholder='Describe chill mode'
-                />
-              </Form.Item>
-
-              <Form.Item
-                name='focusMoodDescription'
-                label='Focus Mood Description'
-                rules={[{ max: 1000, message: 'Max 1000 characters' }]}
-              >
-                <Input.TextArea
-                  rows={3}
-                  showCount
-                  maxLength={1000}
-                  placeholder='Describe focus mode'
-                />
-              </Form.Item>
-            </div>
-
-            <Form.Item
-              name='energeticMoodDescription'
-              label='Energetic Mood Description'
+              name='focusMoodDescription'
+              label='Focus Mood Description'
               rules={[{ max: 1000, message: 'Max 1000 characters' }]}
             >
               <Input.TextArea
                 rows={3}
                 showCount
                 maxLength={1000}
-                placeholder='Describe energetic mode'
+                placeholder='Describe focus mode'
               />
             </Form.Item>
-          </>
-        ) : (
+          </div>
+
+          <Form.Item
+            name='energeticMoodDescription'
+            label='Energetic Mood Description'
+            rules={[{ max: 1000, message: 'Max 1000 characters' }]}
+          >
+            <Input.TextArea
+              rows={3}
+              showCount
+              maxLength={1000}
+              placeholder='Describe energetic mode'
+            />
+          </Form.Item>
+        </div>
+
+        <div style={{ display: activeTab === 'advanced' ? 'block' : 'none' }}>
           <div style={gridStyle}>
             <Form.Item
               name='chillBpmMin'
@@ -389,7 +389,7 @@ export const UpsertFuzzyTemplateDrawer = ({
               />
             </Form.Item>
           </div>
-        )}
+        </div>
       </Form>
     </Drawer>
   );
