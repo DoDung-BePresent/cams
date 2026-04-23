@@ -44,13 +44,14 @@ import {
 /**
  * Types
  */
-import type { SunoGenerationCreateRequest } from '../types';
+import { AiGenerationMode, type SunoGenerationCreateRequest } from '../types';
 import type { BrandProfileSunoMood } from '../utils/brandProfileSunoPrompt';
 
 const { TextArea } = Input;
 const { Text } = Typography;
 
 type PromptMode = 'manual' | 'brandProfile';
+type VocalMode = 'instrumental' | 'withLyrics';
 
 interface SunoGenerationFormProps {
   onSuccess?: (generationId: string) => void;
@@ -59,6 +60,7 @@ interface SunoGenerationFormProps {
 type SunoGenerationFormValues = SunoGenerationCreateRequest & {
   genre?: string | null;
   profileMood?: BrandProfileSunoMood;
+  vocalMode?: VocalMode;
 };
 
 const storeOverrideLabels: Record<number, string> = {
@@ -101,6 +103,9 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const { data: playlistOptions } = usePlaylistOptions();
 
   const hasProfile = hasBrandMusicProfileData(musicSnapshot ?? undefined);
+  const isBrandModelMode =
+    config?.aiGenerationMode === AiGenerationMode.BrandModel;
+  const promptMaxLength = isBrandModelMode ? 4000 : 500;
   const isResolvingProfile =
     isConfigLoading ||
     (!!brandId && isConfigReady && !hasFromConfig && isBrandLoading);
@@ -109,6 +114,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const watchedTitle = Form.useWatch('title', form);
   const watchedGenre = Form.useWatch('genre', form);
   const watchedArtist = Form.useWatch('artist', form);
+  const watchedVocalMode = Form.useWatch('vocalMode', form) ?? 'instrumental';
 
   const generatedPrompt = useMemo(() => {
     if (
@@ -128,6 +134,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
         artist: watchedArtist ?? undefined,
       },
       config?.sunoPromptTemplate,
+      promptMaxLength,
     );
   }, [
     promptMode,
@@ -137,6 +144,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     watchedGenre,
     watchedArtist,
     config?.sunoPromptTemplate,
+    promptMaxLength,
   ]);
 
   useEffect(() => {
@@ -145,28 +153,55 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
         targetPlaylistId: config.sunoDefaultPlaylistId,
         autoAddToTargetPlaylist: true,
         profileMood: 'focus',
+        vocalMode: 'instrumental',
+        instrumental: true,
       });
     }
   }, [config, form]);
 
   const handleSubmit = async (values: SunoGenerationFormValues) => {
-    const finalPrompt =
+    const rawPrompt =
       promptMode === 'brandProfile'
         ? generatedPrompt.trim() || null
         : values.prompt;
 
-    if (finalPrompt && finalPrompt.trim().length > 4000) {
-      message.error('Prompt too long (max 4000 characters)');
+    const finalPrompt = rawPrompt
+      ? rawPrompt.trim().slice(0, promptMaxLength)
+      : rawPrompt;
+
+    if (
+      promptMode === 'brandProfile' &&
+      rawPrompt &&
+      rawPrompt.trim().length > promptMaxLength
+    ) {
+      message.warning(
+        `Generated profile prompt is too long for current mode. Auto-trimmed to ${promptMaxLength} characters.`,
+      );
+    } else if (rawPrompt && rawPrompt.trim().length > promptMaxLength) {
+      message.error(`Prompt too long (max ${promptMaxLength} characters)`);
       return;
     }
 
     const { genre: _genre, profileMood: _profileMood, ...payload } = values;
     void _genre;
     void _profileMood;
+    const vocalMode = values.vocalMode ?? 'instrumental';
+    const instrumental = vocalMode === 'instrumental';
+    const normalizedLyrics = instrumental
+      ? null
+      : values.lyrics?.trim() || null;
+    const customMode = !instrumental;
 
     const result = await createGeneration.mutateAsync({
       ...payload,
       prompt: finalPrompt,
+      ...(isBrandModelMode
+        ? {
+            customMode,
+            instrumental,
+            lyrics: normalizedLyrics,
+          }
+        : {}),
     });
 
     if (result && onSuccess) {
@@ -178,6 +213,8 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       targetPlaylistId: config?.sunoDefaultPlaylistId,
       autoAddToTargetPlaylist: true,
       profileMood: 'focus',
+      vocalMode: 'instrumental',
+      instrumental: true,
     });
     setPromptMode(
       hasBrandMusicProfileData(musicSnapshot ?? undefined)
@@ -400,8 +437,8 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
                       style={{ fontSize: 12 }}
                     >
                       {generatedPrompt
-                        ? `${generatedPrompt.length}/4000`
-                        : '0/4000'}
+                        ? `${generatedPrompt.length}/${promptMaxLength}`
+                        : `0/${promptMaxLength}`}
                     </Text>
                   </Space>
                 }
@@ -417,6 +454,14 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
                     rows={6}
                     placeholder='Adjust title, genre, zone, or Suno Configuration template to refresh...'
                   />
+                  {!isBrandModelMode &&
+                    generatedPrompt.length > promptMaxLength && (
+                      <Alert
+                        type='warning'
+                        showIcon
+                        message={`This generated prompt exceeds Suno limit (${promptMaxLength} chars). It will be auto-trimmed when submitting.`}
+                      />
+                    )}
                   <Button
                     icon={<CopyOutlined />}
                     disabled={!generatedPrompt}
@@ -440,13 +485,16 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
               label='Custom prompt'
               rules={[
                 { required: true, message: 'Please enter generation prompt' },
-                { max: 4000, message: 'Prompt too long' },
+                {
+                  max: promptMaxLength,
+                  message: `Prompt too long (max ${promptMaxLength} characters)`,
+                },
               ]}
             >
               <TextArea
                 rows={4}
                 placeholder='Describe the music you want to generate...'
-                maxLength={4000}
+                maxLength={promptMaxLength}
                 showCount
               />
             </Form.Item>
@@ -454,6 +502,57 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
 
           <Form.Item
             name='autoAddToTargetPlaylist'
+            hidden
+            initialValue={true}
+          >
+            <input type='hidden' />
+          </Form.Item>
+
+          {isBrandModelMode && (
+            <>
+              <Form.Item
+                label='Vocal mode'
+                name='vocalMode'
+                initialValue='instrumental'
+                className='mb-3!'
+              >
+                <Segmented<VocalMode>
+                  options={[
+                    {
+                      label: 'Instrumental (no lyrics)',
+                      value: 'instrumental',
+                    },
+                    { label: 'Music with lyrics', value: 'withLyrics' },
+                  ]}
+                  onChange={(value) => {
+                    const nextInstrumental = value === 'instrumental';
+                    form.setFieldValue('instrumental', nextInstrumental);
+                    if (nextInstrumental) {
+                      form.setFieldValue('lyrics', null);
+                    }
+                  }}
+                />
+              </Form.Item>
+
+              {watchedVocalMode === 'withLyrics' && (
+                <Form.Item
+                  name='lyrics'
+                  label='Lyrics'
+                  rules={[{ max: 8000, message: 'Lyrics too long' }]}
+                >
+                  <TextArea
+                    rows={5}
+                    placeholder='Optional: enter lyrics for this track...'
+                    maxLength={8000}
+                    showCount
+                  />
+                </Form.Item>
+              )}
+            </>
+          )}
+
+          <Form.Item
+            name='instrumental'
             hidden
             initialValue={true}
           >

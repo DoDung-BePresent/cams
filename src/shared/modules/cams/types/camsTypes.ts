@@ -81,6 +81,7 @@ export enum QueueItemStatus {
 export enum QueueItemSource {
   AI = 0,
   Manager = 1,
+  Scheduling = 2,
 }
 
 /**
@@ -124,6 +125,20 @@ export interface SpaceQueueItemDto {
   orderIndex: number;
 }
 
+export interface FuzzySignalContribution {
+  signal: string;
+  chillDelta: number;
+  focusDelta: number;
+  energeticDelta: number;
+}
+
+export interface FuzzyScoreBreakdown {
+  chillScore: number;
+  focusScore: number;
+  energeticScore: number;
+  signalContributions?: FuzzySignalContribution[] | null;
+}
+
 /**
  * Space state DTO (from SIGNALR_STOREHUB.md § 4)
  * Used in SignalR SpaceStateSync event
@@ -160,6 +175,7 @@ export interface SpaceStateDto {
   pendingOverrideReason: string | null;
   volumePercent: number; // NEW: 0-100
   isIotDeviceOffline?: boolean; // NEW: Latest telemetry reports device offline
+  isIotDeviceAssigned?: boolean;
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
@@ -171,6 +187,9 @@ export interface SpaceStateDto {
   fuzzyRule?: string | null; // Triggered rule name (e.g., "RULE_1_RUSH_HOUR")
   fuzzyReason?: string | null; // Human-readable reason (e.g., "Critical pressure detected")
   isBpmFallback?: boolean | null; // True if using mood-only selection (not enough BPM data)
+  fuzzyConfidence?: number | null;
+  fuzzyScoreBreakdown?: FuzzyScoreBreakdown | null;
+  isSuggestOnly?: boolean;
 }
 
 /**
@@ -333,6 +352,7 @@ export interface SpaceStateResponse {
   pendingOverrideReason: string | null;
   volumePercent: number; // NEW: 0-100
   isIotDeviceOffline?: boolean; // Latest telemetry reports device offline
+  isIotDeviceAssigned?: boolean;
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
@@ -344,6 +364,9 @@ export interface SpaceStateResponse {
   fuzzyRule?: string | null; // Triggered rule name (e.g., "RULE_1_RUSH_HOUR")
   fuzzyReason?: string | null; // Human-readable reason (e.g., "Critical pressure detected")
   isBpmFallback?: boolean | null; // True if using mood-only selection (not enough BPM data)
+  fuzzyConfidence?: number | null;
+  fuzzyScoreBreakdown?: FuzzyScoreBreakdown | null;
+  isSuggestOnly?: boolean;
 }
 
 /**

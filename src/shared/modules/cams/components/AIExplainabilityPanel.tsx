@@ -1,4 +1,13 @@
-import { Card, Descriptions, Tag, Alert, Space, Tooltip } from 'antd';
+import {
+  Card,
+  Descriptions,
+  Tag,
+  Alert,
+  Space,
+  Tooltip,
+  Progress,
+  Table,
+} from 'antd';
 import {
   ThunderboltOutlined,
   FireOutlined,
@@ -6,11 +15,25 @@ import {
   InfoCircleOutlined,
   SoundOutlined,
 } from '@ant-design/icons';
-import type { SpaceStateDto, SpaceStateResponse } from '../types';
+import type {
+  SpaceStateDto,
+  SpaceStateResponse,
+  FuzzySignalContribution,
+} from '../types';
 
 interface AIExplainabilityPanelProps {
   spaceState: SpaceStateDto | SpaceStateResponse;
   compact?: boolean; // Compact mode for smaller displays
+}
+
+interface SignalRow {
+  key: string;
+  signal: string;
+  value: string;
+  impact: string;
+  chillDelta: number | null;
+  focusDelta: number | null;
+  energeticDelta: number | null;
 }
 
 /**
@@ -22,6 +45,31 @@ export const AIExplainabilityPanel = ({
   spaceState,
   compact = false,
 }: AIExplainabilityPanelProps) => {
+  const rawState = spaceState as unknown as Record<string, unknown>;
+  const rawConfidence =
+    (spaceState as { fuzzyConfidence?: number | null }).fuzzyConfidence ??
+    (rawState.fuzzy_confidence as number | null | undefined) ??
+    null;
+  const rawScoreBreakdown =
+    (spaceState as { fuzzyScoreBreakdown?: unknown }).fuzzyScoreBreakdown ??
+    rawState.fuzzy_score_breakdown ??
+    (() => {
+      const jsonValue =
+        (rawState.fuzzyScoreJson as string | null | undefined) ??
+        (rawState.fuzzy_score_json as string | null | undefined);
+      if (!jsonValue || typeof jsonValue !== 'string') return null;
+      try {
+        return JSON.parse(jsonValue);
+      } catch {
+        return null;
+      }
+    })();
+
+  const toPercent = (value?: number | null) =>
+    typeof value === 'number'
+      ? Math.round(Math.max(0, Math.min(1, value)) * 100)
+      : null;
+
   const inferBpmRangeFromMood = (moodName?: string | null) => {
     const mood = moodName?.toLowerCase() || '';
 
@@ -52,10 +100,12 @@ export const AIExplainabilityPanel = ({
 
   const hasBpmRange = bpmMin !== null && bpmMax !== null;
   const hasFuzzyInfo = spaceState.fuzzyRule || spaceState.fuzzyReason;
+  const hasScoreBreakdown = !!rawScoreBreakdown;
+  const confidencePercent = toPercent(rawConfidence);
   const isFallback = spaceState.isBpmFallback === true;
 
   // Don't show panel if no AI info available
-  if (!hasBpmRange && !hasFuzzyInfo && !isFallback) {
+  if (!hasBpmRange && !hasFuzzyInfo && !isFallback && !hasScoreBreakdown) {
     return null;
   }
 
@@ -82,6 +132,96 @@ export const AIExplainabilityPanel = ({
       .join(' ');
   };
 
+  const formatSignalLabel = (raw?: string | null) => {
+    if (!raw) return { signal: 'Unknown', value: 'N/A' };
+    const matched = raw.match(/^([^(]+)\((.*)\)$/);
+    if (!matched) return { signal: raw, value: 'N/A' };
+    return {
+      signal: matched[1].trim(),
+      value: matched[2].trim(),
+    };
+  };
+
+  const prettifySignalName = (name?: string) => {
+    if (!name) return 'Unknown';
+    const mapped: Record<string, string> = {
+      crowdPressure: 'Crowd pressure',
+      ambientNoise: 'Ambient noise',
+      timeOfDay: 'Time of day',
+      dayOfWeek: 'Day of week',
+      businessPhase: 'Business phase',
+    };
+    return mapped[name] ?? name;
+  };
+
+  const scoreBreakdown = rawScoreBreakdown as
+    | {
+        chillScore?: number;
+        focusScore?: number;
+        energeticScore?: number;
+        chill_score?: number;
+        focus_score?: number;
+        energetic_score?: number;
+        signalContributions?: FuzzySignalContribution[] | null;
+        signal_contributions?: FuzzySignalContribution[] | null;
+        signals?: FuzzySignalContribution[] | string[] | null;
+        contributions?: FuzzySignalContribution[] | null;
+      }
+    | null
+    | undefined;
+
+  const normalizeScore = (value?: number) => {
+    if (typeof value !== 'number' || Number.isNaN(value)) return 0;
+    return value <= 1 ? Math.round(value * 100) : Math.round(value);
+  };
+
+  const rawSignals =
+    scoreBreakdown?.signalContributions ??
+    scoreBreakdown?.signal_contributions ??
+    scoreBreakdown?.contributions ??
+    scoreBreakdown?.signals ??
+    [];
+
+  const signalRows: SignalRow[] =
+    rawSignals?.map((item: FuzzySignalContribution | string, idx: number) => {
+      if (typeof item === 'string') {
+        const parsed = formatSignalLabel(item);
+        return {
+          key: `${item}-${idx}`,
+          signal: prettifySignalName(parsed.signal),
+          value: parsed.value,
+          impact: 'N/A',
+          chillDelta: null,
+          focusDelta: null,
+          energeticDelta: null,
+        };
+      }
+
+      const parsed = formatSignalLabel(item.signal);
+      const chillDelta =
+        typeof item.chillDelta === 'number' ? item.chillDelta : 0;
+      const focusDelta =
+        typeof item.focusDelta === 'number' ? item.focusDelta : 0;
+      const energeticDelta =
+        typeof item.energeticDelta === 'number' ? item.energeticDelta : 0;
+      const impact = [chillDelta, focusDelta, energeticDelta]
+        .map((v) =>
+          typeof v === 'number'
+            ? `${v >= 0 ? '+' : ''}${v.toFixed(2)}`
+            : '0.00',
+        )
+        .join(' / ');
+      return {
+        key: `${item.signal}-${idx}`,
+        signal: prettifySignalName(parsed.signal),
+        value: parsed.value,
+        impact,
+        chillDelta,
+        focusDelta,
+        energeticDelta,
+      };
+    }) ?? [];
+
   // Compact mode - single line display
   if (compact) {
     return (
@@ -107,6 +247,9 @@ export const AIExplainabilityPanel = ({
                 BPM: {bpmMin}-{bpmMax}
                 {bpmTarget && ` (target: ${bpmTarget})`}
               </Tag>
+            )}
+            {confidencePercent != null && (
+              <Tag color='gold'>Confidence: {confidencePercent}%</Tag>
             )}
             {isFallback && (
               <Tag
@@ -204,6 +347,137 @@ export const AIExplainabilityPanel = ({
             </Descriptions.Item>
           )}
         </Descriptions>
+
+        {confidencePercent != null && (
+          <div>
+            <div style={{ marginBottom: 6, fontSize: 12, color: '#666' }}>
+              Confidence
+            </div>
+            <Progress
+              percent={confidencePercent}
+              size='small'
+              status={confidencePercent >= 50 ? 'success' : 'active'}
+            />
+          </div>
+        )}
+
+        {scoreBreakdown && (
+          <div>
+            <div style={{ marginBottom: 8, fontWeight: 600 }}>
+              Mood score breakdown
+            </div>
+            <Space
+              direction='vertical'
+              style={{ width: '100%' }}
+              size={6}
+            >
+              <div>
+                <div style={{ fontSize: 12, color: '#666' }}>Chill</div>
+                <Progress
+                  percent={Math.min(
+                    100,
+                    normalizeScore(
+                      scoreBreakdown.chillScore ?? scoreBreakdown.chill_score,
+                    ),
+                  )}
+                  size='small'
+                  showInfo
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: '#666' }}>Focus</div>
+                <Progress
+                  percent={Math.min(
+                    100,
+                    normalizeScore(
+                      scoreBreakdown.focusScore ?? scoreBreakdown.focus_score,
+                    ),
+                  )}
+                  size='small'
+                  showInfo
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: '#666' }}>Energetic</div>
+                <Progress
+                  percent={Math.min(
+                    100,
+                    normalizeScore(
+                      scoreBreakdown.energeticScore ??
+                        scoreBreakdown.energetic_score,
+                    ),
+                  )}
+                  size='small'
+                  showInfo
+                />
+              </div>
+            </Space>
+          </div>
+        )}
+
+        {signalRows.length > 0 && (
+          <div>
+            <div style={{ marginBottom: 8, fontWeight: 600 }}>
+              Signal contributions
+            </div>
+            <Table<SignalRow>
+              size='small'
+              pagination={false}
+              rowKey='key'
+              dataSource={signalRows}
+              columns={[
+                {
+                  title: 'Signal',
+                  dataIndex: 'signal',
+                  key: 'signal',
+                  width: 180,
+                  render: (value: string) => <strong>{value}</strong>,
+                },
+                {
+                  title: 'Live value',
+                  dataIndex: 'value',
+                  key: 'value',
+                  ellipsis: true,
+                  render: (value: string) => (
+                    <span style={{ color: '#555' }}>{value}</span>
+                  ),
+                },
+                {
+                  title: 'Impact',
+                  key: 'impact',
+                  width: 280,
+                  render: (_, record: SignalRow) => {
+                    if (record.chillDelta == null) {
+                      return <span style={{ color: '#999' }}>N/A</span>;
+                    }
+                    const chillDelta = record.chillDelta;
+                    const focusDelta = record.focusDelta ?? 0;
+                    const energeticDelta = record.energeticDelta ?? 0;
+                    return (
+                      <Space
+                        size={4}
+                        wrap
+                      >
+                        <Tag color='blue'>
+                          Chill {chillDelta >= 0 ? '+' : ''}
+                          {chillDelta.toFixed(2)}
+                        </Tag>
+                        <Tag color='purple'>
+                          Focus {focusDelta >= 0 ? '+' : ''}
+                          {focusDelta.toFixed(2)}
+                        </Tag>
+                        <Tag color='volcano'>
+                          Energetic {energeticDelta >= 0 ? '+' : ''}
+                          {energeticDelta.toFixed(2)}
+                        </Tag>
+                      </Space>
+                    );
+                  },
+                },
+              ]}
+            />
+          </div>
+        )}
 
         {/* Fallback Warning */}
         {isFallback && (
