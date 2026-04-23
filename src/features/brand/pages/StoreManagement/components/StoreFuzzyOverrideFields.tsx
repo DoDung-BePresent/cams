@@ -1,11 +1,17 @@
-import { Collapse, Form, Input, InputNumber, Select, Typography } from 'antd';
+import {
+  Collapse,
+  Flex,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Typography,
+} from 'antd';
 
 import { getStoreOverrideLevelDescription } from '@/features/brand/constants/storeMusicPolicy';
 import { usePlaylistOptionsForStore } from '@/shared/modules/playlists/hooks';
 import { MOOD_TYPE_LABELS } from '@/shared/modules/moods/constants';
 import { MoodType } from '@/shared/modules/moods/types';
-
-const { Text } = Typography;
 
 const MOOD_CANDIDATE_OPTIONS = Object.values(MoodType)
   .filter((value): value is MoodType => typeof value === 'number')
@@ -19,8 +25,6 @@ type StoreFuzzyOverrideFieldsProps = {
   storeIdForPlaylists?: string;
   /** Store-level override policy (1|2|3). */
   storeOverrideLevel?: number | null;
-  /** New-store flow: copy for allowed-playlist hint when store id is not known yet. */
-  isCreateFlow?: boolean;
   /** Expand advanced BPM / threshold collapse by default (e.g. create store drawer). */
   defaultAdvancedExpanded?: boolean;
 };
@@ -31,7 +35,6 @@ type StoreFuzzyOverrideFieldsProps = {
 export const StoreFuzzyOverrideFields = ({
   storeIdForPlaylists,
   storeOverrideLevel,
-  isCreateFlow = false,
   defaultAdvancedExpanded = false,
 }: StoreFuzzyOverrideFieldsProps) => {
   const { data: playlistOptions = [], isLoading: playlistsLoading } =
@@ -39,26 +42,6 @@ export const StoreFuzzyOverrideFields = ({
 
   const level = storeOverrideLevel;
   const showPlaylistMultiselect = !!storeIdForPlaylists;
-
-  const playlistFooter = (() => {
-    if (!storeIdForPlaylists && !isCreateFlow) {
-      return (
-        <Text type='secondary'>
-          Allowed playlists for the override can be set when editing this store
-          (requires a store id).
-        </Text>
-      );
-    }
-    if (!storeIdForPlaylists && isCreateFlow) {
-      return (
-        <Text type='secondary'>
-          Playlist links are per store. Configure allowed playlists after create
-          (edit store) when the store id is available.
-        </Text>
-      );
-    }
-    return null;
-  })();
 
   const levelHint = getStoreOverrideLevelDescription(level ?? undefined);
 
@@ -73,57 +56,89 @@ export const StoreFuzzyOverrideFields = ({
         </Typography.Paragraph>
       ) : null}
 
-      <Form.Item
-        label='Override profile name'
-        name={['fuzzy', 'name']}
-      >
-        <Input placeholder='Optional label for this profile' />
-      </Form.Item>
+      {showPlaylistMultiselect ? (
+        <Form.Item
+          label='Allowed playlists'
+          name={['fuzzy', 'allowedPlaylistIds']}
+          tooltip='Optional: if set, CAMS runtime limits AI-selected tracks to these playlists for this store profile.'
+        >
+          <Select
+            size='large'
+            mode='multiple'
+            allowClear
+            placeholder='Optional — restrict AI to these playlists'
+            options={playlistOptions}
+            loading={playlistsLoading}
+            optionFilterProp='label'
+          />
+        </Form.Item>
+      ) : null}
 
-      <Form.Item
-        label='Chill mood candidates'
-        name={['fuzzy', 'chillMoodCandidates']}
-        tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+      <Flex
+        gap='middle'
+        justify='space-between'
       >
-        <Select
-          size='large'
-          mode='multiple'
-          allowClear
-          placeholder='Optional - moods allowed for Chill lane'
-          options={MOOD_CANDIDATE_OPTIONS}
-          optionFilterProp='label'
-        />
-      </Form.Item>
+        <Form.Item
+          label='Override profile name'
+          name={['fuzzy', 'name']}
+          className='w-full!'
+        >
+          <Input placeholder='Optional label for this profile' />
+        </Form.Item>
 
-      <Form.Item
-        label='Focus mood candidates'
-        name={['fuzzy', 'focusMoodCandidates']}
-        tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
-      >
-        <Select
-          size='large'
-          mode='multiple'
-          allowClear
-          placeholder='Optional - moods allowed for Focus lane'
-          options={MOOD_CANDIDATE_OPTIONS}
-          optionFilterProp='label'
-        />
-      </Form.Item>
+        <Form.Item
+          label='Chill mood candidates'
+          name={['fuzzy', 'chillMoodCandidates']}
+          tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+          className='w-full!'
+        >
+          <Select
+            size='large'
+            mode='multiple'
+            allowClear
+            placeholder='Optional - moods allowed for Chill lane'
+            options={MOOD_CANDIDATE_OPTIONS}
+            optionFilterProp='label'
+          />
+        </Form.Item>
+      </Flex>
 
-      <Form.Item
-        label='Energetic mood candidates'
-        name={['fuzzy', 'energeticMoodCandidates']}
-        tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+      <Flex
+        gap='middle'
+        justify='space-between'
       >
-        <Select
-          size='large'
-          mode='multiple'
-          allowClear
-          placeholder='Optional - moods allowed for Energetic lane'
-          options={MOOD_CANDIDATE_OPTIONS}
-          optionFilterProp='label'
-        />
-      </Form.Item>
+        <Form.Item
+          label='Focus mood candidates'
+          name={['fuzzy', 'focusMoodCandidates']}
+          tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+          className='w-full!'
+        >
+          <Select
+            size='large'
+            mode='multiple'
+            allowClear
+            placeholder='Optional - moods allowed for Focus lane'
+            options={MOOD_CANDIDATE_OPTIONS}
+            optionFilterProp='label'
+          />
+        </Form.Item>
+
+        <Form.Item
+          label='Energetic mood candidates'
+          name={['fuzzy', 'energeticMoodCandidates']}
+          tooltip='Optional lane mapping override. Leave empty to use runtime default mapping.'
+          className='w-full!'
+        >
+          <Select
+            size='large'
+            mode='multiple'
+            allowClear
+            placeholder='Optional - moods allowed for Energetic lane'
+            options={MOOD_CANDIDATE_OPTIONS}
+            optionFilterProp='label'
+          />
+        </Form.Item>
+      </Flex>
 
       <Collapse
         bordered={false}
@@ -263,26 +278,8 @@ export const StoreFuzzyOverrideFields = ({
             ),
           },
         ]}
+        className='mb-5!'
       />
-
-      {showPlaylistMultiselect ? (
-        <Form.Item
-          label='Allowed playlists'
-          name={['fuzzy', 'allowedPlaylistIds']}
-          tooltip='Optional: if set, CAMS runtime limits AI-selected tracks to these playlists for this store profile.'
-        >
-          <Select
-            size='large'
-            mode='multiple'
-            allowClear
-            placeholder='Optional — restrict AI to these playlists'
-            options={playlistOptions}
-            loading={playlistsLoading}
-            optionFilterProp='label'
-          />
-        </Form.Item>
-      ) : null}
-      {playlistFooter}
     </>
   );
 };

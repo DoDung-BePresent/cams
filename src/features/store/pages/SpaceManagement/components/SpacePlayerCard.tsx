@@ -1,22 +1,19 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Alert,
-  Card,
   Button,
   Space,
-  Select,
   Tag,
   Typography,
   Divider,
   Flex,
   message,
   App,
+  Segmented,
 } from 'antd';
-import {
-  SettingOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 import {
   SpacePlayer,
   AIExplainabilityPanel,
@@ -49,25 +46,16 @@ import {
   formatPlaybackTime,
   isSpacePlaying,
 } from '@/shared/modules/cams/utils';
-import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { AppModal, SettingSwitch } from '@/shared/components';
 import { showErrorMessage } from '@/shared/utils';
 import { fuzzyProfileService } from '@/features/store/services/fuzzyProfileService';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const SCHEDULING_ORIGIN_LABELS: Record<SchedulingSlotOrigin, string> = {
   [SchedulingSlotOrigin.Space]: 'Space Schedule',
   [SchedulingSlotOrigin.Brand]: 'Brand Schedule',
-};
-
-const formatStatusDateTime = (value?: string | null) => {
-  if (!value) {
-    return null;
-  }
-
-  return new Date(value).toLocaleString('en-GB');
 };
 
 interface SpacePlayerCardProps {
@@ -77,7 +65,7 @@ interface SpacePlayerCardProps {
 
 export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
   const { message: appMessage } = App.useApp();
-  const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState<'player' | 'settings'>('player');
   const [isOverrideDrawerOpen, setIsOverrideDrawerOpen] = useState(false);
   const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
   const [statusNowMs, setStatusNowMs] = useState(() => Date.now());
@@ -87,17 +75,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     space.id,
     true,
   );
-
-  // ✅ Use spaceState directly - no need for intermediate state
-  // The component will re-render when spaceState changes from React Query
-
-  // Fetch available playlists for this store
-  const { data: playlistsData } = usePlaylists({
-    page: 1,
-    pageSize: 100,
-    status: 1,
-    storeId,
-  });
 
   // Mutations
   const playbackControl = usePlaybackControl();
@@ -500,22 +477,6 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     [space.id, updateAudio],
   );
 
-  // Override playlist handler (Mode 1: Playlist)
-  const handlePlaylistChange = useCallback(
-    (playlistId: string) => {
-      if (!playlistId) {
-        message.warning('Please select a playlist');
-        return;
-      }
-
-      overridePlaylist.mutate({
-        spaceId: space.id,
-        playlistId,
-      });
-    },
-    [space.id, overridePlaylist],
-  );
-
   const handleOverrideToggle = useCallback(
     (checked: boolean) => {
       if (checked) {
@@ -537,28 +498,11 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
     [cancelOverride, space.id],
   );
 
-  // Playlist options for Select
-  const playlistOptions = (playlistsData?.items || []).map((playlist) => ({
-    label: playlist.name,
-    value: playlist.id,
-  }));
-
   return (
-    <Card
-      title={
-        <Flex
-          justify='space-between'
-          align='center'
-        >
-          <Title level={5}>{space.name}</Title>
-          <Button
-            type='text'
-            icon={<SettingOutlined />}
-            onClick={() => setShowSettings(!showSettings)}
-          />
-        </Flex>
-      }
-      loading={isLoadingState}
+    <Space
+      direction='vertical'
+      style={{ width: '100%' }}
+      size='large'
     >
       <Space
         direction='vertical'
@@ -691,227 +635,127 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
                 )}
               </Space>
             }
-          />
-        )}
-
-        {spaceState?.isScheduling && (
-          <Alert
-            type='info'
-            showIcon
-            message={
-              <Space wrap>
-                <Text strong>Scheduling Runtime Active</Text>
-                {spaceState.schedulingSlotOrigin != null && (
-                  <Tag color='blue'>
-                    {SCHEDULING_ORIGIN_LABELS[spaceState.schedulingSlotOrigin]}
-                  </Tag>
-                )}
-                {schedulingRemainingSeconds != null && (
-                  <Tag color='cyan'>
-                    Ends in {formatPlaybackTime(schedulingRemainingSeconds)}
-                  </Tag>
-                )}
-              </Space>
+            isPreviousDisabled={
+              queueItems.length === 0 ||
+              queueItems.filter(
+                (it) => it.position < (currentItem.position ?? 0),
+              ).length === 0
             }
-            description={
-              <Space
-                direction='vertical'
-                size={2}
-              >
-                {spaceState.schedulingEndsAtUtc && (
-                  <Text type='secondary'>
-                    Window ends:{' '}
-                    {formatStatusDateTime(spaceState.schedulingEndsAtUtc)}
-                  </Text>
-                )}
-                {spaceState.schedulingSlotId && (
-                  <Text type='secondary'>
-                    Active slot: {spaceState.schedulingSlotId}
-                  </Text>
-                )}
-              </Space>
+            isNextDisabled={
+              queueItems.length === 0 ||
+              (queueItems.filter(
+                (it) => it.position > (currentItem.position ?? 0),
+              ).length === 0 &&
+                (spaceState?.queueEndBehavior ?? QueueEndBehavior.Stop) !==
+                  QueueEndBehavior.RepeatQueue)
             }
           />
-        )}
 
-        {/* Playlist Selection (Settings) */}
-        {showSettings && (
-          <>
-            <div>
-              <Flex
-                justify='space-between'
-                align='center'
-              >
-                <Text
-                  strong
-                  style={{ display: 'block', marginBottom: 8 }}
-                >
-                  Select Playlist to Play
-                </Text>
-              </Flex>
+          {/* AI Explainability Panel */}
+          {spaceState && !spaceState.isManualOverride && (
+            <>
+              <Divider style={{ margin: '8px 0' }} />
+              <AIExplainabilityPanel spaceState={spaceState} />
+            </>
+          )}
 
-              <Select
+          {/* Queue Management */}
+          <Divider style={{ margin: '8px 0' }} />
+          <Flex
+            justify='space-between'
+            align='center'
+          >
+            <Text strong>Queue Management</Text>
+            <Space>
+              <Button
                 size='large'
-                placeholder='Choose a playlist'
-                options={playlistOptions}
-                value={spaceState?.currentQueueItemId || undefined}
-                onChange={handlePlaylistChange}
-                style={{ width: '100%' }}
-                loading={overridePlaylist.isPending}
-                disabled={
-                  overridePlaylist.isPending || cancelOverride.isPending
-                }
-                showSearch
-                optionFilterProp='label'
-                allowClear={false}
-              />
-              {spaceState?.currentTrackName && (
-                <Text
-                  type='secondary'
-                  style={{ fontSize: 12, marginTop: 4 }}
-                >
-                  Current: {spaceState.currentTrackName}
-                  {spaceState.moodName && ` (${spaceState.moodName})`}
-                </Text>
-              )}
-
-              {/* Audio controls in settings: volume, mute, queue behavior */}
-              <div style={{ marginTop: 12 }}>
-                <Flex
-                  justify='space-between'
-                  align='center'
-                  style={{ marginBottom: 8 }}
-                >
-                  <Text strong>Audio</Text>
-                  <Space>
-                    <Text
-                      type='secondary'
-                      style={{ fontSize: 12 }}
-                    >
-                      Auto: {isAutoVolumeEnabled ? 'On' : 'Off'}
-                    </Text>
-                    <Text
-                      type='secondary'
-                      style={{ fontSize: 12 }}
-                    >
-                      Volume: {spaceState?.volumePercent ?? 0}%
-                    </Text>
-                    <Button
-                      size='small'
-                      type='text'
-                      onClick={handleToggleMute}
-                    >
-                      {spaceState?.isMuted ? 'Unmute' : 'Mute'}
-                    </Button>
-                  </Space>
-                </Flex>
-
-                {/* Queue end behavior moved out of settings to a visible control below the player */}
-              </div>
-            </div>
-            <Divider style={{ margin: '8px 0' }} />
-          </>
-        )}
-
-        {/* Always show player controls per Rule 1 */}
-        <SpacePlayer
-          spaceId={space.id}
-          hlsUrl={hlsUrl}
-          state={spaceState}
-          isPlaying={isPlaying}
-          isLoading={
-            isLoadingState ||
-            playbackControl.isPending ||
-            overridePlaylist.isPending
-          }
-          onPlayPause={handlePlayPause}
-          onSkipNext={handleSkipNext}
-          onSkipPrevious={handleSkipPrevious}
-          onSeek={handleSeek}
-          onRewind10={handleRewind10}
-          onForward10={handleForward10}
-          onVolumeChangeComplete={handleVolumeChangeBackend}
-          onToggleMute={handleToggleMute}
-          onQueueEndBehaviorChange={(next) =>
-            handleQueueEndBehaviorChange(next as QueueEndBehavior)
-          }
-          // Button disable logic (Rule 3)
-          isPreviousDisabled={
-            queueItems.length === 0 ||
-            queueItems.filter((it) => it.position < (currentItem.position ?? 0))
-              .length === 0
-          }
-          isNextDisabled={
-            queueItems.length === 0 ||
-            (queueItems.filter(
-              (it) => it.position > (currentItem.position ?? 0),
-            ).length === 0 &&
-              (spaceState?.queueEndBehavior ?? QueueEndBehavior.Stop) !==
-                QueueEndBehavior.RepeatQueue)
-          }
-        />
-
-        {/* Repeat button moved into the player component; no duplicate here */}
-
-        {/* AI Explainability Panel */}
-        {spaceState && !spaceState.isManualOverride && (
-          <>
-            <Divider style={{ margin: '8px 0' }} />
-            <AIExplainabilityPanel spaceState={spaceState} />
-          </>
-        )}
-
-        {/* Queue list (render all items sorted) */}
-        <Divider style={{ margin: '8px 0' }} />
-        <Flex
-          justify='space-between'
-          align='center'
+                icon={<DeleteOutlined />}
+                danger
+                onClick={handleClearQueue}
+                loading={clearQueue.isPending}
+                disabled={queueItems.length === 0 || clearQueue.isPending}
+              >
+                Clear Queue
+              </Button>
+              <Button
+                size='large'
+                type='primary'
+                icon={<PlusOutlined />}
+                onClick={() => setIsAddQueueModalOpen(true)}
+                disabled={clearQueue.isPending}
+              >
+                Add to Queue
+              </Button>
+            </Space>
+          </Flex>
+          <SimpleBar style={{ maxHeight: '500px' }}>
+            <QueueList
+              items={queueItems}
+              onRemove={handleRemoveQueueItem}
+              onRemoveMany={handleRemoveQueueItems}
+              onReorder={handleReorderQueue}
+              onSkipToTrack={handleSkipToTrack}
+            />
+          </SimpleBar>
+        </Space>
+      ) : (
+        <Space
+          direction='vertical'
+          style={{ width: '100%' }}
+          size='middle'
         >
-          <Text strong>Queue Management</Text>
-          <Space>
-            <Button
-              size='large'
-              icon={<DeleteOutlined />}
-              danger
-              onClick={handleClearQueue}
-              loading={clearQueue.isPending}
-              disabled={queueItems.length === 0 || clearQueue.isPending}
-            >
-              Clear Queue
-            </Button>
-            <Button
-              size='large'
-              type='primary'
-              icon={<PlusOutlined />}
-              onClick={() => setIsAddQueueModalOpen(true)}
-              disabled={clearQueue.isPending}
-            >
-              Add to Queue
-            </Button>
+          <Space
+            direction='vertical'
+            style={{ width: '100%' }}
+            size={0}
+          >
+            {/* Settings Switches */}
+            <SettingSwitch
+              label='Auto Volume'
+              description='Adjust volume based on ambient noise level'
+              value={isAutoVolumeEnabled}
+              onChange={(checked) => toggleAutoVolume.mutate(checked)}
+              disabled={toggleAutoVolume.isPending}
+            />
+
+            <SettingSwitch
+              label='Manual Override'
+              description='Manually control music selection instead of AI'
+              value={!!spaceState?.isManualOverride}
+              onChange={handleOverrideToggle}
+              disabled={overridePlaylist.isPending || cancelOverride.isPending}
+            />
+
+            <SettingSwitch
+              label='Scheduling Mode'
+              description='Use schedule-driven playback for active time slots'
+              value={!!spaceState?.isScheduling}
+              onChange={(checked) => {
+                updateSchedulingState.mutate({
+                  spaceId: space.id,
+                  data: { isScheduling: checked },
+                });
+              }}
+              disabled={updateSchedulingState.isPending}
+              loading={updateSchedulingState.isPending}
+            />
           </Space>
-        </Flex>
-        <QueueList
-          items={queueItems}
-          onRemove={handleRemoveQueueItem}
-          onRemoveMany={handleRemoveQueueItems}
-          onReorder={handleReorderQueue}
-          onSkipToTrack={handleSkipToTrack}
-        />
+        </Space>
+      )}
 
-        <AddToQueueDrawer
-          open={isAddQueueModalOpen}
-          spaceId={space.id}
-          storeId={storeId}
-          onClose={() => setIsAddQueueModalOpen(false)}
-        />
+      <AddToQueueDrawer
+        open={isAddQueueModalOpen}
+        spaceId={space.id}
+        storeId={storeId}
+        onClose={() => setIsAddQueueModalOpen(false)}
+      />
 
-        <OverrideSpaceMusicDrawer
-          open={isOverrideDrawerOpen}
-          spaceId={space.id}
-          storeId={storeId}
-          onClose={() => setIsOverrideDrawerOpen(false)}
-        />
-      </Space>
-    </Card>
+      <OverrideSpaceMusicDrawer
+        open={isOverrideDrawerOpen}
+        spaceId={space.id}
+        storeId={storeId}
+        onClose={() => setIsOverrideDrawerOpen(false)}
+      />
+    </Space>
   );
 };

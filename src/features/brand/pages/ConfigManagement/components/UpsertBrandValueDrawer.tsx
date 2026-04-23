@@ -191,6 +191,7 @@ export const UpsertBrandValueDrawer = ({
       }
       open={open}
       onClose={handleCancel}
+      destroyOnHidden
       width={DRAWER_WIDTHS.medium}
       afterOpenChange={(isOpen) => {
         if (!isOpen) {

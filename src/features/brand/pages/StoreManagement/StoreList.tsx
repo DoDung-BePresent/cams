@@ -59,9 +59,6 @@ export const StoreList = () => {
   const [governanceModeDrawerOpen, setGovernanceModeDrawerOpen] =
     useState(false);
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
-  const [selectedStoreName, setSelectedStoreName] = useState<
-    string | undefined
-  >();
   const [selectedGovernanceMode, setSelectedGovernanceMode] =
     useState<StoreListItem['governanceMode']>();
 
@@ -107,7 +104,6 @@ export const StoreList = () => {
 
   const handleSetGovernanceMode = (store: StoreListItem) => {
     setSelectedStoreId(store.id);
-    setSelectedStoreName(store.name);
     setSelectedGovernanceMode(store.governanceMode);
     setGovernanceModeDrawerOpen(true);
   };
@@ -286,12 +282,10 @@ export const StoreList = () => {
       <SetGovernanceModeDrawer
         open={governanceModeDrawerOpen}
         storeId={selectedStoreId ?? ''}
-        storeName={selectedStoreName}
         currentMode={selectedGovernanceMode}
         onClose={() => {
           setGovernanceModeDrawerOpen(false);
           setSelectedStoreId(null);
-          setSelectedStoreName(undefined);
           setSelectedGovernanceMode(undefined);
         }}
       />

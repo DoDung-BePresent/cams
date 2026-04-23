@@ -11,27 +11,18 @@ import {
   Typography,
   Segmented,
   Spin,
+  Flex,
 } from 'antd';
 
 /**
  * Icons
  */
-import {
-  ThunderboltOutlined,
-  CopyOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
-
-/**
- * Configs
- */
-import { MODAL_WIDTHS } from '@/config';
+import { ThunderboltOutlined, CopyOutlined } from '@ant-design/icons';
 
 /**
  * Components
  */
-import { AppModal, SettingSwitch } from '@/shared/components';
-import { SunoConfigForm } from './SunoConfigForm';
+import { SettingSwitch } from '@/shared/components';
 
 /**
  * Hooks
@@ -81,7 +72,6 @@ const storeOverrideLabels: Record<number, string> = {
 export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const [form] = Form.useForm<SunoGenerationFormValues>();
   const [promptMode, setPromptMode] = useState<PromptMode>('manual');
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { user } = useAuth();
   const brandId = user?.brandId ?? undefined;
@@ -243,16 +233,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
 
   return (
     <>
-      <Card
-        title='Generate AI Music'
-        extra={
-          <Button
-            type='text'
-            icon={<SettingOutlined />}
-            onClick={() => setSettingsOpen(true)}
-          />
-        }
-      >
+      <Card title='Generate AI Music'>
         {isResolvingProfile && (
           <div style={{ marginBottom: 16 }}>
             <Spin size='small' />{' '}
@@ -363,52 +344,66 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
                 />
               </Form.Item>
 
-              <Form.Item
-                name='title'
-                label='Track title'
-                rules={[
-                  { required: true, message: 'Please enter track title' },
-                  { max: 300, message: 'Title too long' },
-                ]}
+              <Flex
+                gap={16}
+                justify='space-between'
               >
-                <Input
-                  placeholder='e.g., Morning Focus In-Store'
-                  maxLength={300}
-                />
-              </Form.Item>
+                <Form.Item
+                  name='title'
+                  label='Track title'
+                  rules={[
+                    { required: true, message: 'Please enter track title' },
+                    { max: 300, message: 'Title too long' },
+                  ]}
+                  className='w-full!'
+                >
+                  <Input
+                    placeholder='e.g., Morning Focus In-Store'
+                    maxLength={300}
+                  />
+                </Form.Item>
 
-              <Form.Item
-                name='genre'
-                label='Genre'
-                rules={[{ max: 120, message: 'Genre too long' }]}
-              >
-                <Input
-                  placeholder='e.g., ambient, lo-fi, soft jazz'
-                  maxLength={120}
-                />
-              </Form.Item>
+                <Form.Item
+                  name='genre'
+                  label='Genre'
+                  rules={[{ max: 120, message: 'Genre too long' }]}
+                  className='w-full!'
+                >
+                  <Input
+                    placeholder='e.g., ambient, lo-fi, soft jazz'
+                    maxLength={120}
+                  />
+                </Form.Item>
+              </Flex>
 
-              <Form.Item
-                name='artist'
-                label='Artist / style hint'
-                rules={[{ max: 300, message: 'Too long' }]}
+              <Flex
+                gap={16}
+                justify='space-between'
               >
-                <Input
-                  placeholder='e.g., subtle piano, no vocals'
-                  maxLength={300}
-                />
-              </Form.Item>
+                <Form.Item
+                  name='artist'
+                  label='Artist / style hint'
+                  rules={[{ max: 300, message: 'Too long' }]}
+                  className='w-full!'
+                >
+                  <Input
+                    placeholder='e.g., subtle piano, no vocals'
+                    maxLength={300}
+                  />
+                </Form.Item>
 
-              <Form.Item
-                name='moodId'
-                label='Catalog mood (optional)'
-              >
-                <Select
-                  placeholder='Select mood'
-                  options={moodOptions}
-                  allowClear
-                />
-              </Form.Item>
+                <Form.Item
+                  name='moodId'
+                  label='Catalog mood (optional)'
+                  className='w-full!'
+                >
+                  <Select
+                    placeholder='Select mood'
+                    options={moodOptions}
+                    allowClear
+                  />
+                </Form.Item>
+              </Flex>
 
               <Form.Item
                 label={
@@ -543,16 +538,6 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
           </Form.Item>
         </Form>
       </Card>
-
-      <AppModal
-        open={settingsOpen}
-        onCancel={() => setSettingsOpen(false)}
-        footer={null}
-        width={MODAL_WIDTHS.large}
-        title='Suno AI Settings'
-      >
-        <SunoConfigForm />
-      </AppModal>
     </>
   );
 };
