@@ -140,7 +140,6 @@ export const UpsertScheduleSlotDrawer = ({
           <TimePicker
             format='HH:mm'
             style={{ width: '100%' }}
-            minuteStep={5}
           />
         </Form.Item>
 
@@ -166,7 +165,6 @@ export const UpsertScheduleSlotDrawer = ({
           <TimePicker
             format='HH:mm'
             style={{ width: '100%' }}
-            minuteStep={5}
           />
         </Form.Item>
 

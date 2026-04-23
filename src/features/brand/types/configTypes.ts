@@ -96,4 +96,7 @@ export const GOVERNANCE_MODE_DESCRIPTIONS: Record<GovernanceModeEnum, string> =
 export type SetStoreGovernanceModeRequest = {
   storeIds: string[];
   mode: GovernanceModeEnum;
+  /** Optional. StrictSync only — links this brand schedule source template to all
+   *  existing SpaceSchedules in the affected stores so brand crons can be built immediately. */
+  sourceId?: string;
 };

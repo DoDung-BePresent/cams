@@ -7,7 +7,7 @@ export const createPlaylistValidation = {
     { whitespace: true, message: 'Name cannot be only whitespace!' },
   ] as Rule[],
 
-  storeId: [{ required: true, message: 'Please select a store!' }] as Rule[],
+  storeId: [] as Rule[], // Optional: leave empty for brand-wide shared playlist
 
   description: [
     { max: 2000, message: 'Description cannot exceed 2000 characters!' },
