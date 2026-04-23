@@ -6,15 +6,15 @@ import {
   Row,
   Skeleton,
   Space,
-  Statistic,
   Tag,
   Typography,
 } from 'antd';
 import {
+  CheckOutlined,
   LockOutlined,
   ShoppingOutlined,
-  WalletOutlined,
 } from '@ant-design/icons';
+import { createStyles } from 'antd-style';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
 import type {
@@ -30,6 +30,97 @@ const formatMoney = (amount: number, currency: string) =>
     currency: currency || 'VND',
     maximumFractionDigits: 0,
   }).format(amount);
+
+const useStyle = createStyles(({ css }) => {
+  return {
+    pricingCard: css`
+      border: 2px solid #f0f0f0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+
+      &:hover {
+        border-color: #1890ff;
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+        transform: translateY(-4px);
+      }
+
+      .ant-card-head {
+        border-bottom: 2px solid #f0f0f0;
+        padding: 20px 24px;
+      }
+
+      .ant-card-body {
+        padding: 24px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+    `,
+    popularCard: css`
+      border: 2px solid #1890ff;
+      position: relative;
+
+      &::before {
+        content: 'POPULAR';
+        position: absolute;
+        top: -12px;
+        right: 24px;
+        background: #1890ff;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      &:hover {
+        border-color: #1890ff;
+        box-shadow: 0 8px 24px rgba(24, 144, 255, 0.25);
+      }
+    `,
+    priceSection: css`
+      text-align: center;
+      padding: 24px 0;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 24px;
+    `,
+    price: css`
+      font-size: 48px;
+      font-weight: 700;
+      color: #1890ff;
+      line-height: 1;
+      margin-bottom: 8px;
+    `,
+    tokens: css`
+      font-size: 24px;
+      font-weight: 600;
+      color: #262626;
+      margin-bottom: 4px;
+    `,
+    featureList: css`
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px 0;
+      flex: 1;
+
+      li {
+        padding: 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #595959;
+
+        .anticon {
+          color: #52c41a;
+          font-size: 16px;
+        }
+      }
+    `,
+  };
+});
 
 type WalletPackagesTabProps = {
   walletQuery: UseQueryResult<BillingWalletView, Error>;
@@ -56,137 +147,154 @@ export const WalletPackagesTab = ({
   mockCompleteMutation,
   pendingMockOrderId,
 }: WalletPackagesTabProps) => {
+  const { styles, cx } = useStyle();
   const wallet = walletQuery.data;
+
+  // Sort packages by tokens to determine popular
+  const sortedPackages = [...(packagesQuery.data ?? [])].sort(
+    (a, b) => a.tokens - b.tokens,
+  );
+  const middleIndex = Math.floor(sortedPackages.length / 2);
 
   return (
     <>
-      <Row gutter={[16, 16]}>
-        <Col
-          xs={24}
-          lg={8}
-        >
-          <Card
-            title={
-              <Space>
-                <WalletOutlined />
-                Wallet
-              </Space>
-            }
-          >
-            {walletQuery.isLoading ? (
-              <Skeleton active />
-            ) : walletQuery.isError ? (
-              <Alert
-                type='error'
-                message={(walletQuery.error as Error).message}
-              />
-            ) : (
-              <Space
-                direction='vertical'
-                size='middle'
-                style={{ width: '100%' }}
+      <Card
+        title={
+          <Space>
+            <ShoppingOutlined />
+            Token packages
+          </Space>
+        }
+        extra={
+          walletQuery.isLoading ? (
+            <Skeleton.Button
+              active
+              size='small'
+            />
+          ) : walletQuery.isError ? null : (
+            <Space size='large'>
+              <span
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color:
+                    (wallet?.balanceTokens ?? 0) < 0 ? '#cf1322' : '#3f8600',
+                }}
               >
-                <Statistic
-                  title='Balance'
-                  value={wallet?.balanceTokens ?? 0}
-                  suffix='tokens'
-                  valueStyle={{
-                    color:
-                      (wallet?.balanceTokens ?? 0) < 0 ? '#cf1322' : '#3f8600',
-                    fontWeight: 700,
-                  }}
-                />
-                <div>
-                  <Typography.Text type='secondary'>Status: </Typography.Text>
-                  <Tag color={wallet?.isLocked ? 'error' : 'success'}>
-                    {wallet?.lockStatus ?? '—'}
-                  </Tag>
-                </div>
-                {wallet?.isLocked && (
-                  <Alert
-                    type='warning'
-                    showIcon
-                    icon={<LockOutlined />}
-                    message='Wallet locked'
-                    description='Top up to clear debt and unlock playback / generation.'
-                  />
-                )}
-              </Space>
-            )}
-          </Card>
-        </Col>
-
-        <Col
-          xs={24}
-          lg={16}
-        >
-          <Card
-            title={
-              <Space>
-                <ShoppingOutlined />
-                Token packages
-              </Space>
-            }
-          >
-            <Typography.Paragraph type='secondary'>
-              Pay with MoMo. After payment completes, your balance updates
-              automatically.
-            </Typography.Paragraph>
-            {packagesQuery.isLoading ? (
-              <Skeleton active />
-            ) : packagesQuery.isError ? (
-              <Alert
-                type='error'
-                message={(packagesQuery.error as Error).message}
-              />
-            ) : (
-              <Row gutter={[16, 16]}>
-                {(packagesQuery.data ?? []).map((pkg: BillingPackageItem) => (
-                  <Col
-                    xs={24}
-                    sm={12}
-                    md={8}
-                    key={pkg.code}
-                  >
-                    <Card
-                      size='small'
-                      type='inner'
-                      title={pkg.code}
-                      styles={{ header: { fontSize: 13 } }}
-                    >
-                      <Statistic
-                        title='Tokens'
-                        value={pkg.tokens}
-                        valueStyle={{ fontSize: 22 }}
-                      />
-                      <Typography.Title
-                        level={4}
-                        style={{ marginTop: 8, marginBottom: 16 }}
-                      >
-                        {formatMoney(pkg.amount, pkg.currency)}
-                      </Typography.Title>
-                      <Button
-                        type='primary'
-                        block
-                        loading={topUpMutation.isPending}
-                        onClick={() => topUpMutation.mutate(pkg.code)}
-                      >
-                        Buy with MoMo
-                      </Button>
-                    </Card>
-                  </Col>
-                ))}
-              </Row>
-            )}
-            {(packagesQuery.data?.length ?? 0) === 0 &&
-              !packagesQuery.isLoading && (
-                <Typography.Text type='secondary'>
-                  No packages configured yet.
-                </Typography.Text>
+                {wallet?.balanceTokens?.toLocaleString() ?? 0} tokens
+              </span>
+              {wallet?.isLocked && (
+                <Tag
+                  color='error'
+                  icon={<LockOutlined />}
+                >
+                  Locked
+                </Tag>
               )}
-          </Card>
-        </Col>
-      </Row>
+            </Space>
+          )
+        }
+      >
+        {wallet?.isLocked && (
+          <Alert
+            type='warning'
+            showIcon
+            icon={<LockOutlined />}
+            message='Wallet locked'
+            description='Top up to clear debt and unlock playback / generation.'
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        <Typography.Paragraph type='secondary'>
+          Pay with MoMo. After payment completes, your balance updates
+          automatically.
+        </Typography.Paragraph>
+
+        {packagesQuery.isLoading ? (
+          <Skeleton active />
+        ) : packagesQuery.isError ? (
+          <Alert
+            type='error'
+            message={(packagesQuery.error as Error).message}
+          />
+        ) : (
+          <Row gutter={[16, 16]}>
+            {sortedPackages.map((pkg: BillingPackageItem, index: number) => {
+              const isPopular = index === middleIndex;
+              return (
+                <Col
+                  xs={24}
+                  sm={12}
+                  md={8}
+                  key={pkg.code}
+                >
+                  <Card
+                    className={cx(
+                      styles.pricingCard,
+                      isPopular && styles.popularCard,
+                    )}
+                    title={
+                      <Space>
+                        <ShoppingOutlined />
+                        {pkg.code}
+                      </Space>
+                    }
+                  >
+                    <div className={styles.priceSection}>
+                      <div className={styles.price}>
+                        {formatMoney(pkg.amount, pkg.currency)}
+                      </div>
+                      <div className={styles.tokens}>
+                        {pkg.tokens.toLocaleString()} tokens
+                      </div>
+                      <Typography.Text type='secondary'>
+                        One-time payment
+                      </Typography.Text>
+                    </div>
+
+                    <ul className={styles.featureList}>
+                      <li>
+                        <CheckOutlined />
+                        <span>Instant token credit</span>
+                      </li>
+                      <li>
+                        <CheckOutlined />
+                        <span>MoMo payment gateway</span>
+                      </li>
+                      <li>
+                        <CheckOutlined />
+                        <span>No expiration date</span>
+                      </li>
+                      <li>
+                        <CheckOutlined />
+                        <span>Secure transaction</span>
+                      </li>
+                    </ul>
+
+                    <Button
+                      type={isPopular ? 'primary' : 'default'}
+                      size='large'
+                      block
+                      loading={topUpMutation.isPending}
+                      onClick={() => topUpMutation.mutate(pkg.code)}
+                    >
+                      Buy with MoMo
+                    </Button>
+                  </Card>
+                </Col>
+              );
+            })}
+          </Row>
+        )}
+
+        {(packagesQuery.data?.length ?? 0) === 0 &&
+          !packagesQuery.isLoading && (
+            <Typography.Text type='secondary'>
+              No packages configured yet.
+            </Typography.Text>
+          )}
+      </Card>
 
       {pendingMockOrderId && (
         <Alert
