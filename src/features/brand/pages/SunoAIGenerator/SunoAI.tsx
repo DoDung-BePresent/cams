@@ -52,7 +52,7 @@ export const SunoAI = () => {
       className: 'cursor-pointer',
     },
     {
-      title: 'AI Music Generator',
+      title: 'Suno AI Music Generator',
     },
   ];
 
@@ -94,7 +94,7 @@ export const SunoAI = () => {
   return (
     <div>
       <PageHeader
-        title='AI Music Generator'
+        title='Suno AI Music Generator'
         breadcrumbs={breadcrumbs}
       />
 
