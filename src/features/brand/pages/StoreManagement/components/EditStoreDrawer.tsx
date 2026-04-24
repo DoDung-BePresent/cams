@@ -279,246 +279,243 @@ export const EditStoreDrawer = ({
               style={{ marginBottom: 24 }}
             />
 
-            {activeTab === 'basic' ? (
-              <>
-                {/* Basic Information */}
-                <div style={{ marginBottom: 24 }}>
-                  <Title
-                    level={5}
-                    style={{ marginBottom: 16 }}
-                  >
-                    Basic Information
-                  </Title>
+            <div style={{ display: activeTab === 'basic' ? 'block' : 'none' }}>
+              {/* Basic Information */}
+              <div style={{ marginBottom: 24 }}>
+                <Title
+                  level={5}
+                  style={{ marginBottom: 16 }}
+                >
+                  Basic Information
+                </Title>
 
-                  <Form.Item
-                    label='Store Name'
-                    name='name'
-                    rules={updateStoreValidation.name}
-                  >
-                    <Input placeholder='e.g., DeerCoffee Điện Biên Phủ' />
-                  </Form.Item>
+                <Form.Item
+                  label='Store Name'
+                  name='name'
+                  rules={updateStoreValidation.name}
+                >
+                  <Input placeholder='e.g., DeerCoffee Điện Biên Phủ' />
+                </Form.Item>
 
-                  <Form.Item
-                    label='Contact Number'
-                    name='contactNumber'
-                    rules={updateStoreValidation.contactNumber}
-                  >
-                    <Input placeholder='0283456789' />
-                  </Form.Item>
-                </div>
+                <Form.Item
+                  label='Contact Number'
+                  name='contactNumber'
+                  rules={updateStoreValidation.contactNumber}
+                >
+                  <Input placeholder='0283456789' />
+                </Form.Item>
+              </div>
 
-                {/* Location Section */}
-                <div style={{ marginBottom: 24 }}>
-                  <Title
-                    level={5}
-                    style={{ marginBottom: 16 }}
-                  >
-                    Location
-                  </Title>
+              {/* Location Section */}
+              <div style={{ marginBottom: 24 }}>
+                <Title
+                  level={5}
+                  style={{ marginBottom: 16 }}
+                >
+                  Location
+                </Title>
 
-                  <Form.Item
-                    label='Address'
-                    name='address'
-                    rules={updateStoreValidation.address}
-                    extra='You can search on the map below to auto-fill this field'
-                  >
-                    <TextArea
-                      rows={2}
-                      placeholder='e.g., 789 Điện Biên Phủ, Phường 25, Bình Thạnh'
-                    />
-                  </Form.Item>
+                <Form.Item
+                  label='Address'
+                  name='address'
+                  rules={updateStoreValidation.address}
+                  extra='You can search on the map below to auto-fill this field'
+                >
+                  <TextArea
+                    rows={2}
+                    placeholder='e.g., 789 Điện Biên Phủ, Phường 25, Bình Thạnh'
+                  />
+                </Form.Item>
 
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        label='City'
-                        name='city'
-                        rules={updateStoreValidation.city}
-                      >
-                        <Select
-                          placeholder='Select city'
-                          options={VIETNAM_CITIES}
-                          showSearch
-                          optionFilterProp='label'
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        label='District'
-                        name='district'
-                        rules={updateStoreValidation.district}
-                      >
-                        <Select
-                          placeholder='Select district'
-                          options={HCMC_DISTRICTS}
-                          showSearch
-                          optionFilterProp='label'
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Form.Item
-                    label='Pinpoint Store Location on Map'
-                    extra='Click on the map or search for the address to update coordinates'
-                  >
+                <Row gutter={16}>
+                  <Col span={12}>
                     <Form.Item
-                      noStyle
-                      shouldUpdate
+                      label='City'
+                      name='city'
+                      rules={updateStoreValidation.city}
                     >
-                      {({ getFieldValue }) => {
-                        const lat = getFieldValue('latitude');
-                        const lng = getFieldValue('longitude');
-                        return (
-                          <MapPicker
-                            value={lat && lng ? { lat, lng } : null}
-                            onChange={handleMapLocationChange}
-                            onAddressChange={handleAddressChange}
-                            height={400}
-                          />
-                        );
-                      }}
-                    </Form.Item>
-                  </Form.Item>
-
-                  {/* Hidden fields for coordinates */}
-                  <Form.Item
-                    name='latitude'
-                    hidden
-                  >
-                    <Input />
-                  </Form.Item>
-                  <Form.Item
-                    name='longitude'
-                    hidden
-                  >
-                    <Input />
-                  </Form.Item>
-                  <Form.Item
-                    name='mapUrl'
-                    hidden
-                  >
-                    <Input />
-                  </Form.Item>
-                </div>
-
-                {/* Store Details */}
-                <div>
-                  <Title
-                    level={5}
-                    style={{ marginBottom: 16 }}
-                  >
-                    Store Details
-                  </Title>
-
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        label='Area (m²)'
-                        name='areaSquareMeters'
-                        rules={updateStoreValidation.areaSquareMeters}
-                      >
-                        <InputNumber
-                          className='w-full!'
-                          placeholder='e.g., 95.0'
-                          min={0.01}
-                          step={0.1}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col span={12}>
-                      <Form.Item
-                        label='Max Capacity'
-                        name='maxCapacity'
-                        rules={updateStoreValidation.maxCapacity}
-                      >
-                        <InputNumber
-                          className='w-full!'
-                          placeholder='e.g., 60'
-                          min={1}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Music Profile Tab */}
-                <div style={{ marginBottom: 24 }}>
-                  <Form.Item
-                    label='Store policy level (CAMS)'
-                    name='fuzzyOverrideLevel'
-                    rules={updateStoreValidation.fuzzyOverrideLevel}
-                  >
-                    <Radio.Group>
-                      {STORE_FUZZY_OVERRIDE_LEVEL_OPTIONS.map((opt) => (
-                        <Radio
-                          key={opt.value}
-                          value={opt.value}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            marginBottom: 8,
-                          }}
-                        >
-                          <span>
-                            <div>{opt.label}</div>
-                            <Typography.Text
-                              type='secondary'
-                              style={{ fontSize: 12, fontWeight: 'normal' }}
-                            >
-                              {opt.description}
-                            </Typography.Text>
-                          </span>
-                        </Radio>
-                      ))}
-                    </Radio.Group>
-                  </Form.Item>
-                </div>
-
-                <div>
-                  {brandPolicyLoading ? (
-                    <Flex
-                      justify='center'
-                      style={{ padding: 16 }}
-                    >
-                      <Spin />
-                    </Flex>
-                  ) : brandPolicyError ? (
-                    <Alert
-                      type='error'
-                      showIcon
-                      message='Could not load brand music policy'
-                      description='Try again later or contact an administrator.'
-                    />
-                  ) : canStoreFuzzyOverride ? (
-                    <>
-                      <StoreFuzzyOverrideFields
-                        storeIdForPlaylists={storeId ?? undefined}
-                        storeOverrideLevel={selectedStorePolicyLevel}
+                      <Select
+                        placeholder='Select city'
+                        options={VIETNAM_CITIES}
+                        showSearch
+                        optionFilterProp='label'
                       />
-                      <Button
-                        size='large'
-                        type='primary'
-                        onClick={handleCreateFuzzyOverride}
-                        loading={createFuzzyProfile.isPending}
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label='District'
+                      name='district'
+                      rules={updateStoreValidation.district}
+                    >
+                      <Select
+                        placeholder='Select district'
+                        options={HCMC_DISTRICTS}
+                        showSearch
+                        optionFilterProp='label'
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+
+                <Form.Item
+                  label='Pinpoint Store Location on Map'
+                  extra='Click on the map or search for the address to update coordinates'
+                >
+                  <Form.Item
+                    noStyle
+                    shouldUpdate
+                  >
+                    {({ getFieldValue }) => {
+                      const lat = getFieldValue('latitude');
+                      const lng = getFieldValue('longitude');
+                      return (
+                        <MapPicker
+                          value={lat && lng ? { lat, lng } : null}
+                          onChange={handleMapLocationChange}
+                          onAddressChange={handleAddressChange}
+                          height={400}
+                        />
+                      );
+                    }}
+                  </Form.Item>
+                </Form.Item>
+
+                {/* Hidden fields for coordinates */}
+                <Form.Item
+                  name='latitude'
+                  hidden
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  name='longitude'
+                  hidden
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  name='mapUrl'
+                  hidden
+                >
+                  <Input />
+                </Form.Item>
+              </div>
+
+              {/* Store Details */}
+              <div>
+                <Title
+                  level={5}
+                  style={{ marginBottom: 16 }}
+                >
+                  Store Details
+                </Title>
+
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Area (m²)'
+                      name='areaSquareMeters'
+                      rules={updateStoreValidation.areaSquareMeters}
+                    >
+                      <InputNumber
+                        className='w-full!'
+                        placeholder='e.g., 95.0'
+                        min={0.01}
+                        step={0.1}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item
+                      label='Max Capacity'
+                      name='maxCapacity'
+                      rules={updateStoreValidation.maxCapacity}
+                    >
+                      <InputNumber
+                        className='w-full!'
+                        placeholder='e.g., 60'
+                        min={1}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </div>
+            </div>
+            <div style={{ display: activeTab === 'music' ? 'block' : 'none' }}>
+              {/* Music Profile Tab */}
+              <div style={{ marginBottom: 24 }}>
+                <Form.Item
+                  label='Store policy level (CAMS)'
+                  name='fuzzyOverrideLevel'
+                  rules={updateStoreValidation.fuzzyOverrideLevel}
+                >
+                  <Radio.Group>
+                    {STORE_FUZZY_OVERRIDE_LEVEL_OPTIONS.map((opt) => (
+                      <Radio
+                        key={opt.value}
+                        value={opt.value}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          marginBottom: 8,
+                        }}
                       >
-                        Create &amp; Activate Override Profile
-                      </Button>
-                    </>
-                  ) : (
-                    <Alert
-                      type='warning'
-                      showIcon
-                      message='Brand music policy is not configured'
-                      description='Configure the brand default template in Admin before creating a store profile.'
+                        <span>
+                          <div>{opt.label}</div>
+                          <Typography.Text
+                            type='secondary'
+                            style={{ fontSize: 12, fontWeight: 'normal' }}
+                          >
+                            {opt.description}
+                          </Typography.Text>
+                        </span>
+                      </Radio>
+                    ))}
+                  </Radio.Group>
+                </Form.Item>
+              </div>
+
+              <div>
+                {brandPolicyLoading ? (
+                  <Flex
+                    justify='center'
+                    style={{ padding: 16 }}
+                  >
+                    <Spin />
+                  </Flex>
+                ) : brandPolicyError ? (
+                  <Alert
+                    type='error'
+                    showIcon
+                    message='Could not load brand music policy'
+                    description='Try again later or contact an administrator.'
+                  />
+                ) : canStoreFuzzyOverride ? (
+                  <>
+                    <StoreFuzzyOverrideFields
+                      storeIdForPlaylists={storeId ?? undefined}
+                      storeOverrideLevel={selectedStorePolicyLevel}
                     />
-                  )}
-                </div>
-              </>
-            )}
+                    <Button
+                      size='large'
+                      type='primary'
+                      onClick={handleCreateFuzzyOverride}
+                      loading={createFuzzyProfile.isPending}
+                    >
+                      Create &amp; Activate Override Profile
+                    </Button>
+                  </>
+                ) : (
+                  <Alert
+                    type='warning'
+                    showIcon
+                    message='Brand music policy is not configured'
+                    description='Configure the brand default template in Admin before creating a store profile.'
+                  />
+                )}
+              </div>
+            </div>
           </>
         )}
       </Form>

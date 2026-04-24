@@ -152,12 +152,14 @@ export const CreatePlaylistDrawer = ({
             label='Store'
             name='storeId'
             rules={createPlaylistValidation.storeId}
+            extra='Leave empty to create a brand-wide shared playlist'
           >
             <Select
-              placeholder='Select store'
+              placeholder='Select store (optional)'
               options={storeOptions}
               showSearch
               optionFilterProp='label'
+              allowClear
               loading={!storesData}
             />
           </Form.Item>
