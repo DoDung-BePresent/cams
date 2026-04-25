@@ -44,10 +44,10 @@ import { pickSpaceFuzzyOverrideBody } from './spaceFuzzyOverrideUtils';
  */
 import { SettingSwitch } from '@/shared/components';
 
-type CreateSpaceDrawerProps = {
+type CreateSpaceModalProps = {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 };
 
 type CreateSpaceFormValues = CreateSpaceRequest & {
@@ -59,7 +59,7 @@ export const CreateSpaceModal = ({
   open,
   onClose,
   onSuccess,
-}: CreateSpaceDrawerProps) => {
+}: CreateSpaceModalProps) => {
   const { message } = App.useApp();
   const [form] = Form.useForm<CreateSpaceFormValues>();
   const createSpace = useCreateSpace();
@@ -101,7 +101,7 @@ export const CreateSpaceModal = ({
         }
 
         handleCancel();
-        onSuccess();
+        onSuccess?.();
       },
     });
   };

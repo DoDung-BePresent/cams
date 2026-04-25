@@ -31,7 +31,7 @@ import { ENTITY_STATUS_LABELS } from '@/shared/constants';
  */
 import { formatDate, formatDuration } from '@/shared/utils';
 
-interface SpaceDetailDrawerProps {
+interface SpaceDetailModalProps {
   open: boolean;
   spaceId?: string;
   onClose: () => void;
@@ -72,7 +72,7 @@ export const SpaceDetailModal = ({
   open,
   spaceId,
   onClose,
-}: SpaceDetailDrawerProps) => {
+}: SpaceDetailModalProps) => {
   const { data: space, isLoading, error } = useSpace(spaceId, open);
   const { data: spaceState, isLoading: isLoadingState } = useSpaceState(
     spaceId,

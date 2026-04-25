@@ -115,11 +115,11 @@ export const SpaceList = () => {
   });
 
   const [search, setSearch] = useState('');
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
-  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [musicDrawerOpen, setMusicDrawerOpen] = useState(false);
-  const [queueDrawerOpen, setQueueDrawerOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [musicModalOpen, setMusicModalOpen] = useState(false);
+  const [queueModalOpen, setQueueModalOpen] = useState(false);
   const [pairDeviceModalOpen, setPairDeviceModalOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
   const [lastAnalysis, setLastAnalysis] = useState<
@@ -134,12 +134,12 @@ export const SpaceList = () => {
 
   const handleView = (id: string) => {
     setSelectedSpaceId(id);
-    setDetailsDrawerOpen(true);
+    setDetailsModalOpen(true);
   };
 
   const handleManageMusic = (id: string) => {
     setSelectedSpaceId(id);
-    setMusicDrawerOpen(true);
+    setMusicModalOpen(true);
   };
 
   const handleManageSchedule = (id: string) => {
@@ -148,7 +148,7 @@ export const SpaceList = () => {
 
   const handleManageQueue = (id: string) => {
     setSelectedSpaceId(id);
-    setQueueDrawerOpen(true);
+    setQueueModalOpen(true);
   };
 
   const handlePairDevice = (id: string) => {
@@ -182,7 +182,7 @@ export const SpaceList = () => {
             spaceName,
           });
           setSelectedSpaceId(spaceId);
-          setDetailsDrawerOpen(true);
+          setDetailsModalOpen(true);
         },
       },
     );
@@ -190,7 +190,7 @@ export const SpaceList = () => {
 
   const handleEdit = (spaceId: string) => {
     setSelectedSpaceId(spaceId);
-    setEditDrawerOpen(true);
+    setEditModalOpen(true);
   };
 
   const handleDelete = (spaceId: string) => {
@@ -295,7 +295,7 @@ export const SpaceList = () => {
               size='large'
               type='primary'
               icon={<PlusOutlined />}
-              onClick={() => setCreateDrawerOpen(true)}
+              onClick={() => setCreateModalOpen(true)}
               style={{
                 background: C.green,
                 border: 'none',
@@ -749,53 +749,53 @@ export const SpaceList = () => {
       </div>
 
       <CreateSpaceModal
-        open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
         onSuccess={() => {
-          setCreateDrawerOpen(false);
+          setCreateModalOpen(false);
           refetch();
         }}
       />
 
       <EditSpaceModal
-        open={editDrawerOpen}
+        open={editModalOpen}
         spaceId={selectedSpaceId}
         onClose={() => {
-          setEditDrawerOpen(false);
+          setEditModalOpen(false);
           setSelectedSpaceId(null);
         }}
         onSuccess={() => {
-          setEditDrawerOpen(false);
+          setEditModalOpen(false);
           setSelectedSpaceId(null);
           refetch();
         }}
       />
 
       <SpaceDetailModal
-        open={detailsDrawerOpen}
+        open={detailsModalOpen}
         spaceId={selectedSpaceId ?? undefined}
         onClose={() => {
-          setDetailsDrawerOpen(false);
+          setDetailsModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />
 
       <SpaceMusicModal
-        open={musicDrawerOpen}
+        open={musicModalOpen}
         spaceId={selectedSpaceId}
         storeId={user?.storeId || ''}
         onClose={() => {
-          setMusicDrawerOpen(false);
+          setMusicModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />
 
       <QueueManagementModal
-        open={queueDrawerOpen}
+        open={queueModalOpen}
         spaceId={selectedSpaceId || ''}
         storeId={user?.storeId || ''}
         onClose={() => {
-          setQueueDrawerOpen(false);
+          setQueueModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />

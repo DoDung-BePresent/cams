@@ -19,7 +19,7 @@ import { useAuth } from '@/providers';
  */
 import { storeHubService } from '@/shared/modules/cams/services';
 
-interface SpaceMusicDrawerProps {
+interface SpaceMusicModalProps {
   open: boolean;
   spaceId: string | null;
   storeId: string;
@@ -27,7 +27,7 @@ interface SpaceMusicDrawerProps {
 }
 
 /**
- * SpaceMusicDrawer - Manages music playback for a single space
+ * SpaceMusicModal - Manages music playback for a single space
  *
  * This component:
  * 1. Joins the specific space group via SignalR (JoinSpaceAsync)
@@ -40,7 +40,7 @@ export const SpaceMusicModal = ({
   spaceId,
   storeId,
   onClose,
-}: SpaceMusicDrawerProps) => {
+}: SpaceMusicModalProps) => {
   const { accessToken } = useAuth();
   const queryClient = useQueryClient();
   const [isJoinedSpace, setIsJoinedSpace] = useState(false);

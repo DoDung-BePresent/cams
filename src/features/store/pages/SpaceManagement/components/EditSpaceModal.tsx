@@ -48,11 +48,11 @@ import { nullToUndefined } from '@/shared/utils/formHelpers';
 import { SpaceFuzzyOverrideFields } from './SpaceFuzzyOverrideFields';
 import { pickSpaceFuzzyOverrideBody } from './spaceFuzzyOverrideUtils';
 
-type EditSpaceDrawerProps = {
+type EditSpaceModalProps = {
   open: boolean;
   spaceId: string | null;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 };
 
 type EditSpaceFormValues = UpdateSpaceRequest & {
@@ -64,7 +64,7 @@ export const EditSpaceModal = ({
   spaceId,
   onClose,
   onSuccess,
-}: EditSpaceDrawerProps) => {
+}: EditSpaceModalProps) => {
   const [form] = Form.useForm<EditSpaceFormValues>();
   const [activeTab, setActiveTab] = useState<'basic' | 'fuzzy'>('basic');
   const {
@@ -152,7 +152,7 @@ export const EditSpaceModal = ({
       }
 
       handleCancel();
-      onSuccess();
+      onSuccess?.();
     } catch {
       // Error messages are already handled in mutation hooks.
     }

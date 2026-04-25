@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Typography, Table, Button, Space, Tag, Empty } from 'antd';
 import { SoundOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { useSpaces } from '@/shared/modules/spaces/hooks';
-import { SpaceMusicDrawer } from '@/features/store/pages/SpaceManagement/components';
+import { SpaceMusicModal } from '@/features/store/pages/SpaceManagement/components';
 import { PairDeviceModal } from '@/shared/modules/cams/components';
 import type { SpaceListItem, SpaceFilter } from '@/shared/modules/spaces/types';
 import { EntityStatusEnum } from '@/shared/types';
@@ -147,7 +147,7 @@ export const StoreSpacesDrawer = ({
         )}
       </Modal>
 
-      <SpaceMusicDrawer
+      <SpaceMusicModal
         open={musicDrawerOpen}
         spaceId={selectedSpaceId}
         storeId={storeId || ''}
