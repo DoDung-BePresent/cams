@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Drawer, Form, Input, Select, Button, Flex, Typography } from 'antd';
+import { Modal, Form, Input, Select, Button, Flex, Typography } from 'antd';
 
 /**
  * Hooks
@@ -29,17 +29,17 @@ import { SettingSwitch } from '@/shared/components';
 
 const { Title } = Typography;
 
-interface CreatePlaylistDrawerProps {
+interface CreatePlaylistModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export const CreatePlaylistDrawer = ({
+export const CreatePlaylistModal = ({
   open,
   onClose,
   onSuccess,
-}: CreatePlaylistDrawerProps) => {
+}: CreatePlaylistModalProps) => {
   const [form] = Form.useForm<CreatePlaylistRequest>();
   const createPlaylist = useCreatePlaylist();
 
@@ -75,14 +75,13 @@ export const CreatePlaylistDrawer = ({
   }));
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Create New Playlist'
-      placement='right'
-      destroyOnHidden
+      centered
+      destroyOnClose
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
       footer={
         <Flex
           justify='end'
@@ -189,6 +188,6 @@ export const CreatePlaylistDrawer = ({
           </Form.Item>
         </div>
       </Form>
-    </Drawer>
+    </Modal>
   );
 };

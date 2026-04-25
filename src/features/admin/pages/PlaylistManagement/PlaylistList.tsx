@@ -13,8 +13,8 @@ import { PlusOutlined } from '@ant-design/icons';
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
 import {
   getPlaylistColumns,
-  PlaylistDetailsDrawer,
-  AddTracksDrawer,
+  PlaylistDetailsModal,
+  AddTracksModal,
 } from '@/shared/modules/playlists/components';
 import {
   PlaylistFilter as PlaylistFilterComponent,
@@ -249,8 +249,8 @@ export const PlaylistList = () => {
         scroll={{ x: 1400 }}
       />
 
-      {/* Details Drawer (View Only) */}
-      <PlaylistDetailsDrawer
+      {/* Details Modal (View Only) */}
+      <PlaylistDetailsModal
         open={detailsDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
@@ -278,8 +278,8 @@ export const PlaylistList = () => {
         onSuccess={() => refetch()}
       />
 
-      {/* Add Tracks Drawer */}
-      <AddTracksDrawer
+      {/* Add Tracks Modal */}
+      <AddTracksModal
         open={addTracksDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {

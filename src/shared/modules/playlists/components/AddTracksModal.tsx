@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Drawer,
+  Modal,
   Button,
   Flex,
   Input,
@@ -46,7 +46,7 @@ import { ErrorCodeEnum } from '@/shared/types';
 
 const { Title, Text } = Typography;
 
-interface AddTracksDrawerProps {
+interface AddTracksModalProps {
   open: boolean;
   playlistId?: string;
   onClose: () => void;
@@ -55,12 +55,12 @@ interface AddTracksDrawerProps {
 
 type ViewMode = 'available' | 'selected';
 
-export const AddTracksDrawer = ({
+export const AddTracksModal = ({
   open,
   playlistId,
   onClose,
   onSuccess,
-}: AddTracksDrawerProps) => {
+}: AddTracksModalProps) => {
   const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('available');
@@ -221,13 +221,13 @@ export const AddTracksDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Add Tracks to Playlist'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
+      destroyOnClose
+      centered
       footer={
         <Flex
           justify='end'
@@ -346,6 +346,6 @@ export const AddTracksDrawer = ({
           )}
         </Space>
       )}
-    </Drawer>
+    </Modal>
   );
 };

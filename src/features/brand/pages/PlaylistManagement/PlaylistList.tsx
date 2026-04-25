@@ -12,9 +12,9 @@ import { PlusOutlined } from '@ant-design/icons';
  */
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
 import {
-  AddTracksDrawer,
+  AddTracksModal,
   getPlaylistColumns,
-  PlaylistDetailsDrawer,
+  PlaylistDetailsModal,
 } from '@/shared/modules/playlists/components';
 import {
   PlaylistFilter as PlaylistFilterComponent,
@@ -275,8 +275,8 @@ export const PlaylistList = () => {
         onSuccess={() => refetch()}
       />
 
-      {/* Details Drawer */}
-      <PlaylistDetailsDrawer
+      {/* Details Modal */}
+      <PlaylistDetailsModal
         open={detailsDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
@@ -285,8 +285,8 @@ export const PlaylistList = () => {
         }}
       />
 
-      {/* Add Tracks Drawer */}
-      <AddTracksDrawer
+      {/* Add Tracks Modal */}
+      <AddTracksModal
         open={addTracksDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {

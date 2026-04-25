@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import {
-  Drawer,
+  Modal,
   Form,
   Input,
   Select,
@@ -92,14 +92,12 @@ export const EditPlaylistDrawer = ({
   }));
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Edit Playlist'
-      placement='right'
-      destroyOnHidden
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
+      centered
       footer={
         <Flex
           justify='end'
@@ -212,6 +210,6 @@ export const EditPlaylistDrawer = ({
           </div>
         </Form>
       )}
-    </Drawer>
+    </Modal>
   );
 };

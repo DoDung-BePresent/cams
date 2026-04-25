@@ -1,15 +1,5 @@
 import { useState } from 'react';
-import {
-  Button,
-  Drawer,
-  Form,
-  Input,
-  Select,
-  Row,
-  Col,
-  Typography,
-  Flex,
-} from 'antd';
+import { Button, Modal, Form, Input, Select, Row, Col, Typography } from 'antd';
 
 /**
  * Hooks
@@ -38,24 +28,19 @@ import { createStaffValidation } from '@/features/brand/validations';
  */
 import { createImageUploadProps } from '@/shared/utils';
 
-/**
- * Configs
- */
-import { DRAWER_WIDTHS } from '@/config';
-
 const { Title } = Typography;
 
-type CreateStaffDrawerProps = {
+type CreateStaffModalProps = {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
 };
 
-export const CreateStaffDrawer = ({
+export const CreateStaffModal = ({
   open,
   onClose,
   onSuccess,
-}: CreateStaffDrawerProps) => {
+}: CreateStaffModalProps) => {
   const [form] = Form.useForm<CreateStaffRequest>();
   const createStaff = useCreateStaff();
   const [avatarFile, setAvatarFile] = useState<UploadFile | null>(null);
@@ -123,40 +108,36 @@ export const CreateStaffDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Add New Staff Member'
-      placement='right'
-      width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
-      footer={
-        <Flex
-          justify='end'
-          gap='small'
+      onCancel={handleCancel}
+      width={720}
+      footer={[
+        <Button
+          key='cancel'
+          size='large'
+          onClick={handleCancel}
         >
-          <Button
-            size='large'
-            onClick={handleCancel}
-          >
-            Cancel
-          </Button>
-          <Button
-            size='large'
-            type='primary'
-            onClick={() => form.submit()}
-            loading={createStaff.isPending}
-          >
-            Create Staff
-          </Button>
-        </Flex>
-      }
+          Cancel
+        </Button>,
+        <Button
+          key='submit'
+          size='large'
+          type='primary'
+          onClick={() => form.submit()}
+          loading={createStaff.isPending}
+        >
+          Create Staff
+        </Button>,
+      ]}
     >
       <Form
         size='large'
         form={form}
         layout='vertical'
         onFinish={handleSubmit}
+        style={{ marginTop: 24 }}
         styles={{
           label: {
             height: 22,
@@ -271,6 +252,6 @@ export const CreateStaffDrawer = ({
           </Form.Item>
         </div>
       </Form>
-    </Drawer>
+    </Modal>
   );
 };

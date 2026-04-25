@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   App,
   Button,
-  Drawer,
+  Modal,
   Form,
   Input,
   Select,
@@ -40,11 +40,6 @@ import { SpaceFuzzyOverrideFields } from './SpaceFuzzyOverrideFields';
 import { pickSpaceFuzzyOverrideBody } from './spaceFuzzyOverrideUtils';
 
 /**
- * Configs
- */
-import { DRAWER_WIDTHS } from '@/config';
-
-/**
  * Components
  */
 import { SettingSwitch } from '@/shared/components';
@@ -60,7 +55,7 @@ type CreateSpaceFormValues = CreateSpaceRequest & {
   fuzzy?: Partial<SpaceFuzzyOverrideProfileRequest>;
 };
 
-export const CreateSpaceDrawer = ({
+export const CreateSpaceModal = ({
   open,
   onClose,
   onSuccess,
@@ -118,14 +113,13 @@ export const CreateSpaceDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Create New Space'
-      placement='right'
-      width={DRAWER_WIDTHS.medium}
+      centered
+      width={700}
       open={open}
-      destroyOnHidden
-      onClose={handleCancel}
+      destroyOnClose
+      onCancel={handleCancel}
       footer={
         <Flex
           justify='end'
@@ -268,6 +262,6 @@ export const CreateSpaceDrawer = ({
           </Form.Item>
         </div>
       </Form>
-    </Drawer>
+    </Modal>
   );
 };

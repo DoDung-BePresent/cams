@@ -12,14 +12,14 @@ import { PlusOutlined } from '@ant-design/icons';
  */
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
 import {
-  AddTracksDrawer,
+  AddTracksModal,
   getPlaylistColumns,
-  PlaylistDetailsDrawer,
+  PlaylistDetailsModal,
 } from '@/shared/modules/playlists/components';
 import {
   PlaylistFilter as PlaylistFilterComponent,
-  CreatePlaylistDrawer,
-  EditPlaylistDrawer,
+  CreatePlaylistModal,
+  EditPlaylistModal,
 } from './components';
 
 /**
@@ -244,15 +244,15 @@ export const PlaylistList = () => {
         scroll={{ x: 1400 }}
       />
 
-      {/* Create Playlist Drawer */}
-      <CreatePlaylistDrawer
+      {/* Create Playlist Modal */}
+      <CreatePlaylistModal
         open={createDrawerOpen}
         onClose={() => setCreateDrawerOpen(false)}
         onSuccess={() => refetch()}
       />
 
-      {/* Edit Playlist Drawer */}
-      <EditPlaylistDrawer
+      {/* Edit Playlist Modal */}
+      <EditPlaylistModal
         open={editDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
@@ -262,8 +262,8 @@ export const PlaylistList = () => {
         onSuccess={() => refetch()}
       />
 
-      {/* Details Drawer */}
-      <PlaylistDetailsDrawer
+      {/* Details Modal */}
+      <PlaylistDetailsModal
         open={detailsDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
@@ -272,8 +272,8 @@ export const PlaylistList = () => {
         }}
       />
 
-      {/* Add Tracks Drawer */}
-      <AddTracksDrawer
+      {/* Add Tracks Modal */}
+      <AddTracksModal
         open={addTracksDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {

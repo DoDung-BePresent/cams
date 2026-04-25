@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   Alert,
   Descriptions,
-  Drawer,
+  Modal,
   Space,
   Spin,
   Table,
@@ -38,7 +38,7 @@ import { EntityStatusEnum } from '@/shared/types';
 
 const { Text } = Typography;
 
-type ConfigDetailDrawerProps = {
+type ConfigDetailModalProps = {
   open: boolean;
   data: ConfigFlatRowItem | null;
   onClose: () => void;
@@ -62,11 +62,11 @@ const renderOptionalTier = (tier?: ConfigTierEnum | null) => {
   );
 };
 
-export const ConfigDetailDrawer = ({
+export const ConfigDetailModal = ({
   open,
   data,
   onClose,
-}: ConfigDetailDrawerProps) => {
+}: ConfigDetailModalProps) => {
   const [spaceListPage, setSpaceListPage] = useState(1);
   const spaceListPageSize = 5;
 
@@ -128,13 +128,14 @@ export const ConfigDetailDrawer = ({
   ];
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Store Config Details'
       open={open}
-      destroyOnHidden
+      destroyOnClose
       width={DRAWER_WIDTHS.medium}
-      onClose={onClose}
+      onCancel={onClose}
+      footer={null}
+      centered
     >
       {!data ? (
         <Text type='secondary'>No data selected.</Text>
@@ -300,6 +301,6 @@ export const ConfigDetailDrawer = ({
           ) : null}
         </Space>
       )}
-    </Drawer>
+    </Modal>
   );
 };

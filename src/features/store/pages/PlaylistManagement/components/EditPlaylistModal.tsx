@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import {
-  Drawer,
+  Modal,
   Form,
   Input,
   Select,
@@ -41,19 +41,19 @@ import { SettingSwitch } from '@/shared/components';
 
 const { Title } = Typography;
 
-interface EditPlaylistDrawerProps {
+interface EditPlaylistModalProps {
   open: boolean;
   playlistId?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export const EditPlaylistDrawer = ({
+export const EditPlaylistModal = ({
   open,
   playlistId,
   onClose,
   onSuccess,
-}: EditPlaylistDrawerProps) => {
+}: EditPlaylistModalProps) => {
   const [form] = Form.useForm<UpdatePlaylistRequest>();
   const { data: playlist, isLoading } = usePlaylist(playlistId, open);
   const updatePlaylist = useUpdatePlaylist();
@@ -96,14 +96,13 @@ export const EditPlaylistDrawer = ({
   }));
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Edit Playlist'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      destroyOnHidden
-      onClose={handleCancel}
+      destroyOnClose
+      onCancel={handleCancel}
+      centered
       footer={
         <Flex
           justify='end'
@@ -216,6 +215,6 @@ export const EditPlaylistDrawer = ({
           </div>
         </Form>
       )}
-    </Drawer>
+    </Modal>
   );
 };

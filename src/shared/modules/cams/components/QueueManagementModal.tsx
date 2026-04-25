@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Drawer,
+  Modal,
   Button,
   Space,
   Typography,
@@ -13,7 +13,7 @@ import {
   DeleteOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { DRAWER_WIDTHS } from '@/config';
+import { Flex } from 'antd';
 import {
   useSpaceQueue,
   useSpaceState,
@@ -25,24 +25,24 @@ import {
 } from '../hooks';
 import { QueueList } from './QueueList';
 import { AudioMixerControls } from './AudioMixerControls';
-import { AddToQueueDrawer } from './AddToQueueDrawer';
+import { AddToQueueModal } from './AddToQueueModal';
 import type { QueueEndBehavior } from '../types';
 
 const { Title, Text } = Typography;
 
-interface QueueManagementDrawerProps {
+interface QueueManagementModalProps {
   open: boolean;
   spaceId: string;
   storeId: string;
   onClose: () => void;
 }
 
-export const QueueManagementDrawer = ({
+export const QueueManagementModal = ({
   open,
   spaceId,
   storeId,
   onClose,
-}: QueueManagementDrawerProps) => {
+}: QueueManagementModalProps) => {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [localVolume, setLocalVolume] = useState<number>(100);
 
@@ -156,49 +156,55 @@ export const QueueManagementDrawer = ({
 
   return (
     <>
-      <Drawer
-        title='Queue Management'
-        closeIcon={null}
-        placement='right'
-        destroyOnHidden
-        width={DRAWER_WIDTHS.medium}
-        open={open}
-        onClose={onClose}
-        extra={
-          <Space>
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => refetch()}
-              loading={isLoading}
-            >
-              Refresh
-            </Button>
-            <Popconfirm
-              title='Clear Queue'
-              description='Are you sure you want to clear the entire queue?'
-              onConfirm={handleClearQueue}
-              okText='Yes, Clear'
-              cancelText='Cancel'
-              okButtonProps={{ danger: true }}
-            >
+      <Modal
+        title={
+          <Flex
+            justify='space-between'
+            align='center'
+            style={{ paddingRight: 32 }}
+          >
+            <span>Queue Management</span>
+            <Space>
               <Button
-                danger
-                icon={<DeleteOutlined />}
-                loading={clearQueue.isPending}
-                disabled={!queueData || queueData.length === 0}
+                icon={<ReloadOutlined />}
+                onClick={() => refetch()}
+                loading={isLoading}
               >
-                Clear All
+                Refresh
               </Button>
-            </Popconfirm>
-            <Button
-              type='primary'
-              icon={<PlusOutlined />}
-              onClick={() => setAddModalOpen(true)}
-            >
-              Add to Queue
-            </Button>
-          </Space>
+              <Popconfirm
+                title='Clear Queue'
+                description='Are you sure you want to clear the entire queue?'
+                onConfirm={handleClearQueue}
+                okText='Yes, Clear'
+                cancelText='Cancel'
+                okButtonProps={{ danger: true }}
+              >
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  loading={clearQueue.isPending}
+                  disabled={!queueData || queueData.length === 0}
+                >
+                  Clear All
+                </Button>
+              </Popconfirm>
+              <Button
+                type='primary'
+                icon={<PlusOutlined />}
+                onClick={() => setAddModalOpen(true)}
+              >
+                Add to Queue
+              </Button>
+            </Space>
+          </Flex>
         }
+        centered
+        destroyOnClose
+        width={700}
+        open={open}
+        onCancel={onClose}
+        footer={null}
       >
         <Space
           direction='vertical'
@@ -251,9 +257,9 @@ export const QueueManagementDrawer = ({
             </Space>
           </div>
         </Space>
-      </Drawer>
+      </Modal>
 
-      <AddToQueueDrawer
+      <AddToQueueModal
         open={addModalOpen}
         spaceId={spaceId}
         storeId={storeId}

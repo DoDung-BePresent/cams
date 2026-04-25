@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Drawer, Typography, Table, Button, Space, Tag, Empty } from 'antd';
+import { Modal, Typography, Table, Button, Space, Tag, Empty } from 'antd';
 import { SoundOutlined, QrcodeOutlined } from '@ant-design/icons';
 import { useSpaces } from '@/shared/modules/spaces/hooks';
 import { SpaceMusicDrawer } from '@/features/store/pages/SpaceManagement/components';
@@ -112,13 +112,18 @@ export const StoreSpacesDrawer = ({
 
   return (
     <>
-      <Drawer
+      <Modal
         closeIcon={null}
         title='Spaces'
         open={open}
-        onClose={onClose}
+        onCancel={onClose}
         width={DRAWER_WIDTHS.medium}
         destroyOnClose
+        centered
+        footer={null}
+        styles={{
+          body: { maxHeight: '75vh', overflowY: 'auto', paddingRight: 12 },
+        }}
       >
         {!spacesData?.items.length && !isLoading ? (
           <Empty description='No spaces found in this store' />
@@ -140,7 +145,7 @@ export const StoreSpacesDrawer = ({
             />
           </Space>
         )}
-      </Drawer>
+      </Modal>
 
       <SpaceMusicDrawer
         open={musicDrawerOpen}

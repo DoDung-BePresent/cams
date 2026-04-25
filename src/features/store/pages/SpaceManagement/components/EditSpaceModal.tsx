@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Button,
-  Drawer,
+  Modal,
   Form,
   Input,
   Select,
@@ -48,11 +48,6 @@ import { nullToUndefined } from '@/shared/utils/formHelpers';
 import { SpaceFuzzyOverrideFields } from './SpaceFuzzyOverrideFields';
 import { pickSpaceFuzzyOverrideBody } from './spaceFuzzyOverrideUtils';
 
-/**
- * Configs
- */
-import { DRAWER_WIDTHS } from '@/config';
-
 type EditSpaceDrawerProps = {
   open: boolean;
   spaceId: string | null;
@@ -64,7 +59,7 @@ type EditSpaceFormValues = UpdateSpaceRequest & {
   fuzzy?: Partial<SpaceFuzzyOverrideProfileRequest>;
 };
 
-export const EditSpaceDrawer = ({
+export const EditSpaceModal = ({
   open,
   spaceId,
   onClose,
@@ -186,13 +181,12 @@ export const EditSpaceDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Edit Space'
-      placement='right'
-      width={DRAWER_WIDTHS.medium}
+      centered
+      width={700}
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
       footer={
         <Flex
           justify='end'
@@ -329,6 +323,6 @@ export const EditSpaceDrawer = ({
           </div>
         </Form>
       )}
-    </Drawer>
+    </Modal>
   );
 };

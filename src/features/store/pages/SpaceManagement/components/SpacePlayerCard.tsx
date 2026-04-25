@@ -18,8 +18,8 @@ import {
   SpacePlayer,
   AIExplainabilityPanel,
   QueueList,
-  OverrideSpaceMusicDrawer,
-  AddToQueueDrawer,
+  OverrideSpaceMusicModal,
+  AddToQueueModal,
 } from '@/shared/modules/cams/components';
 import {
   useSpaceState,
@@ -700,14 +700,14 @@ export const SpacePlayerCard = ({ space, storeId }: SpacePlayerCardProps) => {
         </Space>
       </div>
 
-      <AddToQueueDrawer
+      <AddToQueueModal
         open={isAddQueueModalOpen}
         spaceId={space.id}
         storeId={storeId}
         onClose={() => setIsAddQueueModalOpen(false)}
       />
 
-      <OverrideSpaceMusicDrawer
+      <OverrideSpaceMusicModal
         open={isOverrideDrawerOpen}
         spaceId={space.id}
         storeId={storeId}

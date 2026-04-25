@@ -1,4 +1,4 @@
-import { Drawer, Descriptions, Tag, Spin, Alert, Space, Badge } from 'antd';
+import { Modal, Descriptions, Tag, Spin, Alert, Space, Badge } from 'antd';
 
 /**
  * Icons
@@ -30,11 +30,6 @@ import { ENTITY_STATUS_LABELS } from '@/shared/constants';
  * Utils
  */
 import { formatDate, formatDuration } from '@/shared/utils';
-
-/**
- * Configs
- */
-import { DRAWER_WIDTHS } from '@/config';
 
 interface SpaceDetailDrawerProps {
   open: boolean;
@@ -73,7 +68,7 @@ const getPlaybackStatusTag = (isPaused?: boolean, hasPlaylist?: boolean) => {
   );
 };
 
-export const SpaceDetailDrawer = ({
+export const SpaceDetailModal = ({
   open,
   spaceId,
   onClose,
@@ -85,13 +80,13 @@ export const SpaceDetailDrawer = ({
   );
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Space Details'
-      placement='right'
-      width={DRAWER_WIDTHS.medium}
+      centered
+      width={700}
       open={open}
-      onClose={onClose}
+      onCancel={onClose}
+      footer={null}
     >
       {(isLoading || isLoadingState) && (
         <div style={{ textAlign: 'center', padding: 48 }}>
@@ -278,6 +273,6 @@ export const SpaceDetailDrawer = ({
           </Descriptions>
         </Space>
       )}
-    </Drawer>
+    </Modal>
   );
 };
