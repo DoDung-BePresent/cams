@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { Space, Typography, Flex, App, Badge, Slider } from 'antd';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { Space, Tag, Typography, Flex, App, Badge, Slider } from 'antd';
 import {
   PlusOutlined,
   SettingOutlined,
@@ -18,9 +18,11 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 import {
   SpacePlayer,
+  AIExplainabilityPanel,
   QueueList,
   OverrideSpaceMusicModal,
   AddToQueueModal,
+  RepeatButton,
 } from '@/shared/modules/cams/components';
 import {
   useSpaceState,
@@ -42,7 +44,10 @@ import {
   QueueEndBehavior,
 } from '@/shared/modules/cams/types';
 import type { SpaceQueueItemResponse } from '@/shared/modules/cams/types';
-import { isSpacePlaying } from '@/shared/modules/cams/utils';
+import {
+  formatPlaybackTime,
+  isSpacePlaying,
+} from '@/shared/modules/cams/utils';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { AppModal, SettingSwitch } from '@/shared/components';
 import { showErrorMessage } from '@/shared/utils';
@@ -68,30 +73,9 @@ export const SpacePlayerCard = ({
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [isAddQueueModalOpen, setIsAddQueueModalOpen] = useState(false);
   const [statusNowMs, setStatusNowMs] = useState(() => Date.now());
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [isHoveringVolume, setIsHoveringVolume] = useState(false);
-  const [isDark, setIsDark] = useState(true);
-  const [scoreHistory, setScoreHistory] = useState<{
-    chill: number[];
-    focus: number[];
-    energetic: number[];
-  }>({
-    chill: [],
-    focus: [],
-    energetic: [],
-  });
-
-  // Theme tokens
-  const T = {
-    bg: isDark ? '#0a0a12' : '#f8fafc',
-    surface: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-    surfaceActive: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-    border: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-    text: isDark ? '#e5e7eb' : '#1e293b',
-    textMuted: isDark ? '#9ca3af' : '#64748b',
-    textSubtle: isDark ? '#6b7280' : '#94a3b8',
-    panelBg: isDark ? 'rgba(0,0,0,0.3)' : '#ffffff',
-    pillBg: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-  };
 
   const isFull = layout === 'full';
 
@@ -238,6 +222,10 @@ export const SpacePlayerCard = ({
       coverImageUrl: i.coverImageUrl ?? null,
     } as SpaceQueueItemResponse;
   });
+  const currentCoverImageUrl =
+    queueItems.find(
+      (item) => item.queueItemId === spaceState?.currentQueueItemId,
+    )?.coverImageUrl ?? null;
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
   const handlePlayPause = useCallback(() => {
@@ -478,6 +466,13 @@ export const SpacePlayerCard = ({
   );
 
   // ─── AI score breakdown from spaceState ──────────────────────────────────
+  type SignalContribution = {
+    signal?: string;
+    chillDelta?: number;
+    focusDelta?: number;
+    energeticDelta?: number;
+  };
+
   const rawScoreBreakdown = (spaceState as unknown as Record<string, unknown>)
     ?.fuzzyScoreBreakdown as
     | {
@@ -487,9 +482,9 @@ export const SpacePlayerCard = ({
         chill_score?: number;
         focus_score?: number;
         energetic_score?: number;
-        signalContributions?: unknown[];
-        signal_contributions?: unknown[];
-        contributions?: unknown[];
+        signalContributions?: SignalContribution[];
+        signal_contributions?: SignalContribution[];
+        contributions?: SignalContribution[];
       }
     | null
     | undefined;
@@ -519,23 +514,14 @@ export const SpacePlayerCard = ({
   const bpmMax = spaceState?.bpmMax ?? null;
   const bpmTarget = spaceState?.bpmTarget ?? null;
 
-  // Track history for real data sparklines
-  useEffect(() => {
-    if (isLoadingState || !spaceState) return;
-
-    // Check if we actually need to update history to avoid unnecessary renders
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setScoreHistory((prev) => {
-      const lastChill = prev.chill[prev.chill.length - 1];
-      if (lastChill === chillPct && prev.chill.length > 0) return prev;
-
-      return {
-        chill: [...prev.chill.slice(-23), chillPct],
-        focus: [...prev.focus.slice(-23), focusPct],
-        energetic: [...prev.energetic.slice(-23), energPct],
-      };
-    });
-  }, [chillPct, focusPct, energPct, isLoadingState, spaceState]);
+  const scoreHistory = useMemo(
+    () => ({
+      chill: [chillPct],
+      focus: [focusPct],
+      energetic: [energPct],
+    }),
+    [chillPct, focusPct, energPct],
+  );
 
   const getMoodTheme = (moodName?: string | null) => {
     const mood = moodName?.toLowerCase() || '';
@@ -581,7 +567,7 @@ export const SpacePlayerCard = ({
     }
     .viz-bar {
       width: 12px;
-      background: linear-gradient(to top, ${theme.color}, ${isDark ? '#fff' : 'rgba(0,0,0,0.5)'});
+      background: linear-gradient(to top, ${theme.color}, #fff);
       mask-image: repeating-linear-gradient(to bottom, black 0, black 6px, transparent 6px, transparent 8px);
       transition: all 0.2s ease;
     }
@@ -589,7 +575,7 @@ export const SpacePlayerCard = ({
     .viz-bar-chill { animation: barPulseChill 1.5s ease-in-out infinite; }
   `;
 
-  // ─── Sub-renderers (internal to simplify main JSX) ─────────────────────────
+  // ─── Sub-components ───────────────────────────────────────────────────────
   const renderMoodVisualizer = () => {
     const isEnergetic = spaceState?.moodName
       ?.toLowerCase()
@@ -627,6 +613,13 @@ export const SpacePlayerCard = ({
     );
   };
 
+  // Right panel tabs
+  const rightTabs: Array<{ key: PanelView; label: string; badge?: number }> = [
+    { key: 'queue', label: 'Queue', badge: queueItems.length || undefined },
+    { key: 'ai', label: 'AI Scores' },
+    { key: 'settings', label: 'Settings' },
+  ];
+
   const renderQueue = () => (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Flex
@@ -637,7 +630,7 @@ export const SpacePlayerCard = ({
         <div>
           <div
             style={{
-              color: T.textMuted,
+              color: '#9ca3af',
               fontSize: 11,
               textTransform: 'uppercase',
               letterSpacing: 2,
@@ -646,7 +639,7 @@ export const SpacePlayerCard = ({
           >
             Up Next
           </div>
-          <div style={{ color: T.textSubtle, fontSize: 12, marginTop: 2 }}>
+          <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>
             {queueItems.length} tracks in queue
           </div>
         </div>
@@ -656,7 +649,7 @@ export const SpacePlayerCard = ({
             disabled={queueItems.length === 0 || clearQueue.isPending}
             style={{
               background: 'transparent',
-              border: `1px solid ${isDark ? 'rgba(239,68,68,0.3)' : 'rgba(239,68,68,0.5)'}`,
+              border: '1px solid rgba(239,68,68,0.3)',
               color: '#ef4444',
               padding: '6px 12px',
               borderRadius: 8,
@@ -701,6 +694,7 @@ export const SpacePlayerCard = ({
     </div>
   );
 
+  // ─── Sparkline generator (Real Data + Business Phase) ────────────────────
   const makeSparkline = (
     history: number[],
     currentPct: number,
@@ -709,20 +703,26 @@ export const SpacePlayerCard = ({
     w = 120,
     h = 36,
   ) => {
+    // Different baselines based on mood type to reflect typical shop behavior
     const baselines: Record<string, number[]> = {
-      chill: [60, 70, 50, 30, 20, 15, 20, 30, 40, 30, 40, 60, 70, 80, 85, 90],
-      focus: [20, 30, 60, 80, 70, 50, 40, 60, 80, 70, 40, 30, 20, 15, 10, 5],
+      chill: [60, 70, 50, 30, 20, 15, 20, 30, 40, 30, 40, 60, 70, 80, 85, 90], // High early/late
+      focus: [20, 30, 60, 80, 70, 50, 40, 60, 80, 70, 40, 30, 20, 15, 10, 5], // High mid-day
       energetic: [
         5, 10, 20, 40, 70, 90, 85, 70, 60, 85, 95, 80, 60, 40, 20, 10,
-      ],
+      ], // High peak/lunch
     };
+
     const baseline = baselines[moodType.toLowerCase()] || baselines.chill;
+
+    // Merge real history with baseline for "context"
     const displayPoints =
       history.length > 5 ? history : [...baseline.slice(0, 8), currentPct];
+
+    const minV = 0;
     const xStep = w / (displayPoints.length - 1);
     const coords = displayPoints.map((p, i) => [
       i * xStep,
-      h - ((p - 0) / 100) * (h - 4) - 2,
+      h - ((p - minV) / 100) * (h - 4) - 2,
     ]);
     const path = coords
       .map(
@@ -731,6 +731,7 @@ export const SpacePlayerCard = ({
       .join(' ');
     const area = `${path} L${w},${h} L0,${h} Z`;
     const gid = `sg${color.replace('#', '')}`;
+
     return (
       <svg
         width={w}
@@ -758,6 +759,7 @@ export const SpacePlayerCard = ({
             />
           </linearGradient>
         </defs>
+        {/* Baseline guide line - very subtle */}
         <path
           d={coords
             .map((c, i) => `${i === 0 ? 'M' : 'L'}${c[0].toFixed(1)},${h - 2}`)
@@ -767,6 +769,7 @@ export const SpacePlayerCard = ({
           strokeWidth='1'
           strokeDasharray='2,2'
         />
+
         <path
           d={area}
           fill={`url(#${gid})`}
@@ -779,6 +782,8 @@ export const SpacePlayerCard = ({
           strokeLinecap='round'
           strokeLinejoin='round'
         />
+
+        {/* Pulsing current point */}
         <circle
           cx={coords[coords.length - 1][0]}
           cy={coords[coords.length - 1][1]}
@@ -802,6 +807,7 @@ export const SpacePlayerCard = ({
     );
   };
 
+  // Confidence arc gauge
   const ConfidenceGauge = ({ pct }: { pct: number }) => {
     const r = 44,
       cx = 56,
@@ -820,7 +826,7 @@ export const SpacePlayerCard = ({
         <path
           d={`M${cx - r},${cy} A${r},${r} 0 0,1 ${cx + r},${cy}`}
           fill='none'
-          stroke={isDark ? '#1f2937' : '#e2e8f0'}
+          stroke='#1f2937'
           strokeWidth={sw}
           strokeLinecap='round'
         />
@@ -841,7 +847,7 @@ export const SpacePlayerCard = ({
           x={cx}
           y={cy - 8}
           textAnchor='middle'
-          fill={T.text}
+          fill='#fff'
           fontSize='20'
           fontWeight='800'
         >
@@ -862,12 +868,150 @@ export const SpacePlayerCard = ({
     );
   };
 
-  const renderAIScores = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+  // Mood card with sparkline
+  const MoodCard = ({
+    label,
+    pct,
+    color,
+    icon,
+  }: {
+    label: string;
+    pct: number;
+    color: string;
+    icon: string;
+  }) => {
+    const isActive = spaceState?.moodName
+      ?.toLowerCase()
+      .includes(label.toLowerCase());
+    return (
       <div
         style={{
-          background: T.surface,
-          border: `1px solid ${T.border}`,
+          background: isActive ? `${color}12` : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${isActive ? `${color}44` : 'rgba(255,255,255,0.07)'}`,
+          borderRadius: 14,
+          padding: '16px',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
+            marginBottom: 12,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: `${color}22`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 20,
+              }}
+            >
+              {icon}
+            </div>
+            <div>
+              <div style={{ color: '#e5e7eb', fontSize: 15, fontWeight: 700 }}>
+                {label}
+              </div>
+              {isActive && (
+                <div
+                  style={{
+                    background: `${color}33`,
+                    color,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    padding: '1px 6px',
+                    borderRadius: 4,
+                    display: 'inline-block',
+                    textTransform: 'uppercase',
+                    marginTop: 2,
+                  }}
+                >
+                  Active Mood
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ color, fontSize: 24, fontWeight: 900 }}>{pct}%</span>
+          </div>
+        </div>
+        <div
+          style={{
+            height: 6,
+            background: '#1f2937',
+            borderRadius: 3,
+            overflow: 'hidden',
+            marginBottom: 12,
+          }}
+        >
+          <div
+            style={{
+              height: '100%',
+              width: `${pct}%`,
+              borderRadius: 3,
+              background: `linear-gradient(90deg, ${color}, ${color}99)`,
+              transition: 'width 1s cubic-bezier(0.4,0,0.2,1)',
+              boxShadow: `0 0 8px ${color}44`,
+            }}
+          />
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <div
+              style={{
+                color: '#6b7280',
+                fontSize: 10,
+                marginBottom: 4,
+                fontWeight: 600,
+                textTransform: 'uppercase',
+              }}
+            >
+              Daily Phase Trend
+            </div>
+            {makeSparkline(
+              label === 'Chill'
+                ? scoreHistory.chill
+                : label === 'Focus'
+                  ? scoreHistory.focus
+                  : scoreHistory.energetic,
+              pct,
+              color,
+              label,
+            )}
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: '#4b5563', fontSize: 10, fontWeight: 500 }}>
+              Shop Hours
+            </div>
+            <div style={{ color: '#6b7280', fontSize: 9 }}>06:00 - 23:00</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderAIScores = () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Confidence Gauge */}
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.07)',
           borderRadius: 14,
           padding: '16px 20px',
           display: 'flex',
@@ -878,7 +1022,7 @@ export const SpacePlayerCard = ({
         <div style={{ flex: 1, paddingRight: 16 }}>
           <div
             style={{
-              color: T.textMuted,
+              color: '#9ca3af',
               fontSize: 11,
               textTransform: 'uppercase',
               letterSpacing: 1.5,
@@ -887,7 +1031,7 @@ export const SpacePlayerCard = ({
           >
             AI Confidence
           </div>
-          <div style={{ color: T.textSubtle, fontSize: 13, lineHeight: 1.5 }}>
+          <div style={{ color: '#d1d5db', fontSize: 13, lineHeight: 1.5 }}>
             {confPct >= 70
               ? 'High confidence in current mood selection'
               : confPct >= 40
@@ -901,8 +1045,8 @@ export const SpacePlayerCard = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 4,
-                background: isDark ? 'rgba(99,102,241,0.15)' : '#e0e7ff',
-                border: `1px solid ${isDark ? 'rgba(99,102,241,0.3)' : '#c7d2fe'}`,
+                background: 'rgba(99,102,241,0.15)',
+                border: '1px solid rgba(99,102,241,0.3)',
                 borderRadius: 6,
                 padding: '3px 8px',
               }}
@@ -923,10 +1067,12 @@ export const SpacePlayerCard = ({
         </div>
         <ConfidenceGauge pct={confPct} />
       </div>
+
+      {/* Mood Cards */}
       <div>
         <div
           style={{
-            color: T.textMuted,
+            color: '#9ca3af',
             fontSize: 11,
             textTransform: 'uppercase',
             letterSpacing: 1.5,
@@ -936,45 +1082,32 @@ export const SpacePlayerCard = ({
           Mood Distribution
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {renderMoodCard(
-            'Chill',
-            chillPct,
-            '#10b981',
-            '🌿',
-            spaceState?.moodName?.toLowerCase().includes('chill'),
-            T,
-            isDark,
-            scoreHistory,
-            makeSparkline,
-          )}
-          {renderMoodCard(
-            'Focus',
-            focusPct,
-            '#3b82f6',
-            '🎯',
-            spaceState?.moodName?.toLowerCase().includes('focus'),
-            T,
-            isDark,
-            scoreHistory,
-            makeSparkline,
-          )}
-          {renderMoodCard(
-            'Energetic',
-            energPct,
-            '#f59e0b',
-            '⚡',
-            spaceState?.moodName?.toLowerCase().includes('energetic'),
-            T,
-            isDark,
-            scoreHistory,
-            makeSparkline,
-          )}
+          <MoodCard
+            label='Chill'
+            pct={chillPct}
+            color='#10b981'
+            icon='🌿'
+          />
+          <MoodCard
+            label='Focus'
+            pct={focusPct}
+            color='#3b82f6'
+            icon='🎯'
+          />
+          <MoodCard
+            label='Energetic'
+            pct={energPct}
+            color='#f59e0b'
+            icon='⚡'
+          />
         </div>
       </div>
+
+      {/* Signal Impact Breakdown */}
       <div>
         <div
           style={{
-            color: T.textMuted,
+            color: '#9ca3af',
             fontSize: 11,
             textTransform: 'uppercase',
             letterSpacing: 1.5,
@@ -985,76 +1118,181 @@ export const SpacePlayerCard = ({
         </div>
         <div
           style={{
-            background: T.surface,
-            border: `1px solid ${T.border}`,
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
             borderRadius: 14,
             padding: '16px',
           }}
         >
-          {realContributions.length === 0 ? (
-            <div
-              style={{
-                color: T.textMuted,
-                fontSize: 12,
-                textAlign: 'center',
-                padding: '20px 0',
-              }}
-            >
-              No live signal data available
-            </div>
-          ) : (
-            realContributions
-              .slice(0, 5)
-              .map(
-                (
-                  sig: {
-                    name?: string;
-                    signal?: string;
-                    [key: string]: unknown;
-                  },
-                  i: number,
-                ) => (
+          {(() => {
+            const icons: Record<string, string> = {
+              crowdPressure: '👥',
+              ambientNoise: '🔊',
+              timeOfDay: '⏰',
+              dayOfWeek: '📅',
+              businessPhase: '🏪',
+              crowd_pressure: '👥',
+              ambient_noise: '🔊',
+              time_of_day: '⏰',
+              day_of_week: '📅',
+              business_phase: '🏪',
+            };
+            const labels: Record<string, string> = {
+              crowdPressure: 'Crowd Pressure',
+              ambientNoise: 'Ambient Noise',
+              timeOfDay: 'Time of Day',
+              dayOfWeek: 'Day of Week',
+              businessPhase: 'Business Phase',
+              crowd_pressure: 'Crowd Pressure',
+              ambient_noise: 'Ambient Noise',
+              time_of_day: 'Time of Day',
+              day_of_week: 'Day of Week',
+              business_phase: 'Business Phase',
+            };
+
+            // Map real contributions to our UI
+            const coreSignals = realContributions.map((c) => {
+              const raw = c.signal || '';
+              const matched = raw.match(/^([^(]+)\((.*)\)$/);
+              const name = matched ? matched[1].trim() : raw;
+              const value = matched ? matched[2].trim() : 'N/A';
+
+              const impacts = [];
+              if (c.chillDelta !== 0 && c.chillDelta != null)
+                impacts.push({ mood: 'Chill', delta: c.chillDelta });
+              if (c.focusDelta !== 0 && c.focusDelta != null)
+                impacts.push({ mood: 'Focus', delta: c.focusDelta });
+              if (c.energeticDelta !== 0 && c.energeticDelta != null)
+                impacts.push({ mood: 'Energetic', delta: c.energeticDelta });
+
+              return {
+                name,
+                label: labels[name] || name,
+                value,
+                icon: icons[name] || '📡',
+                impacts,
+              };
+            });
+
+            if (coreSignals.length === 0) {
+              return (
+                <div
+                  style={{
+                    color: '#4b5563',
+                    fontSize: 12,
+                    textAlign: 'center',
+                    padding: '20px 0',
+                  }}
+                >
+                  No live signal data available
+                </div>
+              );
+            }
+
+            return coreSignals.slice(0, 5).map((sig, i) => (
+              <div
+                key={sig.name + i}
+                style={{
+                  marginBottom:
+                    i === Math.min(coreSignals.length, 5) - 1 ? 0 : 16,
+                  paddingBottom:
+                    i === Math.min(coreSignals.length, 5) - 1 ? 0 : 16,
+                  borderBottom:
+                    i === Math.min(coreSignals.length, 5) - 1
+                      ? 'none'
+                      : '1px solid rgba(255,255,255,0.05)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 8,
+                  }}
+                >
                   <div
-                    key={sig.name + i}
-                    style={{
-                      marginBottom: i === 4 ? 0 : 16,
-                      paddingBottom: i === 4 ? 0 : 16,
-                      borderBottom: i === 4 ? 'none' : `1px solid ${T.border}`,
-                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                   >
-                    <div
+                    <span style={{ fontSize: 16 }}>{sig.icon}</span>
+                    <span
                       style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: 8,
+                        color: '#d1d5db',
+                        fontSize: 13,
+                        fontWeight: 600,
                       }}
                     >
+                      {sig.label}
+                    </span>
+                    <span style={{ color: '#6b7280', fontSize: 11 }}>
+                      ({sig.value})
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {sig.impacts.length > 0 ? (
+                    sig.impacts.map((imp) => (
                       <div
+                        key={imp.mood}
                         style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
+                          fontSize: 10,
+                          background:
+                            imp.delta > 0
+                              ? 'rgba(16,185,129,0.1)'
+                              : 'rgba(239,68,68,0.1)',
+                          color: imp.delta > 0 ? '#10b981' : '#ef4444',
+                          padding: '2px 8px',
+                          borderRadius: 4,
+                          border:
+                            imp.delta > 0
+                              ? '1px solid rgba(16,185,129,0.2)'
+                              : '1px solid rgba(239,68,68,0.2)',
                         }}
                       >
-                        <span style={{ fontSize: 16 }}>{'📡'}</span>
-                        <span
-                          style={{
-                            color: T.text,
-                            fontSize: 13,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {sig.signal}
-                        </span>
+                        {imp.mood} {imp.delta > 0 ? '×' : '÷'}{' '}
+                        {Math.abs(imp.delta * 10).toFixed(1)}
                       </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: 10, color: '#4b5563' }}>
+                      No direct impact on mood scores
                     </div>
-                  </div>
-                ),
-              )
-          )}
+                  )}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </div>
+
+      {/* Signal Analysis (Full Table) */}
+      {spaceState && (
+        <div>
+          <div
+            style={{
+              color: '#9ca3af',
+              fontSize: 11,
+              textTransform: 'uppercase',
+              letterSpacing: 1.5,
+              marginBottom: 12,
+            }}
+          >
+            Technical Signal Analysis
+          </div>
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12,
+            }}
+          >
+            <AIExplainabilityPanel
+              spaceState={spaceState}
+              compact
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -1062,7 +1300,7 @@ export const SpacePlayerCard = ({
     <div>
       <Text
         style={{
-          color: T.textMuted,
+          color: '#9ca3af',
           fontSize: 12,
           textTransform: 'uppercase',
           letterSpacing: 1.5,
@@ -1108,6 +1346,7 @@ export const SpacePlayerCard = ({
     </div>
   );
 
+  // ─── Shared player props ──────────────────────────────────────────────────
   const playerProps = {
     spaceId: space.id,
     hlsUrl,
@@ -1128,25 +1367,75 @@ export const SpacePlayerCard = ({
     onDurationChange: setDuration,
   };
 
+  // ─── Status banner ────────────────────────────────────────────────────────
+  const renderStatusBanner = () =>
+    spaceState?.isManualOverride || spaceState?.isScheduling ? (
+      <div
+        style={{
+          padding: '8px 24px',
+          fontSize: 12,
+          background: spaceState?.isManualOverride
+            ? 'rgba(245,158,11,0.15)'
+            : 'rgba(59,130,246,0.15)',
+          borderBottom: `1px solid ${spaceState?.isManualOverride ? '#78350f66' : '#1e3a5f66'}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        {spaceState?.isManualOverride ? (
+          <>
+            <Tag
+              color='warning'
+              style={{ margin: 0, fontWeight: 700, fontSize: 11 }}
+            >
+              MANUAL OVERRIDE
+            </Tag>
+            {manualOverrideRemainingSeconds != null && (
+              <Tag
+                color='red'
+                style={{ margin: 0 }}
+              >
+                TTL {formatPlaybackTime(manualOverrideRemainingSeconds)}
+              </Tag>
+            )}
+          </>
+        ) : (
+          <>
+            <Tag
+              color='processing'
+              style={{ margin: 0, fontWeight: 700, fontSize: 11 }}
+            >
+              SCHEDULING ACTIVE
+            </Tag>
+            {schedulingRemainingSeconds != null && (
+              <Tag
+                color='cyan'
+                style={{ margin: 0 }}
+              >
+                Ends in {formatPlaybackTime(schedulingRemainingSeconds)}
+              </Tag>
+            )}
+          </>
+        )}
+      </div>
+    ) : null;
+
+  // ─── FULL / KIOSK LAYOUT ─────────────────────────────────────────────────
   if (isFull) {
     return (
       <div
         style={{
-          background: T.bg,
-          minHeight: 'calc(100vh - 112px)',
+          background: 'linear-gradient(135deg, #0d0d1a 0%, #0a0a12 100%)',
+          minHeight: 'calc(100vh - 200px)',
           display: 'flex',
           flexDirection: 'column',
-          fontFamily: "'Inter', sans-serif",
-          color: T.text,
-          transition: 'all 0.3s ease',
+          fontFamily: "'Inter', -apple-system, sans-serif",
         }}
       >
-        {renderStatusBanner(
-          spaceState,
-          manualOverrideRemainingSeconds,
-          schedulingRemainingSeconds,
-        )}
+        {renderStatusBanner()}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          {/* ── LEFT: Circular player + controls ── */}
           <div
             style={{
               flex: '0 0 420px',
@@ -1155,12 +1444,12 @@ export const SpacePlayerCard = ({
               alignItems: 'center',
               justifyContent: 'center',
               padding: '40px 32px',
-              borderRight: `1px solid ${T.border}`,
-              background: isDark
-                ? 'linear-gradient(180deg, rgba(124,58,237,0.08) 0%, transparent 60%)'
-                : 'transparent',
+              borderRight: '1px solid rgba(255,255,255,0.06)',
+              background:
+                'linear-gradient(180deg, rgba(124,58,237,0.08) 0%, transparent 60%)',
             }}
           >
+            {/* Space name header */}
             <div style={{ width: '100%', marginBottom: 24 }}>
               <div
                 style={{
@@ -1171,11 +1460,39 @@ export const SpacePlayerCard = ({
                 }}
               >
                 <SoundOutlined style={{ color: '#818cf8', fontSize: 18 }} />
-                <Text style={{ color: T.text, fontSize: 18, fontWeight: 700 }}>
+                <Text
+                  style={{ color: '#e5e7eb', fontSize: 18, fontWeight: 700 }}
+                >
                   {space.name}
                 </Text>
               </div>
+              {spaceState?.moodName && (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '4px 12px',
+                    borderRadius: 20,
+                    background: theme.bg,
+                    border: `1px solid ${theme.color}66`,
+                  }}
+                >
+                  <EyeOutlined style={{ color: theme.color, fontSize: 12 }} />
+                  <span
+                    style={{
+                      color: theme.color,
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {spaceState.moodName}
+                  </span>
+                </div>
+              )}
             </div>
+
+            {/* Circular BPM orb */}
             <div
               style={{
                 position: 'relative',
@@ -1184,62 +1501,207 @@ export const SpacePlayerCard = ({
                 marginBottom: 32,
               }}
             >
+              {/* Outer glow rings */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: -20,
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${theme.shadow} 0%, transparent 70%)`,
+                  animation: isPlaying
+                    ? 'pulse 3s ease-in-out infinite'
+                    : 'none',
+                }}
+              />
               <div
                 style={{
                   position: 'absolute',
                   inset: 0,
                   borderRadius: '50%',
-                  background: isDark
-                    ? `radial-gradient(circle at 40% 35%, ${theme.color}44 0%, ${theme.color}22 40%, rgba(15,23,42,0.9) 100%)`
-                    : `radial-gradient(circle at 40% 35%, ${theme.color}22 0%, #fff 100%)`,
+                  background: `radial-gradient(circle at 40% 35%, ${theme.color}44 0%, ${theme.color}22 40%, rgba(15,23,42,0.9) 100%)`,
                   border: `1px solid ${theme.color}44`,
+                  boxShadow: isPlaying
+                    ? `0 0 60px ${theme.color}66, 0 0 120px ${theme.color}22, inset 0 0 40px rgba(0,0,0,0.5)`
+                    : `0 0 30px ${theme.color}22, inset 0 0 40px rgba(0,0,0,0.5)`,
+                  transition: 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                {isPlaying && !isLoadingState ? (
-                  renderMoodVisualizer(
-                    isPlaying && !isLoadingState,
-                    !!spaceState?.moodName?.toLowerCase().includes('energetic'),
-                    theme.color,
-                    isDark,
-                    VISUALIZER_CSS,
-                  )
-                ) : bpmTarget !== null ? (
-                  <>
-                    <div
-                      style={{
-                        color: isDark ? '#a5b4fc' : '#4f46e5',
-                        fontSize: 13,
-                        marginBottom: 4,
-                      }}
-                    >
-                      Target: {bpmTarget}
+                {/* Wave lines decoration */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 24,
+                    borderRadius: '50%',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 48,
+                    borderRadius: '50%',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                  }}
+                />
+
+                {/* BPM / Visualizer content */}
+                <div
+                  style={{
+                    textAlign: 'center',
+                    position: 'relative',
+                    zIndex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                >
+                  {isPlaying && !isLoadingState ? (
+                    renderMoodVisualizer()
+                  ) : bpmTarget !== null ? (
+                    <>
+                      <div
+                        style={{
+                          color: '#a5b4fc',
+                          fontSize: 13,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Target: {bpmTarget}
+                      </div>
+                      <div
+                        style={{
+                          color: '#fff',
+                          fontSize: 40,
+                          fontWeight: 800,
+                          lineHeight: 1,
+                          letterSpacing: -1,
+                        }}
+                      >
+                        {bpmMin}–{bpmMax}
+                      </div>
+                      <div
+                        style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}
+                      >
+                        BPM range
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center' }}>
+                      {currentCoverImageUrl ? (
+                        <img
+                          src={currentCoverImageUrl}
+                          alt='cover'
+                          style={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: '50%',
+                            objectFit: 'cover',
+                          }}
+                        />
+                      ) : (
+                        <SoundOutlined
+                          style={{
+                            fontSize: 56,
+                            color: isPlaying ? theme.color : '#374151',
+                          }}
+                        />
+                      )}
                     </div>
-                    <div
-                      style={{
-                        color: T.text,
-                        fontSize: 40,
-                        fontWeight: 800,
-                        lineHeight: 1,
-                        letterSpacing: -1,
-                      }}
-                    >
-                      {bpmMin}–{bpmMax}
-                    </div>
-                    <div
-                      style={{ color: T.textMuted, fontSize: 12, marginTop: 4 }}
-                    >
-                      BPM range
-                    </div>
-                  </>
-                ) : (
-                  <SoundOutlined style={{ fontSize: 56, color: theme.color }} />
-                )}
+                  )}
+                </div>
               </div>
+              {/* Progress arc indicator */}
+              {isPlaying && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 10,
+                    right: 10,
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    background: theme.color,
+                    boxShadow: `0 0 12px ${theme.color}`,
+                    animation: 'pulse 2s ease-in-out infinite',
+                  }}
+                />
+              )}
             </div>
+
+            {/* Track name */}
+            <div
+              style={{ textAlign: 'center', marginBottom: 20, width: '100%' }}
+            >
+              <div
+                style={{
+                  color: '#e5e7eb',
+                  fontSize: 20,
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  marginBottom: 8,
+                }}
+              >
+                {spaceState?.currentTrackName || 'No track playing'}
+              </div>
+
+              {/* Progress Slider */}
+              <div
+                style={{ width: '100%', padding: '0 20px', marginBottom: 20 }}
+              >
+                <Slider
+                  value={duration > 0 ? (currentTime / duration) * 100 : 0}
+                  onChange={(val) => handleSeek((val / 100) * duration)}
+                  tooltip={{ formatter: () => formatPlaybackTime(currentTime) }}
+                  styles={{
+                    track: {
+                      background: `linear-gradient(90deg, ${theme.color}, ${theme.color}aa)`,
+                    },
+                    handle: {
+                      background: '#fff',
+                      border: 'none',
+                      boxShadow: `0 0 10px ${theme.color}`,
+                    },
+                  }}
+                />
+                <Flex
+                  justify='space-between'
+                  style={{ marginTop: -8 }}
+                >
+                  <Text style={{ color: '#6b7280', fontSize: 11 }}>
+                    {formatPlaybackTime(currentTime)}
+                  </Text>
+                  <Text style={{ color: '#6b7280', fontSize: 11 }}>
+                    {formatPlaybackTime(duration)}
+                  </Text>
+                </Flex>
+              </div>
+
+              {spaceState?.fuzzyReason && (
+                <div
+                  style={{
+                    color: '#9ca3af',
+                    fontSize: 13,
+                    background: 'rgba(255,255,255,0.05)',
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    display: 'inline-block',
+                  }}
+                >
+                  {spaceState.fuzzyReason}
+                </div>
+              )}
+            </div>
+
+            {/* Controls pill */}
             <div
               style={{
                 display: 'flex',
@@ -1247,59 +1709,158 @@ export const SpacePlayerCard = ({
                 gap: 12,
                 padding: '12px 24px',
                 borderRadius: 50,
-                background: T.pillBg,
-                border: `1px solid ${T.border}`,
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(12px)',
               }}
             >
-              <ControlBtn
-                onClick={handleSkipPrevious}
-                disabled={isPending}
-                themeColor={theme.color}
-                textColor={T.text}
-              >
-                <StepBackwardOutlined />
-              </ControlBtn>
-              <ControlBtn
-                onClick={handleRewind10}
-                disabled={isPending}
-                themeColor={theme.color}
-                textColor={T.text}
-              >
-                <FastBackwardOutlined style={{ fontSize: 14 }} />
-              </ControlBtn>
-              <ControlBtn
-                onClick={handlePlayPause}
-                primary
-                disabled={isPending}
-                themeColor={theme.color}
-                textColor={T.text}
-              >
-                {isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
-              </ControlBtn>
-              <ControlBtn
-                onClick={handleForward10}
-                disabled={isPending}
-                themeColor={theme.color}
-                textColor={T.text}
-              >
-                <FastForwardOutlined style={{ fontSize: 14 }} />
-              </ControlBtn>
-              <ControlBtn
-                onClick={handleSkipNext}
-                disabled={isPending}
-                themeColor={theme.color}
-                textColor={T.text}
-              >
-                <StepForwardOutlined />
-              </ControlBtn>
+              <RepeatButton
+                queueEndBehavior={spaceState?.queueEndBehavior ?? 0}
+                onChange={(next) =>
+                  handleQueueEndBehaviorChange(next as QueueEndBehavior)
+                }
+                size={18}
+                className='text-gray-400 hover:text-gray-200'
+              />
+
               <div
                 style={{
                   width: 1,
                   height: 20,
-                  background: T.border,
+                  background: 'rgba(255,255,255,0.1)',
                   margin: '0 4px',
                 }}
               />
+
+              <button
+                onClick={handleSkipPrevious}
+                disabled={isPending}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: isPending ? 'not-allowed' : 'pointer',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#fff',
+                  fontSize: 18,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'none',
+                  transition: 'all 0.2s',
+                  opacity: isPending ? 0.4 : 1,
+                  transform: 'scale(1)',
+                }}
+              >
+                <StepBackwardOutlined />
+              </button>
+
+              <button
+                onClick={handleRewind10}
+                disabled={isPending}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: isPending ? 'not-allowed' : 'pointer',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#fff',
+                  fontSize: 18,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'none',
+                  transition: 'all 0.2s',
+                  opacity: isPending ? 0.4 : 1,
+                  transform: 'scale(1)',
+                }}
+              >
+                <FastBackwardOutlined style={{ fontSize: 14 }} />
+              </button>
+
+              <button
+                onClick={handlePlayPause}
+                disabled={isPending}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: isPending ? 'not-allowed' : 'pointer',
+                  background: `linear-gradient(135deg, ${theme.color}, ${theme.color}dd)`,
+                  color: '#fff',
+                  fontSize: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: `0 0 24px ${theme.color}66`,
+                  transition: 'all 0.2s',
+                  opacity: isPending ? 0.4 : 1,
+                  transform: 'scale(1.1)',
+                }}
+              >
+                {isPlaying ? <PauseCircleOutlined /> : <PlayCircleOutlined />}
+              </button>
+
+              <button
+                onClick={handleForward10}
+                disabled={isPending}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: isPending ? 'not-allowed' : 'pointer',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#fff',
+                  fontSize: 18,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'none',
+                  transition: 'all 0.2s',
+                  opacity: isPending ? 0.4 : 1,
+                  transform: 'scale(1)',
+                }}
+              >
+                <FastForwardOutlined style={{ fontSize: 14 }} />
+              </button>
+
+              <button
+                onClick={handleSkipNext}
+                disabled={isPending}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: isPending ? 'not-allowed' : 'pointer',
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#fff',
+                  fontSize: 18,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: 'none',
+                  transition: 'all 0.2s',
+                  opacity: isPending ? 0.4 : 1,
+                  transform: 'scale(1)',
+                }}
+              >
+                <StepForwardOutlined />
+              </button>
+
+              <div
+                style={{
+                  width: 1,
+                  height: 20,
+                  background: 'rgba(255,255,255,0.1)',
+                  margin: '0 4px',
+                }}
+              />
+
               <div
                 onMouseEnter={() => setIsHoveringVolume(true)}
                 onMouseLeave={() => setIsHoveringVolume(false)}
@@ -1318,10 +1879,10 @@ export const SpacePlayerCard = ({
                       transform: 'translateX(-50%)',
                       height: 120,
                       width: 32,
-                      background: isDark ? 'rgba(20,20,30,0.95)' : '#fff',
+                      background: 'rgba(20,20,30,0.95)',
                       borderRadius: 16,
                       padding: '12px 0',
-                      border: `1px solid ${T.border}`,
+                      border: '1px solid rgba(255,255,255,0.1)',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1339,17 +1900,32 @@ export const SpacePlayerCard = ({
                     />
                   </div>
                 )}
-                <ControlBtn
+                <button
                   onClick={handleToggleMute}
-                  themeColor={theme.color}
-                  textColor={T.text}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: '50%',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.06)',
+                    color: '#fff',
+                    fontSize: 18,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: 'none',
+                    transition: 'all 0.2s',
+                    opacity: 1,
+                    transform: 'scale(1)',
+                  }}
                 >
                   {spaceState?.isMuted ? (
                     <MutedOutlined style={{ color: '#ef4444' }} />
                   ) : (
                     <SoundOutlined />
                   )}
-                </ControlBtn>
+                </button>
               </div>
             </div>
 
@@ -1365,14 +1941,14 @@ export const SpacePlayerCard = ({
               flex: 1,
               display: 'flex',
               flexDirection: 'column',
-              background: T.panelBg,
+              background: 'rgba(0,0,0,0.3)',
             }}
           >
             {/* Tab bar */}
             <div
               style={{
                 display: 'flex',
-                borderBottom: `1px solid ${T.border}`,
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
                 padding: '0 8px',
               }}
             >
@@ -1385,13 +1961,13 @@ export const SpacePlayerCard = ({
                     border: 'none',
                     cursor: 'pointer',
                     background: 'transparent',
-                    color: panel === tab.key ? theme.color : T.textMuted,
+                    color: panel === tab.key ? '#818cf8' : '#4b5563',
                     fontSize: 14,
                     fontWeight: 600,
                     transition: 'all 0.2s',
                     borderBottom:
                       panel === tab.key
-                        ? `2px solid ${theme.color}`
+                        ? '2px solid #818cf8'
                         : '2px solid transparent',
                     display: 'flex',
                     alignItems: 'center',
@@ -1402,7 +1978,7 @@ export const SpacePlayerCard = ({
                   {tab.badge ? (
                     <span
                       style={{
-                        background: theme.color,
+                        background: '#7c3aed',
                         color: '#fff',
                         fontSize: 11,
                         padding: '1px 7px',
@@ -1469,22 +2045,20 @@ export const SpacePlayerCard = ({
   return (
     <div
       style={{
-        background: T.bg,
+        background: '#0a0a12',
         borderRadius: 16,
         overflow: 'hidden',
         minHeight: 480,
         display: 'flex',
         flexDirection: 'column',
-        color: T.text,
-        transition: 'all 0.3s ease',
-        border: `1px solid ${T.border}`,
       }}
     >
       {renderStatusBanner()}
       <div
         style={{
           padding: '24px 20px 16px',
-          background: `linear-gradient(180deg, ${theme.color}22 0%, transparent 100%)`,
+          background:
+            'linear-gradient(180deg, rgba(99,102,241,0.1) 0%, transparent 100%)',
         }}
       >
         <div
@@ -1499,13 +2073,11 @@ export const SpacePlayerCard = ({
               width: 180,
               height: 180,
               borderRadius: '50%',
-              background: isDark
-                ? `radial-gradient(circle at 40% 35%, ${theme.color}66 0%, rgba(15,23,42,0.9) 100%)`
-                : `radial-gradient(circle at 40% 35%, ${theme.color}44 0%, #fff 100%)`,
+              background: `radial-gradient(circle at 40% 35%, ${theme.color}66 0%, rgba(15,23,42,0.9) 100%)`,
               border: `1px solid ${theme.color}44`,
               boxShadow: isPlaying
                 ? `0 0 40px ${theme.color}66`
-                : '0 0 20px rgba(0,0,0,0.1)',
+                : '0 0 20px rgba(0,0,0,0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1513,9 +2085,9 @@ export const SpacePlayerCard = ({
               position: 'relative',
             }}
           >
-            {spaceState?.coverImageUrl ? (
+            {currentCoverImageUrl ? (
               <img
-                src={spaceState.coverImageUrl}
+                src={currentCoverImageUrl}
                 alt='cover'
                 style={{
                   width: '100%',
@@ -1528,7 +2100,7 @@ export const SpacePlayerCard = ({
               <SoundOutlined
                 style={{
                   fontSize: 52,
-                  color: isPlaying ? theme.color : T.textSubtle,
+                  color: isPlaying ? theme.color : '#374151',
                 }}
               />
             )}
@@ -1537,7 +2109,7 @@ export const SpacePlayerCard = ({
         <div style={{ textAlign: 'center' }}>
           <div
             style={{
-              color: T.text,
+              color: '#e5e7eb',
               fontSize: 18,
               fontWeight: 700,
               marginBottom: 8,
@@ -1576,9 +2148,8 @@ export const SpacePlayerCard = ({
       <div
         style={{
           display: 'flex',
-          borderTop: `1px solid ${T.border}`,
+          borderTop: '1px solid rgba(255,255,255,0.06)',
           padding: '4px 0',
-          alignItems: 'stretch',
         }}
       >
         {cardTabs.map((tab) => (
@@ -1591,7 +2162,7 @@ export const SpacePlayerCard = ({
               border: 'none',
               cursor: 'pointer',
               background: 'transparent',
-              color: panel === tab.key ? theme.color : T.textMuted,
+              color: panel === tab.key ? theme.color : '#4b5563',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -1611,39 +2182,9 @@ export const SpacePlayerCard = ({
             >
               {tab.icon}
             </Badge>
-            <span
-              style={{
-                fontSize: 10,
-                color: panel === tab.key ? theme.color : T.textSubtle,
-              }}
-            >
-              {tab.label}
-            </span>
+            <span style={{ fontSize: 10 }}>{tab.label}</span>
           </button>
         ))}
-        <button
-          onClick={() => setIsDark((d) => !d)}
-          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          style={{
-            padding: '10px 12px',
-            border: 'none',
-            cursor: 'pointer',
-            background: 'transparent',
-            color: T.textMuted,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 4,
-            fontSize: 16,
-            transition: 'color 0.2s',
-            borderTop: '2px solid transparent',
-          }}
-        >
-          {isDark ? '☀️' : '🌙'}
-          <span style={{ fontSize: 9, color: T.textSubtle }}>
-            {isDark ? 'Light' : 'Dark'}
-          </span>
-        </button>
       </div>
 
       <AddToQueueModal

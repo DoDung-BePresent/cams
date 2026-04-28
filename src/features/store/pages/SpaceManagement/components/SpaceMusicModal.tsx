@@ -109,14 +109,14 @@ export const SpaceMusicModal = ({
       onCancel={onClose}
       destroyOnClose
       footer={null}
+      style={{
+        padding: 0,
+        borderRadius: 16,
+        overflow: 'hidden',
+        border: '1px solid #2a2a2a',
+      }}
       styles={{
         body: { padding: 0, background: '#0a0a0a', borderRadius: 16 },
-        content: {
-          padding: 0,
-          borderRadius: 16,
-          overflow: 'hidden',
-          border: '1px solid #2a2a2a',
-        },
       }}
       closable
       closeIcon={<span style={{ color: '#b3b3b3', fontSize: 16 }}>✕</span>}
