@@ -1,15 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  Button,
-  Drawer,
-  Form,
-  Input,
-  Row,
-  Col,
-  Typography,
-  Flex,
-  Spin,
-} from 'antd';
+import { Button, Modal, Form, Input, Row, Col, Typography, Spin } from 'antd';
 
 /**
  * Hooks
@@ -38,26 +28,21 @@ import { updateStaffValidation } from '@/features/brand/validations';
 import { createImageUploadProps } from '@/shared/utils';
 import { nullToUndefined } from '@/shared/utils';
 
-/**
- * Configs
- */
-import { DRAWER_WIDTHS } from '@/config';
-
 const { Title } = Typography;
 
-type EditStaffDrawerProps = {
+type EditStaffModalProps = {
   open: boolean;
   staffId: string | null;
   onClose: () => void;
   onSuccess: () => void;
 };
 
-export const EditStaffDrawer = ({
+export const EditStaffModal = ({
   open,
   staffId,
   onClose,
   onSuccess,
-}: EditStaffDrawerProps) => {
+}: EditStaffModalProps) => {
   const [form] = Form.useForm<UpdateStaffRequest>();
   const { data: staff, isLoading } = useStaffDetail(staffId || undefined, open);
   const updateStaff = useUpdateStaff();
@@ -127,35 +112,30 @@ export const EditStaffDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Edit Staff Member'
-      placement='right'
-      width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
-      footer={
-        <Flex
-          justify='end'
-          gap='small'
+      onCancel={handleCancel}
+      width={720}
+      footer={[
+        <Button
+          key='cancel'
+          size='large'
+          onClick={handleCancel}
         >
-          <Button
-            size='large'
-            onClick={handleCancel}
-          >
-            Cancel
-          </Button>
-          <Button
-            size='large'
-            type='primary'
-            onClick={() => form.submit()}
-            loading={updateStaff.isPending}
-            disabled={isLoading}
-          >
-            Update Staff
-          </Button>
-        </Flex>
-      }
+          Cancel
+        </Button>,
+        <Button
+          key='submit'
+          size='large'
+          type='primary'
+          onClick={() => form.submit()}
+          loading={updateStaff.isPending}
+          disabled={isLoading}
+        >
+          Update Staff
+        </Button>,
+      ]}
     >
       {isLoading ? (
         <div className='flex h-96 items-center justify-center'>
@@ -167,6 +147,7 @@ export const EditStaffDrawer = ({
           form={form}
           layout='vertical'
           onFinish={handleSubmit}
+          style={{ marginTop: 24 }}
           styles={{
             label: {
               height: 22,
@@ -247,6 +228,6 @@ export const EditStaffDrawer = ({
           )}
         </Form>
       )}
-    </Drawer>
+    </Modal>
   );
 };

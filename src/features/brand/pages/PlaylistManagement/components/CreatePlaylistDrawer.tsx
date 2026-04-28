@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Drawer, Form, Input, Select, Button, Flex, Typography } from 'antd';
+import { Modal, Form, Input, Select, Button, Flex, Typography } from 'antd';
 
 /**
  * Hooks
@@ -85,14 +85,12 @@ export const CreatePlaylistDrawer = ({
   }));
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Create New Playlist'
-      placement='right'
-      destroyOnHidden
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
+      centered
       footer={
         <Flex
           justify='end'
@@ -214,6 +212,6 @@ export const CreatePlaylistDrawer = ({
           </Form.Item>
         </div>
       </Form>
-    </Drawer>
+    </Modal>
   );
 };

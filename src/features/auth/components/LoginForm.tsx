@@ -94,19 +94,31 @@ export const LoginForm = () => {
       styles={{ label: { height: 20 } }}
     >
       <Form.Item<LoginFormType>
-        label='Email Address'
+        label={
+          <span className='text-sm font-medium text-slate-700'>
+            Email Address
+          </span>
+        }
         name='email'
         rules={loginValidation.email}
       >
-        <Input placeholder='Enter email address' />
+        <Input
+          placeholder='Enter email address'
+          className='h-12 rounded-xl !border-slate-200 !bg-slate-100 px-5 text-base !text-slate-900 transition-all hover:!bg-slate-200 focus:!bg-white focus:ring-2 focus:ring-slate-900/10'
+        />
       </Form.Item>
 
       <Form.Item<LoginFormType>
-        label='Password'
+        label={
+          <span className='text-sm font-medium text-slate-700'>Password</span>
+        }
         name='password'
         rules={loginValidation.password}
       >
-        <Input.Password placeholder='Enter password' />
+        <Input.Password
+          placeholder='Enter password'
+          className='h-12 rounded-xl !border-slate-200 !bg-slate-100 px-5 text-base !text-slate-900 transition-all hover:!bg-slate-200 focus:!bg-white focus:ring-2 focus:ring-slate-900/10 [&>input]:!bg-transparent [&>input]:!text-slate-900'
+        />
       </Form.Item>
 
       <Form.Item<LoginFormType>
@@ -128,10 +140,10 @@ export const LoginForm = () => {
       <Button
         type='primary'
         htmlType='submit'
-        className='w-full'
+        className='mt-6 h-12 w-full rounded-full !border-0 !bg-slate-900 text-base font-medium !text-white shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:!bg-slate-800 hover:shadow-lg'
         loading={login.isPending}
       >
-        Login
+        Sign In
       </Button>
     </Form>
   );

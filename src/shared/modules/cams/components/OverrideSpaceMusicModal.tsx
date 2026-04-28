@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Input, Space, Typography, Drawer, Button, Flex } from 'antd';
+import { Input, Space, Typography, Modal, Button, Flex } from 'antd';
 import { createStyles } from 'antd-style';
 
 import { SettingSwitch } from '@/shared/components';
@@ -43,7 +43,7 @@ const useStyle = createStyles(({ css }) => {
   };
 });
 
-interface OverrideSpaceMusicDrawerProps {
+interface OverrideSpaceMusicModalProps {
   open: boolean;
   spaceId: string;
   storeId: string;
@@ -72,13 +72,13 @@ const defaultMoodFilter: MoodSelectorFilter = {
   pageSize: 10,
 };
 
-export const OverrideSpaceMusicDrawer = ({
+export const OverrideSpaceMusicModal = ({
   open,
   spaceId,
   storeId,
   onClose,
   onSuccess,
-}: OverrideSpaceMusicDrawerProps) => {
+}: OverrideSpaceMusicModalProps) => {
   const { styles } = useStyle();
   const [activeTab, setActiveTab] = useState<OverrideSourceTab>('tracks');
   const [showTrackFilters, setShowTrackFilters] = useState(false);
@@ -237,13 +237,13 @@ export const OverrideSpaceMusicDrawer = ({
   };
 
   return (
-    <Drawer
+    <Modal
       open={open}
       title='Override Space Music'
       width={DRAWER_WIDTHS.large}
-      onClose={handleClose}
-      closeIcon={null}
-      destroyOnHidden
+      onCancel={handleClose}
+      destroyOnClose
+      centered
       footer={
         <Flex
           justify='end'
@@ -379,6 +379,6 @@ export const OverrideSpaceMusicDrawer = ({
           />
         </div>
       </Space>
-    </Drawer>
+    </Modal>
   );
 };

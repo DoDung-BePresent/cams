@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Alert,
-  Drawer,
+  Modal,
   Button,
   Flex,
   Radio,
@@ -36,7 +36,7 @@ import {
 const { Text } = Typography;
 const { TextArea } = Input;
 
-interface AddToQueueDrawerProps {
+interface AddToQueueModalProps {
   open: boolean;
   spaceId: string;
   storeId: string;
@@ -122,13 +122,13 @@ const defaultPlaylistFilter: PlaylistFilter = {
   status: 1,
 };
 
-export const AddToQueueDrawer = ({
+export const AddToQueueModal = ({
   open,
   spaceId,
   storeId,
   onClose,
   onSuccess,
-}: AddToQueueDrawerProps) => {
+}: AddToQueueModalProps) => {
   const { styles } = useStyle();
   const [activeTab, setActiveTab] = useState<OverrideSourceTab>('tracks');
   const [showTrackFilters, setShowTrackFilters] = useState(false);
@@ -291,13 +291,13 @@ export const AddToQueueDrawer = ({
   const isPending = addTracks.isPending || addPlaylist.isPending;
 
   return (
-    <Drawer
+    <Modal
       title='Add to Queue'
       open={open}
-      onClose={handleClose}
-      closeIcon={null}
+      onCancel={handleClose}
       width={DRAWER_WIDTHS.large}
-      destroyOnHidden
+      destroyOnClose
+      centered
       footer={
         <Flex
           justify='end'
@@ -449,6 +449,6 @@ export const AddToQueueDrawer = ({
           />
         </div>
       </Space>
-    </Drawer>
+    </Modal>
   );
 };

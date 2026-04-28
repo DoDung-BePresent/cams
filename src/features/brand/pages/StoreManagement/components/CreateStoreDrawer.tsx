@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Button,
-  Drawer,
+  Modal,
   Form,
   Input,
   Radio,
@@ -171,15 +171,18 @@ export const CreateStoreDrawer = ({
   };
 
   return (
-    <Drawer
+    <Modal
       closeIcon={null}
       title='Add New Store'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       forceRender
-      destroyOnHidden
+      destroyOnClose
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
+      centered
+      styles={{
+        body: { maxHeight: '75vh', overflowY: 'auto', paddingRight: 12 },
+      }}
       footer={
         <Flex
           justify='end'
@@ -499,6 +502,6 @@ export const CreateStoreDrawer = ({
           </div>
         </div>
       </Form>
-    </Drawer>
+    </Modal>
   );
 };

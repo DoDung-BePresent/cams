@@ -1,5 +1,5 @@
 import {
-  Drawer,
+  Modal,
   Descriptions,
   Tag,
   Progress,
@@ -83,13 +83,16 @@ export const TrackDetailsDrawer = ({
   );
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Track Details'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={onClose}
+      onCancel={onClose}
+      centered
+      footer={null}
+      styles={{
+        body: { maxHeight: '80vh', overflowY: 'auto', paddingRight: 12 },
+      }}
     >
       {isLoading ? (
         <Flex
@@ -314,6 +317,6 @@ export const TrackDetailsDrawer = ({
       ) : (
         <div style={{ textAlign: 'center', padding: 40 }}>Track not found</div>
       )}
-    </Drawer>
+    </Modal>
   );
 };

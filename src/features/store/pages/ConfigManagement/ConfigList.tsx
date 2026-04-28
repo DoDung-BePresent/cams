@@ -4,10 +4,10 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 
 import {
-  ConfigDetailDrawer,
+  ConfigDetailModal,
   ConfigFilter as ConfigFilterComponent,
   getConfigColumns,
-  UpsertStoreValueDrawer,
+  UpsertStoreValueModal,
 } from './components';
 import { useStoreConfigs } from '@/features/store/hooks';
 import type {
@@ -177,7 +177,7 @@ export const ConfigList = () => {
         scroll={{ x: 1700 }}
       />
 
-      <UpsertStoreValueDrawer
+      <UpsertStoreValueModal
         open={storeValueDrawerOpen}
         selectedConfig={selectedConfig}
         onClose={handleCloseStoreValueDrawer}
@@ -187,7 +187,7 @@ export const ConfigList = () => {
         }}
       />
 
-      <ConfigDetailDrawer
+      <ConfigDetailModal
         open={detailDrawerOpen}
         data={selectedConfig}
         onClose={handleCloseDetailDrawer}

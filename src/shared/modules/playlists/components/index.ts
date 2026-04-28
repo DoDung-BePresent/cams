@@ -1,3 +1,3 @@
-export * from './AddTracksDrawer';
+export * from './AddTracksModal';
 export * from './PlaylistTableColumns';
-export * from './PlaylistDetailsDrawer';
+export * from './PlaylistDetailsModal';

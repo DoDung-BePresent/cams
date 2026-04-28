@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Alert,
   Button,
-  Drawer,
+  Modal,
   Form,
   Input,
   Radio,
@@ -219,14 +219,18 @@ export const EditStoreDrawer = ({
   };
 
   return (
-    <Drawer
+    <Modal
       closeIcon={null}
-      title='Edit Store'
-      placement='right'
+      title={`Edit Store: ${store?.name || ''}`}
       width={DRAWER_WIDTHS.medium}
       forceRender
+      destroyOnClose
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
+      centered
+      styles={{
+        body: { maxHeight: '75vh', overflowY: 'auto', paddingRight: 12 },
+      }}
       footer={
         <Flex
           justify='end'
@@ -519,6 +523,6 @@ export const EditStoreDrawer = ({
           </>
         )}
       </Form>
-    </Drawer>
+    </Modal>
   );
 };
