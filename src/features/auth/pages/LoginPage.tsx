@@ -6,6 +6,8 @@ import { useRef, useEffect, useState } from 'react';
 import { Seo } from '@/shared/components';
 import { AuthWrapper, LoginForm } from '../components';
 
+import LogoImage from '@/assets/images/logo logai-Photoroom.png';
+
 export const LoginPage = () => {
   const formSectionRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -37,7 +39,12 @@ export const LoginPage = () => {
       <AuthWrapper>
         {/* Section 1: Hero */}
         <div className='flex min-h-[calc(100vh-160px)] flex-col items-center justify-center px-4 text-center'>
-          <div className='mb-6 flex animate-[fadeInScale_0.8s_ease-out_1s_forwards] items-center justify-center opacity-0'>
+          <div className='mb-6 flex animate-[fadeInScale_0.8s_ease-out_1s_forwards] items-center justify-center gap-4 opacity-0'>
+            <img
+              src={LogoImage}
+              alt='Log.AI Logo'
+              className='h-12 w-auto sm:h-16'
+            />
             <span className='animate-gradient-flow bg-[linear-gradient(to_right,#ef4444,#f97316,#eab308,#22c55e,#3b82f6,#a855f7,#ef4444)] bg-[length:200%_auto] bg-clip-text pb-2 text-4xl font-extrabold text-transparent drop-shadow-sm sm:text-5xl'>
               Log.AI
             </span>

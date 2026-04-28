@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Button, Typography, Slider, Avatar } from 'antd';
+import { useLocation } from 'react-router';
 import Hls from 'hls.js';
 import {
   PlayCircleFilled,
@@ -23,10 +24,13 @@ import { formatDuration } from '@/shared/utils';
 const { Text } = Typography;
 
 export const StickyPlayer = () => {
+  const location = useLocation();
   const { currentTrack, isPlaying, pauseTrack, resumeTrack, stopTrack } =
     usePlayerStore();
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+
+  const isMusicPage = location.pathname.includes('/music');
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -99,6 +103,10 @@ export const StickyPlayer = () => {
       audio.removeEventListener('ended', handleEnded);
     };
   }, [pauseTrack]); // Added pauseTrack to dependencies
+
+  if (isMusicPage) {
+    return null;
+  }
 
   const handleSeek = (val: number) => {
     if (audioRef.current) {

@@ -6,3 +6,4 @@ export * from './AddToQueueModal';
 export * from './QueueManagementModal';
 export * from './AIExplainabilityPanel';
 export * from './OverrideSpaceMusicModal';
+export * from './RepeatButton';

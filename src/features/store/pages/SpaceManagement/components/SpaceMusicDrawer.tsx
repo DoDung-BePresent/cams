@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, Spin } from 'antd';
+import { Drawer, Spin } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -19,7 +19,12 @@ import { useAuth } from '@/providers';
  */
 import { storeHubService } from '@/shared/modules/cams/services';
 
-interface SpaceMusicModalProps {
+/**
+ * Configs
+ */
+import { DRAWER_WIDTHS } from '@/config';
+
+interface SpaceMusicDrawerProps {
   open: boolean;
   spaceId: string | null;
   storeId: string;
@@ -27,7 +32,7 @@ interface SpaceMusicModalProps {
 }
 
 /**
- * SpaceMusicModal - Manages music playback for a single space
+ * SpaceMusicDrawer - Manages music playback for a single space
  *
  * This component:
  * 1. Joins the specific space group via SignalR (JoinSpaceAsync)
@@ -35,12 +40,12 @@ interface SpaceMusicModalProps {
  * 3. Renders SpacePlayerCard for music control
  * 4. Leaves the space group when closed
  */
-export const SpaceMusicModal = ({
+export const SpaceMusicDrawer = ({
   open,
   spaceId,
   storeId,
   onClose,
-}: SpaceMusicModalProps) => {
+}: SpaceMusicDrawerProps) => {
   const { accessToken } = useAuth();
   const queryClient = useQueryClient();
   const [isJoinedSpace, setIsJoinedSpace] = useState(false);
@@ -101,25 +106,13 @@ export const SpaceMusicModal = ({
   }, [open, spaceId, isConnected, queryClient]);
 
   return (
-    <Modal
-      title={null}
-      centered
-      width={800}
+    <Drawer
+      closeIcon={null}
+      title='Manage Music'
       open={open}
-      onCancel={onClose}
+      onClose={onClose}
+      width={DRAWER_WIDTHS.medium}
       destroyOnClose
-      footer={null}
-      styles={{
-        body: { padding: 0, background: '#0a0a0a', borderRadius: 16 },
-        content: {
-          padding: 0,
-          borderRadius: 16,
-          overflow: 'hidden',
-          border: '1px solid #2a2a2a',
-        },
-      }}
-      closable
-      closeIcon={<span style={{ color: '#b3b3b3', fontSize: 16 }}>✕</span>}
     >
       {isLoadingSpace ? (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -138,6 +131,6 @@ export const SpaceMusicModal = ({
           storeId={storeId}
         />
       ) : null}
-    </Modal>
+    </Drawer>
   );
 };
