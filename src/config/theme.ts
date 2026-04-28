@@ -3,8 +3,8 @@ import type { ThemeConfig } from 'antd';
 export const antTheme: ThemeConfig = {
   cssVar: { key: '_,:root,css-var-my-theme-id' },
   token: {
-    fontFamily: 'Inter',
-    borderRadius: 4,
+    fontFamily: 'Outfit, sans-serif',
+    borderRadius: 8,
   },
   components: {
     Layout: {
@@ -56,13 +56,13 @@ export const antTheme: ThemeConfig = {
 export const antDarkTheme: ThemeConfig = {
   cssVar: { key: '_,:root,css-var-my-theme-id' },
   token: {
-    fontFamily: 'Inter',
-    borderRadius: 4,
+    fontFamily: 'Outfit, sans-serif',
+    borderRadius: 8,
     // Spotify-inspired dark mode colors
     colorBgBase: '#121212',
     colorBgContainer: '#181818',
     colorBgElevated: '#282828',
-    colorBgLayout: '#000000',
+    colorBgLayout: '#121212',
     colorBorder: '#282828',
     colorBorderSecondary: '#282828',
     colorText: '#ffffff',
@@ -101,9 +101,9 @@ export const antDarkTheme: ThemeConfig = {
       itemMarginBlock: 0,
       itemBorderRadius: 0,
       itemHeight: 46,
-      colorBgContainer: '#000000',
-      colorItemBg: '#000000',
-      colorItemBgHover: '#1a1a1a',
+      colorBgContainer: '#181818',
+      colorItemBg: '#181818',
+      colorItemBgHover: '#282828',
       colorItemBgSelected: '#282828',
       colorItemText: '#b3b3b3',
       colorItemTextHover: '#ffffff',

@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import {
   Button,
   DatePicker,
-  Drawer,
+  Modal,
   Flex,
   Form,
   Input,
@@ -34,7 +34,7 @@ import { SelectAffectedSpacesModal } from './SelectAffectedSpacesModal';
 
 const { Text } = Typography;
 
-type UpsertStoreValueDrawerProps = {
+type UpsertStoreValueModalProps = {
   open: boolean;
   selectedConfig: ConfigFlatRowItem | null;
   onClose: () => void;
@@ -89,12 +89,12 @@ const buildValuePayload = (
   }
 };
 
-export const UpsertStoreValueDrawer = ({
+export const UpsertStoreValueModal = ({
   open,
   selectedConfig,
   onClose,
   onSuccess,
-}: UpsertStoreValueDrawerProps) => {
+}: UpsertStoreValueModalProps) => {
   const [form] = Form.useForm<StoreValueFormValues>();
   const upsertStoreValue = useUpsertStoreValue();
   const valueType = Form.useWatch('valueType', form);
@@ -190,14 +190,15 @@ export const UpsertStoreValueDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title={
         selectedConfig ? 'Edit Store Config Value' : 'Create Store Config Value'
       }
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
       width={DRAWER_WIDTHS.medium}
+      centered
+      destroyOnClose
       afterOpenChange={(isOpen) => {
         if (!isOpen) {
           return;
@@ -371,6 +372,6 @@ export const UpsertStoreValueDrawer = ({
           setSpaceSelectorOpen(false);
         }}
       />
-    </Drawer>
+    </Modal>
   );
 };

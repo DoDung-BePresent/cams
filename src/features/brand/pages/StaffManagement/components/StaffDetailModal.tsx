@@ -1,5 +1,5 @@
 import {
-  Drawer,
+  Modal,
   Descriptions,
   Tag,
   Spin,
@@ -42,21 +42,21 @@ import { formatDate } from '@/shared/utils';
 /**
  * Config
  */
-import { AVATAR_SIZE, DRAWER_WIDTHS } from '@/config';
+import { AVATAR_SIZE } from '@/config';
 
 const { Text, Title } = Typography;
 
-type StaffDetailDrawerProps = {
+type StaffDetailModalProps = {
   open: boolean;
   staffId?: string | null;
   onClose: () => void;
 };
 
-export const StaffDetailDrawer = ({
+export const StaffDetailModal = ({
   open,
   staffId,
   onClose,
-}: StaffDetailDrawerProps) => {
+}: StaffDetailModalProps) => {
   const {
     data: staff,
     isLoading,
@@ -64,13 +64,12 @@ export const StaffDetailDrawer = ({
   } = useStaffDetail(staffId ?? undefined, open);
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Staff Details'
-      placement='right'
-      width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={onClose}
+      onCancel={onClose}
+      footer={null}
+      width={720}
     >
       {isLoading && (
         <Flex
@@ -95,7 +94,7 @@ export const StaffDetailDrawer = ({
         <Space
           direction='vertical'
           size='large'
-          style={{ width: '100%' }}
+          style={{ width: '100%', marginTop: 16 }}
         >
           {/* Profile Header */}
           <Flex
@@ -226,6 +225,6 @@ export const StaffDetailDrawer = ({
           </Descriptions>
         </Space>
       )}
-    </Drawer>
+    </Modal>
   );
 };

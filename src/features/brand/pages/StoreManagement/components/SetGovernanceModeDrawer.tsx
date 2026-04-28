@@ -1,6 +1,6 @@
 import {
   Button,
-  Drawer,
+  Modal,
   Flex,
   Radio,
   Select,
@@ -101,11 +101,11 @@ export const SetGovernanceModeDrawer = ({
   ] as const;
 
   return (
-    <Drawer
+    <Modal
       closeIcon={null}
       title='Set Governance Mode'
       open={open}
-      onClose={handleClose}
+      onCancel={handleClose}
       afterOpenChange={(nextOpen) => {
         if (nextOpen) {
           setSelectedMode(currentMode ?? GovernanceModeEnum.Freedom);
@@ -113,6 +113,10 @@ export const SetGovernanceModeDrawer = ({
         }
       }}
       width={DRAWER_WIDTHS.small}
+      centered
+      styles={{
+        body: { maxHeight: '75vh', overflowY: 'auto', paddingRight: 12 },
+      }}
       footer={
         <Flex
           justify='end'
@@ -239,6 +243,6 @@ export const SetGovernanceModeDrawer = ({
           />
         )}
       </Space>
-    </Drawer>
+    </Modal>
   );
 };

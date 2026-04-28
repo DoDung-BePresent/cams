@@ -18,3 +18,4 @@ export * from './NavCard';
 export * from './WelcomeBanner';
 export * from './SettingSwitch';
 export * from './MiniAudioPlayer';
+export * from './StickyPlayer';

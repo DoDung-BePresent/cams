@@ -13,11 +13,6 @@ import {
 } from '@ant-design/icons';
 
 /**
- * Utils
- */
-import { formatDateTime } from '@/shared/utils';
-
-/**
  * Constants
  */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
@@ -80,14 +75,7 @@ export const getPlaylistColumns = ({
       </Space>
     ),
   },
-  {
-    title: 'Mood',
-    dataIndex: 'moodName',
-    key: 'moodName',
-    width: 120,
-    render: (moodName: string) =>
-      moodName ? <Tag color='blue'>{moodName}</Tag> : '—',
-  },
+
   {
     title: 'Tracks',
     dataIndex: 'trackCount',
@@ -99,15 +87,7 @@ export const getPlaylistColumns = ({
       <Tag color={count > 0 ? 'success' : 'default'}>{count}</Tag>
     ),
   },
-  {
-    title: 'Default',
-    dataIndex: 'isDefault',
-    key: 'isDefault',
-    width: 100,
-    align: 'center',
-    render: (isDefault: boolean) =>
-      isDefault ? <Tag color='gold'>Default</Tag> : '—',
-  },
+
   {
     title: 'Status',
     dataIndex: 'status',
@@ -119,14 +99,7 @@ export const getPlaylistColumns = ({
       </Tag>
     ),
   },
-  {
-    title: 'Created At',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
-    width: 160,
-    sorter: true,
-    render: (date: string) => formatDateTime(date),
-  },
+
   {
     title: 'Actions',
     key: 'actions',

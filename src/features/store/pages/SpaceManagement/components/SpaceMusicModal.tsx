@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Drawer, Spin } from 'antd';
+import { Modal, Spin } from 'antd';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -19,12 +19,7 @@ import { useAuth } from '@/providers';
  */
 import { storeHubService } from '@/shared/modules/cams/services';
 
-/**
- * Configs
- */
-import { DRAWER_WIDTHS } from '@/config';
-
-interface SpaceMusicDrawerProps {
+interface SpaceMusicModalProps {
   open: boolean;
   spaceId: string | null;
   storeId: string;
@@ -32,7 +27,7 @@ interface SpaceMusicDrawerProps {
 }
 
 /**
- * SpaceMusicDrawer - Manages music playback for a single space
+ * SpaceMusicModal - Manages music playback for a single space
  *
  * This component:
  * 1. Joins the specific space group via SignalR (JoinSpaceAsync)
@@ -40,12 +35,12 @@ interface SpaceMusicDrawerProps {
  * 3. Renders SpacePlayerCard for music control
  * 4. Leaves the space group when closed
  */
-export const SpaceMusicDrawer = ({
+export const SpaceMusicModal = ({
   open,
   spaceId,
   storeId,
   onClose,
-}: SpaceMusicDrawerProps) => {
+}: SpaceMusicModalProps) => {
   const { accessToken } = useAuth();
   const queryClient = useQueryClient();
   const [isJoinedSpace, setIsJoinedSpace] = useState(false);
@@ -106,13 +101,14 @@ export const SpaceMusicDrawer = ({
   }, [open, spaceId, isConnected, queryClient]);
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Manage Music'
+      centered
+      width={700}
       open={open}
-      onClose={onClose}
-      width={DRAWER_WIDTHS.medium}
+      onCancel={onClose}
       destroyOnClose
+      footer={null}
     >
       {isLoadingSpace ? (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -131,6 +127,6 @@ export const SpaceMusicDrawer = ({
           storeId={storeId}
         />
       ) : null}
-    </Drawer>
+    </Modal>
   );
 };

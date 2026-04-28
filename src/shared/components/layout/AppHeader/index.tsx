@@ -127,7 +127,7 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             }}
             trigger={['click']}
             placement='bottomRight'
-            dropdownRender={() => (
+            popupRender={() => (
               <div
                 className='overflow-hidden rounded-sm shadow-md'
                 style={{

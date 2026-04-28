@@ -4,25 +4,23 @@ import {
   Input,
   Select,
   Button,
-  Card,
-  Space,
   Alert,
   message,
   Typography,
-  Segmented,
   Spin,
-  Flex,
+  Collapse,
 } from 'antd';
+import {
+  ThunderboltOutlined,
+  CopyOutlined,
+  RightOutlined,
+} from '@ant-design/icons';
 
 /**
- * Icons
+ * Assets
  */
-import { ThunderboltOutlined, CopyOutlined } from '@ant-design/icons';
-
-/**
- * Components
- */
-import { SettingSwitch } from '@/shared/components';
+import AcestepImg from '@/assets/images/acestep.jpeg';
+import SunoImg from '@/assets/images/suno AI.png';
 
 /**
  * Hooks
@@ -52,6 +50,7 @@ const { Text } = Typography;
 
 type PromptMode = 'manual' | 'brandProfile';
 type VocalMode = 'instrumental' | 'withLyrics';
+type ModelChoice = 'brandModel' | 'suno';
 
 interface SunoGenerationFormProps {
   onSuccess?: (generationId: string) => void;
@@ -69,9 +68,42 @@ const storeOverrideLabels: Record<number, string> = {
   3: 'Full store override',
 };
 
+const VIBE_OPTIONS: {
+  value: BrandProfileSunoMood;
+  label: string;
+  desc: string;
+}[] = [
+  { value: 'chill', label: 'Chill', desc: 'Calm, ambient, relaxed' },
+  { value: 'focus', label: 'Focus', desc: 'Steady, mellow, in the zone' },
+  {
+    value: 'energetic',
+    label: 'Energetic',
+    desc: 'Upbeat, lively, peak hours',
+  },
+];
+
+// ─── Dark theme tokens ────────────────────────────────────────────────────────
+const C = {
+  bg: '#121212',
+  surface: '#1e1e1e',
+  surfaceHover: '#2a2a2a',
+  border: '#2e2e2e',
+  borderActive: '#1db954',
+  green: '#1db954',
+  greenDim: '#1aa34a',
+  text: '#ffffff',
+  textMuted: '#9ca3af',
+  textSubtle: '#6b7280',
+  inputBg: '#2a2a2a',
+  sectionTitle: '#e5e7eb',
+};
+
 export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const [form] = Form.useForm<SunoGenerationFormValues>();
   const [promptMode, setPromptMode] = useState<PromptMode>('manual');
+  const [selectedVibe, setSelectedVibe] =
+    useState<BrandProfileSunoMood>('focus');
+  const [selectedModel, setSelectedModel] = useState<ModelChoice>('brandModel');
 
   const { user } = useAuth();
   const brandId = user?.brandId ?? undefined;
@@ -103,18 +135,43 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const { data: playlistOptions } = usePlaylistOptions();
 
   const hasProfile = hasBrandMusicProfileData(musicSnapshot ?? undefined);
-  const isBrandModelMode =
-    config?.aiGenerationMode === AiGenerationMode.BrandModel;
+
+  // Use locally selected model instead of config to give user control
+  const isBrandModelMode = selectedModel === 'brandModel';
   const promptMaxLength = isBrandModelMode ? 4000 : 500;
   const isResolvingProfile =
     isConfigLoading ||
     (!!brandId && isConfigReady && !hasFromConfig && isBrandLoading);
 
-  const watchedProfileMood = Form.useWatch('profileMood', form);
+  // Init selectedModel from config on first load
+  useEffect(() => {
+    if (config) {
+      const timer = setTimeout(() => {
+        setSelectedModel(
+          config.aiGenerationMode === AiGenerationMode.BrandModel
+            ? 'brandModel'
+            : 'suno',
+        );
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+  }, [config]);
+
   const watchedTitle = Form.useWatch('title', form);
   const watchedGenre = Form.useWatch('genre', form);
   const watchedArtist = Form.useWatch('artist', form);
   const watchedVocalMode = Form.useWatch('vocalMode', form) ?? 'instrumental';
+
+  useEffect(() => {
+    form.setFieldValue('profileMood', selectedVibe);
+  }, [selectedVibe, form]);
+
+  useEffect(() => {
+    if (hasProfile) {
+      const timer = setTimeout(() => setPromptMode('brandProfile'), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [hasProfile]);
 
   const generatedPrompt = useMemo(() => {
     if (
@@ -124,10 +181,9 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     ) {
       return '';
     }
-
     return buildBrandProfileSunoPrompt(
       musicSnapshot,
-      watchedProfileMood ?? 'focus',
+      selectedVibe,
       {
         title: watchedTitle ?? undefined,
         genre: watchedGenre ?? undefined,
@@ -139,7 +195,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   }, [
     promptMode,
     musicSnapshot,
-    watchedProfileMood,
+    selectedVibe,
     watchedTitle,
     watchedGenre,
     watchedArtist,
@@ -175,7 +231,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       rawPrompt.trim().length > promptMaxLength
     ) {
       message.warning(
-        `Generated profile prompt is too long for current mode. Auto-trimmed to ${promptMaxLength} characters.`,
+        `Generated profile prompt is too long. Auto-trimmed to ${promptMaxLength} characters.`,
       );
     } else if (rawPrompt && rawPrompt.trim().length > promptMaxLength) {
       message.error(`Prompt too long (max ${promptMaxLength} characters)`);
@@ -196,11 +252,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       ...payload,
       prompt: finalPrompt,
       ...(isBrandModelMode
-        ? {
-            customMode,
-            instrumental,
-            lyrics: normalizedLyrics,
-          }
+        ? { customMode, instrumental, lyrics: normalizedLyrics }
         : {}),
     });
 
@@ -216,6 +268,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       vocalMode: 'instrumental',
       instrumental: true,
     });
+    setSelectedVibe('focus');
     setPromptMode(
       hasBrandMusicProfileData(musicSnapshot ?? undefined)
         ? 'brandProfile'
@@ -223,362 +276,777 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     );
   };
 
-  const profileSummary =
-    musicSnapshot && hasProfile ? (
-      <Space
-        direction='vertical'
-        size={4}
-        style={{ width: '100%' }}
-      >
-        <Text type='secondary'>
-          Template:{' '}
-          <Text strong>{musicSnapshot.fuzzyProfileTemplate ?? '—'}</Text>
-          {musicSnapshot.storeOverrideLevel != null && (
-            <>
-              {' '}
-              · Override:{' '}
-              {storeOverrideLabels[musicSnapshot.storeOverrideLevel] ??
-                `Level ${musicSnapshot.storeOverrideLevel}`}
-            </>
-          )}
-        </Text>
-        <Text
-          type='secondary'
-          style={{ fontSize: 12 }}
-        >
-          BPM (guide): Chill {musicSnapshot.chillBpmMin}–
-          {musicSnapshot.chillBpmMax} · Focus {musicSnapshot.focusBpmMin}–
-          {musicSnapshot.focusBpmMax} · Energetic{' '}
-          {musicSnapshot.energeticBpmMin}–{musicSnapshot.energeticBpmMax}
-        </Text>
-      </Space>
-    ) : null;
+  // ─── Shared styles ────────────────────────────────────────────────────────
+  const modelCard = (active: boolean): React.CSSProperties => ({
+    background: active ? 'rgba(29,185,84,0.08)' : C.surface,
+    border: `1.5px solid ${active ? C.borderActive : C.border}`,
+    borderRadius: 12,
+    padding: '16px',
+    cursor: 'pointer',
+    transition: 'all 0.18s',
+    boxShadow: active ? `0 0 0 3px rgba(29,185,84,0.15)` : undefined,
+    flex: 1,
+  });
 
+  const vibeCard = (active: boolean): React.CSSProperties => ({
+    border: `1.5px solid ${active ? C.borderActive : C.border}`,
+    borderRadius: 10,
+    padding: '12px 14px',
+    cursor: 'pointer',
+    background: active ? 'rgba(29,185,84,0.08)' : C.surface,
+    transition: 'all 0.15s',
+    flex: 1,
+  });
+
+  const inputStyle: React.CSSProperties = {
+    background: C.inputBg,
+    border: `1px solid ${C.border}`,
+    color: C.text,
+    borderRadius: 8,
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontWeight: 500,
+    fontSize: 13,
+    color: C.textMuted,
+  };
+
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <>
-      <Card title='Generate AI Music'>
+    <div
+      style={{
+        background: C.bg,
+        borderRadius: 0,
+        padding: '24px 32px',
+        border: 'none',
+      }}
+    >
+      <Form
+        form={form}
+        layout='vertical'
+        onFinish={handleSubmit}
+        size='large'
+        styles={{ label: { height: 22 } }}
+      >
+        {/* Loading */}
         {isResolvingProfile && (
-          <div style={{ marginBottom: 16 }}>
-            <Spin size='small' />{' '}
-            <Text type='secondary'>Loading CAMS profile for Suno...</Text>
+          <div
+            style={{
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <Spin size='small' />
+            <Text style={{ color: C.textMuted }}>Loading CAMS profile…</Text>
           </div>
         )}
 
+        {/* No profile warning */}
         {!hasProfile && isConfigReady && !isResolvingProfile && brandId && (
           <Alert
             type='warning'
             showIcon
             closable
-            className='mb-5!'
-            message='No brand music profile yet'
-            description='Configure Music policy (CAMS fuzzy) under Brand settings, then return here to use this mode.'
+            style={{
+              marginBottom: 20,
+              background: '#2a1f00',
+              border: '1px solid #78350f',
+            }}
+            message={
+              <span style={{ color: '#fbbf24' }}>
+                No brand music profile yet
+              </span>
+            }
+            description={
+              <span style={{ color: '#9ca3af' }}>
+                Configure Music policy (CAMS fuzzy) under Brand settings to use
+                brand profile mode.
+              </span>
+            }
           />
         )}
 
-        <Form
-          form={form}
-          layout='vertical'
-          onFinish={handleSubmit}
-          size='large'
-          styles={{
-            label: {
-              height: 22,
-            },
-          }}
-        >
-          <Form.Item
-            label='Prompt mode'
-            className='mb-0!'
+        {/* ── Step 1: Pick a model ─────────────────────────────────────────── */}
+        <div style={{ marginBottom: 28 }}>
+          <Text
+            style={{
+              fontWeight: 700,
+              fontSize: 15,
+              color: C.sectionTitle,
+              display: 'block',
+              marginBottom: 4,
+            }}
           >
-            <Segmented
-              value={promptMode}
-              onChange={(v) => setPromptMode(v as PromptMode)}
-              options={[
-                { label: 'Manual prompt', value: 'manual' },
-                {
-                  label: 'Brand music profile',
-                  value: 'brandProfile',
-                  disabled: !hasProfile,
-                },
-              ]}
-            />
-          </Form.Item>
-
-          <SettingSwitch
-            label='Auto-add to Playlist'
-            description='Automatically add generated track to the selected playlist'
-            value={form.getFieldValue('autoAddToTargetPlaylist') ?? true}
-            onChange={(checked) =>
-              form.setFieldValue('autoAddToTargetPlaylist', checked)
-            }
-            className='pb-5!'
-          />
-
-          <Form.Item
-            name='targetPlaylistId'
-            label='Target playlist'
+            1. Pick a model
+          </Text>
+          <Text
+            style={{
+              color: C.textSubtle,
+              fontSize: 13,
+              display: 'block',
+              marginBottom: 16,
+            }}
           >
-            <Select
-              placeholder='Select playlist (optional)'
-              options={playlistOptions}
-              allowClear
-              showSearch
-              filterOption={(input, option) =>
-                (option?.label ?? '')
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            />
-          </Form.Item>
+            The free model is great for most in-store ambient tracks.
+          </Text>
 
-          {promptMode === 'brandProfile' && hasProfile ? (
-            <>
-              {profileSummary && (
-                <Alert
-                  type='info'
-                  showIcon
-                  style={{ marginBottom: 16 }}
-                  message='Using your brand CAMS profile'
-                  description={profileSummary}
-                />
-              )}
-
-              <Form.Item
-                name='profileMood'
-                label='Primary music zone'
-                initialValue='focus'
-                rules={[{ required: true, message: 'Select a zone' }]}
+          <div style={{ display: 'flex', gap: 12 }}>
+            {/* Self-hosted card */}
+            <div
+              style={modelCard(selectedModel === 'brandModel')}
+              onClick={() => setSelectedModel('brandModel')}
+              role='button'
+              aria-pressed={selectedModel === 'brandModel'}
+            >
+              <div
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}
               >
-                <Select<BrandProfileSunoMood>
-                  options={[
-                    {
-                      value: 'chill',
-                      label: 'Chill / calm (BPM band from profile)',
-                    },
-                    {
-                      value: 'focus',
-                      label: 'Focus / steady (BPM band from profile)',
-                    },
-                    {
-                      value: 'energetic',
-                      label: 'Energetic / peak (BPM band from profile)',
-                    },
-                  ]}
-                />
-              </Form.Item>
-
-              <Flex
-                gap={16}
-                justify='space-between'
-              >
-                <Form.Item
-                  name='title'
-                  label='Track title'
-                  rules={[
-                    { required: true, message: 'Please enter track title' },
-                    { max: 300, message: 'Title too long' },
-                  ]}
-                  className='w-full!'
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    border: `1px solid ${C.border}`,
+                  }}
                 >
-                  <Input
-                    placeholder='e.g., Morning Focus In-Store'
-                    maxLength={300}
+                  <img
+                    src={AcestepImg}
+                    alt='Acestep'
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
                   />
-                </Form.Item>
-
-                <Form.Item
-                  name='genre'
-                  label='Genre'
-                  rules={[{ max: 120, message: 'Genre too long' }]}
-                  className='w-full!'
-                >
-                  <Input
-                    placeholder='e.g., ambient, lo-fi, soft jazz'
-                    maxLength={120}
-                  />
-                </Form.Item>
-              </Flex>
-
-              <Flex
-                gap={16}
-                justify='space-between'
-              >
-                <Form.Item
-                  name='artist'
-                  label='Artist / style hint'
-                  rules={[{ max: 300, message: 'Too long' }]}
-                  className='w-full!'
-                >
-                  <Input
-                    placeholder='e.g., subtle piano, no vocals'
-                    maxLength={300}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name='moodId'
-                  label='Catalog mood (optional)'
-                  className='w-full!'
-                >
-                  <Select
-                    placeholder='Select mood'
-                    options={moodOptions}
-                    allowClear
-                  />
-                </Form.Item>
-              </Flex>
-
-              <Form.Item
-                label={
-                  <Space size={6}>
-                    <span>Generated prompt (preview)</span>
-                    <Text
-                      type='secondary'
-                      style={{ fontSize: 12 }}
-                    >
-                      {generatedPrompt
-                        ? `${generatedPrompt.length}/${promptMaxLength}`
-                        : `0/${promptMaxLength}`}
-                    </Text>
-                  </Space>
-                }
-              >
-                <Space
-                  direction='vertical'
-                  style={{ width: '100%' }}
-                  size='small'
-                >
-                  <TextArea
-                    value={generatedPrompt}
-                    readOnly
-                    rows={6}
-                    placeholder='Adjust title, genre, zone, or Suno Configuration template to refresh...'
-                  />
-                  {!isBrandModelMode &&
-                    generatedPrompt.length > promptMaxLength && (
-                      <Alert
-                        type='warning'
-                        showIcon
-                        message={`This generated prompt exceeds Suno limit (${promptMaxLength} chars). It will be auto-trimmed when submitting.`}
-                      />
-                    )}
-                  <Button
-                    icon={<CopyOutlined />}
-                    disabled={!generatedPrompt}
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(generatedPrompt);
-                        message.success('Prompt copied');
-                      } catch {
-                        message.error('Failed to copy prompt');
-                      }
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 13,
+                      color: C.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
                     }}
                   >
-                    Copy
-                  </Button>
-                </Space>
-              </Form.Item>
-            </>
-          ) : (
-            <Form.Item
-              name='prompt'
-              label='Custom prompt'
-              rules={[
-                { required: true, message: 'Please enter generation prompt' },
-                {
-                  max: promptMaxLength,
-                  message: `Prompt too long (max ${promptMaxLength} characters)`,
-                },
-              ]}
-            >
-              <TextArea
-                rows={4}
-                placeholder='Describe the music you want to generate...'
-                maxLength={promptMaxLength}
-                showCount
-              />
-            </Form.Item>
-          )}
+                    Self-hosted · acestep-1.5
+                    {selectedModel === 'brandModel' && (
+                      <span
+                        style={{
+                          background: C.green,
+                          color: '#000',
+                          borderRadius: 4,
+                          padding: '1px 6px',
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </Text>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      marginTop: 4,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Our own model, runs on your brand server. Great for ambient,
+                    instrumental tracks.
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: '#f59e0b',
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    >
+                      1 token per track
+                    </span>
+                    <span style={{ color: C.textSubtle, fontSize: 11 }}>
+                      ~1–2 min
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <Form.Item
-            name='autoAddToTargetPlaylist'
-            hidden
-            initialValue={true}
+            {/* Suno card */}
+            <div
+              style={modelCard(selectedModel === 'suno')}
+              onClick={() => setSelectedModel('suno')}
+              role='button'
+              aria-pressed={selectedModel === 'suno'}
+            >
+              <div
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}
+              >
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    border: `1px solid ${C.border}`,
+                  }}
+                >
+                  <img
+                    src={SunoImg}
+                    alt='Suno AI'
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 13,
+                      color: C.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    Suno v4
+                    {selectedModel === 'suno' && (
+                      <span
+                        style={{
+                          background: C.green,
+                          color: '#000',
+                          borderRadius: 4,
+                          padding: '1px 6px',
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}
+                      >
+                        ✓
+                      </span>
+                    )}
+                  </Text>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      marginTop: 4,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Studio-quality AI with vocals and full mixing. Best for hero
+                    tracks.
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 8,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: '#f59e0b',
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    >
+                      3 tokens per track
+                    </span>
+                    <span style={{ color: C.textSubtle, fontSize: 11 }}>
+                      ~1–2 min
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Step 2: Describe your track ──────────────────────────────────── */}
+        <div style={{ marginBottom: 24 }}>
+          <Text
+            style={{
+              fontWeight: 700,
+              fontSize: 15,
+              color: C.sectionTitle,
+              display: 'block',
+              marginBottom: 4,
+            }}
           >
-            <input type='hidden' />
+            2. Describe your track
+          </Text>
+          <Text
+            style={{
+              color: C.textSubtle,
+              fontSize: 13,
+              display: 'block',
+              marginBottom: 16,
+            }}
+          >
+            Just a title and a vibe is enough to start.
+          </Text>
+
+          {/* Track title */}
+          <Form.Item
+            name='title'
+            label={
+              <span style={labelStyle}>
+                Track title <span style={{ color: '#ef4444' }}>*</span>
+              </span>
+            }
+            rules={[
+              { required: true, message: 'Please enter track title' },
+              { max: 300, message: 'Title too long' },
+            ]}
+          >
+            <Input
+              placeholder='e.g. Morning Focus in-store'
+              maxLength={300}
+              style={inputStyle}
+            />
           </Form.Item>
 
-          {isBrandModelMode && (
+          {/* Vibe — brand profile mode */}
+          {promptMode === 'brandProfile' && hasProfile && (
             <>
               <Form.Item
-                label='Vocal mode'
-                name='vocalMode'
-                initialValue='instrumental'
-                className='mb-3!'
+                name='profileMood'
+                hidden
+                initialValue='focus'
               >
-                <Segmented<VocalMode>
-                  options={[
-                    {
-                      label: 'Instrumental (no lyrics)',
-                      value: 'instrumental',
-                    },
-                    { label: 'Music with lyrics', value: 'withLyrics' },
-                  ]}
-                  onChange={(value) => {
-                    const nextInstrumental = value === 'instrumental';
-                    form.setFieldValue('instrumental', nextInstrumental);
-                    if (nextInstrumental) {
-                      form.setFieldValue('lyrics', null);
-                    }
-                  }}
+                <Input />
+              </Form.Item>
+              <div style={{ marginBottom: 16 }}>
+                <Text
+                  style={{ ...labelStyle, display: 'block', marginBottom: 10 }}
+                >
+                  Vibe
+                </Text>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {VIBE_OPTIONS.map((vibe) => (
+                    <div
+                      key={vibe.value}
+                      onClick={() => setSelectedVibe(vibe.value)}
+                      style={vibeCard(selectedVibe === vibe.value)}
+                      role='button'
+                    >
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: 13,
+                          color: selectedVibe === vibe.value ? C.green : C.text,
+                        }}
+                      >
+                        {vibe.label}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: C.textMuted,
+                          marginTop: 2,
+                        }}
+                      >
+                        {vibe.desc}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Text style={{ fontSize: 12, color: C.textSubtle }}>
+                Using your brand profile — BPM and style come from your music
+                policy.{' '}
+                <span
+                  style={{ color: C.green, cursor: 'pointer', fontWeight: 500 }}
+                  onClick={() => setPromptMode('manual')}
+                >
+                  Write a custom prompt instead
+                </span>
+              </Text>
+            </>
+          )}
+
+          {/* Manual prompt */}
+          {promptMode === 'manual' && (
+            <>
+              <Form.Item
+                name='prompt'
+                label={<span style={labelStyle}>Custom prompt</span>}
+                rules={[
+                  {
+                    required: true,
+                    message: 'Please enter a generation prompt',
+                  },
+                  {
+                    max: promptMaxLength,
+                    message: `Prompt too long (max ${promptMaxLength} chars)`,
+                  },
+                ]}
+              >
+                <TextArea
+                  rows={4}
+                  placeholder='Describe the music you want to generate…'
+                  maxLength={promptMaxLength}
+                  showCount
+                  style={{ ...inputStyle, resize: 'none' }}
                 />
               </Form.Item>
-
-              {watchedVocalMode === 'withLyrics' && (
-                <Form.Item
-                  name='lyrics'
-                  label='Lyrics'
-                  rules={[{ max: 8000, message: 'Lyrics too long' }]}
-                >
-                  <TextArea
-                    rows={5}
-                    placeholder='Optional: enter lyrics for this track...'
-                    maxLength={8000}
-                    showCount
-                  />
-                </Form.Item>
+              {hasProfile && (
+                <Text style={{ fontSize: 12, color: C.textSubtle }}>
+                  <span
+                    style={{
+                      color: C.green,
+                      cursor: 'pointer',
+                      fontWeight: 500,
+                    }}
+                    onClick={() => setPromptMode('brandProfile')}
+                  >
+                    Use brand music profile instead
+                  </span>
+                </Text>
               )}
             </>
           )}
+        </div>
 
-          <Form.Item
-            name='instrumental'
-            hidden
-            initialValue={true}
+        {/* ── Playlist ─────────────────────────────────────────────────────── */}
+        <Form.Item
+          name='targetPlaylistId'
+          label={<span style={labelStyle}>Add to playlist (optional)</span>}
+          style={{ marginBottom: 8 }}
+        >
+          <Select
+            placeholder='Pick a playlist — or leave empty'
+            options={playlistOptions}
+            allowClear
+            showSearch
+            filterOption={(input, option) =>
+              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+            }
+            style={{ borderRadius: 8 }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name='autoAddToTargetPlaylist'
+          hidden
+          initialValue={true}
+        >
+          <input type='hidden' />
+        </Form.Item>
+        <Form.Item
+          name='instrumental'
+          hidden
+          initialValue={true}
+        >
+          <input type='hidden' />
+        </Form.Item>
+
+        {/* ── Advanced details ──────────────────────────────────────────────── */}
+        <Collapse
+          ghost
+          style={{ marginBottom: 16 }}
+          expandIcon={({ isActive }) => (
+            <RightOutlined
+              style={{
+                fontSize: 11,
+                color: C.textMuted,
+                transform: isActive ? 'rotate(90deg)' : 'none',
+                transition: '0.2s',
+              }}
+            />
+          )}
+          items={[
+            {
+              key: 'advanced',
+              label: (
+                <Text
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 13,
+                    color: C.sectionTitle,
+                  }}
+                >
+                  Advanced details
+                </Text>
+              ),
+              children: (
+                <div style={{ paddingTop: 8 }}>
+                  {promptMode === 'brandProfile' && hasProfile && (
+                    <>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '1fr 1fr',
+                          gap: 12,
+                        }}
+                      >
+                        <Form.Item
+                          name='genre'
+                          label={
+                            <span style={{ fontSize: 12, color: C.textMuted }}>
+                              Genre
+                            </span>
+                          }
+                          rules={[{ max: 120, message: 'Genre too long' }]}
+                        >
+                          <Input
+                            placeholder='e.g., ambient, lo-fi'
+                            maxLength={120}
+                            style={inputStyle}
+                          />
+                        </Form.Item>
+                        <Form.Item
+                          name='artist'
+                          label={
+                            <span style={{ fontSize: 12, color: C.textMuted }}>
+                              Artist / style hint
+                            </span>
+                          }
+                          rules={[{ max: 300, message: 'Too long' }]}
+                        >
+                          <Input
+                            placeholder='e.g., subtle piano, no vocals'
+                            maxLength={300}
+                            style={inputStyle}
+                          />
+                        </Form.Item>
+                      </div>
+                      <Form.Item
+                        name='moodId'
+                        label={
+                          <span style={{ fontSize: 12, color: C.textMuted }}>
+                            Catalog mood (optional)
+                          </span>
+                        }
+                      >
+                        <Select
+                          placeholder='Select mood'
+                          options={moodOptions}
+                          allowClear
+                        />
+                      </Form.Item>
+                      {generatedPrompt && (
+                        <Form.Item
+                          label={
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                              }}
+                            >
+                              <span
+                                style={{ fontSize: 12, color: C.textMuted }}
+                              >
+                                Generated prompt (preview)
+                              </span>
+                              <span
+                                style={{ fontSize: 11, color: C.textSubtle }}
+                              >
+                                {generatedPrompt.length}/{promptMaxLength}
+                              </span>
+                            </div>
+                          }
+                        >
+                          <TextArea
+                            value={generatedPrompt}
+                            readOnly
+                            rows={5}
+                            style={{
+                              ...inputStyle,
+                              fontSize: 12,
+                              resize: 'none',
+                            }}
+                          />
+                          <Button
+                            size='small'
+                            icon={<CopyOutlined />}
+                            style={{
+                              marginTop: 6,
+                              background: C.surface,
+                              color: C.text,
+                              border: `1px solid ${C.border}`,
+                            }}
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(
+                                  generatedPrompt,
+                                );
+                                message.success('Prompt copied');
+                              } catch {
+                                message.error('Failed to copy prompt');
+                              }
+                            }}
+                          >
+                            Copy
+                          </Button>
+                        </Form.Item>
+                      )}
+                    </>
+                  )}
+
+                  {isBrandModelMode && (
+                    <>
+                      <Form.Item
+                        label={
+                          <span style={{ fontSize: 12, color: C.textMuted }}>
+                            Vocal mode
+                          </span>
+                        }
+                        name='vocalMode'
+                        initialValue='instrumental'
+                      >
+                        <Select
+                          options={[
+                            {
+                              label: 'Instrumental (no lyrics)',
+                              value: 'instrumental',
+                            },
+                            { label: 'Music with lyrics', value: 'withLyrics' },
+                          ]}
+                          onChange={(value) => {
+                            const nextInstrumental = value === 'instrumental';
+                            form.setFieldValue(
+                              'instrumental',
+                              nextInstrumental,
+                            );
+                            if (nextInstrumental)
+                              form.setFieldValue('lyrics', null);
+                          }}
+                        />
+                      </Form.Item>
+                      {watchedVocalMode === 'withLyrics' && (
+                        <Form.Item
+                          name='lyrics'
+                          label={
+                            <span style={{ fontSize: 12, color: C.textMuted }}>
+                              Lyrics
+                            </span>
+                          }
+                          rules={[{ max: 8000, message: 'Lyrics too long' }]}
+                        >
+                          <TextArea
+                            rows={5}
+                            placeholder='Optional: enter lyrics…'
+                            maxLength={8000}
+                            showCount
+                            style={{ ...inputStyle, resize: 'none' }}
+                          />
+                        </Form.Item>
+                      )}
+                    </>
+                  )}
+
+                  {musicSnapshot && hasProfile && (
+                    <Alert
+                      type='info'
+                      showIcon
+                      style={{
+                        marginTop: 8,
+                        background: '#0a1628',
+                        border: '1px solid #1e3a5f',
+                      }}
+                      message={
+                        <span style={{ color: '#60a5fa', fontWeight: 600 }}>
+                          Using your brand CAMS profile
+                        </span>
+                      }
+                      description={
+                        <div style={{ fontSize: 12, color: C.textMuted }}>
+                          <div>
+                            Template:{' '}
+                            <strong style={{ color: C.text }}>
+                              {musicSnapshot.fuzzyProfileTemplate ?? '—'}
+                            </strong>
+                            {musicSnapshot.storeOverrideLevel != null && (
+                              <>
+                                {' '}
+                                · Override:{' '}
+                                {storeOverrideLabels[
+                                  musicSnapshot.storeOverrideLevel
+                                ] ??
+                                  `Level ${musicSnapshot.storeOverrideLevel}`}
+                              </>
+                            )}
+                          </div>
+                          <div style={{ marginTop: 2 }}>
+                            BPM: Chill {musicSnapshot.chillBpmMin}–
+                            {musicSnapshot.chillBpmMax} · Focus{' '}
+                            {musicSnapshot.focusBpmMin}–
+                            {musicSnapshot.focusBpmMax} · Energetic{' '}
+                            {musicSnapshot.energeticBpmMin}–
+                            {musicSnapshot.energeticBpmMax}
+                          </div>
+                        </div>
+                      }
+                    />
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
+
+        {/* ── Generate button ────────────────────────────────────────────────── */}
+        <Form.Item style={{ marginTop: 12, marginBottom: 4 }}>
+          <Button
+            type='primary'
+            htmlType='submit'
+            icon={<ThunderboltOutlined />}
+            loading={createGeneration.isPending}
+            disabled={
+              promptMode === 'brandProfile' &&
+              hasProfile &&
+              !generatedPrompt.trim()
+            }
+            block
+            size='large'
+            style={{
+              height: 52,
+              borderRadius: 10,
+              background: C.green,
+              border: 'none',
+              fontSize: 15,
+              fontWeight: 700,
+              color: '#000',
+              letterSpacing: 0.3,
+            }}
           >
-            <input type='hidden' />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type='primary'
-              htmlType='submit'
-              icon={<ThunderboltOutlined />}
-              loading={createGeneration.isPending}
-              disabled={
-                promptMode === 'brandProfile' &&
-                hasProfile &&
-                !generatedPrompt.trim()
-              }
-              block
-              size='large'
-              className='mt-5'
-            >
-              Generate music
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
-    </>
+            Generate
+          </Button>
+        </Form.Item>
+        <Text
+          style={{
+            display: 'block',
+            textAlign: 'center',
+            fontSize: 12,
+            color: C.textSubtle,
+          }}
+        >
+          You will be notified when the track is ready — usually under 2
+          minutes.
+        </Text>
+      </Form>
+    </div>
   );
 };

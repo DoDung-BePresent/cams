@@ -1,5 +1,5 @@
 import {
-  Drawer,
+  Modal,
   Descriptions,
   Tag,
   Spin,
@@ -52,19 +52,19 @@ import { DRAWER_WIDTHS } from '@/config';
 
 const { Text } = Typography;
 
-interface PlaylistDetailsDrawerProps {
+interface PlaylistDetailsModalProps {
   open: boolean;
   playlistId?: string;
   onClose: () => void;
   readOnly?: boolean;
 }
 
-export const PlaylistDetailsDrawer = ({
+export const PlaylistDetailsModal = ({
   open,
   playlistId,
   onClose,
   readOnly = false,
-}: PlaylistDetailsDrawerProps) => {
+}: PlaylistDetailsModalProps) => {
   const {
     data: playlist,
     isLoading,
@@ -86,13 +86,14 @@ export const PlaylistDetailsDrawer = ({
   };
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Playlist Details'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={onClose}
+      onCancel={onClose}
+      destroyOnClose
+      centered
+      footer={null}
     >
       {isLoading && (
         <div style={{ textAlign: 'center', padding: 48 }}>
@@ -263,6 +264,6 @@ export const PlaylistDetailsDrawer = ({
           </Descriptions>
         </Space>
       )}
-    </Drawer>
+    </Modal>
   );
 };

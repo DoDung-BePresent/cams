@@ -12,14 +12,14 @@ import { PlusOutlined } from '@ant-design/icons';
  */
 import { PageHeader, DataTable, AppModal } from '@/shared/components';
 import {
-  AddTracksDrawer,
+  AddTracksModal,
   getPlaylistColumns,
-  PlaylistDetailsDrawer,
+  PlaylistDetailsModal,
 } from '@/shared/modules/playlists/components';
 import {
   PlaylistFilter as PlaylistFilterComponent,
-  CreatePlaylistDrawer,
-  EditPlaylistDrawer,
+  CreatePlaylistModal,
+  EditPlaylistModal,
 } from './components';
 
 /**
@@ -57,10 +57,10 @@ export const PlaylistList = () => {
   });
 
   const [showFilters, setShowFilters] = useState(false);
-  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
-  const [addTracksDrawerOpen, setAddTracksDrawerOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [addTracksModalOpen, setAddTracksModalOpen] = useState(false);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>();
 
   const { data, isLoading, refetch } = usePlaylists(filter);
@@ -96,17 +96,17 @@ export const PlaylistList = () => {
 
   const handleView = (id: string) => {
     setSelectedPlaylistId(id);
-    setDetailsDrawerOpen(true);
+    setDetailsModalOpen(true);
   };
 
   const handleEdit = (id: string) => {
     setSelectedPlaylistId(id);
-    setEditDrawerOpen(true);
+    setEditModalOpen(true);
   };
 
   const handleAddTracks = (id: string) => {
     setSelectedPlaylistId(id);
-    setAddTracksDrawerOpen(true);
+    setAddTracksModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
@@ -204,7 +204,7 @@ export const PlaylistList = () => {
             type='primary'
             size='large'
             icon={<PlusOutlined />}
-            onClick={() => setCreateDrawerOpen(true)}
+            onClick={() => setCreateModalOpen(true)}
           >
             Create Playlist
           </Button>
@@ -244,40 +244,40 @@ export const PlaylistList = () => {
         scroll={{ x: 1400 }}
       />
 
-      {/* Create Playlist Drawer */}
-      <CreatePlaylistDrawer
-        open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
+      {/* Create Playlist Modal */}
+      <CreatePlaylistModal
+        open={createModalOpen}
+        onClose={() => setCreateModalOpen(false)}
         onSuccess={() => refetch()}
       />
 
-      {/* Edit Playlist Drawer */}
-      <EditPlaylistDrawer
-        open={editDrawerOpen}
+      {/* Edit Playlist Modal */}
+      <EditPlaylistModal
+        open={editModalOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
-          setEditDrawerOpen(false);
+          setEditModalOpen(false);
           setSelectedPlaylistId(undefined);
         }}
         onSuccess={() => refetch()}
       />
 
-      {/* Details Drawer */}
-      <PlaylistDetailsDrawer
-        open={detailsDrawerOpen}
+      {/* Details Modal */}
+      <PlaylistDetailsModal
+        open={detailsModalOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
-          setDetailsDrawerOpen(false);
+          setDetailsModalOpen(false);
           setSelectedPlaylistId(undefined);
         }}
       />
 
-      {/* Add Tracks Drawer */}
-      <AddTracksDrawer
-        open={addTracksDrawerOpen}
+      {/* Add Tracks Modal */}
+      <AddTracksModal
+        open={addTracksModalOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
-          setAddTracksDrawerOpen(false);
+          setAddTracksModalOpen(false);
           setSelectedPlaylistId(undefined);
         }}
         onSuccess={() => refetch()}

@@ -15,7 +15,7 @@ export const AuthFooter = () => {
         gap={16}
       >
         <Flex align='center'>
-          <Text className='text-gray'>
+          <Text className='text-sm font-medium text-slate-500'>
             CAMS ©{new Date().getFullYear()} Created by CAMS - FPT University
           </Text>
         </Flex>
@@ -23,8 +23,18 @@ export const AuthFooter = () => {
           align='center'
           gap={16}
         >
-          <Link href='#'>Terms and Conditions</Link>
-          <Link href='#'>Privacy Policy</Link>
+          <Link
+            href='#'
+            className='!text-sm !text-slate-500 transition-colors hover:!text-blue-600'
+          >
+            Terms and Conditions
+          </Link>
+          <Link
+            href='#'
+            className='!text-sm !text-slate-500 transition-colors hover:!text-blue-600'
+          >
+            Privacy Policy
+          </Link>
         </Flex>
       </Flex>
     </footer>

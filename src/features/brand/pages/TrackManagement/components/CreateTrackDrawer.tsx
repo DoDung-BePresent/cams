@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Drawer,
+  Modal,
   Form,
   Input,
   Button,
@@ -147,14 +147,16 @@ export const CreateTrackDrawer = ({
   };
 
   return (
-    <Drawer
+    <Modal
       title='Upload New Track'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       forceRender
       open={open}
-      onClose={handleCancel}
-      closeIcon={null}
+      onCancel={handleCancel}
+      centered
+      styles={{
+        body: { maxHeight: '70vh', overflowY: 'auto', paddingRight: 8 },
+      }}
       footer={
         <Flex
           justify='end'
@@ -394,6 +396,6 @@ export const CreateTrackDrawer = ({
           </Row>
         </div>
       </Form>
-    </Drawer>
+    </Modal>
   );
 };

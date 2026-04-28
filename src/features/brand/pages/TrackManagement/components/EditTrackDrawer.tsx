@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
-  Drawer,
+  Modal,
   Form,
   Input,
   Button,
@@ -167,13 +167,15 @@ export const EditTrackDrawer = ({
   };
 
   return (
-    <Drawer
+    <Modal
       title='Edit Track'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
-      closeIcon={null}
+      onCancel={handleCancel}
+      centered
+      styles={{
+        body: { maxHeight: '70vh', overflowY: 'auto', paddingRight: 8 },
+      }}
       footer={
         <Flex
           justify='end'
@@ -429,6 +431,6 @@ export const EditTrackDrawer = ({
           </div>
         </Form>
       )}
-    </Drawer>
+    </Modal>
   );
 };
