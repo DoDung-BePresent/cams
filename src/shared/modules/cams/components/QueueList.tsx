@@ -246,7 +246,6 @@ const SortableItem = memo(function SortableItem({
     alignItems: 'center',
     gap: 12,
     position: 'relative',
-    transition: 'all 0.2s ease',
   };
 
   const isPlaying = item.queueStatus === QueueItemStatus.Playing;
