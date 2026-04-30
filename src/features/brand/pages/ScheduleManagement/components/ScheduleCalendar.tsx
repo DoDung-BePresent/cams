@@ -8,6 +8,7 @@ import type {
   EventChangeArg,
 } from '@fullcalendar/core';
 import { Spin } from 'antd';
+import dayjs from 'dayjs';
 
 import { AppModal } from '@/shared/components';
 import { transformSlotsToEvents } from '../utils/calendarHelpers';
@@ -20,7 +21,7 @@ import type { ScheduleBootstrapData } from '../types/schedule.types';
  * - [ ] BE overlap validation - currently client-side only
  */
 
-const SLOT_COLOR = '#4A2EA1'; // TODO: Replace with slot.color when BE adds field
+const SLOT_COLOR = '#1db954'; // Spotify green - stands out in dark mode
 
 interface ScheduleCalendarProps {
   bootstrap: ScheduleBootstrapData | undefined;
@@ -103,13 +104,9 @@ export const ScheduleCalendar = ({
         ref={calendarRef}
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView='timeGridWeek'
-        headerToolbar={{
-          left: 'title',
-          center: '',
-          right: 'today prev,next',
-        }}
-        slotMinTime='00:00:00'
-        slotMaxTime='24:00:00'
+        headerToolbar={false}
+        slotMinTime='07:00:00'
+        slotMaxTime='23:00:00'
         allDaySlot={false}
         editable={true}
         selectable={true}
@@ -124,6 +121,10 @@ export const ScheduleCalendar = ({
         slotDuration='00:30:00'
         snapDuration='00:15:00'
         eventContent={renderEventContent}
+        validRange={{
+          start: dayjs().startOf('week').format('YYYY-MM-DD'),
+          end: dayjs().endOf('week').add(1, 'day').format('YYYY-MM-DD'),
+        }}
       />
     </div>
   );

@@ -1,10 +1,22 @@
 /**
  * FullCalendar Custom Styling
- * Matches the app's design system
+ * Matches the app's design system - optimized for dark mode
  */
 
 .schedule-calendar {
-  /* Calendar container */
+  /* Calendar container - Dark mode optimized */
+  --fc-border-color: #434343;
+  --fc-button-bg-color: #1db954;
+  --fc-button-border-color: #1db954;
+  --fc-button-hover-bg-color: #1ed760;
+  --fc-button-hover-border-color: #1ed760;
+  --fc-button-active-bg-color: #1aa34a;
+  --fc-button-active-border-color: #1aa34a;
+  --fc-today-bg-color: rgba(29, 185, 84, 0.1);
+}
+
+/* Light mode support (for admin only) */
+[data-theme='light'] .schedule-calendar {
   --fc-border-color: #d9d9d9;
   --fc-button-bg-color: #1890ff;
   --fc-button-border-color: #1890ff;
@@ -13,18 +25,6 @@
   --fc-button-active-bg-color: #096dd9;
   --fc-button-active-border-color: #096dd9;
   --fc-today-bg-color: #e6f7ff;
-}
-
-/* Dark mode support */
-[data-theme='dark'] .schedule-calendar {
-  --fc-border-color: #434343;
-  --fc-button-bg-color: #1db954;
-  --fc-button-border-color: #1db954;
-  --fc-button-hover-bg-color: #1ed760;
-  --fc-button-hover-border-color: #1ed760;
-  --fc-button-active-bg-color: #1aa34a;
-  --fc-button-active-border-color: #1aa34a;
-  --fc-today-bg-color: #1a1a1a;
 }
 
 /* Calendar header */
@@ -46,11 +46,11 @@
 }
 
 .schedule-calendar .fc-button:focus {
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.2);
 }
 
-[data-theme='dark'] .schedule-calendar .fc-button:focus {
-  box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.2);
+[data-theme='light'] .schedule-calendar .fc-button:focus {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
 
 /* Time grid */
@@ -60,23 +60,24 @@
 
 .schedule-calendar .fc-timegrid-slot-label {
   font-size: 12px;
-  color: #8c8c8c;
+  color: #b3b3b3;
 }
 
-[data-theme='dark'] .schedule-calendar .fc-timegrid-slot-label {
-  color: #b3b3b3;
+[data-theme='light'] .schedule-calendar .fc-timegrid-slot-label {
+  color: #8c8c8c;
 }
 
 /* Day headers */
 .schedule-calendar .fc-col-header-cell {
   padding: 8px 0;
   font-weight: 600;
-  background-color: #fafafa;
-}
-
-[data-theme='dark'] .schedule-calendar .fc-col-header-cell {
   background-color: #1a1a1a;
   color: #ffffff;
+}
+
+[data-theme='light'] .schedule-calendar .fc-col-header-cell {
+  background-color: #fafafa;
+  color: inherit;
 }
 
 /* Today column */
@@ -109,14 +110,14 @@
 
 /* Selection highlight */
 .schedule-calendar .fc-highlight {
+  background-color: rgba(29, 185, 84, 0.15);
+}
+
+[data-theme='light'] .schedule-calendar .fc-highlight {
   background-color: rgba(24, 144, 255, 0.1);
 }
 
-[data-theme='dark'] .schedule-calendar .fc-highlight {
-  background-color: rgba(29, 185, 84, 0.1);
-}
-
-/* Scrollbar styling */
+/* Scrollbar styling - Dark mode default */
 .schedule-calendar .fc-scroller {
   overflow-y: auto !important;
 }
@@ -126,31 +127,31 @@
 }
 
 .schedule-calendar .fc-scroller::-webkit-scrollbar-track {
-  background: #f0f0f0;
+  background: #282828;
   border-radius: 4px;
 }
 
-[data-theme='dark'] .schedule-calendar .fc-scroller::-webkit-scrollbar-track {
-  background: #282828;
+[data-theme='light'] .schedule-calendar .fc-scroller::-webkit-scrollbar-track {
+  background: #f0f0f0;
 }
 
 .schedule-calendar .fc-scroller::-webkit-scrollbar-thumb {
-  background: #bfbfbf;
+  background: #535353;
   border-radius: 4px;
 }
 
 .schedule-calendar .fc-scroller::-webkit-scrollbar-thumb:hover {
-  background: #8c8c8c;
+  background: #737373;
 }
 
-[data-theme='dark'] .schedule-calendar .fc-scroller::-webkit-scrollbar-thumb {
-  background: #535353;
+[data-theme='light'] .schedule-calendar .fc-scroller::-webkit-scrollbar-thumb {
+  background: #bfbfbf;
 }
 
-[data-theme='dark']
+[data-theme='light']
   .schedule-calendar
   .fc-scroller::-webkit-scrollbar-thumb:hover {
-  background: #737373;
+  background: #8c8c8c;
 }
 
 /* Now indicator */
@@ -167,4 +168,13 @@
 .schedule-calendar .fc-loading {
   opacity: 0.5;
   pointer-events: none;
+}
+
+/* ====== TIME PICKER ===== */
+.ant-picker-dropdown
+  .ant-picker-panel
+  .ant-picker-time-panel-column
+  .ant-picker-time-panel-cell.ant-picker-time-panel-cell-selected
+  .ant-picker-time-panel-cell-inner {
+  background: #ef4444 !important;
 }

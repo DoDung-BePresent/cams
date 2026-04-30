@@ -1,13 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Input, Segmented, Space } from 'antd';
+import { Flex, Input, Segmented, Space, Tag } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
 import { AppModal, DataTable } from '@/shared/components';
-import type {
-  ScheduleSourceItem,
-  ScheduleSourceType,
-} from '@/shared/modules/schedules/types';
+import type { ScheduleSourceItem } from '@/shared/modules/schedules/types';
 
 type ScheduleSourcePickerModalProps = {
   open: boolean;
@@ -26,8 +23,12 @@ export const ScheduleSourcePickerModal = ({
   onClose,
   onSelect,
 }: ScheduleSourcePickerModalProps) => {
-  const [activeType, setActiveType] = useState<ScheduleSourceType>('template');
+  const [activeType, setActiveType] = useState<'template' | 'library'>(
+    'template',
+  );
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const dataSource =
     activeType === 'library' ? librarySources : templateSources;
@@ -47,6 +48,12 @@ export const ScheduleSourcePickerModal = ({
 
   const columns: ColumnsType<ScheduleSourceItem> = [
     {
+      title: 'No.',
+      key: 'no',
+      width: 60,
+      render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
+    },
+    {
       title: 'Source',
       dataIndex: 'title',
       sorter: (a, b) => a.title.localeCompare(b.title),
@@ -56,7 +63,7 @@ export const ScheduleSourcePickerModal = ({
           size={0}
         >
           <strong>{record.title}</strong>
-          <span>{record.subtitle}</span>
+          {record.subtitle && <span>{record.subtitle}</span>}
         </Space>
       ),
     },
@@ -64,12 +71,17 @@ export const ScheduleSourcePickerModal = ({
       title: 'Type',
       dataIndex: 'type',
       width: 120,
-      render: (type: string) => (type === 'template' ? 'Template' : 'Library'),
+      render: (type: string) => (
+        <Tag color={type === 'template' ? 'blue' : 'green'}>
+          {type === 'template' ? 'Template' : 'Library'}
+        </Tag>
+      ),
     },
     {
       title: 'Slots',
       key: 'slots',
-      width: 120,
+      width: 100,
+      align: 'center',
       render: (_, record) => record.schedule?.slots?.length || 0,
     },
   ];
@@ -84,19 +96,27 @@ export const ScheduleSourcePickerModal = ({
       cancelButtonProps={{ style: { display: 'none' } }}
       width={960}
       scrollable={false}
+      styles={{
+        body: {
+          padding: '24px',
+        },
+      }}
     >
-      <Space
-        direction='vertical'
-        size='middle'
-        style={{ width: '100%' }}
+      <Flex
+        vertical
+        gap='middle'
       >
-        <Segmented<ScheduleSourceType>
+        <Segmented<'template' | 'library'>
           value={activeType}
-          onChange={(value) => setActiveType(value)}
+          onChange={(value) => {
+            setActiveType(value);
+            setCurrentPage(1);
+          }}
           options={[
             { label: 'Templates', value: 'template' },
             { label: 'Library', value: 'library' },
           ]}
+          block
         />
 
         <Input
@@ -104,7 +124,10 @@ export const ScheduleSourcePickerModal = ({
           placeholder='Search source by title or subtitle'
           prefix={<SearchOutlined />}
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setCurrentPage(1);
+          }}
           allowClear
         />
 
@@ -113,13 +136,18 @@ export const ScheduleSourcePickerModal = ({
           columns={columns}
           dataSource={filteredData}
           loading={loading}
-          pagination={false}
+          pagination={{
+            current: currentPage,
+            pageSize,
+            onChange: setCurrentPage,
+            showSizeChanger: false,
+          }}
           onRow={(record) => ({
             onClick: () => onSelect(record.id),
             style: { cursor: 'pointer' },
           })}
         />
-      </Space>
+      </Flex>
     </AppModal>
   );
 };

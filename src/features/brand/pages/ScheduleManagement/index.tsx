@@ -1,15 +1,34 @@
 import { useState } from 'react';
-import { Card, Flex } from 'antd';
+import { Card, Flex, Button, Space, Alert } from 'antd';
+import { PlusOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import type { DateSelectArg } from '@fullcalendar/core';
 import dayjs from 'dayjs';
 
 import { PageHeader } from '@/shared/components';
 import { ScheduleCalendar } from './components/ScheduleCalendar';
-import { ScheduleSidebar } from './components/ScheduleSidebar';
+import { QuickCreatePopover } from './components/QuickCreatePopover';
 import { CreateSlotDrawer } from './components/CreateSlotDrawer';
-import { SaveToLibraryModal } from './components/SaveToLibraryModal';
+import { CreateScheduleSourceDrawer } from './components/CreateScheduleSourceDrawer';
+import { ScheduleSourcePickerModal } from './components/ScheduleSourcePickerModal';
 import { useScheduleBootstrap } from './hooks/useScheduleBootstrap';
+import {
+  useCreateBrandScheduleSource,
+  useBrandScheduleLibrary,
+  useBrandScheduleTemplates,
+} from '@/features/brand/hooks';
+import { useAuth } from '@/providers';
+import type { ScheduleSourceType } from '@/shared/modules/schedules/types';
 import './ScheduleManagement.css';
+
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
 /**
  * Schedule Management Page
@@ -26,8 +45,24 @@ import './ScheduleManagement.css';
  * - [ ] Overlap validation from BE (currently client-side only)
  */
 export const ScheduleManagement = () => {
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const { user } = useAuth();
+  const brandId = user?.brandId;
+
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [popoverTimeInfo, setPopoverTimeInfo] = useState<{
+    startTime: string;
+    endTime: string;
+    dayOfWeek: number;
+    dayName: string;
+  } | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [createSourceDrawerOpen, setCreateSourceDrawerOpen] = useState(false);
+  const [loadScheduleModalOpen, setLoadScheduleModalOpen] = useState(false);
+  const [createType, setCreateType] = useState<ScheduleSourceType>('template');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [prefilledTime, setPrefilledTime] = useState<{
@@ -40,44 +75,72 @@ export const ScheduleManagement = () => {
   const spaceId = 'temp-space-id';
 
   const { data: bootstrap, isLoading } = useScheduleBootstrap(spaceId);
+  const {
+    data: librarySources = [],
+    isLoading: isLoadingLibrary,
+    refetch: refetchLibrary,
+  } = useBrandScheduleLibrary(brandId ?? undefined, !!brandId);
+  const {
+    data: templateSources = [],
+    isLoading: isLoadingTemplates,
+    refetch: refetchTemplates,
+  } = useBrandScheduleTemplates(brandId ?? undefined, !!brandId);
+
+  const createSourceMutation = useCreateBrandScheduleSource();
+
+  const handleCreateTemplate = (type: ScheduleSourceType) => {
+    setCreateType(type);
+    setCreateSourceDrawerOpen(true);
+  };
+
+  const handleLoadSchedule = (sourceId: string) => {
+    console.log('Load schedule source:', sourceId);
+    // TODO: Implement apply source to space
+    setLoadScheduleModalOpen(false);
+  };
 
   const handleCreateSlot = (selectInfo?: DateSelectArg) => {
-    setSelectedSlot(null);
-
     if (selectInfo) {
-      // Pre-fill time from calendar selection
+      // Show quick create popover
       const startTime = dayjs(selectInfo.start).format('HH:mm');
       const endTime = dayjs(selectInfo.end).format('HH:mm');
-      const dayOfWeek = selectInfo.start.getDay(); // 0=Sunday, 1=Monday, etc.
+      const dayOfWeek = selectInfo.start.getDay();
+      const dayName = WEEKDAY_NAMES[dayOfWeek];
 
-      setPrefilledTime({
+      // Get mouse position from the jsEvent
+      const mouseEvent = selectInfo.jsEvent as MouseEvent;
+      setPopoverPosition({
+        x: mouseEvent.clientX,
+        y: mouseEvent.clientY,
+      });
+
+      setPopoverTimeInfo({
         startTime,
         endTime,
-        daysOfWeek: [dayOfWeek],
+        dayOfWeek,
+        dayName,
       });
-    } else {
-      setPrefilledTime(null);
-    }
 
-    setCreateDrawerOpen(true);
+      setPopoverOpen(true);
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEditSlot = (slot: any) => {
     setSelectedSlot(slot);
     setPrefilledTime(null);
-    setCreateDrawerOpen(true);
+    setDrawerOpen(true);
   };
 
-  // const handleSaveToLibrary = () => {
-  //   if (!bootstrap?.draftSchedule?.slots?.length) {
-  //     message.warning('No slots to save. Add some slots first.');
-  //     return;
-  //   }
-  //   setSaveModalOpen(true);
-  // };
+  const handleClosePopover = () => {
+    setPopoverOpen(false);
+    setPopoverPosition(null);
+    setPopoverTimeInfo(null);
+  };
 
   const breadcrumbs = [{ title: 'Brand' }, { title: 'Schedule Management' }];
+
+  const hasTemplate = bootstrap?.draftSchedule?.slots?.length;
 
   return (
     <div>
@@ -88,19 +151,44 @@ export const ScheduleManagement = () => {
           description: 'Manage music schedule for your spaces',
           keywords: 'schedule, calendar, music, playlist',
         }}
+        extra={
+          <Space>
+            <Button
+              size='large'
+              icon={<FolderOpenOutlined />}
+              onClick={() => setLoadScheduleModalOpen(true)}
+            >
+              Load Schedule
+            </Button>
+            <Button
+              size='large'
+              onClick={() => handleCreateTemplate('library')}
+            >
+              Create Library
+            </Button>
+            <Button
+              size='large'
+              type='primary'
+              icon={<PlusOutlined />}
+              onClick={() => handleCreateTemplate('template')}
+            >
+              Create Template
+            </Button>
+          </Space>
+        }
       />
 
-      <Flex gap='middle'>
-        {/* Sidebar - 300px fixed width */}
-        <div style={{ width: 300, flexShrink: 0 }}>
-          <ScheduleSidebar
-            bootstrap={bootstrap}
-            isLoading={isLoading}
-            spaceId={spaceId}
-          />
-        </div>
+      {!hasTemplate && (
+        <Alert
+          type='info'
+          showIcon
+          message='Get started by creating a template or library, then add time slots to build your weekly schedule.'
+          style={{ marginBottom: 16 }}
+        />
+      )}
 
-        {/* Main Calendar Area */}
+      <Flex gap='middle'>
+        {/* Main Calendar Area - Full width */}
         <div style={{ flex: 1 }}>
           <Card>
             {/* Calendar */}
@@ -115,11 +203,21 @@ export const ScheduleManagement = () => {
         </div>
       </Flex>
 
-      {/* Drawers & Modals */}
+      {/* Quick Create Popover */}
+      <QuickCreatePopover
+        open={popoverOpen}
+        anchorPosition={popoverPosition}
+        timeInfo={popoverTimeInfo}
+        spaceId={spaceId}
+        musicCatalog={bootstrap?.musicCatalog || []}
+        onClose={handleClosePopover}
+      />
+
+      {/* Full Edit Drawer */}
       <CreateSlotDrawer
-        open={createDrawerOpen}
+        open={drawerOpen}
         onClose={() => {
-          setCreateDrawerOpen(false);
+          setDrawerOpen(false);
           setPrefilledTime(null);
         }}
         spaceId={spaceId}
@@ -128,10 +226,31 @@ export const ScheduleManagement = () => {
         musicCatalog={bootstrap?.musicCatalog || []}
       />
 
-      <SaveToLibraryModal
-        open={saveModalOpen}
-        onClose={() => setSaveModalOpen(false)}
-        spaceId={spaceId}
+      {/* Create Template/Library Drawer */}
+      <CreateScheduleSourceDrawer
+        open={createSourceDrawerOpen}
+        initialType={createType}
+        loading={createSourceMutation.isPending}
+        onClose={() => setCreateSourceDrawerOpen(false)}
+        onSubmit={(values) => {
+          createSourceMutation.mutate(values, {
+            onSuccess: () => {
+              setCreateSourceDrawerOpen(false);
+              refetchLibrary();
+              refetchTemplates();
+            },
+          });
+        }}
+      />
+
+      {/* Load Schedule Modal */}
+      <ScheduleSourcePickerModal
+        open={loadScheduleModalOpen}
+        loading={isLoadingLibrary || isLoadingTemplates}
+        librarySources={librarySources}
+        templateSources={templateSources}
+        onClose={() => setLoadScheduleModalOpen(false)}
+        onSelect={handleLoadSchedule}
       />
     </div>
   );
