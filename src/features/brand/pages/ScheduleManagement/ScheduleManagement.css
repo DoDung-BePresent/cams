@@ -1,0 +1,170 @@
+/**
+ * FullCalendar Custom Styling
+ * Matches the app's design system
+ */
+
+.schedule-calendar {
+  /* Calendar container */
+  --fc-border-color: #d9d9d9;
+  --fc-button-bg-color: #1890ff;
+  --fc-button-border-color: #1890ff;
+  --fc-button-hover-bg-color: #40a9ff;
+  --fc-button-hover-border-color: #40a9ff;
+  --fc-button-active-bg-color: #096dd9;
+  --fc-button-active-border-color: #096dd9;
+  --fc-today-bg-color: #e6f7ff;
+}
+
+/* Dark mode support */
+[data-theme='dark'] .schedule-calendar {
+  --fc-border-color: #434343;
+  --fc-button-bg-color: #1db954;
+  --fc-button-border-color: #1db954;
+  --fc-button-hover-bg-color: #1ed760;
+  --fc-button-hover-border-color: #1ed760;
+  --fc-button-active-bg-color: #1aa34a;
+  --fc-button-active-border-color: #1aa34a;
+  --fc-today-bg-color: #1a1a1a;
+}
+
+/* Calendar header */
+.schedule-calendar .fc-toolbar {
+  margin-bottom: 16px;
+}
+
+.schedule-calendar .fc-toolbar-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Calendar buttons */
+.schedule-calendar .fc-button {
+  padding: 4px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  text-transform: capitalize;
+}
+
+.schedule-calendar .fc-button:focus {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+[data-theme='dark'] .schedule-calendar .fc-button:focus {
+  box-shadow: 0 0 0 2px rgba(29, 185, 84, 0.2);
+}
+
+/* Time grid */
+.schedule-calendar .fc-timegrid-slot {
+  height: 40px;
+}
+
+.schedule-calendar .fc-timegrid-slot-label {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+[data-theme='dark'] .schedule-calendar .fc-timegrid-slot-label {
+  color: #b3b3b3;
+}
+
+/* Day headers */
+.schedule-calendar .fc-col-header-cell {
+  padding: 8px 0;
+  font-weight: 600;
+  background-color: #fafafa;
+}
+
+[data-theme='dark'] .schedule-calendar .fc-col-header-cell {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Today column */
+.schedule-calendar .fc-day-today {
+  background-color: var(--fc-today-bg-color) !important;
+}
+
+/* Events */
+.schedule-calendar .fc-event {
+  border-radius: 4px;
+  padding: 2px 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.schedule-calendar .fc-event:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.schedule-calendar .fc-event-title {
+  font-weight: 500;
+}
+
+.schedule-calendar .fc-event-time {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+/* Selection highlight */
+.schedule-calendar .fc-highlight {
+  background-color: rgba(24, 144, 255, 0.1);
+}
+
+[data-theme='dark'] .schedule-calendar .fc-highlight {
+  background-color: rgba(29, 185, 84, 0.1);
+}
+
+/* Scrollbar styling */
+.schedule-calendar .fc-scroller {
+  overflow-y: auto !important;
+}
+
+.schedule-calendar .fc-scroller::-webkit-scrollbar {
+  width: 8px;
+}
+
+.schedule-calendar .fc-scroller::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+[data-theme='dark'] .schedule-calendar .fc-scroller::-webkit-scrollbar-track {
+  background: #282828;
+}
+
+.schedule-calendar .fc-scroller::-webkit-scrollbar-thumb {
+  background: #bfbfbf;
+  border-radius: 4px;
+}
+
+.schedule-calendar .fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: #8c8c8c;
+}
+
+[data-theme='dark'] .schedule-calendar .fc-scroller::-webkit-scrollbar-thumb {
+  background: #535353;
+}
+
+[data-theme='dark']
+  .schedule-calendar
+  .fc-scroller::-webkit-scrollbar-thumb:hover {
+  background: #737373;
+}
+
+/* Now indicator */
+.schedule-calendar .fc-timegrid-now-indicator-line {
+  border-color: #ff4d4f;
+  border-width: 2px;
+}
+
+.schedule-calendar .fc-timegrid-now-indicator-arrow {
+  border-color: #ff4d4f;
+}
+
+/* Loading state */
+.schedule-calendar .fc-loading {
+  opacity: 0.5;
+  pointer-events: none;
+}

@@ -38,6 +38,11 @@ const ScheduleList = Loadable(
   'ScheduleList',
 );
 
+const ScheduleCalendar = Loadable(
+  () => import('@/features/brand/pages/ScheduleManagement'),
+  'ScheduleManagement',
+);
+
 const ConfigList = Loadable(
   () => import('@/features/brand/pages/ConfigManagement/ConfigList'),
   'ConfigList',
@@ -81,6 +86,10 @@ export const brandRoutes = [
   },
   {
     path: 'schedule',
+    element: <ScheduleCalendar />,
+  },
+  {
+    path: 'schedule-old',
     element: <ScheduleList />,
   },
   {
