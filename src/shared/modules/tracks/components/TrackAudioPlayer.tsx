@@ -38,10 +38,10 @@ export const TrackAudioPlayer = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (shouldStop && wavesurferRef.current) {
-      wavesurferRef.current.pause();
-      setIsPlaying(false);
-    }
+    if (!shouldStop || !wavesurferRef.current) return;
+    wavesurferRef.current.pause();
+    const timer = setTimeout(() => setIsPlaying(false), 0);
+    return () => clearTimeout(timer);
   }, [shouldStop]);
 
   useEffect(() => {
@@ -49,8 +49,8 @@ export const TrackAudioPlayer = ({
 
     const wavesurfer = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#d9d9d9',
-      progressColor: '#1890ff',
+      waveColor: 'rgba(183,173,176,0.35)',
+      progressColor: '#ef4444',
       cursorColor: 'transparent',
       barWidth: 3,
       barGap: 1,
@@ -111,53 +111,88 @@ export const TrackAudioPlayer = ({
   }
 
   return (
-    <Card>
+    <Card
+      style={{
+        background: 'linear-gradient(145deg, #1c1820 0%, #141318 100%)',
+        border: '1px solid rgba(239,68,68,0.12)',
+        borderRadius: 20,
+        overflow: 'hidden',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.4)',
+      }}
+      styles={{ body: { padding: '18px 20px' } }}
+    >
       <Flex
-        align='start'
-        gap='middle'
+        align='center'
+        gap={16}
       >
         {/* Cover Image */}
-        {coverImageUrl && (
+        {coverImageUrl ? (
           <Avatar
             shape='square'
-            size={120}
+            size={84}
             src={coverImageUrl}
             alt={title}
-            className='shrink-0! rounded-lg!'
+            style={{
+              borderRadius: 12,
+              flexShrink: 0,
+              boxShadow: '0 8px 20px rgba(0,0,0,0.5)',
+            }}
           />
+        ) : (
+          <div
+            style={{
+              width: 84,
+              height: 84,
+              borderRadius: 12,
+              background:
+                'linear-gradient(135deg, rgba(239,68,68,0.28) 0%, rgba(100,20,20,0.2) 100%)',
+              border: '1px solid rgba(248,113,113,0.18)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              boxShadow: '0 8px 20px rgba(239,68,68,0.1)',
+            }}
+          >
+            <SoundOutlined style={{ fontSize: 30, color: '#f87171' }} />
+          </div>
         )}
+
+        {/* Track Info, Waveform & Controls */}
         <Flex
           align='center'
-          gap='large'
-          className='w-full!'
+          gap={16}
+          style={{ flex: 1, minWidth: 0 }}
         >
-          {/* Track Info & Waveform */}
           <Flex
             vertical
-            gap={4}
+            gap={6}
             style={{ flex: 1, minWidth: 0 }}
           >
             {/* Track Title & Artist */}
             {(title || artist) && (
               <Flex
-                gap={2}
-                align='start'
                 vertical
+                gap={2}
               >
                 {title && (
                   <Text
                     strong
                     ellipsis
-                    style={{ fontSize: 14 }}
+                    style={{
+                      fontSize: 16,
+                      color: '#f5f5f5',
+                      letterSpacing: 0.2,
+                      lineHeight: 1.4,
+                    }}
                   >
                     {title}
                   </Text>
                 )}
                 {artist && (
                   <Text
-                    type='secondary'
                     ellipsis
-                    style={{ fontSize: 13 }}
+                    style={{ fontSize: 12, color: '#9ca3af' }}
                   >
                     {artist}
                   </Text>
@@ -170,51 +205,69 @@ export const TrackAudioPlayer = ({
               ref={containerRef}
               style={{
                 cursor: 'pointer',
-                borderRadius: 4,
+                borderRadius: 6,
                 overflow: 'hidden',
-                backgroundColor: '#ffffff',
-                minHeight: 40,
+                minHeight: 50,
               }}
             >
               {isLoading && (
                 <div
                   style={{
-                    height: 40,
+                    height: 50,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#999',
+                    color: '#6b7280',
                     fontSize: 12,
+                    letterSpacing: 0.5,
                   }}
                 >
-                  Loading...
+                  Loading audio…
                 </div>
               )}
             </div>
 
             {/* Time Display */}
-            <Text
-              type='secondary'
-              style={{ fontSize: 12 }}
-            >
-              {formatDuration(currentTime)} / {formatDuration(duration)}
-            </Text>
+            <Flex justify='space-between'>
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: '#6b7280',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {formatDuration(currentTime)}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: '#6b7280',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {formatDuration(duration)}
+              </Text>
+            </Flex>
           </Flex>
 
           {/* Play/Pause Button */}
           <Button
             shape='circle'
             type='primary'
-            icon={
-              isPlaying ? (
-                <PauseIcon className='size-8' />
-              ) : (
-                <PlayIcon className='size-8' />
-              )
-            }
+            icon={isPlaying ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
             onClick={togglePlayPause}
             disabled={isLoading}
-            className='size-20! shrink-0! [&>span]:size-8!'
+            style={{
+              width: 56,
+              height: 56,
+              flexShrink: 0,
+              background: 'linear-gradient(135deg, #f87171, #dc2626)',
+              border: 'none',
+              boxShadow: '0 6px 24px rgba(239,68,68,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           />
         </Flex>
       </Flex>

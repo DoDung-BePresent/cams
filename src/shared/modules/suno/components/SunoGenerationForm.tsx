@@ -27,7 +27,11 @@ import SunoImg from '@/assets/images/suno AI.png';
  */
 import { useAuth } from '@/providers';
 import { useBrand } from '@/features/admin/hooks';
-import { useSunoConfig, useCreateSunoGeneration } from '../hooks';
+import {
+  useSunoConfig,
+  useCreateSunoGeneration,
+  useUpdateSunoConfig,
+} from '../hooks';
 import { useMoodOptions } from '@/shared/modules/moods/hooks';
 import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
 
@@ -84,17 +88,17 @@ const VIBE_OPTIONS: {
 
 // ─── Dark theme tokens ────────────────────────────────────────────────────────
 const C = {
-  bg: '#121212',
-  surface: '#1e1e1e',
-  surfaceHover: '#2a2a2a',
-  border: '#2e2e2e',
-  borderActive: '#1db954',
-  green: '#1db954',
-  greenDim: '#1aa34a',
-  text: '#ffffff',
+  bg: '#0f0f11',
+  surface: '#18181b',
+  surfaceHover: '#ef4444',
+  border: '#2d2528',
+  borderActive: '#ef4444',
+  green: '#ef4444',
+  greenDim: '#f87171',
+  text: '#f8f7f7',
   textMuted: '#9ca3af',
   textSubtle: '#6b7280',
-  inputBg: '#2a2a2a',
+  inputBg: '#18181b',
   sectionTitle: '#e5e7eb',
 };
 
@@ -131,6 +135,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   }, [profileFromConfig, brand]);
 
   const createGeneration = useCreateSunoGeneration();
+  const updateConfig = useUpdateSunoConfig();
   const { options: moodOptions } = useMoodOptions();
   const { data: playlistOptions } = usePlaylistOptions();
 
@@ -247,9 +252,22 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       ? null
       : values.lyrics?.trim() || null;
     const customMode = !instrumental;
+    const generationMode = isBrandModelMode
+      ? AiGenerationMode.BrandModel
+      : AiGenerationMode.Suno;
+
+    if (config?.aiGenerationMode !== generationMode) {
+      await updateConfig.mutateAsync({
+        sunoPromptTemplate: config?.sunoPromptTemplate ?? null,
+        sunoDefaultPlaylistId: config?.sunoDefaultPlaylistId ?? null,
+        aiGenerationMode: generationMode,
+      });
+    }
 
     const result = await createGeneration.mutateAsync({
       ...payload,
+      generationMode,
+      aiGenerationMode: generationMode,
       prompt: finalPrompt,
       ...(isBrandModelMode
         ? { customMode, instrumental, lyrics: normalizedLyrics }
@@ -278,13 +296,13 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
 
   // ─── Shared styles ────────────────────────────────────────────────────────
   const modelCard = (active: boolean): React.CSSProperties => ({
-    background: active ? 'rgba(29,185,84,0.08)' : C.surface,
+    background: active ? 'rgba(239,68,68,0.08)' : C.surface,
     border: `1.5px solid ${active ? C.borderActive : C.border}`,
     borderRadius: 12,
     padding: '16px',
     cursor: 'pointer',
     transition: 'all 0.18s',
-    boxShadow: active ? `0 0 0 3px rgba(29,185,84,0.15)` : undefined,
+    boxShadow: active ? `0 0 0 3px rgba(239,68,68,0.15)` : undefined,
     flex: 1,
   });
 
@@ -293,16 +311,17 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     borderRadius: 10,
     padding: '12px 14px',
     cursor: 'pointer',
-    background: active ? 'rgba(29,185,84,0.08)' : C.surface,
+    background: active ? 'rgba(239,68,68,0.08)' : C.surface,
     transition: 'all 0.15s',
     flex: 1,
   });
 
   const inputStyle: React.CSSProperties = {
     background: C.inputBg,
-    border: `1px solid ${C.border}`,
+    border: '1px solid rgba(248,113,113,0.28)',
     color: C.text,
     borderRadius: 8,
+    boxShadow: 'none',
   };
 
   const labelStyle: React.CSSProperties = {
@@ -439,7 +458,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
                       <span
                         style={{
                           background: C.green,
-                          color: '#000',
+                          color: '#fff',
                           borderRadius: 4,
                           padding: '1px 6px',
                           fontSize: 10,
@@ -532,7 +551,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
                       <span
                         style={{
                           background: C.green,
-                          color: '#000',
+                          color: '#fff',
                           borderRadius: 4,
                           padding: '1px 6px',
                           fontSize: 10,
@@ -1013,7 +1032,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
             type='primary'
             htmlType='submit'
             icon={<ThunderboltOutlined />}
-            loading={createGeneration.isPending}
+            loading={createGeneration.isPending || updateConfig.isPending}
             disabled={
               promptMode === 'brandProfile' &&
               hasProfile &&
@@ -1028,7 +1047,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
               border: 'none',
               fontSize: 15,
               fontWeight: 700,
-              color: '#000',
+              color: '#fff',
               letterSpacing: 0.3,
             }}
           >

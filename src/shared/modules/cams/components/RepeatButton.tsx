@@ -10,7 +10,7 @@ export type RepeatButtonProps = {
 };
 
 /**
- * Spotify-style Repeat / Loop toggle button.
+ * Soundtrack-style Repeat / Loop toggle button.
  * - Single button cycles 0 -> 1 -> 2 -> 0 on click
  * - Uses Tailwind classes for styling
  */

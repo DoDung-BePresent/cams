@@ -18,6 +18,11 @@ const SpaceSchedulePage = Loadable(
   'SpaceSchedulePage',
 );
 
+const SpaceMusicPage = Loadable(
+  () => import('@/features/store/pages/SpaceManagement/SpaceMusicPage'),
+  'SpaceMusicPage',
+);
+
 const TrackList = Loadable(
   () => import('@/features/store/pages/TrackManagement/TrackList'),
   'TrackList',
@@ -60,6 +65,10 @@ export const storeRoutes = [
   {
     path: 'spaces/:spaceId/schedule',
     element: <SpaceSchedulePage />,
+  },
+  {
+    path: 'spaces/:spaceId/music',
+    element: <SpaceMusicPage />,
   },
   {
     path: 'settings',

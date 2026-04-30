@@ -51,6 +51,10 @@ const headerStyle: React.CSSProperties = {
   position: 'sticky',
   top: 0,
   zIndex: 100,
+  background: 'rgba(15,15,17,0.82)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  borderBottom: '1px solid rgba(80,45,50,0.7)',
 };
 
 export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {

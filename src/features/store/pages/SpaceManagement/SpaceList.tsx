@@ -93,14 +93,14 @@ const toMoodLabel = (value: number | string | null | undefined) => {
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const C = {
-  bg: '#121212',
-  surface: '#181818',
-  surfaceHover: '#282828',
-  border: '#282828',
-  green: '#1db954',
-  text: '#ffffff',
-  textMuted: '#b3b3b3',
-  textSubtle: '#6a6a6a',
+  bg: '#0f0f11',
+  surface: '#18181b',
+  surfaceHover: '#242126',
+  border: '#2d2528',
+  green: '#ef4444',
+  text: '#f8f7f7',
+  textMuted: '#b7adb0',
+  textSubtle: '#857b80',
 };
 
 export const SpaceList = () => {
@@ -138,8 +138,7 @@ export const SpaceList = () => {
   };
 
   const handleManageMusic = (id: string) => {
-    setSelectedSpaceId(id);
-    setMusicModalOpen(true);
+    navigate(`/store/spaces/${id}/music`);
   };
 
   const handleManageSchedule = (id: string) => {
@@ -271,7 +270,11 @@ export const SpaceList = () => {
 
   return (
     <div
-      style={{ minHeight: '100vh', background: C.bg, padding: '0 32px 40px' }}
+      style={{
+        minHeight: '100vh',
+        background: 'transparent',
+        padding: '0 0 40px',
+      }}
     >
       <PageHeader
         title='Space Management'
@@ -300,7 +303,7 @@ export const SpaceList = () => {
                 background: C.green,
                 border: 'none',
                 fontWeight: 700,
-                color: '#000',
+                color: '#fff',
               }}
             >
               Create Space
@@ -344,19 +347,19 @@ export const SpaceList = () => {
               style={{ marginTop: 8 }}
             >
               <Descriptions.Item
-                label={<span style={{ color: '#b3b3b3' }}>Mood</span>}
+                label={<span style={{ color: '#5f5f67' }}>Mood</span>}
               >
                 <Tag color='purple'>{toMoodLabel(lastAnalysis.targetMood)}</Tag>
               </Descriptions.Item>
               <Descriptions.Item
-                label={<span style={{ color: '#b3b3b3' }}>Rule</span>}
+                label={<span style={{ color: '#5f5f67' }}>Rule</span>}
               >
                 <Tag color='blue'>
                   {lastAnalysis.triggeredRule || 'DEFAULT'}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item
-                label={<span style={{ color: '#b3b3b3' }}>BPM Range</span>}
+                label={<span style={{ color: '#5f5f67' }}>BPM Range</span>}
               >
                 <span style={{ color: '#fff' }}>
                   {lastAnalysis.recommendedBpmMin} -{' '}
@@ -364,14 +367,14 @@ export const SpaceList = () => {
                 </span>
               </Descriptions.Item>
               <Descriptions.Item
-                label={<span style={{ color: '#b3b3b3' }}>Target BPM</span>}
+                label={<span style={{ color: '#5f5f67' }}>Target BPM</span>}
               >
                 <span style={{ color: '#fff' }}>
                   {lastAnalysis.recommendedBpmTarget}
                 </span>
               </Descriptions.Item>
               <Descriptions.Item
-                label={<span style={{ color: '#b3b3b3' }}>Mood Changed</span>}
+                label={<span style={{ color: '#5f5f67' }}>Mood Changed</span>}
               >
                 <Tag color={lastAnalysis.moodChanged ? 'success' : 'default'}>
                   {lastAnalysis.moodChanged ? 'Yes' : 'No'}
@@ -379,7 +382,7 @@ export const SpaceList = () => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={
-                  <span style={{ color: '#b3b3b3' }}>Analyzed At (UTC)</span>
+                  <span style={{ color: '#5f5f67' }}>Analyzed At (UTC)</span>
                 }
               >
                 <span style={{ color: '#fff' }}>
@@ -391,7 +394,7 @@ export const SpaceList = () => {
                 </span>
               </Descriptions.Item>
               <Descriptions.Item
-                label={<span style={{ color: '#b3b3b3' }}>Reason</span>}
+                label={<span style={{ color: '#5f5f67' }}>Reason</span>}
               >
                 <span style={{ color: '#fff' }}>
                   {lastAnalysis.reason || '-'}
@@ -544,9 +547,9 @@ export const SpaceList = () => {
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLDivElement).style.borderColor =
-                    '#404040';
+                    'rgba(248,113,113,0.34)';
                   (e.currentTarget as HTMLDivElement).style.background =
-                    '#222222';
+                    C.surfaceHover;
                   (e.currentTarget as HTMLDivElement).style.transform =
                     'translateY(-3px)';
                 }}
@@ -588,7 +591,7 @@ export const SpaceList = () => {
                         height: 48,
                         borderRadius: 12,
                         background: isActive
-                          ? 'rgba(29,185,84,0.1)'
+                          ? 'rgba(239,68,68,0.1)'
                           : 'rgba(83,83,83,0.15)',
                         display: 'flex',
                         alignItems: 'center',
@@ -713,7 +716,7 @@ export const SpaceList = () => {
                           height: 36,
                           borderRadius: 8,
                           border: 'none',
-                          background: '#242424',
+                          background: '#202024',
                           color: C.textMuted,
                           cursor: 'pointer',
                           transition: 'all 0.15s',
@@ -725,14 +728,14 @@ export const SpaceList = () => {
                         onMouseEnter={(e) => {
                           (
                             e.currentTarget as HTMLButtonElement
-                          ).style.background = '#333';
+                          ).style.background = '#2d2528';
                           (e.currentTarget as HTMLButtonElement).style.color =
                             btn.color;
                         }}
                         onMouseLeave={(e) => {
                           (
                             e.currentTarget as HTMLButtonElement
-                          ).style.background = '#242424';
+                          ).style.background = '#202024';
                           (e.currentTarget as HTMLButtonElement).style.color =
                             C.textMuted;
                         }}

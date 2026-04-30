@@ -54,7 +54,7 @@ interface SunoGenerationLogDrawerProps {
 }
 
 const modeLabel = (mode: AiGenerationMode) =>
-  mode === AiGenerationMode.Suno ? 'Suno' : 'Brand Model';
+  mode === AiGenerationMode.Suno ? 'Suno' : 'Self-hosted · acestep-1.5';
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {

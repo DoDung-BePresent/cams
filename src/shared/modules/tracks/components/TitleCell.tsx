@@ -18,10 +18,10 @@ export const TitleCell = ({ record }: { record: TrackListItem }) => {
         shape='circle'
         icon={
           isCurrent && isPlaying ? (
-            <PauseCircleFilled style={{ fontSize: 24, color: '#1db954' }} />
+            <PauseCircleFilled style={{ fontSize: 24, color: '#f8f7f7' }} />
           ) : (
             <PlayCircleFilled
-              style={{ fontSize: 24, color: isCurrent ? '#1db954' : '#b3b3b3' }}
+              style={{ fontSize: 24, color: isCurrent ? '#ef4444' : '#5f5f67' }}
             />
           )
         }
@@ -62,7 +62,7 @@ export const TitleCell = ({ record }: { record: TrackListItem }) => {
           <span
             style={{
               fontWeight: 500,
-              color: isCurrent ? '#1db954' : 'inherit',
+              color: isCurrent ? '#ef4444' : 'inherit',
             }}
           >
             {record.title}

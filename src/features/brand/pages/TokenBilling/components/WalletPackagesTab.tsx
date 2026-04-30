@@ -31,25 +31,33 @@ const formatMoney = (amount: number, currency: string) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
+const formatPackageName = (code: string) =>
+  code
+    .replace(/^TOKEN_/i, '')
+    .replace(/K$/i, 'K tokens')
+    .replace(/_/g, ' ');
+
 const useStyle = createStyles(({ css }) => {
   return {
     pricingCard: css`
-      border: 2px solid #f0f0f0;
-      border-radius: 8px;
+      background: #18181b;
+      border: 1px solid #2d2528;
+      border-radius: 14px;
       transition: all 0.3s ease;
       height: 100%;
       display: flex;
       flex-direction: column;
 
       &:hover {
-        border-color: #1890ff;
-        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+        border-color: rgba(248, 113, 113, 0.42);
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.32);
         transform: translateY(-4px);
       }
 
       .ant-card-head {
-        border-bottom: 2px solid #f0f0f0;
+        border-bottom: 1px solid #2d2528;
         padding: 20px 24px;
+        color: #f8f7f7;
       }
 
       .ant-card-body {
@@ -60,7 +68,7 @@ const useStyle = createStyles(({ css }) => {
       }
     `,
     popularCard: css`
-      border: 2px solid #1890ff;
+      border-color: #ef4444;
       position: relative;
 
       &::before {
@@ -68,7 +76,7 @@ const useStyle = createStyles(({ css }) => {
         position: absolute;
         top: -12px;
         right: 24px;
-        background: #1890ff;
+        background: #ef4444;
         color: white;
         padding: 4px 12px;
         border-radius: 4px;
@@ -77,27 +85,27 @@ const useStyle = createStyles(({ css }) => {
       }
 
       &:hover {
-        border-color: #1890ff;
-        box-shadow: 0 8px 24px rgba(24, 144, 255, 0.25);
+        border-color: #f87171;
+        box-shadow: 0 18px 42px rgba(127, 29, 29, 0.28);
       }
     `,
     priceSection: css`
       text-align: center;
       padding: 24px 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid #2d2528;
       margin-bottom: 24px;
     `,
     price: css`
       font-size: 48px;
       font-weight: 700;
-      color: #1890ff;
+      color: #f8f7f7;
       line-height: 1;
       margin-bottom: 8px;
     `,
     tokens: css`
       font-size: 24px;
       font-weight: 600;
-      color: #262626;
+      color: #fca5a5;
       margin-bottom: 4px;
     `,
     featureList: css`
@@ -111,10 +119,10 @@ const useStyle = createStyles(({ css }) => {
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #595959;
+        color: #b7adb0;
 
         .anticon {
-          color: #52c41a;
+          color: #86efac;
           font-size: 16px;
         }
       }
@@ -178,7 +186,7 @@ export const WalletPackagesTab = ({
                   fontSize: 18,
                   fontWeight: 600,
                   color:
-                    (wallet?.balanceTokens ?? 0) < 0 ? '#cf1322' : '#3f8600',
+                    (wallet?.balanceTokens ?? 0) < 0 ? '#fca5a5' : '#86efac',
                 }}
               >
                 {wallet?.balanceTokens?.toLocaleString() ?? 0} tokens
@@ -237,7 +245,7 @@ export const WalletPackagesTab = ({
                     title={
                       <Space>
                         <ShoppingOutlined />
-                        {pkg.code}
+                        {formatPackageName(pkg.code)}
                       </Space>
                     }
                   >

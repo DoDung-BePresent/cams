@@ -69,6 +69,7 @@ export interface SpaceDetailResponse extends SpaceListItem {
  * StoreManager: storeId is ignored (auto-filled from user.StoreId)
  */
 export interface CreateSpaceRequest {
+  storeId?: string; // Brand role can create a space for a selected store
   name: string; // Required
   type: SpaceTypeEnum; // Required
   description?: string;
