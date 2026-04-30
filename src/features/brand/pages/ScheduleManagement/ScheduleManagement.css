@@ -80,9 +80,26 @@
   color: inherit;
 }
 
-/* Today column */
+.fc-timegrid-axis {
+  background-color: #1a1a1a;
+}
+
+/* Today header - Red background with white text */
+.schedule-calendar .fc-col-header-cell.fc-day-today {
+  background-color: #ef4444 !important;
+}
+
+.schedule-calendar .fc-day-today .fc-col-header-cell-cushion {
+  color: #ffffff;
+}
+
+/* Today column - Light red background */
 .schedule-calendar .fc-day-today {
-  background-color: var(--fc-today-bg-color) !important;
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+[data-theme='light'] .schedule-calendar .fc-day-today {
+  background-color: rgba(239, 68, 68, 0.05) !important;
 }
 
 /* Events */

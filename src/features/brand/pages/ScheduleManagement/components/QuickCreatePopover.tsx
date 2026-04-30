@@ -8,6 +8,7 @@ import {
   Typography,
   Divider,
   TimePicker,
+  Flex,
 } from 'antd';
 import dayjs from 'dayjs';
 import { createStyles } from 'antd-style';
@@ -125,9 +126,9 @@ export const QuickCreatePopover = ({
 
   const content = (
     <div style={{ width: 320 }}>
-      <Space
-        size='middle'
-        style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
+      <Flex
+        vertical
+        gap='middle'
       >
         {/* Day name */}
         <Text
@@ -211,9 +212,9 @@ export const QuickCreatePopover = ({
         </Form>
 
         {/* Actions */}
-        <Space
-          style={{ width: '100%', justifyContent: 'flex-end' }}
-          size='small'
+        <Flex
+          justify='end'
+          gap='small'
         >
           <Button
             size='large'
@@ -230,8 +231,8 @@ export const QuickCreatePopover = ({
           >
             Save
           </Button>
-        </Space>
-      </Space>
+        </Flex>
+      </Flex>
     </div>
   );
 

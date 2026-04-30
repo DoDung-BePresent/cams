@@ -105,6 +105,7 @@ export const ScheduleCalendar = ({
         plugins={[timeGridPlugin, interactionPlugin]}
         initialView='timeGridWeek'
         headerToolbar={false}
+        firstDay={1} // Start week on Monday
         slotMinTime='07:00:00'
         slotMaxTime='23:00:00'
         allDaySlot={false}
@@ -121,9 +122,10 @@ export const ScheduleCalendar = ({
         slotDuration='00:30:00'
         snapDuration='00:15:00'
         eventContent={renderEventContent}
+        dayHeaderFormat={{ weekday: 'short' }}
         validRange={{
-          start: dayjs().startOf('week').format('YYYY-MM-DD'),
-          end: dayjs().endOf('week').add(1, 'day').format('YYYY-MM-DD'),
+          start: dayjs().startOf('week').add(1, 'day').format('YYYY-MM-DD'), // Monday
+          end: dayjs().endOf('week').add(2, 'day').format('YYYY-MM-DD'), // Next Monday
         }}
       />
     </div>
