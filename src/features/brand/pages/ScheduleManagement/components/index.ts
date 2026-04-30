@@ -1,6 +1,5 @@
 // New calendar-based components
 export { ScheduleCalendar } from './ScheduleCalendar';
-export { ScheduleSidebar } from './ScheduleSidebar';
 export { CreateSlotDrawer } from './CreateSlotDrawer';
 export { SaveToLibraryModal } from './SaveToLibraryModal';
 export { QuickCreatePopover } from './QuickCreatePopover';
