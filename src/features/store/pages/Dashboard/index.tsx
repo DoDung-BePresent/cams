@@ -134,12 +134,12 @@ const NowPlayingBanner = ({
         style={{
           marginBottom: 14,
           padding: '10px 12px',
-          background: '#f5f5f5',
+          background: '#141414',
           borderRadius: 8,
-          border: '1px dashed #d9d9d9',
+          border: '1px dashed #434343',
         }}
       >
-        <SoundOutlined style={{ fontSize: 20, color: '#bfbfbf' }} />
+        <SoundOutlined style={{ fontSize: 20, color: '#595959' }} />
         <div>
           <Typography.Text strong>{spaceLabel}</Typography.Text>
           <div>
@@ -167,20 +167,20 @@ const NowPlayingBanner = ({
         padding: '12px 14px',
         borderRadius: 10,
         background:
-          'linear-gradient(120deg, #f9f0ff 0%, #f6ffed 55%, #e6fffb 100%)',
-        border: '1px solid #efdbff',
+          'linear-gradient(120deg, rgba(249, 240, 255, 0.05) 0%, rgba(246, 255, 237, 0.05) 55%, rgba(230, 255, 251, 0.05) 100%)',
+        border: '1px solid #303030',
         boxShadow: slot.isFetching ? '0 0 0 2px rgba(114,46,209,0.12)' : 'none',
         transition: 'box-shadow 0.35s ease',
       }}
     >
       <SoundOutlined
         className='store-now-playing-icon'
-        style={{ fontSize: 26, color: '#722ed1', marginTop: 2 }}
+        style={{ fontSize: 26, color: '#b37feb', marginTop: 2 }}
       />
       <div style={{ flex: 1, minWidth: 200 }}>
         <Typography.Text
           type='secondary'
-          style={{ fontSize: 11 }}
+          style={{ fontSize: 11, color: '#8c8c8c' }}
         >
           Now playing · {spaceLabel}
         </Typography.Text>
@@ -389,7 +389,7 @@ const MiniLineChart = ({
               y1={y}
               x2={chartRight}
               y2={y}
-              stroke='#e5e7eb'
+              stroke='#303030'
               strokeWidth='1'
               strokeDasharray='3 3'
             />
@@ -397,7 +397,7 @@ const MiniLineChart = ({
         })}
 
         <polyline
-          fill='rgba(0,0,0,0.05)'
+          fill='rgba(255,255,255,0.05)'
           stroke='none'
           points={areaPoints}
           style={{ color }}
@@ -430,7 +430,7 @@ const MiniLineChart = ({
           x={chartLeft}
           y={height - 12}
           fontSize='10'
-          fill='#6b7280'
+          fill='#8c8c8c'
         >
           {projectedPoints[0].label}
         </text>
@@ -438,7 +438,7 @@ const MiniLineChart = ({
           x={chartRight}
           y={height - 12}
           fontSize='10'
-          fill='#6b7280'
+          fill='#8c8c8c'
           textAnchor='end'
         >
           {projectedPoints[projectedPoints.length - 1].label}
@@ -641,7 +641,7 @@ const LiveNoiseCrowdChart = ({
               y1={y}
               x2={width - padR}
               y2={y}
-              stroke='#f0f0f0'
+              stroke='#303030'
               strokeWidth='1'
             />
           );
@@ -1628,7 +1628,7 @@ export const StoreDashboard = () => {
                       >
                         <Card
                           size='small'
-                          styles={{ body: { background: '#fafafa' } }}
+                          styles={{ body: { background: '#141414' } }}
                         >
                           <NowPlayingBanner
                             spaceLabel={label}
@@ -1662,7 +1662,7 @@ export const StoreDashboard = () => {
                   <Card
                     size='small'
                     styles={{
-                      body: { background: '#fafafa', borderRadius: 8 },
+                      body: { background: '#141414', borderRadius: 8 },
                     }}
                   >
                     <NowPlayingBanner

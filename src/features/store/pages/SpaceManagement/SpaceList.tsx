@@ -138,8 +138,7 @@ export const SpaceList = () => {
   };
 
   const handleManageMusic = (id: string) => {
-    setSelectedSpaceId(id);
-    setMusicModalOpen(true);
+    navigate(`/store/spaces/${id}/music`);
   };
 
   const handleManageSchedule = (id: string) => {

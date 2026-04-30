@@ -49,6 +49,8 @@ interface SpacePlayerProps {
   isPreviousDisabled?: boolean;
   isNextDisabled?: boolean;
   onQueueEndBehaviorChange?: (next: number) => void;
+  onTimeUpdate?: (currentTime: number) => void;
+  onDurationChange?: (duration: number) => void;
 }
 
 export const SpacePlayer = ({
@@ -68,6 +70,8 @@ export const SpacePlayer = ({
   isPreviousDisabled,
   isNextDisabled,
   onQueueEndBehaviorChange,
+  onTimeUpdate,
+  onDurationChange,
 }: SpacePlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -98,9 +102,17 @@ export const SpacePlayer = ({
   const pendingSeekRef = useRef<number | null>(null);
   // Always-current snapshot of the state prop — readable inside HLS/audio event closures.
   const stateRef = useRef<SpaceStateResponse | null | undefined>(state);
+  const onTimeUpdateRef = useRef(onTimeUpdate);
+  const onDurationChangeRef = useRef(onDurationChange);
   useEffect(() => {
     stateRef.current = state;
   }, [state]);
+  useEffect(() => {
+    onTimeUpdateRef.current = onTimeUpdate;
+  }, [onTimeUpdate]);
+  useEffect(() => {
+    onDurationChangeRef.current = onDurationChange;
+  }, [onDurationChange]);
   // Keep local seek authoritative briefly to avoid snap-back from stale server state.
   const localSeekLockRef = useRef<{
     targetSeconds: number;
@@ -429,11 +441,15 @@ export const SpacePlayer = ({
     if (!audio) return;
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+      const time = audio.currentTime;
+      setCurrentTime(time);
+      onTimeUpdateRef.current?.(time);
     };
 
     const handleDurationChange = () => {
-      setDuration(audio.duration);
+      const dur = audio.duration;
+      setDuration(dur);
+      onDurationChangeRef.current?.(dur);
     };
 
     const handleWaiting = () => {
