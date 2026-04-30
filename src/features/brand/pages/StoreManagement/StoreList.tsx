@@ -119,10 +119,11 @@ export const StoreList = () => {
           fromUtc: todayFromUtc,
           toUtc: todayToUtc,
         });
+        const aggregate = response.data.data;
         return {
           storeId: store.id,
-          people: Math.round(response.data.data.current.crowdDensity.avg ?? 0),
-          samples: response.data.data.current.samples ?? 0,
+          people: Math.round(aggregate?.current.crowdDensity.avg ?? 0),
+          samples: aggregate?.current.samples ?? 0,
         };
       },
       staleTime: STALE_TIME.short,
