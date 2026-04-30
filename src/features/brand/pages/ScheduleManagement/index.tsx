@@ -9,15 +9,21 @@ import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { QuickCreatePopover } from './components/QuickCreatePopover';
 import { CreateSlotDrawer } from './components/CreateSlotDrawer';
 import { CreateScheduleSourceDrawer } from './components/CreateScheduleSourceDrawer';
+import { EditScheduleSourceDrawer } from './components/EditScheduleSourceDrawer';
 import { ScheduleSourcePickerModal } from './components/ScheduleSourcePickerModal';
 import { useScheduleBootstrap } from './hooks/useScheduleBootstrap';
 import {
   useCreateBrandScheduleSource,
+  useUpdateBrandScheduleSource,
+  useDeleteBrandScheduleSource,
   useBrandScheduleLibrary,
   useBrandScheduleTemplates,
 } from '@/features/brand/hooks';
 import { useAuth } from '@/providers';
-import type { ScheduleSourceType } from '@/shared/modules/schedules/types';
+import type {
+  ScheduleSourceType,
+  ScheduleSourceItem,
+} from '@/shared/modules/schedules/types';
 import './ScheduleManagement.css';
 
 const WEEKDAY_NAMES = [
@@ -61,8 +67,12 @@ export const ScheduleManagement = () => {
   } | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [createSourceDrawerOpen, setCreateSourceDrawerOpen] = useState(false);
+  const [editSourceDrawerOpen, setEditSourceDrawerOpen] = useState(false);
   const [loadScheduleModalOpen, setLoadScheduleModalOpen] = useState(false);
   const [createType, setCreateType] = useState<ScheduleSourceType>('template');
+  const [selectedSource, setSelectedSource] = useState<
+    ScheduleSourceItem | undefined
+  >();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [prefilledTime, setPrefilledTime] = useState<{
@@ -87,10 +97,26 @@ export const ScheduleManagement = () => {
   } = useBrandScheduleTemplates(brandId ?? undefined, !!brandId);
 
   const createSourceMutation = useCreateBrandScheduleSource();
+  const updateSourceMutation = useUpdateBrandScheduleSource();
+  const deleteSourceMutation = useDeleteBrandScheduleSource();
 
   const handleCreateTemplate = (type: ScheduleSourceType) => {
     setCreateType(type);
     setCreateSourceDrawerOpen(true);
+  };
+
+  const handleEditSource = (source: ScheduleSourceItem) => {
+    setSelectedSource(source);
+    setEditSourceDrawerOpen(true);
+  };
+
+  const handleDeleteSource = (sourceId: string) => {
+    deleteSourceMutation.mutate(sourceId, {
+      onSuccess: () => {
+        refetchLibrary();
+        refetchTemplates();
+      },
+    });
   };
 
   const handleLoadSchedule = (sourceId: string) => {
@@ -243,6 +269,31 @@ export const ScheduleManagement = () => {
         }}
       />
 
+      {/* Edit Schedule Source Drawer */}
+      <EditScheduleSourceDrawer
+        open={editSourceDrawerOpen}
+        source={selectedSource}
+        loading={updateSourceMutation.isPending}
+        onClose={() => {
+          setEditSourceDrawerOpen(false);
+          setSelectedSource(undefined);
+        }}
+        onSubmit={(values) => {
+          if (!selectedSource) return;
+          updateSourceMutation.mutate(
+            { sourceId: selectedSource.id, data: values },
+            {
+              onSuccess: () => {
+                setEditSourceDrawerOpen(false);
+                setSelectedSource(undefined);
+                refetchLibrary();
+                refetchTemplates();
+              },
+            },
+          );
+        }}
+      />
+
       {/* Load Schedule Modal */}
       <ScheduleSourcePickerModal
         open={loadScheduleModalOpen}
@@ -251,6 +302,8 @@ export const ScheduleManagement = () => {
         templateSources={templateSources}
         onClose={() => setLoadScheduleModalOpen(false)}
         onSelect={handleLoadSchedule}
+        onEdit={handleEditSource}
+        onDelete={handleDeleteSource}
       />
     </div>
   );

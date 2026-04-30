@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Flex, Input, Segmented, Space, Tag } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Flex, Input, Segmented, Tag, Dropdown, Button } from 'antd';
+import {
+  SearchOutlined,
+  MoreOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
 
 import { AppModal, DataTable } from '@/shared/components';
 import type { ScheduleSourceItem } from '@/shared/modules/schedules/types';
@@ -13,6 +19,8 @@ type ScheduleSourcePickerModalProps = {
   templateSources: ScheduleSourceItem[];
   onClose: () => void;
   onSelect: (sourceId: string) => void;
+  onEdit: (source: ScheduleSourceItem) => void;
+  onDelete: (sourceId: string) => void;
 };
 
 export const ScheduleSourcePickerModal = ({
@@ -21,7 +29,9 @@ export const ScheduleSourcePickerModal = ({
   librarySources,
   templateSources,
   onClose,
-  onSelect,
+  // onSelect,
+  onEdit,
+  onDelete,
 }: ScheduleSourcePickerModalProps) => {
   const [activeType, setActiveType] = useState<'template' | 'library'>(
     'template',
@@ -58,13 +68,17 @@ export const ScheduleSourcePickerModal = ({
       dataIndex: 'title',
       sorter: (a, b) => a.title.localeCompare(b.title),
       render: (_, record) => (
-        <Space
-          direction='vertical'
-          size={0}
+        <Flex
+          vertical
+          gap={0}
         >
           <strong>{record.title}</strong>
-          {record.subtitle && <span>{record.subtitle}</span>}
-        </Space>
+          {record.subtitle && (
+            <span style={{ fontSize: 13, opacity: 0.85 }}>
+              {record.subtitle}
+            </span>
+          )}
+        </Flex>
       ),
     },
     {
@@ -83,6 +97,50 @@ export const ScheduleSourcePickerModal = ({
       width: 100,
       align: 'center',
       render: (_, record) => record.schedule?.slots?.length || 0,
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      width: 100,
+      align: 'center',
+      render: (_, record) => {
+        const items: MenuProps['items'] = [
+          {
+            key: 'edit',
+            label: 'Edit',
+            icon: <EditOutlined />,
+            onClick: () => onEdit(record),
+          },
+          {
+            key: 'delete',
+            label: 'Delete',
+            icon: <DeleteOutlined />,
+            danger: true,
+            onClick: () => {
+              AppModal.confirm({
+                title: 'Delete Schedule Source',
+                content: `Are you sure you want to delete "${record.title}"? This action cannot be undone.`,
+                okText: 'Delete',
+                type: 'warning',
+                okButtonProps: { danger: true },
+                onOk: () => onDelete(record.id),
+              });
+            },
+          },
+        ];
+
+        return (
+          <Dropdown
+            menu={{ items }}
+            trigger={['click']}
+          >
+            <Button
+              variant='text'
+              icon={<MoreOutlined />}
+            />
+          </Dropdown>
+        );
+      },
     },
   ];
 
@@ -108,6 +166,7 @@ export const ScheduleSourcePickerModal = ({
       >
         <Segmented<'template' | 'library'>
           value={activeType}
+          size='large'
           onChange={(value) => {
             setActiveType(value);
             setCurrentPage(1);
@@ -142,10 +201,6 @@ export const ScheduleSourcePickerModal = ({
             onChange: setCurrentPage,
             showSizeChanger: false,
           }}
-          onRow={(record) => ({
-            onClick: () => onSelect(record.id),
-            style: { cursor: 'pointer' },
-          })}
         />
       </Flex>
     </AppModal>
