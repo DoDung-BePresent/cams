@@ -8,7 +8,7 @@ import { useState } from 'react';
 /**
  * Configs
  */
-import { antDarkTheme } from '@/config/theme';
+import { antTheme } from '@/config/theme';
 
 /**
  * Components
@@ -29,17 +29,21 @@ export const BrandDashboardLayout = () => {
   };
 
   return (
-    <ConfigProvider theme={antDarkTheme}>
+    <ConfigProvider theme={antTheme}>
       <App>
         <Layout
           hasSider
           className='h-screen overflow-hidden'
-          style={{ background: '#000000' }}
+          style={{
+            background:
+              'radial-gradient(circle at 18% 0%, rgba(127,29,29,0.34) 0%, rgba(127,29,29,0.08) 26%, transparent 48%), linear-gradient(135deg, #111113 0%, #161112 44%, #09090b 100%)',
+          }}
         >
           <AppSidebar collapsed={collapsed} />
           <Layout
             style={{
-              background: '#121212',
+              background:
+                'radial-gradient(circle at 18% 0%, rgba(127,29,29,0.34) 0%, rgba(127,29,29,0.08) 26%, transparent 48%), linear-gradient(135deg, #111113 0%, #161112 44%, #09090b 100%)',
               marginLeft: 0,
               position: 'relative',
             }}
@@ -51,7 +55,8 @@ export const BrandDashboardLayout = () => {
             <Layout.Content
               style={{
                 height: 'calc(100vh - 60px)',
-                background: '#121212',
+                background:
+                  'radial-gradient(circle at 18% 0%, rgba(127,29,29,0.34) 0%, rgba(127,29,29,0.08) 26%, transparent 48%), linear-gradient(135deg, #111113 0%, #161112 44%, #09090b 100%)',
                 padding: '24px 32px 100px 32px', // added bottom padding for player
                 overflowY: 'auto',
               }}

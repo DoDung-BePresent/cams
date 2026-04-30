@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button, Input, Spin, Empty, Typography } from 'antd';
+import { useQueries } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 
 /**
  * Icons
@@ -17,6 +19,7 @@ import {
   PartitionOutlined,
   SettingOutlined,
   ArrowLeftOutlined,
+  UsergroupAddOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -33,6 +36,8 @@ import {
  * Hooks
  */
 import { useDeleteStore, useStores } from '@/features/brand/hooks';
+import { storeService } from '@/features/brand/services';
+import { STALE_TIME } from '@/config';
 
 /**
  * Components
@@ -49,27 +54,27 @@ import {
 const { Text, Title } = Typography;
 
 const GOVERNANCE_COLORS: Record<GovernanceModeEnum, string> = {
-  [GovernanceModeEnum.StrictSync]: '#f97316',
-  [GovernanceModeEnum.AIMode]: '#1db954',
-  [GovernanceModeEnum.Freedom]: '#3b82f6',
+  [GovernanceModeEnum.StrictSync]: '#fbbf24',
+  [GovernanceModeEnum.AIMode]: '#fca5a5',
+  [GovernanceModeEnum.Freedom]: '#cbd5e1',
 };
 
 const GOVERNANCE_BG: Record<GovernanceModeEnum, string> = {
-  [GovernanceModeEnum.StrictSync]: 'rgba(249,115,22,0.12)',
-  [GovernanceModeEnum.AIMode]: 'rgba(29,185,84,0.12)',
-  [GovernanceModeEnum.Freedom]: 'rgba(59,130,246,0.12)',
+  [GovernanceModeEnum.StrictSync]: 'rgba(251,191,36,0.10)',
+  [GovernanceModeEnum.AIMode]: 'rgba(248,113,113,0.12)',
+  [GovernanceModeEnum.Freedom]: 'rgba(148,163,184,0.12)',
 };
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const C = {
-  bg: '#121212',
-  surface: '#181818',
-  surfaceHover: '#282828',
-  border: '#282828',
-  green: '#1db954',
-  text: '#ffffff',
-  textMuted: '#b3b3b3',
-  textSubtle: '#6a6a6a',
+  bg: '#0f0f11',
+  surface: '#18181b',
+  surfaceHover: '#242126',
+  border: '#2d2528',
+  green: '#ef4444',
+  text: '#f8f7f7',
+  textMuted: '#b7adb0',
+  textSubtle: '#857b80',
 };
 
 export const StoreList = () => {
@@ -97,6 +102,44 @@ export const StoreList = () => {
   const { data, isLoading, refetch } = useStores(filter);
 
   const deleteStore = useDeleteStore();
+  const stores = useMemo(() => data?.items ?? [], [data?.items]);
+  const todayFromUtc = dayjs().startOf('day').toISOString();
+  const todayToUtc = dayjs().endOf('day').toISOString();
+
+  const peopleQueries = useQueries({
+    queries: stores.map((store) => ({
+      queryKey: [
+        'brand-store-management-people',
+        store.id,
+        todayFromUtc,
+        todayToUtc,
+      ],
+      queryFn: async () => {
+        const response = await storeService.getContextAggregate(store.id, {
+          fromUtc: todayFromUtc,
+          toUtc: todayToUtc,
+        });
+        const aggregate = response.data.data;
+        return {
+          storeId: store.id,
+          people: Math.round(aggregate?.current.crowdDensity.avg ?? 0),
+          samples: aggregate?.current.samples ?? 0,
+        };
+      },
+      staleTime: STALE_TIME.short,
+      enabled: Boolean(store.id),
+    })),
+  });
+
+  const peopleByStore = useMemo(
+    () =>
+      new Map(
+        peopleQueries.flatMap((query) =>
+          query.data ? [[query.data.storeId, query.data]] : [],
+        ),
+      ),
+    [peopleQueries],
+  );
 
   const handleView = (storeId: string) => {
     setSelectedStoreId(storeId);
@@ -135,7 +178,7 @@ export const StoreList = () => {
 
   // Group stores by city
   const groupedByCity = useMemo(() => {
-    const items = data?.items || [];
+    const items = stores;
     const filtered = search
       ? items.filter(
           (s) =>
@@ -152,7 +195,9 @@ export const StoreList = () => {
       groups[city].push(store);
     });
     return groups;
-  }, [data?.items, search]);
+  }, [stores, search]);
+
+  const getStorePeople = (storeId: string) => peopleByStore.get(storeId);
 
   const cities = Object.keys(groupedByCity).sort();
 
@@ -187,7 +232,11 @@ export const StoreList = () => {
 
   return (
     <div
-      style={{ minHeight: '100vh', background: C.bg, padding: '0 32px 40px' }}
+      style={{
+        minHeight: '100vh',
+        background: 'transparent',
+        padding: '0 0 40px',
+      }}
     >
       <PageHeader
         title={selectedCity || 'Store Clusters'}
@@ -212,7 +261,7 @@ export const StoreList = () => {
                 background: C.green,
                 border: 'none',
                 fontWeight: 700,
-                color: '#000',
+                color: '#fff',
               }}
             >
               Add Store
@@ -301,6 +350,7 @@ export const StoreList = () => {
           >
             {groupedByCity[selectedCity]?.map((store) => {
               const isActive = store.status === EntityStatusEnum.Active;
+              const people = getStorePeople(store.id);
               const govColor =
                 GOVERNANCE_COLORS[store.governanceMode] || C.textSubtle;
               const govBg =
@@ -323,9 +373,9 @@ export const StoreList = () => {
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLDivElement).style.borderColor =
-                      '#404040';
+                      'rgba(248,113,113,0.34)';
                     (e.currentTarget as HTMLDivElement).style.background =
-                      '#222222';
+                      C.surfaceHover;
                     (e.currentTarget as HTMLDivElement).style.transform =
                       'translateY(-4px)';
                   }}
@@ -413,19 +463,54 @@ export const StoreList = () => {
                   </div>
 
                   <div style={{ marginBottom: 20 }}>
-                    <span
+                    <div
                       style={{
-                        background: govBg,
-                        color: govColor,
-                        border: `1px solid ${govColor}30`,
-                        borderRadius: 6,
-                        padding: '4px 10px',
-                        fontSize: 11,
-                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        flexWrap: 'wrap',
                       }}
                     >
-                      {govLabel}
-                    </span>
+                      <span
+                        style={{
+                          background: govBg,
+                          color: govColor,
+                          border: `1px solid ${govColor}30`,
+                          borderRadius: 6,
+                          padding: '4px 10px',
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {govLabel}
+                      </span>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          color: people?.samples ? '#86efac' : C.textSubtle,
+                          background: people?.samples
+                            ? 'rgba(34,197,94,0.10)'
+                            : 'rgba(148,163,184,0.10)',
+                          border: `1px solid ${
+                            people?.samples
+                              ? 'rgba(34,197,94,0.22)'
+                              : 'rgba(148,163,184,0.18)'
+                          }`,
+                          borderRadius: 999,
+                          padding: '5px 10px',
+                          fontSize: 12,
+                          fontWeight: 800,
+                        }}
+                      >
+                        <UsergroupAddOutlined />
+                        {people?.samples
+                          ? `${people.people} people now`
+                          : 'No people data'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Actions Area */}
@@ -478,7 +563,7 @@ export const StoreList = () => {
                           height: 36,
                           borderRadius: 8,
                           border: 'none',
-                          background: '#242424',
+                          background: '#202024',
                           color: C.textMuted,
                           cursor: 'pointer',
                           transition: 'all 0.15s',
@@ -486,14 +571,14 @@ export const StoreList = () => {
                         onMouseEnter={(e) => {
                           (
                             e.currentTarget as HTMLButtonElement
-                          ).style.background = '#333';
+                          ).style.background = '#2d2528';
                           (e.currentTarget as HTMLButtonElement).style.color =
                             btn.color;
                         }}
                         onMouseLeave={(e) => {
                           (
                             e.currentTarget as HTMLButtonElement
-                          ).style.background = '#242424';
+                          ).style.background = '#202024';
                           (e.currentTarget as HTMLButtonElement).style.color =
                             C.textMuted;
                         }}
@@ -532,6 +617,13 @@ export const StoreList = () => {
               const activeCount = cityStores.filter(
                 (s) => s.status === EntityStatusEnum.Active,
               ).length;
+              const peopleTotal = cityStores.reduce((sum, store) => {
+                const people = getStorePeople(store.id);
+                return sum + (people?.samples ? people.people : 0);
+              }, 0);
+              const reportingStores = cityStores.filter(
+                (store) => (getStorePeople(store.id)?.samples ?? 0) > 0,
+              ).length;
 
               return (
                 <div
@@ -569,7 +661,7 @@ export const StoreList = () => {
                       width: 64,
                       height: 64,
                       borderRadius: 20,
-                      background: 'rgba(29,185,84,0.1)',
+                      background: 'rgba(239,68,68,0.1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -596,20 +688,44 @@ export const StoreList = () => {
                       display: 'flex',
                       justifyContent: 'center',
                       gap: 12,
+                      flexWrap: 'wrap',
                     }}
                   >
                     <span
                       style={{
                         fontSize: 11,
                         color: C.green,
-                        background: 'rgba(29,185,84,0.1)',
+                        background: 'rgba(239,68,68,0.1)',
                         padding: '2px 8px',
                         borderRadius: 10,
                       }}
                     >
                       {activeCount} Active
                     </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: reportingStores ? '#86efac' : C.textSubtle,
+                        background: reportingStores
+                          ? 'rgba(34,197,94,0.10)'
+                          : 'rgba(148,163,184,0.10)',
+                        padding: '2px 8px',
+                        borderRadius: 10,
+                      }}
+                    >
+                      {peopleTotal} people
+                    </span>
                   </div>
+                  <Text
+                    style={{
+                      display: 'block',
+                      marginTop: 8,
+                      color: C.textSubtle,
+                      fontSize: 11,
+                    }}
+                  >
+                    {reportingStores}/{cityStores.length} stores reporting
+                  </Text>
                 </div>
               );
             })

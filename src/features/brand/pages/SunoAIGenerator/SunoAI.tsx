@@ -26,7 +26,7 @@ export const SunoAI = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#121212' }}>
+    <div style={{ minHeight: '100vh', background: 'transparent' }}>
       <Seo
         title='AI Music Generator'
         description='Generate AI music for your brand'
@@ -94,10 +94,10 @@ export const SunoAI = () => {
                 cursor: 'pointer',
                 fontSize: 14,
                 fontWeight: 500,
-                color: activeTab === tab.key ? '#1db954' : '#6b7280',
+                color: activeTab === tab.key ? '#ef4444' : '#6b7280',
                 borderBottom:
                   activeTab === tab.key
-                    ? '2px solid #1db954'
+                    ? '2px solid #ef4444'
                     : '2px solid transparent',
                 marginBottom: -1,
                 transition: 'all 0.15s',

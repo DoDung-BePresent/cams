@@ -15,6 +15,9 @@ type EventHandlers = {
   onReconnected?: () => void;
 };
 
+let activeStoreHubUsers = 0;
+let disconnectTimer: number | null = null;
+
 /**
  * Hook to connect to StoreHub and listen for real-time events
  * Used by both SpaceList (manager) and Tablet
@@ -60,6 +63,11 @@ export const useStoreHub = (
 
     // ✅ Mark that we should connect
     connectionState.shouldConnect = true;
+    activeStoreHubUsers += 1;
+    if (disconnectTimer) {
+      clearTimeout(disconnectTimer);
+      disconnectTimer = null;
+    }
 
     const connect = async () => {
       // ✅ Prevent double-connect in Strict Mode
@@ -159,8 +167,17 @@ export const useStoreHub = (
       console.log('👋 Disconnecting from StoreHub...');
 
       // ✅ Only disconnect if we were actually trying to connect
+      activeStoreHubUsers = Math.max(0, activeStoreHubUsers - 1);
+
+      // Delay the singleton disconnect so React remounts / route transitions
+      // don't let stale cleanup close a newer active hub connection.
       if (shouldCleanup && storeHubService.isConnected()) {
-        storeHubService.disconnect();
+        disconnectTimer = window.setTimeout(() => {
+          if (activeStoreHubUsers === 0 && storeHubService.isConnected()) {
+            storeHubService.disconnect();
+          }
+          disconnectTimer = null;
+        }, 500);
       }
 
       setIsConnected(false);

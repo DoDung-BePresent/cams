@@ -71,6 +71,8 @@ export interface SunoGenerationCreateRequest {
   style?: string | null;
   title?: string | null;
   artist?: string | null;
+  generationMode?: AiGenerationMode;
+  aiGenerationMode?: AiGenerationMode;
   duration?: number | null;
   customMode?: boolean;
   lyrics?: string | null;

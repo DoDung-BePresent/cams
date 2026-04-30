@@ -21,8 +21,15 @@ import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
  * Types
  */
 import type { ColumnsType } from 'antd/es/table';
-import type { PlaylistListItem } from '@/shared/modules/playlists/types';
+import type {
+  PlaylistListItem,
+  PlaylistTrackItem,
+} from '@/shared/modules/playlists/types';
 import type { EntityStatusEnum } from '@/shared/types';
+
+type PlaylistRow = PlaylistListItem & {
+  tracks?: PlaylistTrackItem[];
+};
 
 interface PlaylistColumnActions {
   onView: (id: string) => void;
@@ -77,15 +84,30 @@ export const getPlaylistColumns = ({
   },
 
   {
+    title: 'Mood',
+    dataIndex: 'moodName',
+    key: 'moodName',
+    width: 140,
+    render: (moodName?: string | null) =>
+      moodName ? <Tag color='default'>{moodName}</Tag> : <span>—</span>,
+  },
+
+  {
     title: 'Tracks',
     dataIndex: 'trackCount',
     key: 'trackCount',
-    width: 100,
+    width: 120,
     sorter: true,
     align: 'center',
-    render: (count: number) => (
-      <Tag color={count > 0 ? 'success' : 'default'}>{count}</Tag>
-    ),
+    render: (count: number | null | undefined, record: PlaylistRow) => {
+      const trackCount =
+        typeof count === 'number' ? count : (record.tracks?.length ?? 0);
+      return (
+        <Tag color={trackCount > 0 ? 'success' : 'default'}>
+          {trackCount} {trackCount === 1 ? 'track' : 'tracks'}
+        </Tag>
+      );
+    },
   },
 
   {

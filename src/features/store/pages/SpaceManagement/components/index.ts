@@ -1,5 +1,7 @@
 export * from './CreateSpaceModal';
+export * from './CreateSpaceDrawer';
 export * from './EditSpaceModal';
+export * from './EditSpaceDrawer';
 export * from './SpaceTableColumns';
 export * from './SpaceFilter';
 export * from './SpacePlayerCard';

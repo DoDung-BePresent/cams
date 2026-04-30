@@ -8,7 +8,7 @@ import {
   SoundOutlined,
   MutedOutlined,
 } from '@ant-design/icons';
-import { MusicIcon } from 'lucide-react';
+import { MusicIcon, SkipBack, SkipForward } from 'lucide-react';
 
 /**
  * Stores
@@ -23,8 +23,17 @@ import { formatDuration } from '@/shared/utils';
 const { Text } = Typography;
 
 export const StickyPlayer = () => {
-  const { currentTrack, isPlaying, pauseTrack, resumeTrack, stopTrack } =
-    usePlayerStore();
+  const {
+    currentTrack,
+    isPlaying,
+    trackQueue,
+    queueIndex,
+    pauseTrack,
+    resumeTrack,
+    stopTrack,
+    nextTrack,
+    prevTrack,
+  } = usePlayerStore();
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
 
@@ -134,20 +143,37 @@ export const StickyPlayer = () => {
         bottom: 24,
         left: 24,
         right: 24,
-        height: 80,
-        background: 'rgba(24, 24, 24, 0.65)',
+        height: 96,
+        background:
+          'linear-gradient(135deg, rgba(24,24,27,0.94) 0%, rgba(42,23,27,0.9) 100%)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
+        border: '1px solid rgba(80,45,50,0.75)',
         borderRadius: 16,
         padding: '0 24px',
         display: currentTrack ? 'flex' : 'none',
         alignItems: 'center',
         justifyContent: 'space-between',
         zIndex: 1000,
-        boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+        boxShadow: '0 18px 48px rgba(0,0,0,0.45)',
       }}
     >
+      <style>
+        {`
+          .sticky-player-main-control .ant-btn-icon,
+          .sticky-player-main-control .anticon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+          }
+
+          .sticky-player-main-control .anticon svg {
+            width: 44px;
+            height: 44px;
+          }
+        `}
+      </style>
       <audio ref={audioRef} />
 
       {currentTrack && (
@@ -173,7 +199,7 @@ export const StickyPlayer = () => {
                 style={{
                   width: 56,
                   height: 56,
-                  background: '#282828',
+                  background: '#202024',
                   borderRadius: 4,
                   display: 'flex',
                   alignItems: 'center',
@@ -182,14 +208,14 @@ export const StickyPlayer = () => {
               >
                 <MusicIcon
                   size={24}
-                  color='#b3b3b3'
+                  color='#b7adb0'
                 />
               </div>
             )}
             <div style={{ overflow: 'hidden' }}>
               <div
                 style={{
-                  color: '#fff',
+                  color: '#f8f7f7',
                   fontWeight: 600,
                   fontSize: 14,
                   whiteSpace: 'nowrap',
@@ -201,7 +227,7 @@ export const StickyPlayer = () => {
               </div>
               <div
                 style={{
-                  color: '#b3b3b3',
+                  color: '#b7adb0',
                   fontSize: 12,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -224,25 +250,72 @@ export const StickyPlayer = () => {
               gap: 4,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
               <Button
                 type='text'
                 shape='circle'
-                size='large'
+                icon={
+                  <SkipBack
+                    size={30}
+                    color={queueIndex > 0 ? '#e2dde0' : '#3d3740'}
+                    fill={queueIndex > 0 ? '#e2dde0' : '#3d3740'}
+                  />
+                }
+                onClick={prevTrack}
+                disabled={queueIndex <= 0}
+                style={{
+                  height: 52,
+                  width: 52,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              />
+              <Button
+                type='text'
+                shape='circle'
+                className='sticky-player-main-control'
                 icon={
                   isPlaying ? (
                     <PauseCircleFilled
-                      style={{ fontSize: 36, color: '#fff' }}
+                      style={{ fontSize: 44, color: '#ffffff' }}
                     />
                   ) : (
-                    <PlayCircleFilled style={{ fontSize: 36, color: '#fff' }} />
+                    <PlayCircleFilled
+                      style={{ fontSize: 44, color: '#ffffff' }}
+                    />
                   )
                 }
                 onClick={() => (isPlaying ? pauseTrack() : resumeTrack())}
                 loading={isLoading}
                 style={{
-                  height: 40,
-                  width: 40,
+                  height: 56,
+                  width: 56,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff',
+                }}
+              />
+              <Button
+                type='text'
+                shape='circle'
+                icon={
+                  <SkipForward
+                    size={30}
+                    color={
+                      queueIndex < trackQueue.length - 1 ? '#e2dde0' : '#3d3740'
+                    }
+                    fill={
+                      queueIndex < trackQueue.length - 1 ? '#e2dde0' : '#3d3740'
+                    }
+                  />
+                }
+                onClick={nextTrack}
+                disabled={queueIndex >= trackQueue.length - 1}
+                style={{
+                  height: 52,
+                  width: 52,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -260,7 +333,7 @@ export const StickyPlayer = () => {
             >
               <Text
                 style={{
-                  color: '#b3b3b3',
+                  color: '#b7adb0',
                   fontSize: 11,
                   minWidth: 35,
                   textAlign: 'right',
@@ -277,7 +350,7 @@ export const StickyPlayer = () => {
                 tooltip={{ open: false }}
                 disabled={!displayDuration}
               />
-              <Text style={{ color: '#b3b3b3', fontSize: 11, minWidth: 35 }}>
+              <Text style={{ color: '#b7adb0', fontSize: 11, minWidth: 35 }}>
                 {formatDuration(displayDuration)}
               </Text>
             </div>
@@ -307,9 +380,9 @@ export const StickyPlayer = () => {
                 size='small'
                 icon={
                   isMuted ? (
-                    <MutedOutlined style={{ color: '#b3b3b3' }} />
+                    <MutedOutlined style={{ color: '#b7adb0' }} />
                   ) : (
-                    <SoundOutlined style={{ color: '#b3b3b3' }} />
+                    <SoundOutlined style={{ color: '#b7adb0' }} />
                   )
                 }
                 onClick={toggleMute}
@@ -325,7 +398,7 @@ export const StickyPlayer = () => {
             </div>
             <Button
               type='text'
-              icon={<CloseOutlined style={{ color: '#b3b3b3' }} />}
+              icon={<CloseOutlined style={{ color: '#b7adb0' }} />}
               onClick={stopTrack}
             />
           </div>
