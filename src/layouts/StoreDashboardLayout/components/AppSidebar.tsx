@@ -25,7 +25,7 @@ type AppSidebarProps = {
   collapsed: boolean;
 };
 
-const SPOTIFY_GREEN = '#1db954';
+const SOUNDTRACK_ACCENT = '#ef4444';
 
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const navigate = useNavigate();
@@ -68,12 +68,13 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
         position: 'sticky',
         top: 0,
         left: 0,
-        background: '#000000',
+        background:
+          'linear-gradient(180deg, rgba(17,17,19,0.96) 0%, rgba(12,12,14,0.98) 100%)',
         display: 'flex',
         flexDirection: 'column',
         transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
-        borderRight: '1px solid #282828',
+        borderRight: '1px solid rgba(80,45,50,0.7)',
         zIndex: 10,
         flexShrink: 0,
       }}
@@ -85,7 +86,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           display: 'flex',
           flexDirection: 'column',
           gap: 16,
-          borderBottom: '1px solid #282828',
+          borderBottom: '1px solid rgba(80,45,50,0.7)',
           flexShrink: 0,
         }}
       >
@@ -95,12 +96,12 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: `linear-gradient(135deg, ${SPOTIFY_GREEN}, #0f9344)`,
+              background: 'linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              boxShadow: `0 4px 12px ${SPOTIFY_GREEN}40`,
+              boxShadow: 'none',
             }}
           >
             <ShopOutlined style={{ color: 'white', fontSize: 18 }} />
@@ -109,7 +110,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  color: '#fff',
+                  color: '#f8f7f7',
                   fontWeight: 700,
                   fontSize: 16,
                   lineHeight: 1.2,
@@ -131,7 +132,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
               </div>
               <div
                 style={{
-                  color: '#b3b3b3',
+                  color: '#b7adb0',
                   fontSize: 11,
                   fontWeight: 500,
                   letterSpacing: '0.5px',
@@ -159,13 +160,13 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
         {!collapsed && (
           <div
             style={{
-              background: '#121212',
+              background: 'rgba(24,24,27,0.72)',
               borderRadius: 12,
               padding: '10px 12px',
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              border: '1px solid #282828',
+              border: '1px solid rgba(80,45,50,0.7)',
             }}
           >
             <div
@@ -173,11 +174,11 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                background: '#282828',
+                background: '#2a171b',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: SPOTIFY_GREEN,
+                color: SOUNDTRACK_ACCENT,
               }}
             >
               <WalletOutlined style={{ fontSize: 16 }} />
@@ -185,7 +186,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
             <div style={{ flex: 1 }}>
               <div
                 style={{
-                  color: '#b3b3b3',
+                  color: '#b7adb0',
                   fontSize: 10,
                   fontWeight: 600,
                   textTransform: 'uppercase',
@@ -193,13 +194,13 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
               >
                 Credits
               </div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>
+              <div style={{ color: '#f8f7f7', fontWeight: 700, fontSize: 14 }}>
                 {isWalletLoading
                   ? '...'
                   : (wallet?.balanceTokens?.toLocaleString() ?? 0)}
                 <span
                   style={{
-                    color: '#b3b3b3',
+                    color: '#b7adb0',
                     fontSize: 11,
                     fontWeight: 400,
                     marginLeft: 4,
@@ -225,7 +226,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
           <div
             style={{
               padding: '8px 12px 4px',
-              color: '#6a6a6a',
+              color: '#857b80',
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: '1.5px',
@@ -254,8 +255,10 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
                 borderRadius: 8,
                 cursor: 'pointer',
                 marginBottom: 2,
-                background: active ? '#282828' : 'transparent',
-                color: active ? '#fff' : '#b3b3b3',
+                background: active
+                  ? 'linear-gradient(90deg, #2a171b 0%, #202024 100%)'
+                  : 'transparent',
+                color: '#f8f7f7',
                 fontWeight: active ? 700 : 400,
                 fontSize: 14,
                 transition: 'all 0.15s ease',
@@ -265,22 +268,22 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
               onMouseEnter={(e) => {
                 if (!active) {
                   (e.currentTarget as HTMLDivElement).style.background =
-                    '#1a1a1a';
-                  (e.currentTarget as HTMLDivElement).style.color = '#fff';
+                    '#242126';
+                  (e.currentTarget as HTMLDivElement).style.color = '#f8f7f7';
                 }
               }}
               onMouseLeave={(e) => {
                 if (!active) {
                   (e.currentTarget as HTMLDivElement).style.background =
                     'transparent';
-                  (e.currentTarget as HTMLDivElement).style.color = '#b3b3b3';
+                  (e.currentTarget as HTMLDivElement).style.color = '#f8f7f7';
                 }
               }}
             >
               <span
                 style={{
                   fontSize: 18,
-                  color: active ? SPOTIFY_GREEN : 'inherit',
+                  color: active ? SOUNDTRACK_ACCENT : 'inherit',
                   display: 'flex',
                   alignItems: 'center',
                   flexShrink: 0,
@@ -305,7 +308,7 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
                     width: 4,
                     height: 4,
                     borderRadius: '50%',
-                    background: SPOTIFY_GREEN,
+                    background: SOUNDTRACK_ACCENT,
                     marginLeft: 'auto',
                     flexShrink: 0,
                   }}
@@ -333,11 +336,11 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
         <div
           style={{
             padding: '16px 20px',
-            borderTop: '1px solid #282828',
+            borderTop: '1px solid rgba(80,45,50,0.7)',
             flexShrink: 0,
           }}
         >
-          <div style={{ color: '#535353', fontSize: 11, textAlign: 'center' }}>
+          <div style={{ color: '#857b80', fontSize: 11, textAlign: 'center' }}>
             CAMS © {new Date().getFullYear()}
           </div>
         </div>

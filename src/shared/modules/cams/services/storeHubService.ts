@@ -25,6 +25,7 @@ class StoreHubService {
   private connection: HubConnection | null = null;
   private currentStoreId: string | null = null;
   private joinedSpaceIds = new Set<string>();
+  private joinedSpaceRefCounts = new Map<string, number>();
   private eventHandlers: StoreHubEventHandlers = {};
 
   /**
@@ -60,6 +61,8 @@ class StoreHubService {
     // ✅ Prevent double-connect
     if (this.isConnected() && this.currentStoreId === storeId) {
       console.log('⏭️ Already connected to this store');
+      this.eventHandlers = handlers;
+      handlers.onConnected?.();
       return;
     }
 
@@ -195,6 +198,14 @@ class StoreHubService {
 
     try {
       console.log('🎵 Joining space group:', spaceId);
+      const currentRefCount = this.joinedSpaceRefCounts.get(spaceId) ?? 0;
+      this.joinedSpaceRefCounts.set(spaceId, currentRefCount + 1);
+
+      if (this.joinedSpaceIds.has(spaceId)) {
+        console.log('Already joined space group:', spaceId);
+        return;
+      }
+
       await this.connection.invoke('JoinSpaceAsync', spaceId);
       this.joinedSpaceIds.add(spaceId);
       console.log('✅ Joined space group successfully:', spaceId);
@@ -219,6 +230,19 @@ class StoreHubService {
 
     try {
       console.log('👋 Leaving space group:', spaceId);
+      const currentRefCount = this.joinedSpaceRefCounts.get(spaceId) ?? 0;
+      if (currentRefCount > 1) {
+        this.joinedSpaceRefCounts.set(spaceId, currentRefCount - 1);
+        console.log('Space still in use, keeping group joined:', spaceId);
+        return;
+      }
+
+      this.joinedSpaceRefCounts.delete(spaceId);
+
+      if (!this.joinedSpaceIds.has(spaceId)) {
+        return;
+      }
+
       await this.connection.invoke('LeaveSpaceAsync', spaceId);
       this.joinedSpaceIds.delete(spaceId);
       console.log('✅ Left space group successfully:', spaceId);
@@ -328,6 +352,7 @@ class StoreHubService {
       this.connection = null;
       this.currentStoreId = null;
       this.joinedSpaceIds.clear();
+      this.joinedSpaceRefCounts.clear();
       this.eventHandlers = {};
     }
   }

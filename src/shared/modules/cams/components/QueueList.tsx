@@ -7,13 +7,11 @@ import {
   type CSSProperties,
 } from 'react';
 import {
-  List,
   Tag,
   Button,
   Space,
   Typography,
   Empty,
-  Tooltip,
   Checkbox,
   Popconfirm,
 } from 'antd';
@@ -24,7 +22,20 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   StopOutlined,
+  SoundOutlined,
 } from '@ant-design/icons';
+
+const PLAYING_BARS_CSS = `
+  @keyframes bounce {
+    0%, 100% { height: 6px; }
+    50% { height: 14px; }
+  }
+  .playing-bars span {
+    animation: bounce 0.8s ease-in-out infinite;
+  }
+  .playing-bars span:nth-child(2) { animation-delay: 0.2s; }
+  .playing-bars span:nth-child(3) { animation-delay: 0.4s; }
+`;
 import {
   DndContext,
   DragOverlay,
@@ -128,11 +139,10 @@ const DragOverlayItem = ({
       display: 'flex',
       alignItems: 'center',
       padding: '12px 16px',
-      backgroundColor: selected ? '#e6f4ff' : '#ffffff',
-      boxShadow:
-        '0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08)',
+      backgroundColor: selected ? 'rgba(29, 185, 84, 0.15)' : '#181818',
+      boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)',
       borderRadius: 8,
-      border: '1px solid #bfdbfe',
+      border: `1px solid ${selected ? '#1db954' : '#2a2a2a'}`,
       cursor: 'grabbing',
       gap: 12,
     }}
@@ -156,7 +166,7 @@ const DragOverlayItem = ({
           style={{
             width: 40,
             height: 40,
-            background: '#fafafa',
+            background: '#222222',
             borderRadius: 4,
           }}
         />
@@ -222,142 +232,244 @@ const SortableItem = memo(function SortableItem({
     transform: CSS.Transform.toString(transform),
     transition,
     padding: '12px 16px',
-    borderBottom: '1px solid #f0f0f0',
-    backgroundColor: selected
-      ? '#e6f4ff'
-      : item.queueStatus === QueueItemStatus.Playing
-        ? '#f6ffed'
+    border: 'none',
+    borderRadius: 14,
+    marginBottom: 10,
+    backgroundColor:
+      item.queueStatus === QueueItemStatus.Playing
+        ? 'rgba(255,255,255,0.065)'
+        : isHovered
+          ? 'rgba(255,255,255,0.04)'
+          : 'transparent',
+    borderColor:
+      item.queueStatus === QueueItemStatus.Playing
+        ? 'rgba(16,185,129,0.28)'
         : 'transparent',
-    // Hide original slot while DragOverlay follows the cursor
+    borderStyle: 'solid',
+    borderWidth: 1,
     opacity: isDragging ? 0 : 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    position: 'relative',
   };
 
+  const isPlaying = item.queueStatus === QueueItemStatus.Playing;
+
   return (
-    <List.Item
+    <div
       ref={setNodeRef}
       style={style}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      actions={[
-        // Only show Play button when the item is not currently playing
-        item.queueStatus !== QueueItemStatus.Playing && (
-          <Tooltip
-            key='play'
-            title='Play this track'
-          >
-            <Button
-              type='text'
-              size='small'
-              icon={<PlayCircleOutlined />}
-              onClick={() => onSkipToTrack?.(item.queueItemId, item.trackId)}
-            />
-          </Tooltip>
-        ),
-        <Tooltip
-          key='remove'
-          title={
-            item.queueStatus === QueueItemStatus.Playing
-              ? 'Remove current track and transition to next'
-              : 'Remove from queue'
-          }
-        >
-          <Button
-            type='text'
-            size='small'
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => onRemove(item.queueItemId)}
-          />
-        </Tooltip>,
-      ]}
     >
-      <List.Item.Meta
-        avatar={
-          <Space>
-            <div
-              {...attributes}
-              {...(isDraggable ? listeners : {})}
+      {/* Selection / Checkbox - Subtle */}
+      <div
+        style={{
+          opacity: selected || isHovered ? 1 : 0.2,
+          transition: 'opacity 0.2s',
+        }}
+      >
+        <Checkbox
+          checked={selected}
+          onChange={(e) => onSelectChange(item.queueItemId, e.target.checked)}
+        />
+      </div>
+
+      {/* Artwork with Play Hover */}
+      <div
+        style={{
+          position: 'relative',
+          width: 52,
+          height: 52,
+          flexShrink: 0,
+          cursor: 'pointer',
+        }}
+        onClick={() =>
+          !isPlaying && onSkipToTrack?.(item.queueItemId, item.trackId)
+        }
+      >
+        {item.coverImageUrl ? (
+          <img
+            src={item.coverImageUrl}
+            alt=''
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: 6,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              background: 'rgba(59,130,246,0.14)',
+              border: '1px solid rgba(59,130,246,0.16)',
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <SoundOutlined style={{ color: '#64748b' }} />
+          </div>
+        )}
+        {isHovered && !isPlaying && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0,0,0,0.4)',
+              borderRadius: 6,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <PlayCircleOutlined style={{ color: '#fff', fontSize: 20 }} />
+          </div>
+        )}
+        {isPlaying && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(16,185,129,0.16)',
+              border: '2px solid #10b981',
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <div className='playing-bars'>
+              <span
+                style={{
+                  width: 2,
+                  height: 8,
+                  background: '#10b981',
+                  margin: '0 1px',
+                }}
+              />
+              <span
+                style={{
+                  width: 2,
+                  height: 12,
+                  background: '#10b981',
+                  margin: '0 1px',
+                }}
+              />
+              <span
+                style={{
+                  width: 2,
+                  height: 6,
+                  background: '#10b981',
+                  margin: '0 1px',
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Track Info */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            color: isPlaying ? '#10b981' : '#f8f7f7',
+            fontSize: 15,
+            fontWeight: isPlaying ? 800 : 650,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {item.trackName}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            marginTop: 2,
+          }}
+        >
+          <span
+            style={{
+              color: '#93c5fd',
+              fontSize: 11,
+              fontWeight: 600,
+              textTransform: 'uppercase',
+            }}
+          >
+            {getSourceLabel(item.source)}
+          </span>
+          <span
+            style={{
+              width: 3,
+              height: 3,
+              borderRadius: '50%',
+              background: '#4b5563',
+            }}
+          />
+          <span style={{ color: '#6b7280', fontSize: 11 }}>
+            {isPlaying ? 'Playing Now' : 'Up Next'}
+          </span>
+          {!item.isReadyToStream && (
+            <Tag
+              color='warning'
               style={{
-                cursor: isDraggable ? 'grab' : 'default',
-                touchAction: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                width: 16,
-                opacity: isHovered && isDraggable ? 1 : 0,
-                transition: 'opacity 0.15s ease',
+                fontSize: 9,
+                padding: '0 4px',
+                margin: 0,
+                lineHeight: '14px',
+                height: '16px',
               }}
             >
-              <DragOutlined style={{ color: '#1890ff' }} />
-            </div>
-            <Checkbox
-              checked={selected}
-              onChange={(e) =>
-                onSelectChange(item.queueItemId, e.target.checked)
-              }
-              onClick={(e) => e.stopPropagation()}
-            />
-            {/* Cover image if available */}
-            {item.coverImageUrl ? (
-              <img
-                src={item.coverImageUrl}
-                alt={item.trackName}
-                style={{
-                  width: 40,
-                  height: 40,
-                  objectFit: 'cover',
-                  borderRadius: 4,
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: '#fafafa',
-                  borderRadius: 4,
-                }}
-              />
-            )}
-          </Space>
-        }
-        title={
-          <Space>
-            {getStatusIcon(item.queueStatus)}
-            <Text>{item.trackName}</Text>
-          </Space>
-        }
-        description={
-          <Space size='small'>
-            <Tag
-              color={getStatusColor(item.queueStatus)}
-              style={{ fontSize: 11 }}
-            >
-              {getStatusLabel(item.queueStatus)}
+              Readying...
             </Tag>
-            <Tag
-              color={getSourceColor(item.source)}
-              style={{ fontSize: 11 }}
-            >
-              {getSourceLabel(item.source)}
-            </Tag>
-            {!item.isReadyToStream && (
-              <Tag
-                color='warning'
-                style={{ fontSize: 11 }}
-              >
-                Transcoding...
-              </Tag>
-            )}
-          </Space>
-        }
-      />
-    </List.Item>
+          )}
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          opacity: isHovered ? 1 : 0,
+          transition: 'opacity 0.2s',
+        }}
+      >
+        <div
+          {...attributes}
+          {...(isDraggable ? listeners : {})}
+          style={{
+            cursor: isDraggable ? 'grab' : 'default',
+            padding: 8,
+            color: '#4b5563',
+          }}
+        >
+          <DragOutlined />
+        </div>
+        <Button
+          type='text'
+          danger
+          icon={<DeleteOutlined />}
+          size='small'
+          onClick={() => onRemove(item.queueItemId)}
+          style={{ background: 'transparent' }}
+        />
+      </div>
+    </div>
   );
 });
 
 export const QueueList = ({
   items,
-  loading,
   onRemove,
   onRemoveMany,
   onReorder,
@@ -479,6 +591,7 @@ export const QueueList = ({
       size='small'
       style={{ width: '100%' }}
     >
+      <style>{PLAYING_BARS_CSS}</style>
       <Space
         align='center'
         style={{ width: '100%', justifyContent: 'space-between' }}
@@ -521,10 +634,8 @@ export const QueueList = ({
           items={localItems.map((item) => item.queueItemId)}
           strategy={verticalListSortingStrategy}
         >
-          <List
-            loading={loading}
-            dataSource={localItems}
-            renderItem={(item) => (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {localItems.map((item) => (
               <SortableItem
                 key={item.queueItemId}
                 item={item}
@@ -535,8 +646,8 @@ export const QueueList = ({
                 onRemove={onRemove}
                 onSkipToTrack={onSkipToTrack}
               />
-            )}
-          />
+            ))}
+          </div>
         </SortableContext>
         <DragOverlay dropAnimation={null}>
           {activeItem ? (

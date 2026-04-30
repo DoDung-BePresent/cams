@@ -38,6 +38,15 @@
 }
 
 /* ===== KEY FRAMES ===== */
+@keyframes player-bar {
+  from {
+    transform: scaleY(0.4);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
 @keyframes slideDown {
   from {
     transform: translateY(-100%);
@@ -101,6 +110,33 @@
 
   body {
     font-family: 'Outfit', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Soundtrack scrollbar ────────────────────────── */
+  :root,
+  .ant-layout-content {
+    scrollbar-width: thin;
+    scrollbar-color: #5b222b #0f0f11;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #f87171;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ef4444;
   }
   .ant-form-item-required {
     flex-direction: row-reverse;
@@ -192,18 +228,127 @@
   }
 }
 
+/* ── Soundtrack-specific component styles ─────────────── */
+@layer components {
+  /* Track row hover */
+  .soundtrack-track-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background 0.15s ease;
+    cursor: pointer;
+  }
+
+  .soundtrack-track-row:hover {
+    background: #242126;
+  }
+
+  .soundtrack-track-row:hover .soundtrack-track-index {
+    display: none;
+  }
+
+  .soundtrack-track-row:hover .soundtrack-track-play {
+    display: flex !important;
+  }
+
+  .soundtrack-track-play {
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Playlist card hover glow */
+  .soundtrack-playlist-card:hover {
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Soundtrack focus glow on focus */
+  .ant-input:focus,
+  .ant-select-focused .ant-select-selector {
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18) !important;
+  }
+
+  /* Input placeholder color fix */
+  .ant-input::placeholder {
+    color: #857b80 !important;
+  }
+
+  /* Sidebar selected item left bar */
+  .ant-menu-dark .ant-menu-item-selected {
+    border-right: 2px solid #ef4444 !important;
+  }
+
+  /* Smoother card transitions */
+  .ant-card {
+    transition:
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  /*
+   * Dark-theme tag palette.
+   * Ant preset tags are tuned for light backgrounds, so keep them subdued on
+   * the red-black dashboard surfaces.
+   */
+  .ant-tag {
+    border-radius: 7px;
+    font-weight: 600;
+  }
+
+  .ant-tag-success,
+  .ant-tag-green {
+    background: rgba(34, 197, 94, 0.12) !important;
+    border-color: rgba(134, 239, 172, 0.24) !important;
+    color: #86efac !important;
+  }
+
+  .ant-tag-blue,
+  .ant-tag-cyan,
+  .ant-tag-geekblue,
+  .ant-tag-processing {
+    background: rgba(148, 163, 184, 0.12) !important;
+    border-color: rgba(203, 213, 225, 0.2) !important;
+    color: #cbd5e1 !important;
+  }
+
+  .ant-tag-purple,
+  .ant-tag-magenta {
+    background: rgba(248, 113, 113, 0.12) !important;
+    border-color: rgba(248, 113, 113, 0.28) !important;
+    color: #fca5a5 !important;
+  }
+
+  .ant-tag-red,
+  .ant-tag-error {
+    background: rgba(239, 68, 68, 0.14) !important;
+    border-color: rgba(248, 113, 113, 0.3) !important;
+    color: #fca5a5 !important;
+  }
+
+  .ant-tag-orange,
+  .ant-tag-gold,
+  .ant-tag-warning {
+    background: rgba(251, 191, 36, 0.1) !important;
+    border-color: rgba(251, 191, 36, 0.26) !important;
+    color: #fbbf24 !important;
+  }
+
+  .ant-tag .anticon {
+    color: inherit !important;
+  }
+}
+
 @layer utilities {
   .rainbow-text-animate {
     background: linear-gradient(
       90deg,
-      #ff0000,
-      #ff7f00,
-      #ffff00,
-      #00ff00,
-      #0000ff,
-      #4b0082,
-      #9400d3,
-      #ff0000
+      #ef4444,
+      #f87171,
+      #7f1d1d,
+      #f87171,
+      #ef4444
     );
     background-size: 200% auto;
     color: transparent;

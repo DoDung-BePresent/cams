@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type React from 'react';
 import {
   Alert,
   Button,
@@ -21,9 +22,10 @@ import {
 } from 'antd';
 import {
   LockOutlined,
+  PlayCircleOutlined,
   ReloadOutlined,
   SoundOutlined,
-  TableOutlined,
+  ThunderboltOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
 import { useQueries, useQuery } from '@tanstack/react-query';
@@ -35,12 +37,10 @@ import { spaceService } from '@/shared/modules/spaces/services';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import type { ColumnsType } from 'antd/es/table';
 import type {
-  MetricTrend,
   StoreContextRawLogItem,
   StoreContextTimeSeriesPoint,
 } from '@/features/brand/types';
 import { billingService, storeService } from '@/features/brand/services';
-import type { BillingUsageView } from '@/shared/modules/billing';
 import { camsService } from '@/shared/modules/cams/services';
 import type { SpaceStateResponse } from '@/shared/modules/cams/types';
 import { EntityStatusEnum } from '@/shared/types';
@@ -54,7 +54,115 @@ type RangeValue = [dayjs.Dayjs, dayjs.Dayjs];
 
 const LIVE_POLL_MS = 5000;
 const LIVE_PAGE_SIZE = 300;
-const TOKEN_USAGE_TABLE_PAGE_SIZE = 8;
+
+const dashboardCardStyle: React.CSSProperties = {
+  background: 'rgba(24,24,27,0.88)',
+  border: '1px solid rgba(80,45,50,0.75)',
+  borderRadius: 14,
+  boxShadow: '0 18px 42px rgba(0,0,0,0.18)',
+};
+
+const panelBodyStyle: React.CSSProperties = {
+  background: 'transparent',
+};
+
+const kpiValueStyle: React.CSSProperties = {
+  color: '#f8f7f7',
+  fontWeight: 800,
+  fontSize: 28,
+  lineHeight: 1,
+};
+
+const StatTile = ({
+  icon,
+  label,
+  value,
+  detail,
+  tone = 'neutral',
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  detail?: React.ReactNode;
+  tone?: 'neutral' | 'good' | 'warn' | 'danger';
+}) => {
+  const toneMap = {
+    neutral: {
+      bg: 'rgba(255,255,255,0.05)',
+      border: 'rgba(255,255,255,0.08)',
+      color: '#cbd5e1',
+    },
+    good: {
+      bg: 'rgba(34,197,94,0.10)',
+      border: 'rgba(134,239,172,0.20)',
+      color: '#86efac',
+    },
+    warn: {
+      bg: 'rgba(251,191,36,0.10)',
+      border: 'rgba(251,191,36,0.24)',
+      color: '#fbbf24',
+    },
+    danger: {
+      bg: 'rgba(239,68,68,0.12)',
+      border: 'rgba(248,113,113,0.28)',
+      color: '#fca5a5',
+    },
+  }[tone];
+
+  return (
+    <div
+      style={{
+        ...dashboardCardStyle,
+        padding: 18,
+        minHeight: 118,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}
+    >
+      <Flex
+        justify='space-between'
+        align='center'
+        gap={12}
+      >
+        <Typography.Text
+          style={{
+            color: '#b7adb0',
+            fontSize: 12,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+          }}
+        >
+          {label}
+        </Typography.Text>
+        <div
+          style={{
+            width: 34,
+            height: 34,
+            borderRadius: 10,
+            background: toneMap.bg,
+            border: `1px solid ${toneMap.border}`,
+            color: toneMap.color,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </div>
+      </Flex>
+      <div>
+        <div style={kpiValueStyle}>{value}</div>
+        {detail && (
+          <Typography.Text style={{ color: '#857b80', fontSize: 12 }}>
+            {detail}
+          </Typography.Text>
+        )}
+      </div>
+    </div>
+  );
+};
 
 /** Map telemetry group key (id or name) to space GUID for CAMS state API */
 const resolveSpaceIdForPlayback = (
@@ -75,6 +183,18 @@ type PlaybackPollSlot = {
   state: SpaceStateResponse | null;
   isPending: boolean;
   isFetching: boolean;
+};
+
+type SpaceHealthRow = {
+  key: string;
+  spaceName: string;
+  peopleNow: number | null;
+  noiseNow: number | null;
+  moodName: string | null;
+  currentTrack: string | null;
+  playbackStatus: 'Playing' | 'Paused' | 'Idle' | 'Loading';
+  iotStatus: 'Online' | 'Offline' | 'Not paired' | 'Unknown';
+  lastUpdatedUtc: string | null;
 };
 
 const NowPlayingBanner = ({
@@ -134,16 +254,23 @@ const NowPlayingBanner = ({
         style={{
           marginBottom: 14,
           padding: '10px 12px',
-          background: '#f5f5f5',
+          background: '#202024',
           borderRadius: 8,
-          border: '1px dashed #d9d9d9',
+          border: '1px dashed #404040',
         }}
       >
-        <SoundOutlined style={{ fontSize: 20, color: '#bfbfbf' }} />
+        <SoundOutlined style={{ fontSize: 20, color: '#8b8b92' }} />
         <div>
-          <Typography.Text strong>{spaceLabel}</Typography.Text>
+          <Typography.Text
+            style={{ color: '#f8f7f7' }}
+            strong
+          >
+            {spaceLabel}
+          </Typography.Text>
           <div>
-            <Typography.Text type='secondary'>No track playing</Typography.Text>
+            <Typography.Text style={{ color: '#857b80' }}>
+              No track playing
+            </Typography.Text>
           </div>
           <Space
             size={[6, 6]}
@@ -167,26 +294,25 @@ const NowPlayingBanner = ({
         padding: '12px 14px',
         borderRadius: 10,
         background:
-          'linear-gradient(120deg, #f9f0ff 0%, #f6ffed 55%, #e6fffb 100%)',
-        border: '1px solid #efdbff',
-        boxShadow: slot.isFetching ? '0 0 0 2px rgba(114,46,209,0.12)' : 'none',
-        transition: 'box-shadow 0.35s ease',
+          'linear-gradient(120deg, rgba(239,68,68,0.14) 0%, rgba(239,68,68,0.07) 60%, rgba(0,0,0,0) 100%)',
+        border: slot.isFetching
+          ? '1px solid rgba(239,68,68,0.5)'
+          : '1px solid rgba(239,68,68,0.25)',
+        boxShadow: slot.isFetching ? '0 0 0 2px rgba(239,68,68,0.1)' : 'none',
+        transition: 'box-shadow 0.35s ease, border-color 0.35s ease',
       }}
     >
       <SoundOutlined
         className='store-now-playing-icon'
-        style={{ fontSize: 26, color: '#722ed1', marginTop: 2 }}
+        style={{ fontSize: 26, color: '#f8f7f7', marginTop: 2 }}
       />
       <div style={{ flex: 1, minWidth: 200 }}>
-        <Typography.Text
-          type='secondary'
-          style={{ fontSize: 11 }}
-        >
+        <Typography.Text style={{ fontSize: 11, color: '#857b80' }}>
           Now playing · {spaceLabel}
         </Typography.Text>
         <Typography.Title
           level={5}
-          style={{ margin: '4px 0 6px', fontWeight: 700 }}
+          style={{ margin: '4px 0 6px', fontWeight: 700, color: '#f8f7f7' }}
         >
           {trackTitle || 'Playing (stream active)'}
         </Typography.Title>
@@ -246,22 +372,6 @@ const getErrorMessage = (error: unknown) => {
   }
 
   return 'Something went wrong while loading data.';
-};
-
-const formatTrend = (trend: MetricTrend) => {
-  if (trend.deltaPercent === null || trend.deltaPercent === undefined) {
-    return <Tag color='default'>No baseline</Tag>;
-  }
-
-  const positive = trend.deltaPercent >= 0;
-  const sign = positive ? '+' : '';
-
-  return (
-    <Tag color={positive ? 'success' : 'error'}>
-      {sign}
-      {trend.deltaPercent.toFixed(2)}%
-    </Tag>
-  );
 };
 
 const metricCards: Array<{
@@ -389,7 +499,7 @@ const MiniLineChart = ({
               y1={y}
               x2={chartRight}
               y2={y}
-              stroke='#e5e7eb'
+              stroke='#e2e2e6'
               strokeWidth='1'
               strokeDasharray='3 3'
             />
@@ -397,7 +507,7 @@ const MiniLineChart = ({
         })}
 
         <polyline
-          fill='rgba(0,0,0,0.05)'
+          fill='rgba(239,68,68,0.04)'
           stroke='none'
           points={areaPoints}
           style={{ color }}
@@ -430,7 +540,7 @@ const MiniLineChart = ({
           x={chartLeft}
           y={height - 12}
           fontSize='10'
-          fill='#6b7280'
+          fill='#857b80'
         >
           {projectedPoints[0].label}
         </text>
@@ -438,7 +548,7 @@ const MiniLineChart = ({
           x={chartRight}
           y={height - 12}
           fontSize='10'
-          fill='#6b7280'
+          fill='#857b80'
           textAnchor='end'
         >
           {projectedPoints[projectedPoints.length - 1].label}
@@ -641,7 +751,7 @@ const LiveNoiseCrowdChart = ({
               y1={y}
               x2={width - padR}
               y2={y}
-              stroke='#f0f0f0'
+              stroke='#e2e2e6'
               strokeWidth='1'
             />
           );
@@ -737,7 +847,7 @@ const LiveNoiseCrowdChart = ({
           x={padL}
           y={height - 8}
           fontSize='10'
-          fill='#8c8c8c'
+          fill='#857b80'
         >
           {dayjs(tMin).format('HH:mm:ss')}
         </text>
@@ -745,7 +855,7 @@ const LiveNoiseCrowdChart = ({
           x={width - padR}
           y={height - 8}
           fontSize='10'
-          fill='#8c8c8c'
+          fill='#857b80'
           textAnchor='end'
         >
           {dayjs(tMax).format('HH:mm:ss')}
@@ -790,9 +900,6 @@ export const StoreDashboard = () => {
   const [granularity, setGranularity] = useState<GranularityOption>('hour');
   const [spaceId, setSpaceId] = useState<string | undefined>(undefined);
   const [range, setRange] = useState<RangeValue>(() => getRangeByPeriod('day'));
-  const [rawPage, setRawPage] = useState(1);
-  const [rawPageSize, setRawPageSize] = useState(10);
-  const [showRawLogs, setShowRawLogs] = useState(false);
 
   const effectiveRange = useMemo(() => {
     if (period === 'custom') {
@@ -831,17 +938,6 @@ export const StoreDashboard = () => {
     staleTime: STALE_TIME.short,
   });
 
-  const usageLogQuery = useQuery({
-    queryKey: ['store-dashboard', 'usage-log', storeId],
-    queryFn: async () => {
-      if (!storeId) throw new Error('Store ID is required.');
-      const response = await billingService.getUsage({ storeId, limit: 40 });
-      return response.data.data ?? [];
-    },
-    enabled: !!storeId,
-    staleTime: STALE_TIME.short,
-  });
-
   const { data: spaces, isLoading: isLoadingSpaces } = useQuery({
     queryKey: ['store-dashboard', 'spaces', storeId],
     queryFn: async () => {
@@ -857,12 +953,6 @@ export const StoreDashboard = () => {
     enabled: !!storeId,
     staleTime: STALE_TIME.medium,
   });
-
-  const spaceNameById = useMemo(() => {
-    const m = new Map<string, string>();
-    (spaces ?? []).forEach((s) => m.set(s.id, s.name));
-    return m;
-  }, [spaces]);
 
   const liveLogsQuery = useQuery({
     queryKey: [
@@ -890,32 +980,6 @@ export const StoreDashboard = () => {
     refetchIntervalInBackground: true,
   });
 
-  const rawLogsQuery = useQuery({
-    queryKey: [
-      'store-dashboard',
-      'raw-logs',
-      storeId,
-      spaceId,
-      fromUtc,
-      toUtc,
-      rawPage,
-      rawPageSize,
-    ],
-    queryFn: async () => {
-      if (!storeId) throw new Error('Store ID is required.');
-      const response = await storeService.getContextRawLogs(storeId, {
-        page: rawPage,
-        pageSize: rawPageSize,
-        spaceId,
-        fromUtc,
-        toUtc,
-      });
-      return response.data;
-    },
-    enabled: !!storeId && showRawLogs,
-    staleTime: STALE_TIME.short,
-  });
-
   const timeSeriesQuery = useQuery({
     queryKey: [
       'store-dashboard',
@@ -933,28 +997,6 @@ export const StoreDashboard = () => {
         fromUtc,
         toUtc,
         granularity,
-      });
-      return response.data.data;
-    },
-    enabled: !!storeId,
-    staleTime: STALE_TIME.short,
-  });
-
-  const aggregateQuery = useQuery({
-    queryKey: [
-      'store-dashboard',
-      'aggregate',
-      storeId,
-      spaceId,
-      fromUtc,
-      toUtc,
-    ],
-    queryFn: async () => {
-      if (!storeId) throw new Error('Store ID is required.');
-      const response = await storeService.getContextAggregate(storeId, {
-        spaceId,
-        fromUtc,
-        toUtc,
       });
       return response.data.data;
     },
@@ -1045,7 +1087,6 @@ export const StoreDashboard = () => {
     if (nextPeriod !== 'custom') {
       setRange(getRangeByPeriod(nextPeriod));
     }
-    setRawPage(1);
   };
 
   const handleResetFilters = () => {
@@ -1053,98 +1094,195 @@ export const StoreDashboard = () => {
     setRange(getRangeByPeriod('day'));
     setGranularity('hour');
     setSpaceId(undefined);
-    setRawPage(1);
-    setRawPageSize(10);
   };
 
-  const tokenUsageColumns: ColumnsType<BillingUsageView> = [
-    {
-      title: 'Time (UTC)',
-      dataIndex: 'chargedAtUtc',
-      key: 'chargedAtUtc',
-      render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm'),
-      width: 155,
-    },
-    {
-      title: 'Type',
-      dataIndex: 'usageType',
-      key: 'usageType',
-      width: 140,
-    },
-    {
-      title: 'Tokens',
-      dataIndex: 'tokensCharged',
-      key: 'tokensCharged',
-      width: 80,
-    },
-    {
-      title: 'Space',
-      dataIndex: 'spaceId',
-      key: 'spaceId',
-      width: 168,
-      ellipsis: true,
-      render: (id: string | null) =>
-        id ? (spaceNameById.get(id) ?? `${id.slice(0, 8)}…`) : '—',
-    },
-    {
-      title: 'Source',
-      dataIndex: 'source',
-      key: 'source',
-      ellipsis: true,
-    },
-  ];
+  const isAnyRefreshing =
+    liveLogsQuery.isFetching || timeSeriesQuery.isFetching;
 
-  const rawColumns: ColumnsType<StoreContextRawLogItem> = [
-    {
-      title: 'Analyzed At (UTC)',
-      dataIndex: 'measuredAtUtc',
-      key: 'measuredAtUtc',
-      render: (value: string) => dayjs(value).format('YYYY-MM-DD HH:mm:ss'),
-      width: 180,
-    },
+  const activeSpacesCount = spaces?.length ?? 0;
+  const todayStreamTokens = (usageTodayQuery.data ?? [])
+    .filter((u) => u.usageType === 'StreamingSpaceDaily')
+    .reduce((sum, u) => sum + u.tokensCharged, 0);
+  const playbackSlots = Array.from(playbackStateBySpaceId.values());
+  const playingSpacesCount = playbackSlots.filter((slot) => {
+    const state = slot.state;
+    return Boolean(
+      (state?.hlsUrl || state?.currentTrackName) && !state?.isPaused,
+    );
+  }).length;
+  const attentionSpacesCount = playbackSlots.filter((slot) => {
+    const state = slot.state;
+    return (
+      state?.isIotDeviceAssigned === false ||
+      state?.isIotDeviceOffline ||
+      state?.isPaused
+    );
+  }).length;
+  const latestSamplesCount = liveLogsQuery.data?.items?.length ?? 0;
+  const latestLogBySpaceId = useMemo(() => {
+    const map = new Map<string, StoreContextRawLogItem>();
+    for (const item of liveLogsQuery.data?.items ?? []) {
+      const key = item.spaceId || item.spaceName;
+      const existing = map.get(key);
+      if (
+        !existing ||
+        dayjs(item.measuredAtUtc).valueOf() >
+          dayjs(existing.measuredAtUtc).valueOf()
+      ) {
+        map.set(key, item);
+      }
+    }
+    return map;
+  }, [liveLogsQuery.data?.items]);
+
+  const liveSpaceRows: SpaceHealthRow[] = useMemo(() => {
+    const sourceSpaces = (spaces ?? []).filter((space) =>
+      spaceId ? space.id === spaceId : true,
+    );
+
+    return sourceSpaces.map((space) => {
+      const latest =
+        latestLogBySpaceId.get(space.id) ?? latestLogBySpaceId.get(space.name);
+      const slot = playbackStateBySpaceId.get(space.id);
+      const state = slot?.state;
+      const playbackStatus: SpaceHealthRow['playbackStatus'] = slot?.isPending
+        ? 'Loading'
+        : state?.isPaused
+          ? 'Paused'
+          : state?.hlsUrl || state?.currentTrackName
+            ? 'Playing'
+            : 'Idle';
+      const iotStatus: SpaceHealthRow['iotStatus'] =
+        state?.isIotDeviceAssigned === false
+          ? 'Not paired'
+          : state?.isIotDeviceOffline === true
+            ? 'Offline'
+            : state?.isIotDeviceOffline === false
+              ? 'Online'
+              : 'Unknown';
+
+      return {
+        key: space.id,
+        spaceName: space.name,
+        peopleNow: latest?.crowdDensity ?? null,
+        noiseNow: latest?.avgNoise ?? null,
+        moodName: latest?.moodName || state?.moodName || null,
+        currentTrack: state?.currentTrackName ?? null,
+        playbackStatus,
+        iotStatus,
+        lastUpdatedUtc: latest?.measuredAtUtc ?? null,
+      };
+    });
+  }, [latestLogBySpaceId, playbackStateBySpaceId, spaceId, spaces]);
+
+  const totalPeopleNow = liveSpaceRows.reduce(
+    (sum, row) => sum + (row.peopleNow ?? 0),
+    0,
+  );
+  const spacesWithPeopleSamples = liveSpaceRows.filter(
+    (row) => row.peopleNow != null,
+  ).length;
+  const iotOnlineCount = liveSpaceRows.filter(
+    (row) => row.iotStatus === 'Online',
+  ).length;
+  const iotKnownCount = liveSpaceRows.filter(
+    (row) => row.iotStatus !== 'Unknown',
+  ).length;
+  const liveSpaceColumns: ColumnsType<SpaceHealthRow> = [
     {
       title: 'Space',
       dataIndex: 'spaceName',
       key: 'spaceName',
-      width: 160,
+      fixed: 'left',
+      width: 180,
+      render: (value: string, row) => (
+        <Space
+          direction='vertical'
+          size={2}
+        >
+          <Typography.Text strong>{value}</Typography.Text>
+          <Typography.Text style={{ color: '#857b80', fontSize: 12 }}>
+            {row.lastUpdatedUtc
+              ? `Updated ${dayjs(row.lastUpdatedUtc).format('HH:mm:ss')}`
+              : 'No sensor sample today'}
+          </Typography.Text>
+        </Space>
+      ),
+    },
+    {
+      title: 'People',
+      dataIndex: 'peopleNow',
+      key: 'peopleNow',
+      align: 'center',
+      width: 110,
+      render: (value: number | null) => (
+        <Typography.Text
+          strong
+          style={{ color: '#f8f7f7' }}
+        >
+          {value == null ? '--' : formatValue(value, 0)}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: 'Noise',
+      dataIndex: 'noiseNow',
+      key: 'noiseNow',
+      align: 'center',
+      width: 110,
+      render: (value: number | null) =>
+        value == null ? '--' : `${formatValue(value)} dB`,
     },
     {
       title: 'Mood',
       dataIndex: 'moodName',
       key: 'moodName',
-      width: 140,
+      width: 130,
+      render: (value: string | null) =>
+        value ? <Tag color='default'>{value}</Tag> : '--',
     },
     {
-      title: 'Noise (dB)',
-      dataIndex: 'avgNoise',
-      key: 'avgNoise',
-      render: (value?: number | null) => `${formatValue(value)} dB`,
-      width: 120,
+      title: 'IoT',
+      dataIndex: 'iotStatus',
+      key: 'iotStatus',
+      width: 130,
+      render: (value: SpaceHealthRow['iotStatus']) => {
+        const color =
+          value === 'Online'
+            ? 'success'
+            : value === 'Offline'
+              ? 'error'
+              : value === 'Not paired'
+                ? 'warning'
+                : 'default';
+        return <Tag color={color}>{value}</Tag>;
+      },
     },
     {
-      title: 'Crowd',
-      dataIndex: 'crowdDensity',
-      key: 'crowdDensity',
-      render: (value?: number | null) => formatValue(value, 0),
-      width: 100,
+      title: 'Playback',
+      dataIndex: 'playbackStatus',
+      key: 'playbackStatus',
+      width: 130,
+      render: (value: SpaceHealthRow['playbackStatus']) => {
+        const color =
+          value === 'Playing'
+            ? 'success'
+            : value === 'Paused'
+              ? 'warning'
+              : value === 'Loading'
+                ? 'processing'
+                : 'default';
+        return <Tag color={color}>{value}</Tag>;
+      },
     },
     {
-      title: 'Rule',
-      dataIndex: 'currentWeather',
-      key: 'currentWeather',
-      render: (value?: string | null) => value || '--',
-      width: 140,
+      title: 'Current Track',
+      dataIndex: 'currentTrack',
+      key: 'currentTrack',
+      ellipsis: true,
+      render: (value: string | null) => value || 'No track playing',
     },
   ];
-
-  const summary = aggregateQuery.data;
-  const hasAnyTrendData = !!summary && summary.current.samples > 0;
-
-  const isAnyRefreshing =
-    liveLogsQuery.isFetching ||
-    timeSeriesQuery.isFetching ||
-    aggregateQuery.isFetching ||
-    (showRawLogs && rawLogsQuery.isFetching);
 
   return (
     <div>
@@ -1167,12 +1305,12 @@ export const StoreDashboard = () => {
         `}
       </style>
       <PageHeader
-        title='Store Context Analytics'
+        title='Store Manager Dashboard'
         breadcrumbs={[{ title: 'Store' }, { title: 'Dashboard' }]}
         seo={{
           description:
-            'Live crowd & noise telemetry, token wallet, and optional raw context logs.',
-          keywords: 'store dashboard, crowd, noise, telemetry',
+            'Monitor playback, spaces, token health, and live store telemetry.',
+          keywords: 'store dashboard, playback, space health, telemetry',
         }}
       />
 
@@ -1185,16 +1323,166 @@ export const StoreDashboard = () => {
         />
       )}
 
+      <div
+        style={{
+          ...dashboardCardStyle,
+          padding: 24,
+          marginBottom: 16,
+          background:
+            'radial-gradient(circle at top left, rgba(248,68,68,0.22), transparent 34%), linear-gradient(135deg, rgba(49,18,22,0.96), rgba(18,18,20,0.96) 52%, rgba(10,10,12,0.98))',
+        }}
+      >
+        <Flex
+          justify='space-between'
+          align='flex-start'
+          wrap='wrap'
+          gap={16}
+        >
+          <div style={{ maxWidth: 720 }}>
+            <Typography.Text
+              style={{
+                color: '#fca5a5',
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: 1,
+                textTransform: 'uppercase',
+              }}
+            >
+              Store manager
+            </Typography.Text>
+            <Typography.Title
+              level={2}
+              style={{ margin: '4px 0 8px', color: '#f8f7f7' }}
+            >
+              Live Store Health
+            </Typography.Title>
+            <Typography.Text style={{ color: '#c5b8bd', fontSize: 15 }}>
+              Check what is playing, which spaces need attention, and whether
+              the store has enough tokens to keep music running.
+            </Typography.Text>
+          </div>
+
+          <Space wrap>
+            <Tag color='default'>{latestSamplesCount} telemetry samples</Tag>
+            {isAnyRefreshing && <Tag color='processing'>Updating</Tag>}
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => {
+                walletQuery.refetch();
+                usageTodayQuery.refetch();
+                liveLogsQuery.refetch();
+                timeSeriesQuery.refetch();
+              }}
+            >
+              Refresh live data
+            </Button>
+          </Space>
+        </Flex>
+      </div>
+
+      <Row
+        gutter={[16, 16]}
+        style={{ marginBottom: 16 }}
+      >
+        <Col
+          xs={24}
+          sm={12}
+          xl={6}
+        >
+          <StatTile
+            icon={<SoundOutlined />}
+            label='People now'
+            value={formatValue(totalPeopleNow, 0)}
+            detail={`${spacesWithPeopleSamples}/${activeSpacesCount} spaces reporting`}
+            tone={spacesWithPeopleSamples > 0 ? 'good' : 'warn'}
+          />
+        </Col>
+        <Col
+          xs={24}
+          sm={12}
+          xl={6}
+        >
+          <StatTile
+            icon={<ThunderboltOutlined />}
+            label='IoT online'
+            value={`${iotOnlineCount}/${activeSpacesCount}`}
+            detail={
+              iotKnownCount === 0
+                ? 'waiting for device status'
+                : 'paired devices reporting'
+            }
+            tone={
+              iotKnownCount === 0
+                ? 'warn'
+                : iotOnlineCount === activeSpacesCount
+                  ? 'good'
+                  : 'danger'
+            }
+          />
+        </Col>
+        <Col
+          xs={24}
+          sm={12}
+          xl={6}
+        >
+          <StatTile
+            icon={<PlayCircleOutlined />}
+            label='Playing now'
+            value={playingSpacesCount}
+            detail={`checked every ${LIVE_POLL_MS / 1000}s`}
+            tone={playingSpacesCount > 0 ? 'good' : 'warn'}
+          />
+        </Col>
+        <Col
+          xs={24}
+          sm={12}
+          xl={6}
+        >
+          <StatTile
+            icon={<WalletOutlined />}
+            label='Needs attention'
+            value={attentionSpacesCount}
+            detail='offline, paused, or no IoT'
+            tone={attentionSpacesCount > 0 ? 'danger' : 'good'}
+          />
+        </Col>
+      </Row>
+
+      <Card
+        title='Live Space Status'
+        style={{ marginBottom: 16, ...dashboardCardStyle }}
+        styles={{ body: panelBodyStyle }}
+        extra={
+          <Space wrap>
+            <Tag color='default'>{activeSpacesCount} spaces</Tag>
+            <Tag color='processing'>Refreshes every {LIVE_POLL_MS / 1000}s</Tag>
+          </Space>
+        }
+      >
+        <Table<SpaceHealthRow>
+          rowKey='key'
+          columns={liveSpaceColumns}
+          dataSource={liveSpaceRows}
+          loading={isLoadingSpaces || liveLogsQuery.isLoading}
+          pagination={false}
+          scroll={{ x: 900 }}
+          locale={{
+            emptyText: 'No active spaces found for this store.',
+          }}
+        />
+      </Card>
+
       {/* ── Token Wallet Overview ── */}
       <Card
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 16, ...dashboardCardStyle }}
+        styles={{ body: panelBodyStyle }}
         title={
           <Flex
             align='center'
             gap={8}
           >
             <WalletOutlined />
-            <span>Token Wallet</span>
+            <span>Wallet Health</span>
             {walletQuery.data?.isLocked && (
               <Tooltip
                 title={`Locked from ${walletQuery.data.lockedFromBusinessDate ?? ''}`}
@@ -1216,7 +1504,6 @@ export const StoreDashboard = () => {
             onClick={() => {
               walletQuery.refetch();
               usageTodayQuery.refetch();
-              usageLogQuery.refetch();
             }}
           >
             Refresh
@@ -1249,8 +1536,8 @@ export const StoreDashboard = () => {
                 valueStyle={{
                   color:
                     (walletQuery.data?.balanceTokens ?? 0) < 0
-                      ? '#cf1322'
-                      : '#3f8600',
+                      ? '#fca5a5'
+                      : '#86efac',
                   fontWeight: 700,
                 }}
                 suffix='tokens'
@@ -1264,8 +1551,9 @@ export const StoreDashboard = () => {
                 title='Status'
                 value={walletQuery.data?.lockStatus ?? '--'}
                 valueStyle={{
-                  color: walletQuery.data?.isLocked ? '#cf1322' : '#3f8600',
+                  color: walletQuery.data?.isLocked ? '#fca5a5' : '#86efac',
                   fontSize: 16,
+                  fontWeight: 700,
                 }}
               />
             </Col>
@@ -1276,9 +1564,8 @@ export const StoreDashboard = () => {
               <Statistic
                 title="Today's Usage (streams)"
                 loading={usageTodayQuery.isLoading}
-                value={(usageTodayQuery.data ?? [])
-                  .filter((u) => u.usageType === 'StreamingSpaceDaily')
-                  .reduce((sum, u) => sum + u.tokensCharged, 0)}
+                valueStyle={{ color: '#f8f7f7', fontWeight: 700 }}
+                value={todayStreamTokens}
                 suffix='tokens'
               />
             </Col>
@@ -1298,54 +1585,10 @@ export const StoreDashboard = () => {
       )}
 
       <Card
-        style={{ marginBottom: 16 }}
-        title='Token deductions (this store)'
-        extra={
-          <Button
-            size='small'
-            icon={<ReloadOutlined />}
-            loading={usageLogQuery.isFetching || usageTodayQuery.isFetching}
-            disabled={!storeId}
-            onClick={() => {
-              usageLogQuery.refetch();
-              usageTodayQuery.refetch();
-            }}
-          >
-            Refresh
-          </Button>
-        }
+        title='Time & Space Filters'
+        style={{ display: 'none', marginBottom: 16, ...dashboardCardStyle }}
+        styles={{ body: panelBodyStyle }}
       >
-        {!storeId ? (
-          <Typography.Text type='secondary'>
-            Store scope is required to list per-store token charges.
-          </Typography.Text>
-        ) : usageLogQuery.isLoading ? (
-          <Skeleton active />
-        ) : usageLogQuery.isError ? (
-          <Alert
-            type='error'
-            showIcon
-            message={getErrorMessage(usageLogQuery.error)}
-          />
-        ) : (
-          <Table<BillingUsageView>
-            size='small'
-            rowKey={(r, i) => `${r.chargedAtUtc}-${i}`}
-            pagination={{
-              pageSize: TOKEN_USAGE_TABLE_PAGE_SIZE,
-              showSizeChanger: true,
-              pageSizeOptions: ['8', '20', '50'],
-              showTotal: (total) => `${total} records`,
-            }}
-            dataSource={usageLogQuery.data ?? []}
-            columns={tokenUsageColumns}
-            scroll={{ x: 900, y: 380 }}
-            locale={{ emptyText: 'No token charges for this store yet.' }}
-          />
-        )}
-      </Card>
-
-      <Card style={{ marginBottom: 16 }}>
         <Space
           direction='vertical'
           size='middle'
@@ -1378,7 +1621,6 @@ export const StoreDashboard = () => {
                   if (period !== 'custom') {
                     setPeriod('custom');
                   }
-                  setRawPage(1);
                 }}
                 showTime
                 allowClear={false}
@@ -1393,7 +1635,6 @@ export const StoreDashboard = () => {
                 value={spaceId}
                 onChange={(value) => {
                   setSpaceId(value);
-                  setRawPage(1);
                 }}
                 allowClear
                 loading={isLoadingSpaces}
@@ -1423,8 +1664,6 @@ export const StoreDashboard = () => {
                 onClick={() => {
                   liveLogsQuery.refetch();
                   timeSeriesQuery.refetch();
-                  aggregateQuery.refetch();
-                  if (showRawLogs) rawLogsQuery.refetch();
                 }}
               >
                 Refresh
@@ -1451,22 +1690,11 @@ export const StoreDashboard = () => {
 
           {isAnyRefreshing &&
             !liveLogsQuery.isLoading &&
-            !timeSeriesQuery.isLoading &&
-            !aggregateQuery.isLoading && (
+            !timeSeriesQuery.isLoading && (
               <Tag color='processing'>Updating…</Tag>
             )}
         </Space>
       </Card>
-
-      {aggregateQuery.isError && (
-        <Alert
-          type='error'
-          showIcon
-          className='mb-4!'
-          message='Failed to load aggregate analytics'
-          description={getErrorMessage(aggregateQuery.error)}
-        />
-      )}
 
       {timeSeriesQuery.isError && (
         <Alert
@@ -1488,99 +1716,13 @@ export const StoreDashboard = () => {
         />
       )}
 
-      <Row gutter={[16, 16]}>
-        <Col
-          xs={24}
-          lg={6}
-        >
-          <Card>
-            {aggregateQuery.isLoading ? (
-              <Skeleton
-                active
-                paragraph={{ rows: 2 }}
-                title={false}
-              />
-            ) : (
-              <>
-                <Statistic
-                  title='Current Samples'
-                  value={summary?.current.samples ?? 0}
-                />
-                <div style={{ marginTop: 8 }}>
-                  {formatTrend(summary?.trend.samples || {})}
-                </div>
-              </>
-            )}
-          </Card>
-        </Col>
-
-        <Col
-          xs={24}
-          lg={18}
-        >
-          <Card title='Aggregate — Crowd & Noise'>
-            {aggregateQuery.isLoading ? (
-              <Skeleton
-                active
-                paragraph={{ rows: 4 }}
-              />
-            ) : !hasAnyTrendData ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description='No aggregate data for the selected filters.'
-              />
-            ) : (
-              <Row gutter={[16, 16]}>
-                {metricCards.map((metric) => {
-                  const aggregate = summary?.current[metric.key];
-                  const trend = summary?.trend[metric.key];
-
-                  return (
-                    <Col
-                      xs={24}
-                      sm={12}
-                      key={metric.key}
-                    >
-                      <Card size='small'>
-                        <Flex
-                          justify='space-between'
-                          align='center'
-                        >
-                          <Typography.Text strong>
-                            {metric.title}
-                          </Typography.Text>
-                          {formatTrend((trend || {}) as MetricTrend)}
-                        </Flex>
-                        <div style={{ marginTop: 12 }}>
-                          <Typography.Text type='secondary'>
-                            Min: {formatValue(aggregate?.min)} {metric.unit}
-                          </Typography.Text>
-                          <br />
-                          <Typography.Text type='secondary'>
-                            Max: {formatValue(aggregate?.max)} {metric.unit}
-                          </Typography.Text>
-                          <br />
-                          <Typography.Text>
-                            Avg: <b>{formatValue(aggregate?.avg)}</b>{' '}
-                            {metric.unit}
-                          </Typography.Text>
-                        </div>
-                      </Card>
-                    </Col>
-                  );
-                })}
-              </Row>
-            )}
-          </Card>
-        </Col>
-      </Row>
-
       <Card
-        title='Live telemetry — Crowd, Noise, playback & IoT status'
-        style={{ marginTop: 16 }}
+        title='Live Space Operations'
+        style={{ display: 'none', marginTop: 16, ...dashboardCardStyle }}
+        styles={{ body: panelBodyStyle }}
         extra={
           <Space>
-            <Tag color='blue'>Telemetry + track · {LIVE_POLL_MS / 1000}s</Tag>
+            <Tag color='processing'>Live every {LIVE_POLL_MS / 1000}s</Tag>
           </Space>
         }
       >
@@ -1628,7 +1770,11 @@ export const StoreDashboard = () => {
                       >
                         <Card
                           size='small'
-                          styles={{ body: { background: '#fafafa' } }}
+                          style={{
+                            background: 'rgba(255,255,255,0.035)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                          }}
+                          styles={{ body: { background: 'transparent' } }}
                         >
                           <NowPlayingBanner
                             spaceLabel={label}
@@ -1661,8 +1807,12 @@ export const StoreDashboard = () => {
                 >
                   <Card
                     size='small'
+                    style={{
+                      background: 'rgba(255,255,255,0.035)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
                     styles={{
-                      body: { background: '#fafafa', borderRadius: 8 },
+                      body: { background: 'transparent', borderRadius: 8 },
                     }}
                   >
                     <NowPlayingBanner
@@ -1685,8 +1835,9 @@ export const StoreDashboard = () => {
       </Card>
 
       <Card
-        title='Context time-series (bucketed)'
-        style={{ marginTop: 16 }}
+        title='Context Trends'
+        style={{ display: 'none', marginTop: 16, ...dashboardCardStyle }}
+        styles={{ body: panelBodyStyle }}
       >
         {timeSeriesQuery.isLoading ? (
           <Flex
@@ -1711,6 +1862,11 @@ export const StoreDashboard = () => {
                 <Card
                   size='small'
                   title={metric.title}
+                  style={{
+                    background: 'rgba(255,255,255,0.035)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                  styles={{ body: { background: 'transparent' } }}
                 >
                   <MiniLineChart
                     data={timeSeriesQuery.data?.points || []}
@@ -1722,61 +1878,6 @@ export const StoreDashboard = () => {
               </Col>
             ))}
           </Row>
-        )}
-      </Card>
-
-      <Card
-        style={{ marginTop: 16 }}
-        title='Raw context logs (analysis results)'
-        extra={
-          <Button
-            type={showRawLogs ? 'default' : 'primary'}
-            icon={<TableOutlined />}
-            onClick={() => setShowRawLogs((v) => !v)}
-          >
-            {showRawLogs ? 'Hide table' : 'Show raw log table'}
-          </Button>
-        }
-      >
-        {showRawLogs ? (
-          <>
-            {rawLogsQuery.isError && (
-              <Alert
-                type='error'
-                showIcon
-                className='mb-4!'
-                message='Failed to load raw logs'
-                description={getErrorMessage(rawLogsQuery.error)}
-              />
-            )}
-            <Table
-              rowKey='id'
-              columns={rawColumns}
-              dataSource={rawLogsQuery.data?.items || []}
-              loading={rawLogsQuery.isLoading}
-              scroll={{ x: 900 }}
-              locale={{
-                emptyText: rawLogsQuery.isLoading
-                  ? 'Loading logs…'
-                  : 'No context logs for the current filters.',
-              }}
-              pagination={{
-                current: rawLogsQuery.data?.currentPage || rawPage,
-                pageSize: rawLogsQuery.data?.pageSize || rawPageSize,
-                total: rawLogsQuery.data?.totalItems || 0,
-                showSizeChanger: true,
-                onChange: (page, pageSize) => {
-                  setRawPage(page);
-                  setRawPageSize(pageSize);
-                },
-              }}
-            />
-          </>
-        ) : (
-          <Typography.Text type='secondary'>
-            Raw rows are hidden by default. Use the button above when you need
-            to inspect individual measurements (pagination applies).
-          </Typography.Text>
         )}
       </Card>
     </div>

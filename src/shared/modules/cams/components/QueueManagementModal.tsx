@@ -12,6 +12,7 @@ import {
   PlusOutlined,
   DeleteOutlined,
   ReloadOutlined,
+  CloseOutlined,
 } from '@ant-design/icons';
 import { Flex } from 'antd';
 import {
@@ -157,18 +158,42 @@ export const QueueManagementModal = ({
   return (
     <>
       <Modal
+        className='cams-queue-management-modal'
         title={
           <Flex
             justify='space-between'
             align='center'
-            style={{ paddingRight: 32 }}
+            gap={16}
+            wrap
+            style={{ paddingRight: 36 }}
           >
-            <span>Queue Management</span>
-            <Space>
+            <div>
+              <Title
+                level={4}
+                style={{
+                  margin: 0,
+                  color: '#f8f7f7',
+                  fontSize: 18,
+                  fontWeight: 800,
+                }}
+              >
+                Queue Management
+              </Title>
+              <Text style={{ color: '#9ca3af', fontSize: 12 }}>
+                Control playback queue and output behavior
+              </Text>
+            </div>
+            <Space wrap>
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => refetch()}
                 loading={isLoading}
+                style={{
+                  background: '#18181b',
+                  borderColor: 'rgba(255,255,255,0.12)',
+                  color: '#f8f7f7',
+                  fontWeight: 700,
+                }}
               >
                 Refresh
               </Button>
@@ -185,6 +210,12 @@ export const QueueManagementModal = ({
                   icon={<DeleteOutlined />}
                   loading={clearQueue.isPending}
                   disabled={!queueData || queueData.length === 0}
+                  style={{
+                    background: 'rgba(248, 64, 72, 0.08)',
+                    borderColor: 'rgba(248, 64, 72, 0.55)',
+                    color: '#ff6b72',
+                    fontWeight: 700,
+                  }}
                 >
                   Clear All
                 </Button>
@@ -193,6 +224,13 @@ export const QueueManagementModal = ({
                 type='primary'
                 icon={<PlusOutlined />}
                 onClick={() => setAddModalOpen(true)}
+                style={{
+                  background: '#f84048',
+                  borderColor: '#f84048',
+                  color: '#fff',
+                  fontWeight: 800,
+                  boxShadow: '0 10px 28px rgba(248, 64, 72, 0.26)',
+                }}
               >
                 Add to Queue
               </Button>
@@ -201,11 +239,37 @@ export const QueueManagementModal = ({
         }
         centered
         destroyOnClose
-        width={700}
+        width={760}
         open={open}
         onCancel={onClose}
         footer={null}
+        closeIcon={<CloseOutlined style={{ color: '#9ca3af' }} />}
+        styles={{
+          header: {
+            background: 'transparent',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            padding: '22px 28px 18px',
+            margin: 0,
+          },
+          body: {
+            padding: '22px 28px 28px',
+            background:
+              'radial-gradient(circle at 8% 0%, rgba(248,64,72,0.12), transparent 32%), transparent',
+          },
+        }}
       >
+        <style>
+          {`
+            .cams-queue-management-modal .ant-modal-content {
+              background: linear-gradient(145deg, #171719 0%, #111113 54%, #0b0b0d 100%);
+              border: 1px solid rgba(248, 64, 72, 0.18);
+              border-radius: 14px;
+              box-shadow: 0 22px 70px rgba(0, 0, 0, 0.62);
+              padding: 0;
+              overflow: hidden;
+            }
+          `}
+        </style>
         <Space
           direction='vertical'
           style={{ width: '100%' }}
@@ -223,7 +287,9 @@ export const QueueManagementModal = ({
             onQueueEndBehaviorChange={handleQueueEndBehaviorChange}
           />
 
-          <Divider style={{ margin: 0 }} />
+          <Divider
+            style={{ margin: 0, borderColor: 'rgba(255,255,255,0.08)' }}
+          />
 
           {/* Queue List */}
           <div>
@@ -238,11 +304,11 @@ export const QueueManagementModal = ({
               >
                 <Title
                   level={5}
-                  style={{ margin: 0 }}
+                  style={{ margin: 0, color: '#f8f7f7', fontWeight: 800 }}
                 >
                   Queue Items
                 </Title>
-                <Text type='secondary'>
+                <Text style={{ color: '#9ca3af', fontWeight: 700 }}>
                   {queueData?.length || 0} track
                   {queueData?.length !== 1 ? 's' : ''}
                 </Text>

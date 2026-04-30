@@ -187,9 +187,17 @@ export const HLSAudioPlayer = ({
 
   if (!hlsUrl || disabled) {
     return (
-      <Card>
-        <div style={{ padding: 16, textAlign: 'center', color: '#999' }}>
-          <SoundOutlined style={{ fontSize: 24, marginBottom: 8 }} />
+      <Card
+        style={{
+          background: '#18181b',
+          border: '1px solid #2d2528',
+          borderRadius: 16,
+        }}
+      >
+        <div style={{ padding: 16, textAlign: 'center', color: '#b7adb0' }}>
+          <SoundOutlined
+            style={{ fontSize: 24, marginBottom: 8, color: '#fca5a5' }}
+          />
           <div>{unavailableMessage || 'Audio file not available'}</div>
         </div>
       </Card>
@@ -198,8 +206,14 @@ export const HLSAudioPlayer = ({
 
   if (error) {
     return (
-      <Card>
-        <div style={{ padding: 16, textAlign: 'center', color: '#ff4d4f' }}>
+      <Card
+        style={{
+          background: '#18181b',
+          border: '1px solid #2d2528',
+          borderRadius: 16,
+        }}
+      >
+        <div style={{ padding: 16, textAlign: 'center', color: '#fca5a5' }}>
           <SoundOutlined style={{ fontSize: 24, marginBottom: 8 }} />
           <div>{error}</div>
         </div>
@@ -208,29 +222,53 @@ export const HLSAudioPlayer = ({
   }
 
   return (
-    <Card>
+    <Card
+      style={{
+        background: 'linear-gradient(135deg, #18181b 0%, #141416 100%)',
+        border: '1px solid #2d2528',
+        borderRadius: 16,
+      }}
+      styles={{ body: { padding: 24 } }}
+    >
       <audio
         ref={audioRef}
         style={{ display: 'none' }}
       />
       <Flex
-        align='start'
-        gap='middle'
+        align='center'
+        gap={20}
       >
         {/* Cover Image */}
-        {coverImageUrl && (
+        {coverImageUrl ? (
           <Avatar
             shape='square'
             size={120}
             src={coverImageUrl}
             alt={title}
-            className='shrink-0! rounded-lg!'
+            style={{ borderRadius: 14, flexShrink: 0 }}
           />
+        ) : (
+          <div
+            style={{
+              width: 92,
+              height: 92,
+              borderRadius: 18,
+              background:
+                'linear-gradient(135deg, rgba(239,68,68,0.22), rgba(127,29,29,0.16))',
+              border: '1px solid rgba(248,113,113,0.22)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <SoundOutlined style={{ fontSize: 34, color: '#fca5a5' }} />
+          </div>
         )}
         <Flex
           align='center'
-          gap='large'
-          className='w-full!'
+          gap={24}
+          style={{ width: '100%' }}
         >
           {/* Track Info & Controls */}
           <Flex
@@ -249,7 +287,7 @@ export const HLSAudioPlayer = ({
                   <Text
                     strong
                     ellipsis
-                    style={{ fontSize: 14 }}
+                    style={{ fontSize: 18, color: '#f8f7f7' }}
                   >
                     {title}
                   </Text>
@@ -258,7 +296,7 @@ export const HLSAudioPlayer = ({
                   <Text
                     type='secondary'
                     ellipsis
-                    style={{ fontSize: 13 }}
+                    style={{ fontSize: 13, color: '#b7adb0' }}
                   >
                     {artist}
                   </Text>
@@ -285,13 +323,13 @@ export const HLSAudioPlayer = ({
             <Flex justify='space-between'>
               <Text
                 type='secondary'
-                style={{ fontSize: 12 }}
+                style={{ fontSize: 12, color: '#b7adb0' }}
               >
                 {formatDuration(currentTime)}
               </Text>
               <Text
                 type='secondary'
-                style={{ fontSize: 12 }}
+                style={{ fontSize: 12, color: '#b7adb0' }}
               >
                 {formatDuration(duration)}
               </Text>
@@ -300,7 +338,7 @@ export const HLSAudioPlayer = ({
             {isLoading && (
               <Text
                 type='secondary'
-                style={{ fontSize: 12, textAlign: 'center' }}
+                style={{ fontSize: 12, textAlign: 'center', color: '#857b80' }}
               >
                 Loading audio stream...
               </Text>
@@ -320,7 +358,13 @@ export const HLSAudioPlayer = ({
             }
             onClick={togglePlayPause}
             disabled={isLoading}
-            className='size-20! shrink-0! [&>span]:size-8!'
+            style={{
+              width: 72,
+              height: 72,
+              flexShrink: 0,
+              background: '#ef4444',
+              boxShadow: '0 14px 30px rgba(239,68,68,0.24)',
+            }}
           />
         </Flex>
       </Flex>

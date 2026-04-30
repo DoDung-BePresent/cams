@@ -84,7 +84,7 @@ export const getConfigColumns = ({
         (currentPage - 1) * pageSize + index + 1,
     },
     {
-      title: 'Key',
+      title: 'Config',
       dataIndex: 'key',
       key: 'key',
       sorter: true,
@@ -94,10 +94,7 @@ export const getConfigColumns = ({
         const meta = CONFIG_KEY_META[value];
         return (
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontWeight: 500 }}>{value}</span>
-            {meta?.label && (
-              <Tag style={{ marginInlineEnd: 0 }}>{meta.label}</Tag>
-            )}
+            <span style={{ fontWeight: 600 }}>{meta?.label ?? value}</span>
             {meta?.hardLocked && (
               <Tooltip title='Hard-locked — only writable by System Admin via policy'>
                 <LockOutlined style={{ color: '#ff4d4f' }} />

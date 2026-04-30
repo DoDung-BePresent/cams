@@ -49,6 +49,8 @@ interface SpacePlayerProps {
   isPreviousDisabled?: boolean;
   isNextDisabled?: boolean;
   onQueueEndBehaviorChange?: (next: number) => void;
+  onTimeUpdate?: (currentTime: number) => void;
+  onDurationChange?: (duration: number) => void;
 }
 
 export const SpacePlayer = ({
@@ -68,6 +70,8 @@ export const SpacePlayer = ({
   isPreviousDisabled,
   isNextDisabled,
   onQueueEndBehaviorChange,
+  onTimeUpdate,
+  onDurationChange,
 }: SpacePlayerProps) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -429,11 +433,15 @@ export const SpacePlayer = ({
     if (!audio) return;
 
     const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
+      const time = audio.currentTime;
+      setCurrentTime(time);
+      onTimeUpdate?.(time);
     };
 
     const handleDurationChange = () => {
-      setDuration(audio.duration);
+      const dur = audio.duration;
+      setDuration(dur);
+      onDurationChange?.(dur);
     };
 
     const handleWaiting = () => {
@@ -494,7 +502,7 @@ export const SpacePlayer = ({
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, []);
+  }, [onTimeUpdate, onDurationChange]);
 
   // Handle seek (scrub) - immediate local scrub on change, remote seek on afterChange
   const handleSeek = (value: number) => {

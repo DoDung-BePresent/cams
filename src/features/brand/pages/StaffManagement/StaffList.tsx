@@ -55,14 +55,14 @@ const { Text, Title } = Typography;
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const C = {
-  bg: '#121212',
-  surface: '#181818',
-  surfaceHover: '#282828',
-  border: '#282828',
-  green: '#1db954',
-  text: '#ffffff',
-  textMuted: '#b3b3b3',
-  textSubtle: '#6a6a6a',
+  bg: '#0f0f11',
+  surface: '#18181b',
+  surfaceHover: '#242126',
+  border: '#2d2528',
+  green: '#ef4444',
+  text: '#f8f7f7',
+  textMuted: '#b7adb0',
+  textSubtle: '#857b80',
 };
 
 export const StaffList = () => {
@@ -192,7 +192,11 @@ export const StaffList = () => {
 
   return (
     <div
-      style={{ minHeight: '100vh', background: C.bg, padding: '0 32px 40px' }}
+      style={{
+        minHeight: '100vh',
+        background: 'transparent',
+        padding: '0 0 40px',
+      }}
     >
       <PageHeader
         title={
@@ -221,7 +225,7 @@ export const StaffList = () => {
                 background: C.green,
                 border: 'none',
                 fontWeight: 700,
-                color: '#000',
+                color: '#fff',
               }}
             >
               Add Staff
@@ -377,9 +381,9 @@ export const StaffList = () => {
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLDivElement).style.borderColor =
-                        '#404040';
+                        'rgba(248,113,113,0.34)';
                       (e.currentTarget as HTMLDivElement).style.background =
-                        '#222222';
+                        C.surfaceHover;
                       (e.currentTarget as HTMLDivElement).style.transform =
                         'translateY(-3px)';
                     }}
@@ -535,7 +539,7 @@ export const StaffList = () => {
                             <CheckCircleOutlined />
                           ),
                           title: isActive ? 'Deactivate' : 'Activate',
-                          color: isActive ? '#ef4444' : '#1db954',
+                          color: isActive ? '#ef4444' : '#ef4444',
                           onClick: () => handleToggleStatus(staff.id),
                         },
                       ].map((btn, idx) => (
@@ -548,7 +552,7 @@ export const StaffList = () => {
                             height: 34,
                             borderRadius: 8,
                             border: 'none',
-                            background: '#242424',
+                            background: '#202024',
                             color: C.textMuted,
                             cursor: 'pointer',
                             transition: 'all 0.15s',
@@ -559,14 +563,14 @@ export const StaffList = () => {
                           onMouseEnter={(e) => {
                             (
                               e.currentTarget as HTMLButtonElement
-                            ).style.background = '#333';
+                            ).style.background = '#2d2528';
                             (e.currentTarget as HTMLButtonElement).style.color =
                               btn.color;
                           }}
                           onMouseLeave={(e) => {
                             (
                               e.currentTarget as HTMLButtonElement
-                            ).style.background = '#242424';
+                            ).style.background = '#202024';
                             (e.currentTarget as HTMLButtonElement).style.color =
                               C.textMuted;
                           }}
@@ -646,7 +650,7 @@ export const StaffList = () => {
                       borderRadius: 18,
                       background: isUnassigned
                         ? 'rgba(83,83,83,0.15)'
-                        : 'rgba(29,185,84,0.1)',
+                        : 'rgba(239,68,68,0.1)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -683,7 +687,7 @@ export const StaffList = () => {
                       style={{
                         fontSize: 11,
                         color: C.green,
-                        background: 'rgba(29,185,84,0.1)',
+                        background: 'rgba(239,68,68,0.1)',
                         padding: '2px 8px',
                         borderRadius: 10,
                       }}

@@ -4,6 +4,7 @@ import {
   MutedOutlined,
   RetweetOutlined,
   ControlOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { QueueEndBehavior } from '../types';
 import { SettingSwitch } from '@/shared/components';
@@ -19,6 +20,9 @@ const useStyle = createStyles(({ css, prefixCls }) => {
       gap: 8px;
 
       .${prefixCls}-radio-button-wrapper {
+        background: #151518;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #d1d5db;
         flex: 1;
         min-width: 160px;
         min-height: 44px;
@@ -30,12 +34,20 @@ const useStyle = createStyles(({ css, prefixCls }) => {
       }
 
       .${prefixCls}-radio-button-wrapper-checked {
+        background: rgba(248, 64, 72, 0.16);
+        border-color: #f84048;
+        color: #fff;
         .${prefixCls}-typography {
           color: #fff !important;
         }
         .anticon {
           color: #fff !important;
         }
+      }
+
+      .${prefixCls}-radio-button-wrapper:not(.${prefixCls}-radio-button-wrapper-checked):hover {
+        border-color: rgba(248, 64, 72, 0.45);
+        color: #fff;
       }
     `,
   };
@@ -105,7 +117,17 @@ export const AudioMixerControls = ({
       items={[
         {
           key: 'audio',
-          label: 'Audio Mixer',
+          label: (
+            <Space size={10}>
+              <SoundOutlined style={{ color: '#f84048' }} />
+              <span style={{ color: '#f8f7f7', fontWeight: 800 }}>
+                Audio Mixer
+              </span>
+              <Text style={{ color: '#9ca3af', fontSize: 12 }}>
+                {isMuted ? 'Muted' : `${volumePercent}%`}
+              </Text>
+            </Space>
+          ),
           children: (
             <Space
               vertical
@@ -120,7 +142,12 @@ export const AudioMixerControls = ({
                   style={{ marginBottom: 12 }}
                 >
                   <Col flex='none'>
-                    <Text strong>Volume</Text>
+                    <Text
+                      strong
+                      style={{ color: '#f8f7f7' }}
+                    >
+                      Volume
+                    </Text>
                   </Col>
                   <Col flex='auto'>
                     {isMuted ? (
@@ -132,7 +159,13 @@ export const AudioMixerControls = ({
                         }}
                       />
                     ) : (
-                      <SoundOutlined style={{ fontSize: 16, paddingTop: 4 }} />
+                      <SoundOutlined
+                        style={{
+                          fontSize: 16,
+                          paddingTop: 4,
+                          color: '#9ca3af',
+                        }}
+                      />
                     )}
                   </Col>
                   <Col flex='none'>
@@ -143,6 +176,7 @@ export const AudioMixerControls = ({
                         display: 'inline-block',
                         textAlign: 'right',
                         fontSize: 13,
+                        color: '#d1d5db',
                       }}
                     >
                       {isMuted ? '0%' : `${volumePercent}%`}
@@ -164,6 +198,14 @@ export const AudioMixerControls = ({
                       disabled={loading || isMuted}
                       style={{ margin: 0 }}
                       tooltip={{ formatter: (value) => `${value}%` }}
+                      styles={{
+                        rail: { background: 'rgba(255,255,255,0.12)' },
+                        track: { background: '#f84048' },
+                        handle: {
+                          borderColor: '#f84048',
+                          boxShadow: '0 0 0 4px rgba(248,64,72,0.16)',
+                        },
+                      }}
                     />
                   </Col>
                 </Row>
@@ -181,7 +223,12 @@ export const AudioMixerControls = ({
 
               {/* Queue End Behavior */}
               <div>
-                <Text strong>Queue End Behavior</Text>
+                <Text
+                  strong
+                  style={{ color: '#f8f7f7' }}
+                >
+                  Queue End Behavior
+                </Text>
                 <Radio.Group
                   className={styles.queueBehaviorRadio}
                   style={{ marginTop: 10 }}
@@ -207,13 +254,27 @@ export const AudioMixerControls = ({
       ]}
       styles={{
         root: {
-          border: '1px solid var(--ant-blue-3)',
-          borderRadius: 2,
+          background: '#121215',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: 12,
+          overflow: 'hidden',
         },
         header: {
-          backgroundColor: 'var(--ant-blue-1)',
+          backgroundColor: 'rgba(255,255,255,0.035)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          padding: '14px 16px',
+        },
+        body: {
+          backgroundColor: '#121215',
+          padding: 16,
         },
       }}
+      expandIcon={({ isActive }) => (
+        <DownOutlined
+          rotate={isActive ? 180 : 0}
+          style={{ color: '#9ca3af' }}
+        />
+      )}
     />
   );
 };
