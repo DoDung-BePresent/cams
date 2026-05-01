@@ -85,6 +85,11 @@ export const CreateScheduleSourceDrawer = ({
             isTemplate: values.sourceType === 'template',
           });
         }}
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           label='Source Type'
