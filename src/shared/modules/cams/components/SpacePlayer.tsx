@@ -55,6 +55,15 @@ const canAttemptAudiblePlayback = (audio: HTMLAudioElement) =>
 const isNotAllowedError = (err: unknown) =>
   err instanceof DOMException && err.name === 'NotAllowedError';
 
+export type SpacePlayerAudioAnalysis = {
+  energy: number;
+  bass: number;
+  treble: number;
+  beat: number;
+  beatId: number;
+  beatStrength: number;
+};
+
 export type SpacePlayerHandle = {
   playFromUserGesture: () => Promise<void>;
   pauseFromUserGesture: () => void;
@@ -80,6 +89,7 @@ interface SpacePlayerProps {
   onQueueEndBehaviorChange?: (next: number) => void;
   onTimeUpdate?: (currentTime: number) => void;
   onDurationChange?: (duration: number) => void;
+  onAudioAnalysis?: (analysis: SpacePlayerAudioAnalysis) => void;
 }
 
 export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
@@ -103,11 +113,28 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       onQueueEndBehaviorChange,
       onTimeUpdate,
       onDurationChange,
+      onAudioAnalysis,
     },
     ref,
   ) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const hlsRef = useRef<Hls | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+    const analysisFrameRef = useRef<number | null>(null);
+    const beatBaselineRef = useRef(0);
+    const previousBassRef = useRef(0);
+    const previousEnergyRef = useRef(0);
+    const beatIdRef = useRef(0);
+    const lastBeatAtRef = useRef(0);
+    const lastAnalysisEmitRef = useRef(0);
+    const smoothedAnalysisRef = useRef({
+      energy: 0,
+      bass: 0,
+      treble: 0,
+      beatStrength: 0,
+    });
     const waitingForUserActivationRef = useRef(false);
 
     const [currentTime, setCurrentTime] = useState(0);
@@ -160,6 +187,10 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
           const audio = audioRef.current;
           if (!audio) return;
 
+          if (audioContextRef.current?.state === 'suspended') {
+            await audioContextRef.current.resume();
+          }
+
           audio.muted = isMuted;
           audio.volume = volumeToAudioLevel(volume);
 
@@ -190,6 +221,150 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       }),
       [isMuted, volume],
     );
+
+    useEffect(() => {
+      const audio = audioRef.current;
+      if (!audio || !onAudioAnalysis || !isPlaying) {
+        onAudioAnalysis?.({
+          energy: 0,
+          bass: 0,
+          treble: 0,
+          beat: 0,
+          beatId: beatIdRef.current,
+          beatStrength: 0,
+        });
+        return undefined;
+      }
+
+      const AudioContextCtor =
+        window.AudioContext ||
+        (
+          window as typeof window & {
+            webkitAudioContext?: typeof AudioContext;
+          }
+        ).webkitAudioContext;
+
+      if (!AudioContextCtor) return undefined;
+
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContextCtor();
+      }
+
+      const audioContext = audioContextRef.current;
+
+      if (!analyserRef.current) {
+        analyserRef.current = audioContext.createAnalyser();
+        analyserRef.current.fftSize = 512;
+        analyserRef.current.smoothingTimeConstant = 0.78;
+      }
+
+      if (!sourceNodeRef.current) {
+        sourceNodeRef.current = audioContext.createMediaElementSource(audio);
+        sourceNodeRef.current.connect(analyserRef.current);
+        analyserRef.current.connect(audioContext.destination);
+      }
+
+      if (audioContext.state === 'suspended' && hasDocumentUserActivation()) {
+        void audioContext.resume().catch(() => undefined);
+      }
+
+      const analyser = analyserRef.current;
+      const frequencyData = new Uint8Array(analyser.frequencyBinCount);
+      let mounted = true;
+
+      const tick = (timestamp: number) => {
+        if (!mounted) return;
+
+        analyser.getByteFrequencyData(frequencyData);
+
+        const bassBins = Math.max(4, Math.floor(frequencyData.length * 0.12));
+        const trebleStart = Math.floor(frequencyData.length * 0.48);
+        let total = 0;
+        let bassTotal = 0;
+        let trebleTotal = 0;
+
+        for (let index = 0; index < frequencyData.length; index += 1) {
+          const value = frequencyData[index];
+          total += value;
+          if (index < bassBins) bassTotal += value;
+          if (index >= trebleStart) trebleTotal += value;
+        }
+
+        const energy = total / frequencyData.length / 255;
+        const bass = bassTotal / bassBins / 255;
+        const treble = trebleTotal / (frequencyData.length - trebleStart) / 255;
+        const previousBaseline = beatBaselineRef.current || bass;
+        const baseline = previousBaseline * 0.9 + bass * 0.1;
+        beatBaselineRef.current = baseline;
+        const relativeBassStrength = Math.max(
+          0,
+          (bass - baseline) / Math.max(0.08, baseline),
+        );
+        const bassRise = Math.max(0, bass - previousBassRef.current);
+        const energyRise = Math.max(0, energy - previousEnergyRef.current);
+        previousBassRef.current = bass;
+        previousEnergyRef.current = energy;
+
+        const onsetStrength = Math.max(bassRise * 5.2, energyRise * 4.2);
+        const beatStrength = Math.max(relativeBassStrength, onsetStrength);
+        const densePassageBoost = energy > 0.18 && bass > 0.08 ? 0.05 : 0;
+        const isBeatCandidate =
+          bass > 0.048 &&
+          (beatStrength > 0.1 - densePassageBoost ||
+            (energyRise > 0.018 && bassRise > 0.01));
+        const beat =
+          isBeatCandidate && timestamp - lastBeatAtRef.current > 92 ? 1 : 0;
+
+        if (beat) {
+          beatIdRef.current += 1;
+          lastBeatAtRef.current = timestamp;
+        }
+
+        if (timestamp - lastAnalysisEmitRef.current > 55) {
+          lastAnalysisEmitRef.current = timestamp;
+          const smoothed = smoothedAnalysisRef.current;
+          const nextEnergy = Math.min(1, energy * 2.35);
+          const nextBass = Math.min(1, bass * 2.75);
+          const nextTreble = Math.min(1, treble * 2.1);
+          const nextBeatStrength = Math.min(1, beatStrength);
+
+          smoothed.energy = smoothed.energy * 0.62 + nextEnergy * 0.38;
+          smoothed.bass = smoothed.bass * 0.58 + nextBass * 0.42;
+          smoothed.treble = smoothed.treble * 0.64 + nextTreble * 0.36;
+          smoothed.beatStrength =
+            smoothed.beatStrength * 0.44 + nextBeatStrength * 0.56;
+
+          onAudioAnalysis({
+            energy: smoothed.energy,
+            bass: smoothed.bass,
+            treble: smoothed.treble,
+            beat,
+            beatId: beatIdRef.current,
+            beatStrength: smoothed.beatStrength,
+          });
+        }
+
+        analysisFrameRef.current = requestAnimationFrame(tick);
+      };
+
+      analysisFrameRef.current = requestAnimationFrame(tick);
+
+      return () => {
+        mounted = false;
+        if (analysisFrameRef.current !== null) {
+          cancelAnimationFrame(analysisFrameRef.current);
+          analysisFrameRef.current = null;
+        }
+        onAudioAnalysis({
+          energy: 0,
+          bass: 0,
+          treble: 0,
+          beat: 0,
+          beatId: beatIdRef.current,
+          beatStrength: 0,
+        });
+      };
+    }, [isPlaying, onAudioAnalysis]);
 
     // Initialize HLS player
     useEffect(() => {
@@ -685,7 +860,10 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
     return (
       <Card>
         {/* Hidden audio element */}
-        <audio ref={audioRef} />
+        <audio
+          ref={audioRef}
+          crossOrigin='anonymous'
+        />
 
         <Space
           orientation='vertical'

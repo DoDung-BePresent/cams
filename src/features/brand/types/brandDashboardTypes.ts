@@ -92,18 +92,28 @@ export type BrandDashboardOverview = {
   totalStores: number;
   activeStores: number;
   inactiveStores: number;
+  totalStoresTrend: BrandDashboardMetricTrend;
   totalSpaces: number;
   activeSpaces: number;
+  totalSpacesTrend: BrandDashboardMetricTrend;
   spacesCurrentlyPlaying: number;
   spacesPaused: number;
   spacesManualOverride: number;
   totalPlays: number;
+  totalPlaysTrend: BrandDashboardMetricTrend;
   distinctTracksPlayed: number;
   totalPlaybackMinutes: number;
   iotOnlineSpaces: number;
   iotOfflineSpaces: number;
   iotStaleSpaces: number;
   iotUnknownSpaces: number;
+};
+
+export type BrandDashboardMetricTrend = {
+  currentValue: number;
+  previousValue: number;
+  delta: number;
+  percentChange?: number | null;
 };
 
 export type BrandStoreHealthItem = {
@@ -230,9 +240,17 @@ export type BrandBillingSummary = {
   balanceTokens: number;
   lockStatus: WalletLockStatusEnum;
   rangeUsageTokens: number;
+  rangeUsageTrend: BrandDashboardTokenMetricTrend;
   todayUsageTokens: number;
   lastSettlementAtUtc?: string | null;
   lastDebtBusinessDate?: string | null;
+};
+
+export type BrandDashboardTokenMetricTrend = {
+  currentValue: number;
+  previousValue: number;
+  delta: number;
+  percentChange?: number | null;
 };
 
 export type BrandAiGenerationSummary = {
