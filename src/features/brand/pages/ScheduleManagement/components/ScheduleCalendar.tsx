@@ -13,7 +13,8 @@ import dayjs from 'dayjs';
 import { AppModal } from '@/shared/components';
 import { transformSlotsToEvents } from '../utils/calendarHelpers';
 import type { ScheduleBootstrapData } from '../types/schedule.types';
-// import { useSlotMutations } from '../hooks';
+import { useBrandSourceSlotMutations } from '../hooks/useBrandSourceSlotMutations';
+import type { ScheduleSlotItem } from '@/shared/modules/schedules/types';
 
 /**
  * TODO: Waiting for BE
@@ -26,7 +27,8 @@ const SLOT_COLOR = '#1db954'; // Spotify green - stands out in dark mode
 interface ScheduleCalendarProps {
   bootstrap: ScheduleBootstrapData | undefined;
   isLoading: boolean;
-  spaceId: string;
+  sourceId: string | null;
+  brandId?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEditSlot: (slot: any) => void;
   onCreateSlot: (selectInfo: DateSelectArg) => void;
@@ -35,17 +37,18 @@ interface ScheduleCalendarProps {
 export const ScheduleCalendar = ({
   bootstrap,
   isLoading,
-  // spaceId,
+  sourceId,
+  brandId,
   onEditSlot,
   onCreateSlot,
 }: ScheduleCalendarProps) => {
   const calendarRef = useRef<FullCalendar>(null);
-  // const { updateSlot, deleteSlot } = useSlotMutations(spaceId);
+  const { deleteSlot } = useBrandSourceSlotMutations(sourceId || '', brandId);
 
   // Transform BE slots to FullCalendar events
   const events = bootstrap?.draftSchedule?.slots
     ? transformSlotsToEvents(
-        bootstrap.draftSchedule.slots,
+        bootstrap.draftSchedule.slots as unknown as ScheduleSlotItem[],
         bootstrap.musicCatalog,
         SLOT_COLOR,
       )
@@ -70,9 +73,10 @@ export const ScheduleCalendar = ({
         AppModal.confirm({
           title: 'Delete Time Slot',
           content: `Are you sure you want to delete "${clickInfo.event.title}"?`,
+          type: 'warning',
           okText: 'Delete',
           okButtonProps: { danger: true },
-          // onOk: () => deleteSlot.mutate(slot.id),
+          onOk: () => deleteSlot.mutate(slot.id),
         });
       },
     });

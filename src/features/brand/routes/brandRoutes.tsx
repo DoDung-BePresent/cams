@@ -33,11 +33,6 @@ const PlaylistList = Loadable(
   'PlaylistList',
 );
 
-const ScheduleList = Loadable(
-  () => import('@/features/brand/pages/ScheduleManagement/ScheduleList'),
-  'ScheduleList',
-);
-
 const ScheduleCalendar = Loadable(
   () => import('@/features/brand/pages/ScheduleManagement'),
   'ScheduleManagement',
@@ -87,10 +82,6 @@ export const brandRoutes = [
   {
     path: 'schedule',
     element: <ScheduleCalendar />,
-  },
-  {
-    path: 'schedule-old',
-    element: <ScheduleList />,
   },
   {
     path: 'config-management',

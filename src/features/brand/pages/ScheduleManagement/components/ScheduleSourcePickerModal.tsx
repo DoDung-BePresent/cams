@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Flex, Input, Segmented, Tag, Dropdown, Button } from 'antd';
+import { Flex, Input, Segmented, Tag, Dropdown, Button, Radio } from 'antd';
 import {
   SearchOutlined,
   MoreOutlined,
@@ -29,7 +29,7 @@ export const ScheduleSourcePickerModal = ({
   librarySources,
   templateSources,
   onClose,
-  // onSelect,
+  onSelect,
   onEdit,
   onDelete,
 }: ScheduleSourcePickerModalProps) => {
@@ -38,6 +38,7 @@ export const ScheduleSourcePickerModal = ({
   );
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
   const pageSize = 10;
 
   const dataSource =
@@ -56,7 +57,25 @@ export const ScheduleSourcePickerModal = ({
     });
   }, [dataSource, search]);
 
+  const handleLoad = () => {
+    if (selectedSourceId) {
+      onSelect(selectedSourceId);
+    }
+  };
+
   const columns: ColumnsType<ScheduleSourceItem> = [
+    {
+      title: '',
+      key: 'radio',
+      width: 50,
+      align: 'center',
+      render: (_, record) => (
+        <Radio
+          checked={selectedSourceId === record.id}
+          onChange={() => setSelectedSourceId(record.id)}
+        />
+      ),
+    },
     {
       title: 'No.',
       key: 'no',
@@ -149,15 +168,20 @@ export const ScheduleSourcePickerModal = ({
       title='Load schedule source'
       open={open}
       onCancel={onClose}
-      onOk={onClose}
-      okText='Close'
-      cancelButtonProps={{ style: { display: 'none' } }}
+      onOk={handleLoad}
+      okText='Load'
+      okButtonProps={{ disabled: !selectedSourceId }}
       width={960}
       scrollable={false}
       styles={{
         body: {
           padding: '24px',
         },
+      }}
+      afterClose={() => {
+        setSelectedSourceId(null);
+        setSearch('');
+        setCurrentPage(1);
       }}
     >
       <Flex

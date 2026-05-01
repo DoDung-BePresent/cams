@@ -13,7 +13,7 @@ import {
 import dayjs from 'dayjs';
 
 import type { ScheduleMusicItemDto } from '../types/schedule.types';
-import { useSlotMutations } from '../hooks';
+import { useBrandSourceSlotMutations } from '../hooks/useBrandSourceSlotMutations';
 
 const { Text } = Typography;
 
@@ -30,7 +30,8 @@ const WEEKDAYS = [
 interface CreateSlotDrawerProps {
   open: boolean;
   onClose: () => void;
-  spaceId: string;
+  sourceId: string | null;
+  brandId?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   slot: any | null;
   prefilledTime?: {
@@ -44,13 +45,14 @@ interface CreateSlotDrawerProps {
 export const CreateSlotDrawer = ({
   open,
   onClose,
-  spaceId,
+  sourceId,
+  brandId,
   slot,
   prefilledTime,
   musicCatalog,
 }: CreateSlotDrawerProps) => {
   const [form] = Form.useForm();
-  const { createSlot, updateSlot } = useSlotMutations(spaceId);
+  const { upsertSlot } = useBrandSourceSlotMutations(sourceId || '', brandId);
 
   const isEdit = !!slot;
 
@@ -58,7 +60,7 @@ export const CreateSlotDrawer = ({
     if (open && slot) {
       // Editing existing slot
       form.setFieldsValue({
-        playlistId: slot.musicId,
+        playlistId: slot.playlistId || slot.musicId, // Support both field names
         daysOfWeek: slot.daysOfWeek,
         timeRange: [
           dayjs(slot.startTime, 'HH:mm'),
@@ -82,6 +84,8 @@ export const CreateSlotDrawer = ({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (values: any) => {
+    if (!sourceId) return;
+
     const [startTime, endTime] = values.timeRange;
 
     const payload = {
@@ -91,16 +95,10 @@ export const CreateSlotDrawer = ({
       endTime: endTime.format('HH:mm'),
     };
 
-    // TODO: Client-side overlap validation
-    // Waiting for BE to add overlap validation
+    // Use existing slot ID or generate new one
+    const slotId = isEdit ? slot.id : crypto.randomUUID();
 
-    if (isEdit) {
-      await updateSlot.mutateAsync({ slotId: slot.id, data: payload });
-    } else {
-      // Generate new GUID for slot
-      const newSlotId = crypto.randomUUID();
-      await createSlot.mutateAsync({ slotId: newSlotId, data: payload });
-    }
+    await upsertSlot.mutateAsync({ slotId, data: payload });
 
     handleClose();
   };
@@ -132,7 +130,7 @@ export const CreateSlotDrawer = ({
             size='large'
             type='primary'
             onClick={() => form.submit()}
-            loading={createSlot.isPending || updateSlot.isPending}
+            loading={upsertSlot.isPending}
           >
             {isEdit ? 'Update' : 'Create'}
           </Button>

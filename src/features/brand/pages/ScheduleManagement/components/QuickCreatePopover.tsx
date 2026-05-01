@@ -13,7 +13,7 @@ import {
 import dayjs from 'dayjs';
 import { createStyles } from 'antd-style';
 
-import { useSlotMutations } from '../hooks/useSlotMutations';
+import { useBrandSourceSlotMutations } from '../hooks/useBrandSourceSlotMutations';
 import type { ScheduleMusicItemDto } from '../types/schedule.types';
 
 const { Text } = Typography;
@@ -53,7 +53,8 @@ interface QuickCreatePopoverProps {
     dayOfWeek: number;
     dayName: string;
   } | null;
-  spaceId: string;
+  sourceId: string | null;
+  brandId?: string;
   musicCatalog: ScheduleMusicItemDto[];
   onClose: () => void;
 }
@@ -62,13 +63,14 @@ export const QuickCreatePopover = ({
   open,
   anchorPosition,
   timeInfo,
-  spaceId,
+  sourceId,
+  brandId,
   musicCatalog,
   onClose,
 }: QuickCreatePopoverProps) => {
   const { styles } = useStyles();
   const [form] = Form.useForm();
-  const { createSlot } = useSlotMutations(spaceId);
+  const { upsertSlot } = useBrandSourceSlotMutations(sourceId || '', brandId);
   const [selectedPlaylist, setSelectedPlaylist] = useState<string>();
   const [startTime, setStartTime] = useState<dayjs.Dayjs | null>(null);
   const [endTime, setEndTime] = useState<dayjs.Dayjs | null>(null);
@@ -94,7 +96,8 @@ export const QuickCreatePopover = ({
   }, [anchorPosition]);
 
   const handleSubmit = async () => {
-    if (!timeInfo || !selectedPlaylist || !startTime || !endTime) return;
+    if (!timeInfo || !selectedPlaylist || !startTime || !endTime || !sourceId)
+      return;
 
     // Validate time range
     if (endTime.isBefore(startTime) || endTime.isSame(startTime)) {
@@ -109,7 +112,7 @@ export const QuickCreatePopover = ({
 
     const newSlotId = crypto.randomUUID();
 
-    await createSlot.mutateAsync({
+    await upsertSlot.mutateAsync({
       slotId: newSlotId,
       data: {
         daysOfWeek: [timeInfo.dayOfWeek],
@@ -226,8 +229,8 @@ export const QuickCreatePopover = ({
             size='large'
             type='primary'
             onClick={handleSubmit}
-            disabled={!selectedPlaylist || !startTime || !endTime}
-            loading={createSlot.isPending}
+            disabled={!selectedPlaylist || !startTime || !endTime || !sourceId}
+            loading={upsertSlot.isPending}
           >
             Save
           </Button>

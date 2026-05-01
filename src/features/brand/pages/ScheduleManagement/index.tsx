@@ -11,7 +11,6 @@ import { CreateSlotDrawer } from './components/CreateSlotDrawer';
 import { CreateScheduleSourceDrawer } from './components/CreateScheduleSourceDrawer';
 import { EditScheduleSourceDrawer } from './components/EditScheduleSourceDrawer';
 import { ScheduleSourcePickerModal } from './components/ScheduleSourcePickerModal';
-import { useScheduleBootstrap } from './hooks/useScheduleBootstrap';
 import {
   useCreateBrandScheduleSource,
   useUpdateBrandScheduleSource,
@@ -19,11 +18,16 @@ import {
   useBrandScheduleLibrary,
   useBrandScheduleTemplates,
 } from '@/features/brand/hooks';
+import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useAuth } from '@/providers';
 import type {
   ScheduleSourceType,
   ScheduleSourceItem,
 } from '@/shared/modules/schedules/types';
+import type {
+  SpaceScheduleDto,
+  ScheduleMusicItemDto,
+} from './types/schedule.types';
 import './ScheduleManagement.css';
 
 const WEEKDAY_NAMES = [
@@ -37,18 +41,18 @@ const WEEKDAY_NAMES = [
 ];
 
 /**
- * Schedule Management Page
+ * Schedule Management Page (Brand Level)
  *
  * Features:
- * - Weekly calendar view with time slots
- * - Drag & drop to create/edit slots
- * - Sidebar with music catalog and templates
- * - Save schedule to library
+ * - Manage brand schedule sources (templates and library)
+ * - Create/edit slots for each source
+ * - Visual calendar interface for slot management
  *
- * TODO: Waiting for BE
- * - [ ] Slot color field (currently hardcoded to #4A2EA1)
- * - [ ] Bulk slot operations (currently sequential API calls)
- * - [ ] Overlap validation from BE (currently client-side only)
+ * Flow:
+ * 1. Load templates and library sources
+ * 2. Select a source to edit (or create new)
+ * 3. Add/edit/delete slots for that source
+ * 4. Slots are saved to brand source (not space)
  */
 export const ScheduleManagement = () => {
   const { user } = useAuth();
@@ -70,6 +74,7 @@ export const ScheduleManagement = () => {
   const [editSourceDrawerOpen, setEditSourceDrawerOpen] = useState(false);
   const [loadScheduleModalOpen, setLoadScheduleModalOpen] = useState(false);
   const [createType, setCreateType] = useState<ScheduleSourceType>('template');
+  const [currentSourceId, setCurrentSourceId] = useState<string | null>(null);
   const [selectedSource, setSelectedSource] = useState<
     ScheduleSourceItem | undefined
   >();
@@ -81,10 +86,7 @@ export const ScheduleManagement = () => {
     daysOfWeek: number[];
   } | null>(null);
 
-  // TODO: Get spaceId from route params or context
-  const spaceId = 'temp-space-id';
-
-  const { data: bootstrap, isLoading } = useScheduleBootstrap(spaceId);
+  // Load data
   const {
     data: librarySources = [],
     isLoading: isLoadingLibrary,
@@ -95,10 +97,35 @@ export const ScheduleManagement = () => {
     isLoading: isLoadingTemplates,
     refetch: refetchTemplates,
   } = useBrandScheduleTemplates(brandId ?? undefined, !!brandId);
+  const { data: playlistsData, isLoading: isLoadingPlaylists } = usePlaylists({
+    page: 1,
+    pageSize: 1000, // Load all playlists
+    status: 1,
+  });
 
   const createSourceMutation = useCreateBrandScheduleSource();
   const updateSourceMutation = useUpdateBrandScheduleSource();
   const deleteSourceMutation = useDeleteBrandScheduleSource();
+
+  // Get current source being edited
+  const currentSource =
+    librarySources.find((s) => s.id === currentSourceId) ||
+    templateSources.find((s) => s.id === currentSourceId);
+
+  // Transform playlists to music catalog format
+  const musicCatalog: ScheduleMusicItemDto[] =
+    playlistsData?.items
+      .filter((playlist) => playlist.name) // Filter out playlists without name
+      .map((playlist) => ({
+        id: playlist.id,
+        title: playlist.name!,
+        artist: 'Brand Playlist',
+        collection: (playlist.storeName ?? null) as string | null,
+        artworkLabel:
+          playlist.name!.split(' ').slice(0, 2).join(' ') || 'Playlist',
+        primaryHex: '#4A2EA1',
+        secondaryHex: '#4FB2D6',
+      })) || [];
 
   const handleCreateTemplate = (type: ScheduleSourceType) => {
     setCreateType(type);
@@ -120,8 +147,7 @@ export const ScheduleManagement = () => {
   };
 
   const handleLoadSchedule = (sourceId: string) => {
-    console.log('Load schedule source:', sourceId);
-    // TODO: Implement apply source to space
+    setCurrentSourceId(sourceId);
     setLoadScheduleModalOpen(false);
   };
 
@@ -166,7 +192,8 @@ export const ScheduleManagement = () => {
 
   const breadcrumbs = [{ title: 'Brand' }, { title: 'Schedule Management' }];
 
-  const hasTemplate = bootstrap?.draftSchedule?.slots?.length;
+  const isLoading =
+    isLoadingLibrary || isLoadingTemplates || isLoadingPlaylists;
 
   return (
     <div>
@@ -204,12 +231,23 @@ export const ScheduleManagement = () => {
         }
       />
 
-      {!hasTemplate && (
+      {!currentSourceId && (
         <Alert
           type='info'
           showIcon
-          message='Get started by creating a template or library, then add time slots to build your weekly schedule.'
+          description='Get started by creating a template or library, or load an existing one to add time slots.'
           style={{ marginBottom: 16 }}
+        />
+      )}
+
+      {currentSourceId && currentSource && (
+        <Alert
+          type='success'
+          showIcon
+          description={`Editing: ${currentSource.title} (${currentSource.type})`}
+          style={{ marginBottom: 16 }}
+          closable
+          onClose={() => setCurrentSourceId(null)}
         />
       )}
 
@@ -219,9 +257,25 @@ export const ScheduleManagement = () => {
           <Card>
             {/* Calendar */}
             <ScheduleCalendar
-              bootstrap={bootstrap}
+              bootstrap={{
+                draftSchedule:
+                  (currentSource?.schedule as unknown as SpaceScheduleDto) || {
+                    id: '',
+                    name: '',
+                    spaceId: null,
+                    slots: [],
+                    enabled: true,
+                    sourceId: null,
+                    sourceLabel: null,
+                    updatedAt: new Date().toISOString(),
+                  },
+                librarySources: [],
+                templateSources: [],
+                musicCatalog: isLoadingPlaylists ? [] : musicCatalog,
+              }}
               isLoading={isLoading}
-              spaceId={spaceId}
+              sourceId={currentSourceId}
+              brandId={brandId ?? undefined}
               onEditSlot={handleEditSlot}
               onCreateSlot={handleCreateSlot}
             />
@@ -234,8 +288,9 @@ export const ScheduleManagement = () => {
         open={popoverOpen}
         anchorPosition={popoverPosition}
         timeInfo={popoverTimeInfo}
-        spaceId={spaceId}
-        musicCatalog={bootstrap?.musicCatalog || []}
+        sourceId={currentSourceId}
+        brandId={brandId ?? undefined}
+        musicCatalog={musicCatalog}
         onClose={handleClosePopover}
       />
 
@@ -246,10 +301,11 @@ export const ScheduleManagement = () => {
           setDrawerOpen(false);
           setPrefilledTime(null);
         }}
-        spaceId={spaceId}
+        sourceId={currentSourceId}
+        brandId={brandId ?? undefined}
         slot={selectedSlot}
         prefilledTime={prefilledTime}
-        musicCatalog={bootstrap?.musicCatalog || []}
+        musicCatalog={musicCatalog}
       />
 
       {/* Create Template/Library Drawer */}

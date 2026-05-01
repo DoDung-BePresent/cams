@@ -1,8 +1,6 @@
 import type { EventInput } from '@fullcalendar/core';
-import type {
-  ScheduleSlotDto,
-  ScheduleMusicItemDto,
-} from '../types/schedule.types';
+import type { ScheduleMusicItemDto } from '../types/schedule.types';
+import type { ScheduleSlotItem } from '@/shared/modules/schedules/types';
 
 /**
  * Transform BE schedule slots to FullCalendar events
@@ -11,13 +9,13 @@ import type {
  * BE uses JS weekday (0=Sunday, 1=Monday, ..., 6=Saturday)
  */
 export const transformSlotsToEvents = (
-  slots: ScheduleSlotDto[],
+  slots: ScheduleSlotItem[],
   musicCatalog: ScheduleMusicItemDto[],
   defaultColor: string,
 ): EventInput[] => {
   return slots.flatMap((slot) => {
-    const music = musicCatalog.find((m) => m.id === slot.musicId);
-    const title = music?.title || 'Unknown Playlist';
+    const music = musicCatalog.find((m) => m.id === slot.playlistId);
+    const title = music?.title || `Unknown Playlist`;
 
     // Convert BE weekdays (0=Sun) to FullCalendar weekdays (1=Mon, 7=Sun)
     const fcDaysOfWeek = slot.daysOfWeek.map((day) => (day === 0 ? 7 : day));
@@ -31,7 +29,7 @@ export const transformSlotsToEvents = (
       backgroundColor: defaultColor,
       borderColor: defaultColor,
       extendedProps: {
-        playlistId: slot.musicId,
+        playlistId: slot.playlistId,
         timeRange: `${slot.startTime} - ${slot.endTime}`,
         daysOfWeekBE: slot.daysOfWeek, // Keep original for editing
       },
