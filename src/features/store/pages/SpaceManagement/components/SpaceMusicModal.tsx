@@ -24,6 +24,7 @@ interface SpaceMusicModalProps {
   spaceId: string | null;
   storeId: string;
   onClose: () => void;
+  zIndex?: number;
 }
 
 /**
@@ -40,6 +41,7 @@ export const SpaceMusicModal = ({
   spaceId,
   storeId,
   onClose,
+  zIndex,
 }: SpaceMusicModalProps) => {
   const { accessToken } = useAuth();
   const queryClient = useQueryClient();
@@ -106,6 +108,7 @@ export const SpaceMusicModal = ({
       centered
       width={800}
       open={open}
+      zIndex={zIndex}
       onCancel={onClose}
       destroyOnHidden
       footer={null}

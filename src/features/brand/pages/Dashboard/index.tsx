@@ -21,9 +21,14 @@ import {
 } from 'antd';
 import {
   AudioOutlined,
+  ArrowDownOutlined,
+  ArrowUpOutlined,
   CalendarOutlined,
   CustomerServiceOutlined,
+  FullscreenExitOutlined,
+  FullscreenOutlined,
   LeftOutlined,
+  MinusOutlined,
   MutedOutlined,
   PauseCircleOutlined,
   PlayCircleOutlined,
@@ -44,6 +49,7 @@ import {
   IotHealthStatusEnum,
   TrackScopeEnum,
   WalletLockStatusEnum,
+  type BrandDashboardMetricTrend,
   type BrandDashboardIotSpaceHealthItem,
   type BrandDashboardTopTrackItem,
   type BrandLivePlaybackQueueItem,
@@ -60,6 +66,7 @@ import {
 } from '@/shared/modules/cams/hooks';
 import {
   SpacePlayer,
+  type SpacePlayerAudioAnalysis,
   type SpacePlayerHandle,
 } from '@/shared/modules/cams/components';
 import { SpaceMusicModal } from '@/features/store/pages/SpaceManagement/components';
@@ -98,6 +105,7 @@ const hasDocumentUserActivation = () => {
 
 const EMPTY_LIVE_PLAYBACK_ITEMS: BrandLivePlaybackSpaceItem[] = [];
 const EMPTY_IOT_SPACE_HEALTH_ITEMS: BrandDashboardIotSpaceHealthItem[] = [];
+const DASHBOARD_KPI_CARD_HEIGHT = 140;
 
 const C = {
   surface: '#18181b',
@@ -141,6 +149,86 @@ const formatAgo = (value?: string | null) => {
   return `${Math.floor(minutes / 60)}h ago`;
 };
 
+const getComparisonLabel = (period?: BrandDashboardPeriodEnum) => {
+  switch (period) {
+    case BrandDashboardPeriodEnum.Day:
+      return 'vs yesterday';
+    case BrandDashboardPeriodEnum.Week:
+      return 'vs last week';
+    case BrandDashboardPeriodEnum.Month:
+      return 'vs last month';
+    case BrandDashboardPeriodEnum.Year:
+      return 'vs last year';
+    default:
+      return 'vs previous period';
+  }
+};
+
+const formatSigned = (value: number, suffix = '') => {
+  if (value > 0) return `+${formatNumber(value)}${suffix}`;
+  if (value < 0) return `-${formatNumber(Math.abs(value))}${suffix}`;
+  return `0${suffix}`;
+};
+
+const formatTrendText = (
+  trend?: BrandDashboardMetricTrend | null,
+  comparisonLabel = 'vs previous period',
+  mode: 'delta' | 'percent' = 'percent',
+  noun?: string,
+) => {
+  if (!trend) return undefined;
+
+  if (
+    mode === 'percent' &&
+    trend.percentChange !== null &&
+    trend.percentChange !== undefined
+  ) {
+    return `${formatSigned(trend.percentChange, '%')} ${comparisonLabel}`;
+  }
+
+  const nounText = noun ? ` ${noun}` : '';
+  return `${formatSigned(trend.delta)}${nounText} ${comparisonLabel}`;
+};
+
+const formatTokenUsageTrendText = (
+  trend?: { delta: number } | null,
+  comparisonLabel = 'vs previous period',
+) => {
+  if (!trend) return undefined;
+  return `${formatSigned(trend.delta)} used ${comparisonLabel}`;
+};
+
+const formatPlayTrendText = (
+  trend?: { delta: number } | null,
+  comparisonLabel = 'vs previous period',
+) => {
+  if (!trend) return undefined;
+  return `${formatSigned(trend.delta)} plays ${comparisonLabel}`;
+};
+
+type TrendDirection = 'up' | 'down' | 'flat';
+
+const getTrendDirection = (value?: number | null): TrendDirection => {
+  if (!value) return 'flat';
+  return value > 0 ? 'up' : 'down';
+};
+
+const getTrendTone = (value?: number | null) => {
+  if (!value) return C.subtle;
+  return value > 0 ? C.green : C.red;
+};
+
+const getUsageTrendTone = (value?: number | null) => {
+  if (!value) return C.subtle;
+  return value > 0 ? C.red : C.green;
+};
+
+const TrendIcon = ({ direction }: { direction: TrendDirection }) => {
+  if (direction === 'up') return <ArrowUpOutlined />;
+  if (direction === 'down') return <ArrowDownOutlined />;
+  return <MinusOutlined />;
+};
+
 const getIotMeta = (status?: IotHealthStatusEnum) => {
   switch (status) {
     case IotHealthStatusEnum.Online:
@@ -169,17 +257,29 @@ const Panel = ({
   children,
   minHeight,
   viewPath,
+  style,
+  contentStyle,
 }: {
   title: string;
   extra?: ReactNode;
   children: ReactNode;
   minHeight?: number;
   viewPath?: string;
+  style?: React.CSSProperties;
+  contentStyle?: React.CSSProperties;
 }) => {
   const navigate = useNavigate();
 
   return (
-    <section style={panel(minHeight)}>
+    <section
+      style={{
+        ...panel(minHeight),
+        display: 'flex',
+        flexDirection: 'column',
+        width: '100%',
+        ...style,
+      }}
+    >
       <div
         style={{
           display: 'flex',
@@ -213,15 +313,44 @@ const Panel = ({
             </Text>
           ))}
       </div>
-      <div style={{ padding: 14 }}>{children}</div>
+      <div style={{ padding: 14, flex: 1, ...contentStyle }}>{children}</div>
     </section>
   );
 };
+
+const TrendLine = ({
+  text,
+  tone,
+  direction,
+}: {
+  text: string;
+  tone: string;
+  direction: TrendDirection;
+}) => (
+  <Text
+    style={{
+      color: tone,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4,
+      fontSize: 10,
+      fontWeight: 800,
+      marginTop: 3,
+    }}
+  >
+    <TrendIcon direction={direction} />
+    <span>{text}</span>
+  </Text>
+);
+
 const KpiCard = ({
   icon,
   label,
   value,
   detail,
+  trendText,
+  trendTone = C.subtle,
+  trendDirection = 'flat',
   accent = C.red,
   loading,
   onClick,
@@ -230,6 +359,9 @@ const KpiCard = ({
   label: string;
   value: string;
   detail?: string;
+  trendText?: string;
+  trendTone?: string;
+  trendDirection?: TrendDirection;
   accent?: string;
   loading?: boolean;
   onClick?: () => void;
@@ -237,7 +369,9 @@ const KpiCard = ({
   <div
     onClick={onClick}
     style={{
-      ...panel(108),
+      ...panel(),
+      boxSizing: 'border-box',
+      height: DASHBOARD_KPI_CARD_HEIGHT,
       padding: 15,
       cursor: onClick ? 'pointer' : 'default',
     }}
@@ -277,6 +411,13 @@ const KpiCard = ({
         {detail ? (
           <Text style={{ color: C.subtle, fontSize: 11 }}>{detail}</Text>
         ) : null}
+        {trendText ? (
+          <TrendLine
+            text={trendText}
+            tone={trendTone}
+            direction={trendDirection}
+          />
+        ) : null}
       </div>
     </div>
   </div>
@@ -288,6 +429,9 @@ const IotKpiCard = ({
   offline,
   stale,
   unknown,
+  trendText,
+  trendTone = C.green,
+  trendDirection = 'flat',
   loading,
   onClick,
 }: {
@@ -296,6 +440,9 @@ const IotKpiCard = ({
   offline?: number | null;
   stale?: number | null;
   unknown?: number | null;
+  trendText?: string;
+  trendTone?: string;
+  trendDirection?: TrendDirection;
   loading?: boolean;
   onClick?: () => void;
 }) => {
@@ -310,7 +457,9 @@ const IotKpiCard = ({
     <div
       onClick={onClick}
       style={{
-        ...panel(108),
+        ...panel(),
+        boxSizing: 'border-box',
+        height: DASHBOARD_KPI_CARD_HEIGHT,
         padding: 13,
         cursor: onClick ? 'pointer' : 'default',
       }}
@@ -391,6 +540,13 @@ const IotKpiCard = ({
               </span>
             ))}
           </div>
+          {trendText ? (
+            <TrendLine
+              text={trendText}
+              tone={trendTone}
+              direction={trendDirection}
+            />
+          ) : null}
         </div>
         <Progress
           type='circle'
@@ -412,106 +568,140 @@ const IotKpiCard = ({
 const WaveVisualizer = ({
   color,
   playing,
+  analysis,
 }: {
   color: string;
   playing: boolean;
-}) => (
-  <div
-    style={{
-      position: 'absolute',
-      inset: 0,
-      overflow: 'hidden',
-      borderRadius: 8,
-      opacity: playing ? 1 : 0.68,
-    }}
-  >
-    <style>{`
-      @keyframes bmWaveDrift { 0% { transform: translateX(-14px); } 50% { transform: translateX(14px); } 100% { transform: translateX(-14px); } }
-      @keyframes bmWaveGlow { 0%,100% { opacity: .42; } 50% { opacity: .95; } }
-      @keyframes bmDiscPulse { 0%,100% { transform: scale(.96); opacity: .48; } 50% { transform: scale(1.05); opacity: .95; } }
-    `}</style>
+  analysis: SpacePlayerAudioAnalysis;
+}) => {
+  const energy = playing ? analysis.energy : 0;
+  const bass = playing ? analysis.bass : 0;
+  const treble = playing ? analysis.treble : 0;
+  const beat = playing ? analysis.beat : 0;
+  const beatStrength = playing ? analysis.beatStrength : 0;
+  const waveOpacity = playing ? 0.36 + energy * 0.28 : 0.2;
+  const bassPunch = bass * 40 + beat * 22 + beatStrength * 32;
+  const trebleRipple = treble * 24 + beatStrength * 8;
+  const tempoPhase = (analysis.beatId % 6) * 0.55;
+  const glow = 8 + energy * 24 + bass * 20 + beatStrength * 16 + beat * 10;
+  const buildWavePath = (index: number) => {
+    const baseY = 88 + index * 16;
+    const layer = index + 1;
+    const crest = 34 + index * 10 - bassPunch * (0.82 - index * 0.08);
+    const valley = 144 + index * 8 + bassPunch * (0.64 - index * 0.06);
+    const midLift = Math.sin(tempoPhase + layer) * trebleRipple;
+    const lateLift = Math.cos(tempoPhase * 1.2 + layer) * trebleRipple * 0.75;
+
+    return `M0 ${baseY}
+      C72 ${crest + lateLift}, 126 ${crest - midLift}, 190 ${baseY + midLift}
+      S304 ${valley - lateLift}, 390 ${baseY - midLift}
+      S520 ${crest + midLift}, 620 ${baseY + lateLift}
+      S760 ${valley + midLift}, 860 ${baseY - lateLift}
+      S930 ${50 + index * 9 - bassPunch * 0.32}, 980 ${baseY}`;
+  };
+
+  return (
     <div
       style={{
         position: 'absolute',
-        left: '27%',
-        top: '16%',
-        width: '46%',
-        height: '70%',
-        borderRadius: '50%',
-        background: `radial-gradient(circle, ${color}33 0%, ${color}18 38%, transparent 70%)`,
-        filter: 'blur(4px)',
-        animation: playing
-          ? 'bmDiscPulse 2.1s ease-in-out infinite'
-          : undefined,
-      }}
-    />
-    <svg
-      viewBox='0 0 520 190'
-      preserveAspectRatio='none'
-      style={{
-        position: 'absolute',
-        inset: '5% -4% 0',
-        width: '108%',
-        height: '88%',
-        animation: playing
-          ? 'bmWaveDrift 3.4s ease-in-out infinite'
-          : undefined,
+        inset: 0,
+        overflow: 'hidden',
+        borderRadius: 8,
+        opacity: waveOpacity,
+        pointerEvents: 'none',
       }}
     >
-      <defs>
-        <linearGradient
-          id='bmWaveGradient'
-          x1='0'
-          x2='1'
-          y1='0'
-          y2='0'
-        >
-          <stop
-            offset='0'
-            stopColor={color}
-            stopOpacity='.08'
+      <style>{`
+      @keyframes bmWaveGlow { 0%,100% { opacity: .42; } 50% { opacity: .95; } }
+      @keyframes bmDiscPulse { 0%,100% { transform: scale(.96); opacity: .48; } 50% { transform: scale(1.05); opacity: .95; } }
+      @keyframes bmCoverBeatBump { 0% { transform: scale(1); } 24% { transform: scale(var(--cover-beat-scale, 1.18)) translateY(var(--cover-beat-lift, -2px)); } 62% { transform: scale(.975); } 100% { transform: scale(1); } }
+      .brand-live-cover.beat-bump { animation: bmCoverBeatBump 260ms cubic-bezier(.16,.82,.25,1.08); will-change: transform; }
+    `}</style>
+      <div
+        style={{
+          position: 'absolute',
+          left: '15%',
+          top: '22%',
+          width: '28%',
+          height: '48%',
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${color}44 0%, ${color}1f 38%, transparent 70%)`,
+          filter: `blur(${6 + bass * 9 + beatStrength * 4}px)`,
+          transform: `scale(${1 + energy * 0.18 + bass * 0.12 + beatStrength * 0.07})`,
+          transition: 'transform 80ms linear, filter 80ms linear',
+        }}
+      />
+      <svg
+        viewBox='0 0 980 220'
+        preserveAspectRatio='none'
+        style={{
+          position: 'absolute',
+          left: '-7%',
+          right: '-7%',
+          top: '18%',
+          width: '114%',
+          height: '54%',
+        }}
+      >
+        <defs>
+          <linearGradient
+            id='bmWaveGradient'
+            x1='0'
+            x2='1'
+            y1='0'
+            y2='0'
+          >
+            <stop
+              offset='0'
+              stopColor={color}
+              stopOpacity='.08'
+            />
+            <stop
+              offset='.28'
+              stopColor={color}
+              stopOpacity={0.64 + bass * 0.34}
+            />
+            <stop
+              offset='.5'
+              stopColor={color}
+              stopOpacity={0.18 + treble * 0.32}
+            />
+            <stop
+              offset='.72'
+              stopColor={color}
+              stopOpacity={0.64 + bass * 0.34}
+            />
+            <stop
+              offset='1'
+              stopColor={color}
+              stopOpacity='.08'
+            />
+          </linearGradient>
+        </defs>
+        {[0, 1, 2, 3].map((i) => (
+          <path
+            key={i}
+            d={buildWavePath(i)}
+            fill='none'
+            stroke='url(#bmWaveGradient)'
+            strokeWidth={
+              (i === 1 ? 2.8 : 1.8) + bass * 3.3 + beatStrength * 1.55
+            }
+            strokeLinecap='round'
+            style={{
+              filter: `drop-shadow(0 0 ${glow}px ${color}88)`,
+              transition:
+                'd 55ms linear, stroke-width 55ms linear, filter 55ms linear',
+              animation: playing
+                ? `bmWaveGlow ${1.4 + i * 0.18}s ease-in-out infinite`
+                : undefined,
+            }}
           />
-          <stop
-            offset='.28'
-            stopColor={color}
-            stopOpacity='.82'
-          />
-          <stop
-            offset='.5'
-            stopColor={color}
-            stopOpacity='.14'
-          />
-          <stop
-            offset='.72'
-            stopColor={color}
-            stopOpacity='.82'
-          />
-          <stop
-            offset='1'
-            stopColor={color}
-            stopOpacity='.08'
-          />
-        </linearGradient>
-      </defs>
-      {[0, 1, 2, 3].map((i) => (
-        <path
-          key={i}
-          d={`M0 ${78 + i * 18} C58 ${22 + i * 12}, 95 ${28 + i * 11}, 145 ${78 + i * 18} S230 ${132 + i * 8}, 280 ${78 + i * 18} S365 ${22 + i * 12}, 420 ${78 + i * 18} S485 ${132 + i * 8}, 520 ${78 + i * 18}`}
-          fill='none'
-          stroke='url(#bmWaveGradient)'
-          strokeWidth={i === 1 ? 2.2 : 1.4}
-          strokeLinecap='round'
-          style={{
-            filter: `drop-shadow(0 0 ${i === 1 ? 9 : 5}px ${color}88)`,
-            animation: playing
-              ? `bmWaveGlow ${1.4 + i * 0.18}s ease-in-out infinite`
-              : undefined,
-          }}
-        />
-      ))}
-    </svg>
-  </div>
-);
+        ))}
+      </svg>
+    </div>
+  );
+};
 
 const formatDuration = (seconds?: number | null) => {
   const safeSeconds = Math.max(0, Math.floor(seconds ?? 0));
@@ -698,8 +888,23 @@ const LivePlayback = ({
   const [playerCurrentTime, setPlayerCurrentTime] = useState(0);
   const [playerDuration, setPlayerDuration] = useState(0);
   const [playerTimeUpdatedAtMs, setPlayerTimeUpdatedAtMs] = useState(0);
+  const [isPlaybackExpanded, setIsPlaybackExpanded] = useState(false);
+  const [playbackFocusPhase, setPlaybackFocusPhase] = useState<
+    'idle' | 'entering' | 'open' | 'closing'
+  >('idle');
+  const [audioAnalysis, setAudioAnalysis] = useState<SpacePlayerAudioAnalysis>({
+    energy: 0,
+    bass: 0,
+    treble: 0,
+    beat: 0,
+    beatId: 0,
+    beatStrength: 0,
+  });
   const hiddenPlayerRef = useRef<SpacePlayerHandle>(null);
+  const coverArtRef = useRef<HTMLDivElement>(null);
   const playbackUnlockToastShownRef = useRef(false);
+  const playbackFocusTimerRef = useRef<number | null>(null);
+  const playbackFocusFrameRef = useRef<number | null>(null);
   const go = (dir: -1 | 1) =>
     items.length &&
     onActiveIndexChange((activeIndex + dir + items.length) % items.length);
@@ -707,6 +912,12 @@ const LivePlayback = ({
   const activeStartedAtUtc = active?.startedAtUtc;
   const activeExpectedEndAtUtc = active?.expectedEndAtUtc;
   const activeIsPaused = active?.isPaused ?? true;
+  const handleAudioAnalysis = useCallback(
+    (nextAnalysis: SpacePlayerAudioAnalysis) => {
+      setAudioAnalysis(nextAnalysis);
+    },
+    [],
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -757,6 +968,24 @@ const LivePlayback = ({
     (activeSpaceState?.currentQueueItemId ?? active.trackId) &&
     !active.isPaused,
   );
+
+  useEffect(() => {
+    if (!playing || audioAnalysis.beatId <= 0) return undefined;
+
+    const coverArt = coverArtRef.current;
+    if (!coverArt) return undefined;
+
+    coverArt.classList.remove('beat-bump');
+    void coverArt.offsetWidth;
+    coverArt.classList.add('beat-bump');
+
+    const timer = window.setTimeout(() => {
+      coverArt.classList.remove('beat-bump');
+    }, 270);
+
+    return () => window.clearTimeout(timer);
+  }, [audioAnalysis.beatId, playing]);
+
   const isCommanding = playbackControl.isPending || updateAudio.isPending;
   const hlsUrl = activeSpaceState?.hlsUrl ?? currentQueue?.hlsUrl ?? null;
   const fallbackElapsed = active
@@ -850,12 +1079,24 @@ const LivePlayback = ({
     });
   }, [hlsUrl, musicModalOpen, playing]);
 
+  useEffect(() => {
+    return () => {
+      if (playbackFocusTimerRef.current) {
+        window.clearTimeout(playbackFocusTimerRef.current);
+      }
+      if (playbackFocusFrameRef.current) {
+        window.cancelAnimationFrame(playbackFocusFrameRef.current);
+      }
+    };
+  }, []);
+
   if (loading)
     return (
       <Panel
         title='Live Playback'
         viewPath='/brand/stores'
         minHeight={358}
+        style={{ height: '100%' }}
       >
         <Skeleton
           active
@@ -869,6 +1110,7 @@ const LivePlayback = ({
         title='Live Playback'
         viewPath='/brand/stores'
         minHeight={358}
+        style={{ height: '100%' }}
       >
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -921,11 +1163,90 @@ const LivePlayback = ({
     });
   };
 
+  const clearPlaybackFocusMotion = () => {
+    if (playbackFocusTimerRef.current) {
+      window.clearTimeout(playbackFocusTimerRef.current);
+      playbackFocusTimerRef.current = null;
+    }
+    if (playbackFocusFrameRef.current) {
+      window.cancelAnimationFrame(playbackFocusFrameRef.current);
+      playbackFocusFrameRef.current = null;
+    }
+  };
+
+  const openPlaybackFocus = () => {
+    clearPlaybackFocusMotion();
+    setIsPlaybackExpanded(true);
+    setPlaybackFocusPhase('entering');
+    playbackFocusFrameRef.current = window.requestAnimationFrame(() => {
+      setPlaybackFocusPhase('open');
+      playbackFocusFrameRef.current = null;
+    });
+  };
+
+  const closePlaybackFocus = () => {
+    clearPlaybackFocusMotion();
+    setPlaybackFocusPhase('closing');
+    playbackFocusTimerRef.current = window.setTimeout(() => {
+      setIsPlaybackExpanded(false);
+      setPlaybackFocusPhase('idle');
+      playbackFocusTimerRef.current = null;
+    }, 280);
+  };
+
+  const togglePlaybackExpanded = () => {
+    if (isPlaybackExpanded) {
+      closePlaybackFocus();
+      return;
+    }
+
+    openPlaybackFocus();
+  };
+
+  const isPlaybackFocusOpen = playbackFocusPhase === 'open';
+
+  const playbackCardStyle: React.CSSProperties = isPlaybackExpanded
+    ? {
+        position: 'fixed',
+        left: '50%',
+        top: '50%',
+        width: 'min(980px, calc(100vw - 48px))',
+        maxHeight: 'calc(100vh - 48px)',
+        transform: `translate(-50%, -50%) scale(${isPlaybackFocusOpen ? 1 : 0.94})`,
+        opacity: isPlaybackFocusOpen ? 1 : 0,
+        zIndex: 1002,
+        border: `1px solid ${mood.color}88`,
+        borderRadius: 12,
+        padding: 22,
+        background: `radial-gradient(circle at 30% 38%, ${mood.color}28, transparent 34%), linear-gradient(145deg, #101013 0%, #09090b 100%)`,
+        boxShadow: `0 24px 80px rgba(0,0,0,.58), 0 0 42px ${mood.color}24, inset 0 1px 0 rgba(255,255,255,.06)`,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        transition:
+          'transform 260ms cubic-bezier(.16,1,.3,1), opacity 220ms ease, width 260ms cubic-bezier(.16,1,.3,1), max-height 260ms cubic-bezier(.16,1,.3,1), padding 260ms cubic-bezier(.16,1,.3,1), border-radius 260ms cubic-bezier(.16,1,.3,1), box-shadow 260ms ease',
+        willChange: 'transform, opacity',
+      }
+    : {
+        position: 'relative',
+        border: `1px solid ${mood.color}66`,
+        borderRadius: 8,
+        padding: 14,
+        background: `radial-gradient(circle at 30% 38%, ${mood.color}24, transparent 34%), linear-gradient(145deg, #101013 0%, #09090b 100%)`,
+        boxShadow: `inset 0 1px 0 rgba(255,255,255,.04), 0 0 24px ${mood.color}18`,
+        overflow: 'hidden',
+        transform: 'scale(1)',
+        opacity: 1,
+        transition:
+          'transform 220ms cubic-bezier(.16,1,.3,1), opacity 180ms ease, padding 220ms cubic-bezier(.16,1,.3,1), border-radius 220ms cubic-bezier(.16,1,.3,1), box-shadow 220ms ease',
+        willChange: 'transform',
+      };
+
   return (
     <Panel
       title='Live Playback'
       viewPath='/brand/stores'
       minHeight={358}
+      style={{ height: '100%' }}
     >
       <div>
         {!musicModalOpen && (
@@ -963,21 +1284,38 @@ const LivePlayback = ({
                 setPlayerTimeUpdatedAtMs(Date.now());
               }}
               onDurationChange={setPlayerDuration}
+              onAudioAnalysis={handleAudioAnalysis}
             />
           </div>
         )}
 
-        <div
-          style={{
-            position: 'relative',
-            border: `1px solid ${mood.color}66`,
-            borderRadius: 8,
-            padding: 14,
-            background: `radial-gradient(circle at 30% 38%, ${mood.color}24, transparent 34%), linear-gradient(145deg, #101013 0%, #09090b 100%)`,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,.04), 0 0 24px ${mood.color}18`,
-            overflow: 'hidden',
-          }}
-        >
+        {isPlaybackExpanded ? (
+          <button
+            type='button'
+            aria-label='Close expanded live playback'
+            onClick={closePlaybackFocus}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 1001,
+              border: 0,
+              padding: 0,
+              cursor: 'zoom-out',
+              background: isPlaybackFocusOpen
+                ? 'rgba(4,4,6,.62)'
+                : 'rgba(4,4,6,0)',
+              backdropFilter: isPlaybackFocusOpen ? 'blur(14px)' : 'blur(0px)',
+              transition: 'background 240ms ease, backdrop-filter 280ms ease',
+            }}
+          />
+        ) : null}
+
+        <div style={playbackCardStyle}>
+          <WaveVisualizer
+            color={mood.color}
+            playing={playing}
+            analysis={audioAnalysis}
+          />
           <div
             style={{
               position: 'absolute',
@@ -1037,6 +1375,34 @@ const LivePlayback = ({
                   justifyContent: 'flex-end',
                 }}
               >
+                <button
+                  type='button'
+                  onClick={togglePlaybackExpanded}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    border: `1px solid ${C.borderSoft}`,
+                    background: 'rgba(0,0,0,.28)',
+                    color: C.muted,
+                    cursor: isPlaybackExpanded ? 'zoom-out' : 'zoom-in',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                  }}
+                  aria-label={
+                    isPlaybackExpanded
+                      ? 'Collapse live playback'
+                      : 'Expand live playback'
+                  }
+                >
+                  {isPlaybackExpanded ? (
+                    <FullscreenExitOutlined />
+                  ) : (
+                    <FullscreenOutlined />
+                  )}
+                </button>
                 <Tag
                   color={active.isPaused ? 'warning' : 'error'}
                   style={{ margin: 0, fontSize: 10, fontWeight: 800 }}
@@ -1055,43 +1421,64 @@ const LivePlayback = ({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'minmax(164px, .92fr) minmax(170px, 1fr)',
-                gap: 16,
+                gridTemplateColumns: isPlaybackExpanded
+                  ? 'minmax(260px, .95fr) minmax(260px, 1fr)'
+                  : 'minmax(164px, .92fr) minmax(170px, 1fr)',
+                gap: isPlaybackExpanded ? 28 : 16,
                 alignItems: 'center',
               }}
             >
               <div
                 style={{
-                  minHeight: 150,
+                  minHeight: isPlaybackExpanded ? 250 : 150,
                   position: 'relative',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
                 }}
               >
-                <WaveVisualizer
-                  color={mood.color}
-                  playing={playing}
-                />
                 <div
-                  style={{
-                    position: 'relative',
-                    zIndex: 2,
-                    width: 128,
-                    height: 128,
-                    borderRadius: '50%',
-                    background: currentQueue?.coverImageUrl
-                      ? `center / cover no-repeat url(${currentQueue.coverImageUrl})`
-                      : `radial-gradient(circle at 38% 30%, ${mood.color}66 0%, rgba(15,23,42,.96) 100%)`,
-                    border: `1px solid ${mood.color}77`,
-                    boxShadow: playing
-                      ? `0 0 0 8px ${mood.color}22, 0 0 46px ${mood.color}66, inset 0 0 34px rgba(0,0,0,.54)`
-                      : `0 0 18px ${mood.color}2f`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                  }}
+                  ref={coverArtRef}
+                  className='brand-live-cover'
+                  style={
+                    {
+                      '--cover-beat-lift': `${-2 - audioAnalysis.beatStrength * 3}px`,
+                      '--cover-beat-scale': `${1.14 + audioAnalysis.beatStrength * 0.12}`,
+                      position: 'relative',
+                      zIndex: 2,
+                      width: isPlaybackExpanded ? 210 : 128,
+                      height: isPlaybackExpanded ? 210 : 128,
+                      borderRadius: '50%',
+                      background: currentQueue?.coverImageUrl
+                        ? `center / cover no-repeat url(${currentQueue.coverImageUrl})`
+                        : `radial-gradient(circle at 38% 30%, ${mood.color}66 0%, rgba(15,23,42,.96) 100%)`,
+                      border: `1px solid ${mood.color}77`,
+                      boxShadow: playing
+                        ? `0 0 0 ${7 + audioAnalysis.bass * 8 + audioAnalysis.treble * 5}px ${mood.color}2f, 0 0 ${34 + audioAnalysis.energy * 52 + audioAnalysis.bass * 24 + audioAnalysis.beatStrength * 24}px ${mood.color}88, inset 0 0 ${26 + audioAnalysis.treble * 18}px rgba(255,255,255,.08), inset 0 0 34px rgba(0,0,0,.54)`
+                        : `0 0 18px ${mood.color}2f`,
+                      transform: `scale(${
+                        playing
+                          ? 1 +
+                            audioAnalysis.energy * 0.07 +
+                            audioAnalysis.bass * 0.055 +
+                            audioAnalysis.treble * 0.025 +
+                            audioAnalysis.beatStrength * 0.025
+                          : 1
+                      })`,
+                      filter: playing
+                        ? `saturate(${1 + audioAnalysis.treble * 0.42}) brightness(${1 + audioAnalysis.energy * 0.12})`
+                        : undefined,
+                      transition:
+                        'transform 90ms linear, box-shadow 90ms linear, filter 90ms linear',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                    } as React.CSSProperties & {
+                      '--cover-beat-lift': string;
+                      '--cover-beat-scale': string;
+                    }
+                  }
                 >
                   <div
                     style={{
@@ -1125,7 +1512,7 @@ const LivePlayback = ({
                   style={{
                     color: C.text,
                     display: 'block',
-                    fontSize: 19,
+                    fontSize: isPlaybackExpanded ? 30 : 19,
                     fontWeight: 950,
                   }}
                 >
@@ -1136,7 +1523,7 @@ const LivePlayback = ({
                   style={{
                     color: C.muted,
                     display: 'block',
-                    fontSize: 12,
+                    fontSize: isPlaybackExpanded ? 15 : 12,
                     marginTop: 2,
                   }}
                 >
@@ -1174,7 +1561,7 @@ const LivePlayback = ({
               </div>
             </div>
 
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 8, padding: '0 42px' }}>
               <div
                 style={{
                   display: 'grid',
@@ -1349,7 +1736,7 @@ const LivePlayback = ({
                 style={{
                   display: 'grid',
                   gap: 0,
-                  maxHeight: 168,
+                  maxHeight: isPlaybackExpanded ? 232 : 168,
                   overflowY: 'auto',
                 }}
               >
@@ -1468,6 +1855,7 @@ const LivePlayback = ({
             open={musicModalOpen}
             spaceId={active.spaceId}
             storeId={active.storeId}
+            zIndex={isPlaybackExpanded ? 1200 : undefined}
             onClose={() => setMusicModalOpen(false)}
           />
         ) : null}
@@ -1541,6 +1929,7 @@ const StoreHealth = ({
       title='Store Health'
       viewPath='/brand/stores'
       minHeight={292}
+      style={{ height: '100%' }}
     >
       {loading ? (
         <Skeleton
@@ -1671,6 +2060,7 @@ const IotHealth = ({
     title='IoT Space Health'
     viewPath='/brand/stores'
     minHeight={292}
+    style={{ height: '100%' }}
   >
     {loading ? (
       <Skeleton
@@ -1939,6 +2329,16 @@ const ContextBillingAi = ({
                 ? 'Active wallet'
                 : 'Wallet locked'}
             </Text>
+            <TrendLine
+              text={`${formatCompact(data?.billing.rangeUsageTokens)} used this period, ${
+                formatTokenUsageTrendText(data?.billing.rangeUsageTrend) ??
+                '0 used vs previous period'
+              }`}
+              tone={getUsageTrendTone(data?.billing.rangeUsageTrend?.delta)}
+              direction={getTrendDirection(
+                data?.billing.rangeUsageTrend?.delta,
+              )}
+            />
           </div>
         )}
       </Panel>
@@ -2036,6 +2436,20 @@ export const BrandDashboard = () => {
   const handleDashboardUserGesture = useCallback(() => {
     dashboardPlaybackUnlockRef.current?.();
   }, []);
+  const comparisonLabel = getComparisonLabel(data?.period ?? period);
+  const playingShare =
+    overview?.activeSpaces && overview.activeSpaces > 0
+      ? Math.round(
+          ((overview.spacesCurrentlyPlaying ?? 0) / overview.activeSpaces) *
+            100,
+        )
+      : 0;
+  const iotOnlineShare =
+    overview?.totalSpaces && overview.totalSpaces > 0
+      ? Math.round(
+          ((overview.iotOnlineSpaces ?? 0) / overview.totalSpaces) * 100,
+        )
+      : 0;
 
   useEffect(() => {
     document.addEventListener('pointerdown', handleDashboardUserGesture, true);
@@ -2131,6 +2545,16 @@ export const BrandDashboard = () => {
             label='Total Stores'
             value={formatNumber(overview?.totalStores)}
             detail={`${formatNumber(overview?.activeStores)} active`}
+            trendText={formatTrendText(
+              overview?.totalStoresTrend,
+              comparisonLabel,
+              'delta',
+              'new',
+            )}
+            trendTone={getTrendTone(overview?.totalStoresTrend?.delta)}
+            trendDirection={getTrendDirection(
+              overview?.totalStoresTrend?.delta,
+            )}
             loading={isLoading}
             onClick={() => navigate('/brand/stores')}
           />
@@ -2145,6 +2569,9 @@ export const BrandDashboard = () => {
             label='Spaces Playing'
             value={formatNumber(overview?.spacesCurrentlyPlaying)}
             detail={`${formatNumber(overview?.activeSpaces)} active spaces`}
+            trendText={`${playingShare}% of active spaces`}
+            trendTone={playingShare > 0 ? C.green : C.subtle}
+            trendDirection='flat'
             accent={C.blue}
             loading={isLoading}
             onClick={() => navigate('/brand/stores')}
@@ -2160,6 +2587,12 @@ export const BrandDashboard = () => {
             label='Total Plays'
             value={formatNumber(overview?.totalPlays)}
             detail={`${formatNumber(overview?.distinctTracksPlayed)} tracks`}
+            trendText={formatPlayTrendText(
+              overview?.totalPlaysTrend,
+              comparisonLabel,
+            )}
+            trendTone={getTrendTone(overview?.totalPlaysTrend?.delta)}
+            trendDirection={getTrendDirection(overview?.totalPlaysTrend?.delta)}
             loading={isLoading}
             onClick={() => navigate('/brand/tracks')}
           />
@@ -2175,6 +2608,9 @@ export const BrandDashboard = () => {
             offline={overview?.iotOfflineSpaces}
             stale={overview?.iotStaleSpaces}
             unknown={overview?.iotUnknownSpaces}
+            trendText={`${iotOnlineShare}% online`}
+            trendTone={iotOnlineShare > 0 ? C.green : C.subtle}
+            trendDirection='flat'
             loading={isLoading}
             onClick={() => navigate('/brand/stores')}
           />
@@ -2188,7 +2624,15 @@ export const BrandDashboard = () => {
             icon={<WalletOutlined />}
             label='Token Balance'
             value={formatCompact(data?.billing.balanceTokens)}
-            detail='View details'
+            detail={`${formatCompact(data?.billing.rangeUsageTokens)} used`}
+            trendText={formatTokenUsageTrendText(
+              data?.billing.rangeUsageTrend,
+              comparisonLabel,
+            )}
+            trendTone={getUsageTrendTone(data?.billing.rangeUsageTrend?.delta)}
+            trendDirection={getTrendDirection(
+              data?.billing.rangeUsageTrend?.delta,
+            )}
             accent={C.blue}
             loading={isLoading}
             onClick={() => navigate('/brand/tokens')}
@@ -2199,10 +2643,12 @@ export const BrandDashboard = () => {
       <Row
         gutter={[10, 10]}
         style={{ marginBottom: 10 }}
+        align='stretch'
       >
         <Col
           xs={24}
           xl={7}
+          style={{ display: 'flex' }}
         >
           <StoreHealth
             data={data}
@@ -2212,6 +2658,7 @@ export const BrandDashboard = () => {
         <Col
           xs={24}
           xl={8}
+          style={{ display: 'flex' }}
         >
           <IotHealth
             rows={iotRows}
@@ -2221,6 +2668,7 @@ export const BrandDashboard = () => {
         <Col
           xs={24}
           xl={9}
+          style={{ display: 'flex' }}
         >
           <LivePlayback
             items={playbackItems}
