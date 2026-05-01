@@ -34,6 +34,7 @@ import { UserDropdownContent } from './UserDropdownContent';
  * Configs
  */
 import { AVATAR_SIZE } from '@/config';
+import { RoleEnum } from '@/shared/types';
 
 type AppHeaderProps = {
   collapsed: boolean;
@@ -64,6 +65,9 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { mode, toggleTheme } = useTheme();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Only show theme toggle for SystemAdmin
+  const showThemeToggle = user?.roles[0] === RoleEnum.SystemAdmin;
 
   return (
     <Header style={headerStyle}>
@@ -108,12 +112,14 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             }
             style={{ width: 36, height: 36 }}
           />
-          <Button
-            type='text'
-            onClick={(e) => toggleTheme(e)}
-            icon={mode === 'dark' ? <MoonOutlined /> : <SunOutlined />}
-            style={{ width: 36, height: 36 }}
-          />
+          {showThemeToggle && (
+            <Button
+              type='text'
+              onClick={(e) => toggleTheme(e)}
+              icon={mode === 'dark' ? <MoonOutlined /> : <SunOutlined />}
+              style={{ width: 36, height: 36 }}
+            />
+          )}
           <Button
             type='text'
             onClick={toggleFullscreen}

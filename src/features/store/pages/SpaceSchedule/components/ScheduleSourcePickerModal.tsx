@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Input, Segmented, Space } from 'antd';
+import { Flex, Input, Segmented, Tag, Radio } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -30,6 +30,9 @@ export const ScheduleSourcePickerModal = ({
 }: ScheduleSourcePickerModalProps) => {
   const [activeType, setActiveType] = useState<ScheduleSourceType>('library');
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
+  const pageSize = 10;
 
   const dataSource =
     activeType === 'library' ? librarySources : templateSources;
@@ -45,33 +48,66 @@ export const ScheduleSourcePickerModal = ({
       const subtitle = item.subtitle?.toLowerCase() || '';
       return title.includes(keyword) || subtitle.includes(keyword);
     });
-  }, [search, dataSource]);
+  }, [dataSource, search]);
+
+  const handleLoad = () => {
+    if (selectedSourceId) {
+      onSelect(selectedSourceId);
+    }
+  };
 
   const columns: ColumnsType<ScheduleSourceItem> = [
+    {
+      title: '',
+      key: 'radio',
+      width: 50,
+      align: 'center',
+      render: (_, record) => (
+        <Radio
+          checked={selectedSourceId === record.id}
+          onChange={() => setSelectedSourceId(record.id)}
+        />
+      ),
+    },
+    {
+      title: 'No.',
+      key: 'no',
+      width: 60,
+      render: (_, __, index) => (currentPage - 1) * pageSize + index + 1,
+    },
     {
       title: 'Source',
       dataIndex: 'title',
       sorter: (a, b) => a.title.localeCompare(b.title),
       render: (_, record) => (
-        <Space
-          direction='vertical'
-          size={0}
+        <Flex
+          vertical
+          gap={0}
         >
           <strong>{record.title}</strong>
-          <span>{record.subtitle}</span>
-        </Space>
+          {record.subtitle && (
+            <span style={{ fontSize: 13, opacity: 0.85 }}>
+              {record.subtitle}
+            </span>
+          )}
+        </Flex>
       ),
     },
     {
       title: 'Type',
       dataIndex: 'type',
       width: 120,
-      render: (type: string) => (type === 'template' ? 'Template' : 'Library'),
+      render: (type: string) => (
+        <Tag color={type === 'template' ? 'blue' : 'green'}>
+          {type === 'template' ? 'Template' : 'Library'}
+        </Tag>
+      ),
     },
     {
       title: 'Slots',
       key: 'slots',
-      width: 120,
+      width: 100,
+      align: 'center',
       render: (_, record) => record.schedule?.slots?.length || 0,
     },
   ];
@@ -81,25 +117,39 @@ export const ScheduleSourcePickerModal = ({
       title='Load schedule source'
       open={open}
       onCancel={onClose}
-      onOk={onClose}
-      okText='Close'
-      cancelButtonProps={{ style: { display: 'none' } }}
+      onOk={handleLoad}
+      okText='Load'
+      okButtonProps={{ disabled: !selectedSourceId }}
       width={960}
       scrollable={false}
+      styles={{
+        body: {
+          padding: '24px',
+        },
+      }}
+      afterClose={() => {
+        setSelectedSourceId(null);
+        setSearch('');
+        setCurrentPage(1);
+      }}
     >
-      <Space
-        direction='vertical'
-        size='middle'
-        style={{ width: '100%' }}
+      <Flex
+        vertical
+        gap='middle'
       >
         {showTemplates && (
           <Segmented<ScheduleSourceType>
             value={activeType}
-            onChange={(value) => setActiveType(value)}
+            size='large'
+            onChange={(value) => {
+              setActiveType(value);
+              setCurrentPage(1);
+            }}
             options={[
               { label: 'Library', value: 'library' },
               { label: 'Templates', value: 'template' },
             ]}
+            block
           />
         )}
 
@@ -108,7 +158,10 @@ export const ScheduleSourcePickerModal = ({
           placeholder='Search source by title or subtitle'
           prefix={<SearchOutlined />}
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setCurrentPage(1);
+          }}
           allowClear
         />
 
@@ -117,13 +170,14 @@ export const ScheduleSourcePickerModal = ({
           columns={columns}
           dataSource={filteredData}
           loading={loading}
-          pagination={false}
-          onRow={(record) => ({
-            onClick: () => onSelect(record.id),
-            style: { cursor: 'pointer' },
-          })}
+          pagination={{
+            current: currentPage,
+            pageSize,
+            onChange: setCurrentPage,
+            showSizeChanger: false,
+          }}
         />
-      </Space>
+      </Flex>
     </AppModal>
   );
 };

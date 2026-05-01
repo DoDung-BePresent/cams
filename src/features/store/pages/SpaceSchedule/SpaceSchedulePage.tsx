@@ -1,328 +1,334 @@
-import { useMemo, useState } from 'react';
-import { Button, Empty, Segmented, Space, Switch, Tag, Typography } from 'antd';
-import {
-  CalendarOutlined,
-  PlusOutlined,
-  SaveOutlined,
-} from '@ant-design/icons';
+import { useState, useRef } from 'react';
+import { Card, Flex, Button, Space, Alert, Switch, Tag } from 'antd';
+import { FolderOpenOutlined, SaveOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router';
-import type { ColumnsType } from 'antd/es/table';
+import type { DateSelectArg, EventClickArg } from '@fullcalendar/core';
+import type FullCalendar from '@fullcalendar/react';
+import dayjs from 'dayjs';
 
-import { AppModal, DataTable, PageHeader } from '@/shared/components';
+import { PageHeader } from '@/shared/components';
 import { useAuth } from '@/providers';
 import { RoleEnum } from '@/shared/types';
 import { useSpace } from '@/shared/modules/spaces/hooks';
 import {
   useApplyScheduleSource,
-  useDeleteScheduleSlot,
   useSaveScheduleToLibrary,
   useSpaceScheduleBootstrap,
   useToggleSpaceSchedule,
   useUpsertScheduleSlot,
 } from '@/shared/modules/schedules/hooks';
-import type { ScheduleSlotItem } from '@/shared/modules/schedules/types';
-import { usePlaylistOptionsForStore } from '@/shared/modules/playlists/hooks';
+import type {
+  ScheduleMusicItemDto,
+  SpaceScheduleDto,
+} from './types/schedule.types';
 import {
-  SaveToLibraryModal,
+  ScheduleCalendar,
+  QuickCreatePopover,
+  SlotActionsPopover,
   ScheduleSourcePickerModal,
-  UpsertScheduleSlotDrawer,
+  SaveToLibraryModal,
 } from './components';
+import './SpaceSchedule.css';
 
-type ScheduleStage = 'welcome' | 'editor';
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
-const dayOptions = [
-  { label: 'Sun', value: 0 },
-  { label: 'Mon', value: 1 },
-  { label: 'Tue', value: 2 },
-  { label: 'Wed', value: 3 },
-  { label: 'Thu', value: 4 },
-  { label: 'Fri', value: 5 },
-  { label: 'Sat', value: 6 },
-] as const;
-
-const makeClientGuid = () =>
-  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === 'x' ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-
-const minutesFromTime = (value: string) => {
-  const [hourString, minuteString] = value.split(':');
-  const hour = Number(hourString);
-  const minute = Number(minuteString);
-  return hour * 60 + minute;
-};
-
+/**
+ * Space Schedule Page (Store Level)
+ *
+ * Features:
+ * - Manage space-level schedule
+ * - Load library sources (not templates - those are for StrictSync)
+ * - Visual calendar interface for slot management
+ * - Drag & drop to move/resize slots
+ *
+ * Flow:
+ * 1. Load bootstrap data for the space
+ * 2. Create slots or load from library
+ * 3. Add/edit/delete slots via calendar
+ * 4. Slots are saved to space schedule
+ */
 export const SpaceSchedulePage = () => {
   const navigate = useNavigate();
   const params = useParams();
   const { user } = useAuth();
-
   const spaceId = params.spaceId;
-  const [stage, setStage] = useState<ScheduleStage>('welcome');
-  const [selectedDay, setSelectedDay] = useState<number>(new Date().getDay());
-  const [sourcePickerOpen, setSourcePickerOpen] = useState(false);
-  const [slotDrawerOpen, setSlotDrawerOpen] = useState(false);
-  const [saveLibraryOpen, setSaveLibraryOpen] = useState(false);
-  const [editingSlot, setEditingSlot] = useState<ScheduleSlotItem | null>(null);
+  const calendarRef = useRef<FullCalendar | null>(null);
 
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [popoverPosition, setPopoverPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [popoverTimeInfo, setPopoverTimeInfo] = useState<{
+    startTime: string;
+    endTime: string;
+    dayOfWeek: number;
+    dayName: string;
+  } | null>(null);
+  const [slotActionsOpen, setSlotActionsOpen] = useState(false);
+  const [slotActionsPosition, setSlotActionsPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [slotActionsSlot, setSlotActionsSlot] = useState<{
+    id: string;
+    playlistId: string;
+    daysOfWeek: number[];
+    startTime: string;
+    endTime: string;
+  } | null>(null);
+  const [sourcePickerOpen, setSourcePickerOpen] = useState(false);
+  const [saveLibraryOpen, setSaveLibraryOpen] = useState(false);
+
+  // Load data
   const { data: spaceDetail } = useSpace(spaceId, !!spaceId);
   const { data: bootstrap, isLoading } = useSpaceScheduleBootstrap(
     spaceId,
     !!spaceId,
   );
-  const { data: playlistOptions = [] } = usePlaylistOptionsForStore(
-    user?.storeId ?? undefined,
-  );
 
   const applySourceMutation = useApplyScheduleSource(spaceId);
-  const upsertSlotMutation = useUpsertScheduleSlot(spaceId);
-  const deleteSlotMutation = useDeleteScheduleSlot(spaceId);
   const saveLibraryMutation = useSaveScheduleToLibrary(spaceId);
   const toggleScheduleMutation = useToggleSpaceSchedule(spaceId);
+  const updateSlotMutation = useUpsertScheduleSlot(spaceId);
 
   const activeSchedule = bootstrap?.draftSchedule;
   const canSaveToLibrary =
     !!user?.roles?.includes(RoleEnum.SystemAdmin) ||
     !!user?.roles?.includes(RoleEnum.BrandManager);
 
-  const slotsOfDay = useMemo(() => {
-    const slots = activeSchedule?.slots || [];
-    return slots
-      .filter((slot) => slot.daysOfWeek.includes(selectedDay))
-      .slice()
-      .sort(
-        (a, b) => minutesFromTime(a.startTime) - minutesFromTime(b.startTime),
-      );
-  }, [activeSchedule?.slots, selectedDay]);
+  // Transform playlists to music catalog format
+  const musicCatalog: ScheduleMusicItemDto[] =
+    bootstrap?.musicCatalog?.map((playlist) => ({
+      id: playlist.id,
+      title: playlist.title,
+      artist: playlist.artist || 'Brand Playlist',
+      collection: playlist.collection ?? null,
+      artworkLabel: playlist.artworkLabel,
+      primaryHex: playlist.primaryHex || '#4A2EA1',
+      secondaryHex: playlist.secondaryHex || '#4FB2D6',
+    })) || [];
 
-  const playlistLabelMap = useMemo(() => {
-    return new Map(
-      (playlistOptions || []).map((item) => [
-        String(item.value),
-        item.label || '-',
-      ]),
-    );
-  }, [playlistOptions]);
-
-  const onLoadSchedule = () => {
+  const handleLoadSchedule = () => {
     setSourcePickerOpen(true);
   };
 
-  const onCreateNew = () => {
-    setStage('editor');
+  const handleApplySource = (sourceId: string) => {
+    applySourceMutation.mutate(
+      { sourceId },
+      {
+        onSuccess: () => {
+          setSourcePickerOpen(false);
+        },
+      },
+    );
   };
 
-  const ensureNoOverlap = (
-    candidate: { id: string; day: number; startTime: string; endTime: string },
-    allSlots: ScheduleSlotItem[],
+  const handleCreateSlot = (selectInfo?: DateSelectArg) => {
+    if (selectInfo) {
+      // Show quick create popover
+      const startTime = dayjs(selectInfo.start).format('HH:mm');
+      const endTime = dayjs(selectInfo.end).format('HH:mm');
+      const dayOfWeek = selectInfo.start.getDay();
+      const dayName = WEEKDAY_NAMES[dayOfWeek];
+
+      // Get mouse position from the jsEvent
+      const mouseEvent = selectInfo.jsEvent as MouseEvent;
+      setPopoverPosition({
+        x: mouseEvent.clientX,
+        y: mouseEvent.clientY,
+      });
+
+      setPopoverTimeInfo({
+        startTime,
+        endTime,
+        dayOfWeek,
+        dayName,
+      });
+
+      setPopoverOpen(true);
+    }
+  };
+
+  const handleSlotClick = (clickInfo: EventClickArg) => {
+    const slot = activeSchedule?.slots.find((s) => s.id === clickInfo.event.id);
+
+    if (!slot) return;
+
+    // Get mouse position from the jsEvent
+    const mouseEvent = clickInfo.jsEvent as MouseEvent;
+    setSlotActionsPosition({
+      x: mouseEvent.clientX,
+      y: mouseEvent.clientY,
+    });
+
+    setSlotActionsSlot({
+      id: slot.id,
+      playlistId: slot.playlistId,
+      daysOfWeek: slot.daysOfWeek,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+    });
+
+    setSlotActionsOpen(true);
+  };
+
+  const handleSlotChange = async (
+    slotId: string,
+    updates: { daysOfWeek: number[]; startTime: string; endTime: string },
   ) => {
-    const candidateStart = minutesFromTime(candidate.startTime);
-    const candidateEnd = minutesFromTime(candidate.endTime);
+    if (!spaceId) return;
 
-    return !allSlots.some((slot) => {
-      if (slot.id === candidate.id) {
-        return false;
-      }
-      if (!slot.daysOfWeek.includes(candidate.day)) {
-        return false;
-      }
+    const slot = activeSchedule?.slots.find((s) => s.id === slotId);
+    if (!slot) return;
 
-      const otherStart = minutesFromTime(slot.startTime);
-      const otherEnd = minutesFromTime(slot.endTime);
-      return (
-        Math.max(candidateStart, otherStart) < Math.min(candidateEnd, otherEnd)
-      );
+    // Update the slot with new time/day via API (silent mode for drag)
+    await updateSlotMutation.mutateAsync({
+      slotId,
+      body: {
+        daysOfWeek: updates.daysOfWeek,
+        startTime: updates.startTime,
+        endTime: updates.endTime,
+        playlistId: slot.playlistId, // Keep existing playlist
+      },
+      silent: true, // Don't show success message for drag operations
     });
   };
 
-  const slotColumns: ColumnsType<ScheduleSlotItem> = [
+  const handleCloseSlotActions = () => {
+    setSlotActionsOpen(false);
+    setSlotActionsPosition(null);
+    setSlotActionsSlot(null);
+  };
+
+  const handleClosePopover = () => {
+    setPopoverOpen(false);
+    setPopoverPosition(null);
+    setPopoverTimeInfo(null);
+  };
+
+  const breadcrumbs = [
     {
-      title: 'Time Window',
-      key: 'timeWindow',
-      render: (_, record) => (
-        <Space
-          direction='vertical'
-          size={0}
-        >
-          <strong>
-            {record.startTime} - {record.endTime}
-          </strong>
-          <span>
-            Day: {dayOptions.find((item) => item.value === selectedDay)?.label}
-          </span>
-        </Space>
-      ),
+      title: 'Space Management',
+      onClick: () => navigate('/store/spaces'),
+      className: 'cursor-pointer',
     },
-    {
-      title: 'Playlist',
-      key: 'playlist',
-      render: (_, record) =>
-        playlistLabelMap.get(record.playlistId) || record.playlistId || '-',
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      width: 200,
-      render: (_, record) => (
-        <Space>
-          <Button
-            size='large'
-            onClick={() => {
-              setEditingSlot(record);
-              setSlotDrawerOpen(true);
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            size='large'
-            danger
-            onClick={() => {
-              AppModal.confirm({
-                title: 'Delete schedule slot',
-                content: `Remove slot ${record.startTime} - ${record.endTime}?`,
-                okText: 'Delete',
-                okButtonProps: { danger: true },
-                onOk: () => deleteSlotMutation.mutate(record.id),
-              });
-            }}
-          >
-            Delete
-          </Button>
-        </Space>
-      ),
-    },
+    { title: spaceDetail?.name || 'Space' },
+    { title: 'Schedule' },
   ];
 
   return (
     <div>
       <PageHeader
         title='Space Schedule'
-        breadcrumbs={[
-          {
-            title: 'Space Management',
-            onClick: () => navigate('/store/spaces'),
-            className: 'cursor-pointer',
-          },
-          { title: spaceDetail?.name || 'Space' },
-          { title: 'Schedule' },
-        ]}
+        breadcrumbs={breadcrumbs}
         seo={{
-          description: 'Manage weekly schedule at space level.',
+          description: 'Manage weekly schedule at space level',
           keywords: 'space, schedule, playlist, weekly',
         }}
-      />
-
-      {stage === 'welcome' && !activeSchedule && (
-        <Space
-          direction='vertical'
-          size='middle'
-          style={{ width: '100%' }}
-        >
-          <Typography.Title level={3}>
-            First schedule, let&apos;s go.
-          </Typography.Title>
+        extra={
           <Space>
             <Button
               size='large'
-              type='primary'
-              icon={<CalendarOutlined />}
-              onClick={onLoadSchedule}
+              icon={<FolderOpenOutlined />}
+              onClick={handleLoadSchedule}
             >
-              Load schedule
+              Load Schedule
             </Button>
-            <Button
-              size='large'
-              icon={<PlusOutlined />}
-              onClick={onCreateNew}
-            >
-              Create new
-            </Button>
-          </Space>
-        </Space>
-      )}
-
-      {(stage === 'editor' || !!activeSchedule) && (
-        <Space
-          direction='vertical'
-          size='middle'
-          style={{ width: '100%' }}
-        >
-          <Space style={{ justifyContent: 'space-between', width: '100%' }}>
-            <Segmented<number>
-              value={selectedDay}
-              onChange={(value) => setSelectedDay(value)}
-              options={dayOptions.map((item) => ({
-                label: item.label,
-                value: item.value,
-              }))}
-            />
-            <Space>
-              <Button
-                size='large'
-                onClick={onLoadSchedule}
-              >
-                Load Schedule
-              </Button>
+            {canSaveToLibrary && (
               <Button
                 size='large'
                 icon={<SaveOutlined />}
-                disabled={!canSaveToLibrary || !activeSchedule}
+                disabled={!activeSchedule}
                 onClick={() => setSaveLibraryOpen(true)}
               >
                 Save to Library
               </Button>
-              <Button
-                size='large'
-                type='primary'
-                icon={<PlusOutlined />}
-                onClick={() => {
-                  setEditingSlot(null);
-                  setSlotDrawerOpen(true);
-                }}
-              >
-                Add Slot
-              </Button>
-            </Space>
+            )}
           </Space>
+        }
+      />
 
-          <Space>
-            <Tag color='blue'>Space-level scheduling</Tag>
-            <Switch
-              checked={!!activeSchedule?.enabled}
-              disabled={!activeSchedule}
-              loading={toggleScheduleMutation.isPending}
-              checkedChildren='Enabled'
-              unCheckedChildren='Disabled'
-              onChange={(checked) => {
-                toggleScheduleMutation.mutate({ enabled: checked });
-              }}
-            />
-          </Space>
+      {!activeSchedule && (
+        <Alert
+          type='info'
+          showIcon
+          description='Get started by loading a schedule from library or create slots directly on the calendar.'
+          style={{ marginBottom: 16 }}
+        />
+      )}
 
-          {slotsOfDay.length === 0 ? (
-            <Empty
-              description='No schedule slots for selected day.'
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          ) : (
-            <DataTable<ScheduleSlotItem>
-              rowKey='id'
-              columns={slotColumns}
-              dataSource={slotsOfDay}
-              loading={
-                isLoading ||
-                upsertSlotMutation.isPending ||
-                deleteSlotMutation.isPending
-              }
-              pagination={false}
-            />
-          )}
+      {activeSchedule && (
+        <Space style={{ marginBottom: 16 }}>
+          <Tag color='blue'>Space-level scheduling</Tag>
+          <Switch
+            checked={!!activeSchedule?.enabled}
+            loading={toggleScheduleMutation.isPending}
+            checkedChildren='Enabled'
+            unCheckedChildren='Disabled'
+            onChange={(checked) => {
+              toggleScheduleMutation.mutate({ enabled: checked });
+            }}
+          />
         </Space>
       )}
 
+      <Flex gap='middle'>
+        {/* Main Calendar Area - Full width */}
+        <div style={{ flex: 1 }}>
+          <Card>
+            {/* Calendar */}
+            <ScheduleCalendar
+              bootstrap={{
+                draftSchedule:
+                  (activeSchedule as unknown as SpaceScheduleDto) || null,
+                librarySources: [],
+                templateSources: [],
+                musicCatalog: isLoading ? [] : musicCatalog,
+              }}
+              isLoading={isLoading}
+              spaceId={spaceId ?? null}
+              onCreateSlot={handleCreateSlot}
+              onSlotClick={handleSlotClick}
+              onSlotChange={handleSlotChange}
+              onCalendarReady={(ref) => {
+                calendarRef.current = ref;
+              }}
+            />
+          </Card>
+        </div>
+      </Flex>
+
+      {/* Quick Create Popover */}
+      <QuickCreatePopover
+        open={popoverOpen}
+        anchorPosition={popoverPosition}
+        timeInfo={popoverTimeInfo}
+        spaceId={spaceId ?? null}
+        musicCatalog={musicCatalog}
+        onClose={handleClosePopover}
+        calendarRef={calendarRef}
+      />
+
+      {/* Slot Actions Popover */}
+      <SlotActionsPopover
+        open={slotActionsOpen}
+        anchorPosition={slotActionsPosition}
+        slot={slotActionsSlot}
+        spaceId={spaceId ?? null}
+        musicCatalog={musicCatalog}
+        onClose={handleCloseSlotActions}
+      />
+
+      {/* Load Schedule Modal */}
       <ScheduleSourcePickerModal
         open={sourcePickerOpen}
         loading={isLoading || applySourceMutation.isPending}
@@ -330,76 +336,10 @@ export const SpaceSchedulePage = () => {
         templateSources={bootstrap?.templateSources || []}
         showTemplates={false}
         onClose={() => setSourcePickerOpen(false)}
-        onSelect={(sourceId) => {
-          applySourceMutation.mutate(
-            { sourceId },
-            {
-              onSuccess: () => {
-                setStage('editor');
-                setSourcePickerOpen(false);
-              },
-            },
-          );
-        }}
+        onSelect={handleApplySource}
       />
 
-      <UpsertScheduleSlotDrawer
-        open={slotDrawerOpen}
-        slot={editingSlot}
-        selectedDay={selectedDay}
-        playlistOptions={(playlistOptions || []).map((item) => ({
-          label: item.label,
-          value: String(item.value),
-        }))}
-        loading={upsertSlotMutation.isPending}
-        onClose={() => {
-          setSlotDrawerOpen(false);
-          setEditingSlot(null);
-        }}
-        onSubmit={(payload) => {
-          const slotId = payload.id || makeClientGuid();
-          const allSlots = activeSchedule?.slots || [];
-
-          if (
-            !ensureNoOverlap(
-              {
-                id: slotId,
-                day: payload.daysOfWeek[0],
-                startTime: payload.startTime,
-                endTime: payload.endTime,
-              },
-              allSlots,
-            )
-          ) {
-            AppModal.error({
-              title: 'Invalid slot',
-              content:
-                'This time overlaps another schedule slot on the same day.',
-            });
-            return;
-          }
-
-          upsertSlotMutation.mutate(
-            {
-              slotId,
-              body: {
-                daysOfWeek: payload.daysOfWeek,
-                startTime: payload.startTime,
-                endTime: payload.endTime,
-                playlistId: payload.playlistId,
-              },
-            },
-            {
-              onSuccess: () => {
-                setStage('editor');
-                setSlotDrawerOpen(false);
-                setEditingSlot(null);
-              },
-            },
-          );
-        }}
-      />
-
+      {/* Save to Library Modal */}
       <SaveToLibraryModal
         open={saveLibraryOpen}
         initialTitle={

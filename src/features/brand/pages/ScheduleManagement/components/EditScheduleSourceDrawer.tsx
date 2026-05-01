@@ -80,6 +80,11 @@ export const EditScheduleSourceDrawer = ({
             description: values.description?.trim() || undefined,
           });
         }}
+        styles={{
+          label: {
+            height: 22,
+          },
+        }}
       >
         <Form.Item
           label='Title'

@@ -58,6 +58,9 @@ const darkFadeComponents: ThemeConfig['components'] = {
     colorPrimaryHover: '#f87171',
     colorPrimaryActive: '#dc2626',
     primaryColor: '#ffffff',
+    colorBgContainerDisabled: '#3d2a2d',
+    colorTextDisabled: '#8a7175',
+    borderColorDisabled: '#3d2a2d',
   },
   Input: {
     fontSizeLG: 14,
@@ -101,6 +104,7 @@ const darkFadeComponents: ThemeConfig['components'] = {
     colorBorder: '#2d2528',
     colorText: '#f8f7f7',
     colorTextPlaceholder: '#857b80',
+    cellHoverBg: '#EF4444',
   },
   Divider: {
     marginLG: 0,
@@ -185,6 +189,11 @@ const darkFadeComponents: ThemeConfig['components'] = {
   Tooltip: {
     colorBgSpotlight: '#202024',
     colorTextLightSolid: '#ffffff',
+  },
+  Popover: {
+    colorBgElevated: '#202024',
+    colorText: '#f8f7f7',
+    colorBorder: '#2d2528',
   },
   Tag: {
     defaultBg: '#202024',
