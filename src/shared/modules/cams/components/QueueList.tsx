@@ -1,4 +1,4 @@
-import {
+﻿import {
   memo,
   useCallback,
   useEffect,
@@ -57,6 +57,14 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { SpaceQueueItemResponse } from '../types';
 import { QueueItemStatus, QueueItemSource } from '../types';
+import {
+  canPlayCamsQueueItem,
+  canReorderCamsQueueItem,
+  getCamsQueueStatusAntColor,
+  getCamsQueueStatusDescription,
+  getCamsQueueStatusLabel,
+  getCamsQueueStatusTone,
+} from '../utils';
 
 const { Text } = Typography;
 
@@ -84,35 +92,14 @@ const getStatusIcon = (status: QueueItemStatus) => {
   }
 };
 
-const getStatusLabel = (status: QueueItemStatus) => {
-  switch (status) {
-    case QueueItemStatus.Playing:
-      return 'Playing';
-    case QueueItemStatus.Pending:
-      return 'Pending';
-    case QueueItemStatus.Played:
-      return 'Played';
-    case QueueItemStatus.Skipped:
-      return 'Skipped';
-    default:
-      return 'Unknown';
-  }
-};
+const getStatusLabel = (status: QueueItemStatus) =>
+  getCamsQueueStatusLabel(status);
 
-const getStatusColor = (status: QueueItemStatus) => {
-  switch (status) {
-    case QueueItemStatus.Playing:
-      return 'success';
-    case QueueItemStatus.Pending:
-      return 'processing';
-    case QueueItemStatus.Played:
-      return 'default';
-    case QueueItemStatus.Skipped:
-      return 'error';
-    default:
-      return 'default';
-  }
-};
+const getStatusColor = (status: QueueItemStatus) =>
+  getCamsQueueStatusAntColor(status);
+
+const getStatusDescription = (status: QueueItemStatus) =>
+  getCamsQueueStatusDescription(status);
 
 const getSourceLabel = (source: QueueItemSource) => {
   if (source === QueueItemSource.AI) return 'AI';
@@ -126,7 +113,7 @@ const getSourceColor = (source: QueueItemSource) => {
   return 'blue';
 };
 
-// Visual clone rendered in DragOverlay — no sortable hooks, renders as portal above list
+// Visual clone rendered in DragOverlay â€” no sortable hooks, renders as portal above list
 const DragOverlayItem = ({
   item,
   selected,
@@ -214,7 +201,10 @@ const SortableItem = memo(function SortableItem({
   onSkipToTrack,
 }: SortableItemProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const isDraggable = item.queueStatus === QueueItemStatus.Pending;
+  const isDraggable = canReorderCamsQueueItem(item.queueStatus);
+  const canPlay =
+    canPlayCamsQueueItem(item.queueStatus) && item.isReadyToStream;
+  const statusTone = getCamsQueueStatusTone(item.queueStatus);
 
   const {
     attributes,
@@ -237,13 +227,13 @@ const SortableItem = memo(function SortableItem({
     marginBottom: 10,
     backgroundColor:
       item.queueStatus === QueueItemStatus.Playing
-        ? 'rgba(255,255,255,0.065)'
+        ? statusTone.bg
         : isHovered
           ? 'rgba(255,255,255,0.04)'
           : 'transparent',
     borderColor:
       item.queueStatus === QueueItemStatus.Playing
-        ? 'rgba(16,185,129,0.28)'
+        ? statusTone.border
         : 'transparent',
     borderStyle: 'solid',
     borderWidth: 1,
@@ -283,10 +273,10 @@ const SortableItem = memo(function SortableItem({
           width: 52,
           height: 52,
           flexShrink: 0,
-          cursor: 'pointer',
+          cursor: canPlay ? 'pointer' : 'default',
         }}
         onClick={() =>
-          !isPlaying && onSkipToTrack?.(item.queueItemId, item.trackId)
+          canPlay && onSkipToTrack?.(item.queueItemId, item.trackId)
         }
       >
         {item.coverImageUrl ? (
@@ -316,7 +306,7 @@ const SortableItem = memo(function SortableItem({
             <SoundOutlined style={{ color: '#64748b' }} />
           </div>
         )}
-        {isHovered && !isPlaying && (
+        {isHovered && canPlay && (
           <div
             style={{
               position: 'absolute',
@@ -396,6 +386,12 @@ const SortableItem = memo(function SortableItem({
             marginTop: 2,
           }}
         >
+          <Tag
+            color={getStatusColor(item.queueStatus)}
+            style={{ fontSize: 10, margin: 0, lineHeight: '16px' }}
+          >
+            {getStatusLabel(item.queueStatus)}
+          </Tag>
           <span
             style={{
               color: '#93c5fd',
@@ -415,7 +411,7 @@ const SortableItem = memo(function SortableItem({
             }}
           />
           <span style={{ color: '#6b7280', fontSize: 11 }}>
-            {isPlaying ? 'Playing Now' : 'Up Next'}
+            {getStatusDescription(item.queueStatus)}
           </span>
           {!item.isReadyToStream && (
             <Tag
@@ -444,13 +440,30 @@ const SortableItem = memo(function SortableItem({
           transition: 'opacity 0.2s',
         }}
       >
+        {canPlay && (
+          <Button
+            type='text'
+            icon={<PlayCircleOutlined />}
+            size='small'
+            disabled={!canPlay}
+            onClick={() =>
+              canPlay && onSkipToTrack?.(item.queueItemId, item.trackId)
+            }
+            style={{ background: 'transparent', color: '#60a5fa' }}
+          />
+        )}
         <div
           {...attributes}
           {...(isDraggable ? listeners : {})}
+          title={
+            isDraggable
+              ? 'Drag to reorder pending tracks'
+              : `${getStatusLabel(item.queueStatus)} tracks cannot be reordered`
+          }
           style={{
-            cursor: isDraggable ? 'grab' : 'default',
+            cursor: isDraggable ? 'grab' : 'not-allowed',
             padding: 8,
-            color: '#4b5563',
+            color: isDraggable ? '#4b5563' : '#2f333a',
           }}
         >
           <DragOutlined />
@@ -490,7 +503,7 @@ export const QueueList = ({
     }),
   );
 
-  // Sync from props only when not actively dragging — preserves optimistic order
+  // Sync from props only when not actively dragging â€” preserves optimistic order
   useEffect(() => {
     if (!activeId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -576,9 +589,22 @@ export const QueueList = ({
 
     if (oldIndex === -1 || newIndex === -1) return;
 
+    const activeQueueItem = localItems[oldIndex];
+    const overQueueItem = localItems[newIndex];
+    if (
+      activeQueueItem.queueStatus !== QueueItemStatus.Pending ||
+      overQueueItem.queueStatus !== QueueItemStatus.Pending
+    ) {
+      return;
+    }
+
     const reordered = arrayMove(localItems, oldIndex, newIndex);
     setLocalItems(reordered);
-    onReorder(reordered.map((item) => item.queueItemId));
+    onReorder(
+      reordered
+        .filter((item) => item.queueStatus === QueueItemStatus.Pending)
+        .map((item) => item.queueItemId),
+    );
   };
 
   const handleDragCancel = () => {

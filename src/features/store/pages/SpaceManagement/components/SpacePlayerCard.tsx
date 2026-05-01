@@ -1,4 +1,4 @@
-import {
+﻿import {
   useState,
   useCallback,
   useEffect,
@@ -54,6 +54,8 @@ import {
 import type { SpaceQueueItemResponse } from '@/shared/modules/cams/types';
 import {
   formatPlaybackTime,
+  getCamsMoodTheme,
+  isCamsQueueItemStatus,
   isSpacePlaying,
 } from '@/shared/modules/cams/utils';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
@@ -209,8 +211,7 @@ export const SpacePlayerCard = ({
   const queueItems: SpaceQueueItemResponse[] = sortedByPosition.map((i) => {
     const position = i.position ?? 0;
     let queueStatus: QueueItemStatus;
-    if (typeof i.rawStatus === 'number')
-      queueStatus = i.rawStatus as QueueItemStatus;
+    if (isCamsQueueItemStatus(i.rawStatus)) queueStatus = i.rawStatus;
     else if (i.queueItemId === spaceState?.currentQueueItemId)
       queueStatus = QueueItemStatus.Playing;
     else if (i.queueItemId === spaceState?.pendingQueueItemId)
@@ -531,45 +532,8 @@ export const SpacePlayerCard = ({
     [chillPct, focusPct, energPct],
   );
 
-  const getMoodTheme = (moodName?: string | null) => {
-    const mood = moodName?.toLowerCase() || '';
-    if (mood.includes('chill'))
-      return {
-        color: '#10b981',
-        glow: 'rgba(16,185,129,0.4)',
-        bg: 'rgba(16,185,129,0.15)',
-        shadow: 'rgba(16,185,129,0.15)',
-      };
-    if (mood.includes('focus'))
-      return {
-        color: '#3b82f6',
-        glow: 'rgba(59,130,246,0.4)',
-        bg: 'rgba(59,130,246,0.15)',
-        shadow: 'rgba(59,130,246,0.15)',
-      };
-    if (mood.includes('energetic') || mood.includes('uplifting'))
-      return {
-        color: '#f59e0b',
-        glow: 'rgba(245,158,11,0.4)',
-        bg: 'rgba(245,158,11,0.15)',
-        shadow: 'rgba(245,158,11,0.15)',
-      };
-    return {
-      color: '#818cf8',
-      glow: 'rgba(129,140,248,0.4)',
-      bg: 'rgba(129,140,248,0.15)',
-      shadow: 'rgba(129,140,248,0.15)',
-    };
-  };
-
-  const theme = getMoodTheme(spaceState?.moodName);
-  const playerTheme = {
-    color: '#3b82f6',
-    colorSoft: '#818cf8',
-    bg: 'rgba(59,130,246,0.14)',
-    glow: 'rgba(59,130,246,0.48)',
-    shadow: 'rgba(59,130,246,0.18)',
-  };
+  const theme = getCamsMoodTheme(spaceState?.moodName);
+  const playerTheme = theme;
 
   const VISUALIZER_CSS = `
     @keyframes waveFloat {
