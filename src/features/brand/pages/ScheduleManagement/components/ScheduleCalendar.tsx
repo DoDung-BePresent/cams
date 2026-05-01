@@ -32,7 +32,7 @@ interface ScheduleCalendarProps {
   onSlotChange?: (
     slotId: string,
     updates: { daysOfWeek: number[]; startTime: string; endTime: string },
-  ) => void;
+  ) => Promise<void>;
 }
 
 export const ScheduleCalendar = ({
@@ -61,11 +61,11 @@ export const ScheduleCalendar = ({
     onCreateSlot(selectInfo);
   };
 
-  const handleEventChange = (changeInfo: EventChangeArg) => {
-    const { event } = changeInfo;
+  const handleEventChange = async (changeInfo: EventChangeArg) => {
+    const { event, revert } = changeInfo;
 
     if (!onSlotChange) {
-      changeInfo.revert();
+      revert();
       return;
     }
 
@@ -89,12 +89,18 @@ export const ScheduleCalendar = ({
     const startTime = newStart.format('HH:mm');
     const endTime = newEnd.format('HH:mm');
 
-    // Call the callback with updated slot data
-    onSlotChange(event.id, {
-      daysOfWeek: daysOfWeek.sort((a, b) => a - b),
-      startTime,
-      endTime,
-    });
+    try {
+      // Optimistic update - keep the event in new position
+      // Call the callback with updated slot data
+      await onSlotChange(event.id, {
+        daysOfWeek: daysOfWeek.sort((a, b) => a - b),
+        startTime,
+        endTime,
+      });
+    } catch {
+      // If API fails, revert the change
+      revert();
+    }
   };
 
   if (isLoading) {

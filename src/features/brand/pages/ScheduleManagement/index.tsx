@@ -224,7 +224,7 @@ export const ScheduleManagement = () => {
     const slot = currentSource?.schedule?.slots.find((s) => s.id === slotId);
     if (!slot) return;
 
-    // Update the slot with new time/day via API
+    // Update the slot with new time/day via API (silent mode for drag)
     await updateSlotMutation.mutateAsync({
       slotId,
       data: {
@@ -233,6 +233,7 @@ export const ScheduleManagement = () => {
         endTime: updates.endTime,
         playlistId: slot.playlistId, // Keep existing playlist
       },
+      silent: true, // Don't show success message for drag operations
     });
   };
 
