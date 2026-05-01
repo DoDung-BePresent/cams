@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { PageHeader } from '@/shared/components';
 import { ScheduleCalendar } from './components/ScheduleCalendar';
 import { QuickCreatePopover } from './components/QuickCreatePopover';
-import { CreateSlotDrawer } from './components/CreateSlotDrawer';
+import { SlotActionsPopover } from './components/SlotActionsPopover';
 import { CreateScheduleSourceDrawer } from './components/CreateScheduleSourceDrawer';
 import { EditScheduleSourceDrawer } from './components/EditScheduleSourceDrawer';
 import { ScheduleSourcePickerModal } from './components/ScheduleSourcePickerModal';
@@ -18,6 +18,7 @@ import {
   useBrandScheduleLibrary,
   useBrandScheduleTemplates,
 } from '@/features/brand/hooks';
+import { useBrandSourceSlotMutations } from './hooks/useBrandSourceSlotMutations';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useAuth } from '@/providers';
 import type {
@@ -28,6 +29,7 @@ import type {
   SpaceScheduleDto,
   ScheduleMusicItemDto,
 } from './types/schedule.types';
+import type { EventClickArg } from '@fullcalendar/core';
 import './ScheduleManagement.css';
 
 const WEEKDAY_NAMES = [
@@ -69,7 +71,18 @@ export const ScheduleManagement = () => {
     dayOfWeek: number;
     dayName: string;
   } | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [slotActionsOpen, setSlotActionsOpen] = useState(false);
+  const [slotActionsPosition, setSlotActionsPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [slotActionsSlot, setSlotActionsSlot] = useState<{
+    id: string;
+    playlistId: string;
+    daysOfWeek: number[];
+    startTime: string;
+    endTime: string;
+  } | null>(null);
   const [createSourceDrawerOpen, setCreateSourceDrawerOpen] = useState(false);
   const [editSourceDrawerOpen, setEditSourceDrawerOpen] = useState(false);
   const [loadScheduleModalOpen, setLoadScheduleModalOpen] = useState(false);
@@ -78,13 +91,6 @@ export const ScheduleManagement = () => {
   const [selectedSource, setSelectedSource] = useState<
     ScheduleSourceItem | undefined
   >();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedSlot, setSelectedSlot] = useState<any>(null);
-  const [prefilledTime, setPrefilledTime] = useState<{
-    startTime: string;
-    endTime: string;
-    daysOfWeek: number[];
-  } | null>(null);
 
   // Load data
   const {
@@ -106,6 +112,13 @@ export const ScheduleManagement = () => {
   const createSourceMutation = useCreateBrandScheduleSource();
   const updateSourceMutation = useUpdateBrandScheduleSource();
   const deleteSourceMutation = useDeleteBrandScheduleSource();
+
+  // Always call the hook, but pass empty string if no source selected
+  // The mutations won't be used unless currentSourceId exists
+  const { upsertSlot: updateSlotMutation } = useBrandSourceSlotMutations(
+    currentSourceId || '',
+    brandId || undefined,
+  );
 
   // Get current source being edited
   const currentSource =
@@ -177,11 +190,56 @@ export const ScheduleManagement = () => {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleEditSlot = (slot: any) => {
-    setSelectedSlot(slot);
-    setPrefilledTime(null);
-    setDrawerOpen(true);
+  const handleSlotClick = (clickInfo: EventClickArg) => {
+    const slot = currentSource?.schedule?.slots.find(
+      (s) => s.id === clickInfo.event.id,
+    );
+
+    if (!slot) return;
+
+    // Get mouse position from the jsEvent
+    const mouseEvent = clickInfo.jsEvent as MouseEvent;
+    setSlotActionsPosition({
+      x: mouseEvent.clientX,
+      y: mouseEvent.clientY,
+    });
+
+    setSlotActionsSlot({
+      id: slot.id,
+      playlistId: slot.playlistId,
+      daysOfWeek: slot.daysOfWeek,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+    });
+
+    setSlotActionsOpen(true);
+  };
+
+  const handleSlotChange = async (
+    slotId: string,
+    updates: { daysOfWeek: number[]; startTime: string; endTime: string },
+  ) => {
+    if (!currentSourceId || !brandId) return;
+
+    const slot = currentSource?.schedule?.slots.find((s) => s.id === slotId);
+    if (!slot) return;
+
+    // Update the slot with new time/day via API
+    await updateSlotMutation.mutateAsync({
+      slotId,
+      data: {
+        daysOfWeek: updates.daysOfWeek,
+        startTime: updates.startTime,
+        endTime: updates.endTime,
+        playlistId: slot.playlistId, // Keep existing playlist
+      },
+    });
+  };
+
+  const handleCloseSlotActions = () => {
+    setSlotActionsOpen(false);
+    setSlotActionsPosition(null);
+    setSlotActionsSlot(null);
   };
 
   const handleClosePopover = () => {
@@ -276,8 +334,9 @@ export const ScheduleManagement = () => {
               isLoading={isLoading}
               sourceId={currentSourceId}
               brandId={brandId ?? undefined}
-              onEditSlot={handleEditSlot}
               onCreateSlot={handleCreateSlot}
+              onSlotClick={handleSlotClick}
+              onSlotChange={handleSlotChange}
             />
           </Card>
         </div>
@@ -294,18 +353,15 @@ export const ScheduleManagement = () => {
         onClose={handleClosePopover}
       />
 
-      {/* Full Edit Drawer */}
-      <CreateSlotDrawer
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setPrefilledTime(null);
-        }}
+      {/* Slot Actions Popover */}
+      <SlotActionsPopover
+        open={slotActionsOpen}
+        anchorPosition={slotActionsPosition}
+        slot={slotActionsSlot}
         sourceId={currentSourceId}
         brandId={brandId ?? undefined}
-        slot={selectedSlot}
-        prefilledTime={prefilledTime}
         musicCatalog={musicCatalog}
+        onClose={handleCloseSlotActions}
       />
 
       {/* Create Template/Library Drawer */}

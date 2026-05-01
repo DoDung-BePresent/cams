@@ -10,10 +10,8 @@ import type {
 import { Spin } from 'antd';
 import dayjs from 'dayjs';
 
-import { AppModal } from '@/shared/components';
 import { transformSlotsToEvents } from '../utils/calendarHelpers';
 import type { ScheduleBootstrapData } from '../types/schedule.types';
-import { useBrandSourceSlotMutations } from '../hooks/useBrandSourceSlotMutations';
 import type { ScheduleSlotItem } from '@/shared/modules/schedules/types';
 
 /**
@@ -29,21 +27,22 @@ interface ScheduleCalendarProps {
   isLoading: boolean;
   sourceId: string | null;
   brandId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onEditSlot: (slot: any) => void;
   onCreateSlot: (selectInfo: DateSelectArg) => void;
+  onSlotClick: (clickInfo: EventClickArg) => void;
+  onSlotChange?: (
+    slotId: string,
+    updates: { daysOfWeek: number[]; startTime: string; endTime: string },
+  ) => void;
 }
 
 export const ScheduleCalendar = ({
   bootstrap,
   isLoading,
-  sourceId,
-  brandId,
-  onEditSlot,
   onCreateSlot,
+  onSlotClick,
+  onSlotChange,
 }: ScheduleCalendarProps) => {
   const calendarRef = useRef<FullCalendar>(null);
-  const { deleteSlot } = useBrandSourceSlotMutations(sourceId || '', brandId);
 
   // Transform BE slots to FullCalendar events
   const events = bootstrap?.draftSchedule?.slots
@@ -55,31 +54,7 @@ export const ScheduleCalendar = ({
     : [];
 
   const handleEventClick = (clickInfo: EventClickArg) => {
-    const slot = bootstrap?.draftSchedule?.slots.find(
-      (s) => s.id === clickInfo.event.id,
-    );
-
-    if (!slot) return;
-
-    AppModal.confirm({
-      title: 'Manage Time Slot',
-      content: `"${clickInfo.event.title}" - ${clickInfo.event.extendedProps.timeRange}`,
-      okText: 'Edit',
-      cancelText: 'Delete',
-      okButtonProps: { type: 'primary' },
-      cancelButtonProps: { danger: true },
-      onOk: () => onEditSlot(slot),
-      onCancel: () => {
-        AppModal.confirm({
-          title: 'Delete Time Slot',
-          content: `Are you sure you want to delete "${clickInfo.event.title}"?`,
-          type: 'warning',
-          okText: 'Delete',
-          okButtonProps: { danger: true },
-          onOk: () => deleteSlot.mutate(slot.id),
-        });
-      },
-    });
+    onSlotClick(clickInfo);
   };
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
@@ -89,9 +64,37 @@ export const ScheduleCalendar = ({
   const handleEventChange = (changeInfo: EventChangeArg) => {
     const { event } = changeInfo;
 
-    // TODO: Implement drag to resize/move
-    // Need to recalculate daysOfWeek if moved to different day
-    console.log('Event changed:', event);
+    if (!onSlotChange) {
+      changeInfo.revert();
+      return;
+    }
+
+    // Get the new start and end times
+    const newStart = dayjs(event.start);
+    const newEnd = dayjs(event.end);
+
+    // Calculate which days this event now spans
+    const daysOfWeek: number[] = [];
+    let currentDay = newStart.clone();
+
+    while (currentDay.isBefore(newEnd) || currentDay.isSame(newEnd, 'day')) {
+      const dayOfWeek = currentDay.day();
+      if (!daysOfWeek.includes(dayOfWeek)) {
+        daysOfWeek.push(dayOfWeek);
+      }
+      currentDay = currentDay.add(1, 'day');
+    }
+
+    // Format times
+    const startTime = newStart.format('HH:mm');
+    const endTime = newEnd.format('HH:mm');
+
+    // Call the callback with updated slot data
+    onSlotChange(event.id, {
+      daysOfWeek: daysOfWeek.sort((a, b) => a - b),
+      startTime,
+      endTime,
+    });
   };
 
   if (isLoading) {

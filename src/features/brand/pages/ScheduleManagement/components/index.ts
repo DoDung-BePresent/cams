@@ -3,6 +3,7 @@ export { ScheduleCalendar } from './ScheduleCalendar';
 export { CreateSlotDrawer } from './CreateSlotDrawer';
 export { SaveToLibraryModal } from './SaveToLibraryModal';
 export { QuickCreatePopover } from './QuickCreatePopover';
+export { SlotActionsPopover } from './SlotActionsPopover';
 
 // Existing brand schedule template components
 export { CreateScheduleSourceDrawer } from './CreateScheduleSourceDrawer';
