@@ -107,7 +107,7 @@ export const SpaceMusicModal = ({
       width={800}
       open={open}
       onCancel={onClose}
-      destroyOnClose
+      destroyOnHidden
       footer={null}
       style={{
         padding: 0,

@@ -7,3 +7,4 @@ export * from './playerTypes';
 export * from './scheduleTypes';
 export * from './spaceTypes';
 export * from './visualizationTypes';
+export * from './brandDashboardTypes';

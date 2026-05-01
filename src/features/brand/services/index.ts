@@ -3,3 +3,4 @@ export * from './staffService';
 export * from './storeService';
 export * from './configService';
 export * from './scheduleService';
+export * from './brandDashboardService';

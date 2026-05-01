@@ -123,6 +123,9 @@ export interface SpaceQueueItemDto {
   durationSec: number | null;
   coverImageUrl: string | null;
   orderIndex: number;
+  queueStatus?: QueueItemStatus | number | null;
+  source?: number | null;
+  isReadyToStream?: boolean | null;
 }
 
 export interface FuzzySignalContribution {

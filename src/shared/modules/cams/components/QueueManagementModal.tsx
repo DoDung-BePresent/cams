@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import {
   Modal,
   Button,
@@ -23,11 +23,12 @@ import {
   useRemoveQueueItems,
   useUpdateAudioState,
   useReorderQueue,
+  usePlaybackControl,
 } from '../hooks';
 import { QueueList } from './QueueList';
 import { AudioMixerControls } from './AudioMixerControls';
 import { AddToQueueModal } from './AddToQueueModal';
-import type { QueueEndBehavior } from '../types';
+import { PlaybackCommand, type QueueEndBehavior } from '../types';
 
 const { Title, Text } = Typography;
 
@@ -59,11 +60,16 @@ export const QueueManagementModal = ({
   const removeQueueItems = useRemoveQueueItems();
   const updateAudioState = useUpdateAudioState();
   const reorderQueue = useReorderQueue();
+  const playbackControl = usePlaybackControl();
 
   // Get current audio state from space state or defaults
   const volumePercent = spaceState?.volumePercent ?? 100;
   const isMuted = spaceState?.isMuted ?? false;
   const queueEndBehavior = spaceState?.queueEndBehavior ?? 0;
+  const queueSyncSignature =
+    spaceState?.spaceQueueItems
+      ?.map((item) => `${item.queueItemId}:${item.orderIndex ?? ''}`)
+      .join('|') ?? '';
 
   // Sync local volume with server state when spaceState changes
   useEffect(() => {
@@ -72,6 +78,18 @@ export const QueueManagementModal = ({
       setLocalVolume(spaceState.volumePercent);
     }
   }, [spaceState?.volumePercent]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    void refetch();
+  }, [
+    open,
+    refetch,
+    spaceState?.currentQueueItemId,
+    spaceState?.pendingQueueItemId,
+    queueSyncSignature,
+  ]);
 
   const handleClearQueue = async () => {
     try {
@@ -152,6 +170,19 @@ export const QueueManagementModal = ({
       });
     } catch (error) {
       console.error('Failed to remove queue items:', error);
+    }
+  };
+
+  const handleSkipToTrack = async (queueItemId: string) => {
+    try {
+      await playbackControl.mutateAsync({
+        spaceId,
+        command: PlaybackCommand.SkipToTrack,
+        targetQueueItemId: queueItemId,
+      });
+      await refetch();
+    } catch (error) {
+      console.error('Failed to skip to queue item:', error);
     }
   };
 
@@ -319,6 +350,7 @@ export const QueueManagementModal = ({
                 onRemove={handleRemoveItem}
                 onRemoveMany={handleRemoveItems}
                 onReorder={handleReorder}
+                onSkipToTrack={handleSkipToTrack}
               />
             </Space>
           </div>

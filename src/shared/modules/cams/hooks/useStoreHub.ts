@@ -54,7 +54,7 @@ export const useStoreHub = (
 
     // ✅ Early return without setState
     if (!storeId || !token) {
-      console.log('❌ Cannot connect to StoreHub: Missing storeId or token', {
+      console.debug('StoreHub connection skipped: missing storeId or token', {
         hasStoreId: !!storeId,
         hasToken: !!token,
       });
