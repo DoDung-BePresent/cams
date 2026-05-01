@@ -1,1 +1,1 @@
-export * from './config';
+export { useStoreContext } from './useStoreContext';

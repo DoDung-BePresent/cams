@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type React from 'react';
 import {
   Alert,
@@ -29,10 +29,13 @@ import {
   WalletOutlined,
 } from '@ant-design/icons';
 import { useQueries, useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router';
 import dayjs from 'dayjs';
 
 import { STALE_TIME } from '@/config';
 import { useAuth } from '@/providers';
+import { useStoreContext } from '@/features/store/hooks';
+import { RoleEnum } from '@/shared/types';
 import { spaceService } from '@/shared/modules/spaces/services';
 import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import type { ColumnsType } from 'antd/es/table';
@@ -894,7 +897,21 @@ const LiveNoiseCrowdChart = ({
 
 export const StoreDashboard = () => {
   const { user } = useAuth();
-  const storeId = user?.storeId || undefined;
+  const navigate = useNavigate();
+  const storeId = useStoreContext();
+
+  // If Brand Manager accesses Store Dashboard without storeId, redirect back to Brand Dashboard
+  // Only check once on mount, not on every render
+  useEffect(() => {
+    const isBrandManagerOnly =
+      user?.roles?.includes(RoleEnum.BrandManager) &&
+      !user?.roles?.includes(RoleEnum.StoreManager);
+
+    if (isBrandManagerOnly && !storeId) {
+      navigate('/brand/stores', { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run once on mount
 
   const [period, setPeriod] = useState<PeriodOption>('day');
   const [granularity, setGranularity] = useState<GranularityOption>('hour');

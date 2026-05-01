@@ -7,8 +7,6 @@ import type FullCalendar from '@fullcalendar/react';
 import dayjs from 'dayjs';
 
 import { PageHeader } from '@/shared/components';
-import { useAuth } from '@/providers';
-import { RoleEnum } from '@/shared/types';
 import { useSpace } from '@/shared/modules/spaces/hooks';
 import {
   useApplyScheduleSource,
@@ -58,7 +56,6 @@ const WEEKDAY_NAMES = [
 export const SpaceSchedulePage = () => {
   const navigate = useNavigate();
   const params = useParams();
-  const { user } = useAuth();
   const spaceId = params.spaceId;
   const calendarRef = useRef<FullCalendar | null>(null);
 
@@ -101,9 +98,9 @@ export const SpaceSchedulePage = () => {
   const updateSlotMutation = useUpsertScheduleSlot(spaceId);
 
   const activeSchedule = bootstrap?.draftSchedule;
-  const canSaveToLibrary =
-    !!user?.roles?.includes(RoleEnum.SystemAdmin) ||
-    !!user?.roles?.includes(RoleEnum.BrandManager);
+  // Store Manager layout: No elevated permissions, even for Brand Manager
+  // If Brand Manager wants more features, they should use Brand Dashboard
+  const canSaveToLibrary = false;
 
   // Transform playlists to music catalog format
   const musicCatalog: ScheduleMusicItemDto[] =

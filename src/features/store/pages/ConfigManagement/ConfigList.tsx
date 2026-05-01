@@ -9,7 +9,6 @@ import {
   getConfigColumns,
   UpsertStoreValueModal,
 } from './components';
-import { useStoreConfigs } from '@/features/store/hooks';
 import type {
   ConfigFlatRowItem,
   ConfigStoreFilter,
@@ -18,6 +17,7 @@ import type { TablePaginationConfig } from 'antd';
 import type { FilterValue, SorterResult } from 'antd/es/table/interface';
 import { PAGINATION_SIZES } from '@/shared/constants';
 import { DataTable, PageHeader } from '@/shared/components';
+import { useStoreConfigs } from '../../hooks/config';
 
 const DEFAULT_FILTER: ConfigStoreFilter = {
   page: 1,

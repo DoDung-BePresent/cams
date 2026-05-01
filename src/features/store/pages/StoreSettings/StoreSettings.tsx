@@ -20,8 +20,8 @@ import dayjs from 'dayjs';
 /**
  * Providers
  */
-import { useAuth } from '@/providers';
 import { useStore } from '@/features/brand/hooks/store';
+import { useStoreContext } from '@/features/store/hooks';
 
 /**
  * Components
@@ -87,11 +87,10 @@ const getLocalClockByTimezone = (date: Date, timeZone: string) => {
 
 export const StoreSettings = () => {
   const { message } = App.useApp();
-  const { user } = useAuth();
   const [form] = Form.useForm<BusinessHoursForm>();
   const [now, setNow] = useState(() => new Date());
 
-  const storeId = user?.storeId || undefined;
+  const storeId = useStoreContext();
   const { data: store } = useStore(storeId, !!storeId);
 
   const {

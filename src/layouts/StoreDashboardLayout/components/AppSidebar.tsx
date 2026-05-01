@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate, useLocation, useSearchParams } from 'react-router';
 import { Tooltip, Skeleton } from 'antd';
 import { WalletOutlined, ShopOutlined } from '@ant-design/icons';
 
@@ -20,6 +20,7 @@ import { useAuth } from '@/providers';
 import { useBrand } from '@/features/admin/hooks/brand';
 import { useStore } from '@/features/brand/hooks/store/useStore';
 import { useWallet } from '@/shared/modules/billing/hooks';
+import { useStoreContext } from '@/features/store/hooks';
 
 type AppSidebarProps = {
   collapsed: boolean;
@@ -30,9 +31,10 @@ const SOUNDTRACK_ACCENT = '#ef4444';
 export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const brandId = user?.brandId;
-  const storeId = user?.storeId;
+  const storeId = useStoreContext();
 
   const { data: brand, isLoading: isBrandLoading } = useBrand(
     brandId || undefined,
@@ -46,7 +48,13 @@ export const AppSidebar = ({ collapsed }: AppSidebarProps) => {
 
   const handleClick = (key: string) => {
     const route = STORE_ROUTE_MAP[key] || `/store/${key}`;
-    navigate(route);
+    // Preserve storeId query param when navigating (for Brand Manager acting as Store)
+    const queryStoreId = searchParams.get('storeId');
+    if (queryStoreId) {
+      navigate(`${route}?storeId=${queryStoreId}`);
+    } else {
+      navigate(route);
+    }
   };
 
   const isActive = (key: string) => {
