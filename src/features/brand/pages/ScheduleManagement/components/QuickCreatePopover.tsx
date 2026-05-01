@@ -12,6 +12,7 @@ import {
 } from 'antd';
 import dayjs from 'dayjs';
 import { createStyles } from 'antd-style';
+import type FullCalendar from '@fullcalendar/react';
 
 import { useBrandSourceSlotMutations } from '../hooks/useBrandSourceSlotMutations';
 import type { ScheduleMusicItemDto } from '../types/schedule.types';
@@ -57,6 +58,7 @@ interface QuickCreatePopoverProps {
   brandId?: string;
   musicCatalog: ScheduleMusicItemDto[];
   onClose: () => void;
+  calendarRef?: React.RefObject<FullCalendar | null>;
 }
 
 export const QuickCreatePopover = ({
@@ -67,6 +69,7 @@ export const QuickCreatePopover = ({
   brandId,
   musicCatalog,
   onClose,
+  calendarRef,
 }: QuickCreatePopoverProps) => {
   const { styles } = useStyles();
   const [form] = Form.useForm();
@@ -122,6 +125,8 @@ export const QuickCreatePopover = ({
       },
     });
 
+    // Unselect the calendar selection
+    calendarRef?.current?.getApi().unselect();
     onClose();
   };
 
@@ -221,7 +226,11 @@ export const QuickCreatePopover = ({
         >
           <Button
             size='large'
-            onClick={onClose}
+            onClick={() => {
+              // Unselect the calendar selection
+              calendarRef?.current?.getApi().unselect();
+              onClose();
+            }}
           >
             Cancel
           </Button>
@@ -252,7 +261,11 @@ export const QuickCreatePopover = ({
         content={content}
         open={open}
         onOpenChange={(visible) => {
-          if (!visible) onClose();
+          if (!visible) {
+            // Unselect when popover closes
+            calendarRef?.current?.getApi().unselect();
+            onClose();
+          }
         }}
         trigger='click'
         placement='rightTop'

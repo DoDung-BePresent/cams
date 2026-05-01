@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, Flex, Button, Space, Alert } from 'antd';
 import { PlusOutlined, FolderOpenOutlined } from '@ant-design/icons';
 import type { DateSelectArg } from '@fullcalendar/core';
+import type FullCalendar from '@fullcalendar/react';
 import dayjs from 'dayjs';
 
 import { PageHeader } from '@/shared/components';
@@ -59,6 +60,7 @@ const WEEKDAY_NAMES = [
 export const ScheduleManagement = () => {
   const { user } = useAuth();
   const brandId = user?.brandId;
+  const calendarRef = useRef<FullCalendar | null>(null);
 
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState<{
@@ -307,6 +309,12 @@ export const ScheduleManagement = () => {
           style={{ marginBottom: 16 }}
           closable
           onClose={() => setCurrentSourceId(null)}
+          styles={{
+            close: {
+              marginTop: 3.5,
+              fontSize: 18,
+            },
+          }}
         />
       )}
 
@@ -338,6 +346,9 @@ export const ScheduleManagement = () => {
               onCreateSlot={handleCreateSlot}
               onSlotClick={handleSlotClick}
               onSlotChange={handleSlotChange}
+              onCalendarReady={(ref) => {
+                calendarRef.current = ref;
+              }}
             />
           </Card>
         </div>
@@ -352,6 +363,7 @@ export const ScheduleManagement = () => {
         brandId={brandId ?? undefined}
         musicCatalog={musicCatalog}
         onClose={handleClosePopover}
+        calendarRef={calendarRef}
       />
 
       {/* Slot Actions Popover */}

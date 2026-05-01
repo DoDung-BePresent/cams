@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -33,16 +33,31 @@ interface ScheduleCalendarProps {
     slotId: string,
     updates: { daysOfWeek: number[]; startTime: string; endTime: string },
   ) => Promise<void>;
+  onCalendarReady?: (ref: FullCalendar) => void;
 }
+
+export { type ScheduleCalendarProps };
 
 export const ScheduleCalendar = ({
   bootstrap,
   isLoading,
+  sourceId,
   onCreateSlot,
   onSlotClick,
   onSlotChange,
+  onCalendarReady,
 }: ScheduleCalendarProps) => {
   const calendarRef = useRef<FullCalendar>(null);
+
+  // Disable interactions if no source is selected
+  const isDisabled = !sourceId;
+
+  // Notify parent when calendar is ready
+  useEffect(() => {
+    if (calendarRef.current && onCalendarReady) {
+      onCalendarReady(calendarRef.current);
+    }
+  }, [onCalendarReady]);
 
   // Transform BE slots to FullCalendar events
   const events = bootstrap?.draftSchedule?.slots
@@ -54,14 +69,21 @@ export const ScheduleCalendar = ({
     : [];
 
   const handleEventClick = (clickInfo: EventClickArg) => {
+    if (isDisabled) return;
     onSlotClick(clickInfo);
   };
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
+    if (isDisabled) return;
     onCreateSlot(selectInfo);
   };
 
   const handleEventChange = async (changeInfo: EventChangeArg) => {
+    if (isDisabled) {
+      changeInfo.revert();
+      return;
+    }
+
     const { event, revert } = changeInfo;
 
     if (!onSlotChange) {
@@ -112,7 +134,7 @@ export const ScheduleCalendar = ({
   }
 
   return (
-    <div className='schedule-calendar'>
+    <div className={`schedule-calendar ${isDisabled ? 'disabled' : ''}`}>
       <FullCalendar
         ref={calendarRef}
         plugins={[timeGridPlugin, interactionPlugin]}
@@ -122,9 +144,10 @@ export const ScheduleCalendar = ({
         slotMinTime='07:00:00'
         slotMaxTime='23:00:00'
         allDaySlot={false}
-        editable={true}
-        selectable={true}
+        editable={!isDisabled}
+        selectable={!isDisabled}
         selectMirror={true}
+        unselectAuto={false}
         dayMaxEvents={true}
         weekends={true}
         events={events}
@@ -140,6 +163,7 @@ export const ScheduleCalendar = ({
           start: dayjs().startOf('week').add(1, 'day').format('YYYY-MM-DD'), // Monday
           end: dayjs().endOf('week').add(2, 'day').format('YYYY-MM-DD'), // Next Monday
         }}
+        eventClassNames={isDisabled ? 'fc-event-disabled' : ''}
       />
     </div>
   );

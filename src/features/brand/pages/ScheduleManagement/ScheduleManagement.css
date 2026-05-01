@@ -195,3 +195,15 @@
   .ant-picker-time-panel-cell-inner {
   background: #ef4444 !important;
 }
+
+/* ====== DISABLED STATE ===== */
+.schedule-calendar.disabled {
+  position: relative;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.schedule-calendar .fc-event-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
