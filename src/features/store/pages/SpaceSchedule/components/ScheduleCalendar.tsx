@@ -140,6 +140,7 @@ export const ScheduleCalendar = ({
         unselectAuto={false}
         dayMaxEvents={true}
         weekends={true}
+        nowIndicator={true}
         events={events}
         select={handleDateSelect}
         eventClick={handleEventClick}
