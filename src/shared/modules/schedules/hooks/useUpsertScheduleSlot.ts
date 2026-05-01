@@ -39,7 +39,9 @@ export const useUpsertScheduleSlot = (spaceId?: string) => {
         QUERY_KEYS.schedules.bootstrap(spaceId),
         (old: unknown) => {
           if (!old || typeof old !== 'object') return old;
-          const oldData = old as { draftSchedule?: { slots?: unknown[] } };
+          const oldData = old as {
+            draftSchedule?: { slots?: Array<{ id: string }> };
+          };
 
           if (!oldData.draftSchedule?.slots) return old;
 
@@ -47,7 +49,7 @@ export const useUpsertScheduleSlot = (spaceId?: string) => {
             ...oldData,
             draftSchedule: {
               ...oldData.draftSchedule,
-              slots: oldData.draftSchedule.slots.map((slot: { id: string }) =>
+              slots: oldData.draftSchedule.slots.map((slot) =>
                 slot.id === slotId ? { ...slot, ...body } : slot,
               ),
             },
