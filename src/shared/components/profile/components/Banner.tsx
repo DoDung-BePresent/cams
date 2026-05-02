@@ -19,14 +19,21 @@ export const Banner = ({
 }: React.ComponentProps<'div'>) => {
   return (
     <div
-      className={cn(
-        'relative rounded-sm bg-[var(--ant-blue-1)] p-4 px-7',
-        className,
-      )}
+      className={cn('relative rounded-sm p-4 px-7', className)}
+      style={{
+        background: 'linear-gradient(135deg, #18181b 0%, #242126 100%)',
+        border: '1px solid #2d2528',
+      }}
       {...props}
     >
-      <LeftWave className='absolute bottom-0 left-0 text-[var(--ant-blue-3)]' />
-      <RightWave className='absolute top-0 right-0 text-[var(--ant-blue-3)]' />
+      <LeftWave
+        className='absolute bottom-0 left-0 opacity-10'
+        style={{ color: '#ef4444' }}
+      />
+      <RightWave
+        className='absolute top-0 right-0 opacity-10'
+        style={{ color: '#ef4444' }}
+      />
       <Flex
         gap={20}
         align='center'
@@ -36,20 +43,28 @@ export const Banner = ({
           percent={30}
           size={85}
           format={(value) => (
-            <span className='text-sm font-medium'>{value}%</span>
+            <span
+              className='text-sm font-medium'
+              style={{ color: '#f8f7f7' }}
+            >
+              {value}%
+            </span>
           )}
           strokeLinecap='square'
-          railColor='#ffffff'
+          strokeColor='#ef4444'
+          trailColor='rgba(239,68,68,0.15)'
         />
         <Space
           vertical
           size={0}
         >
-          <Title level={5}>Edit Your Profile</Title>
-          <Text
-            type='secondary'
-            style={{ fontSize: 13 }}
+          <Title
+            level={5}
+            style={{ color: '#f8f7f7', margin: 0 }}
           >
+            Edit Your Profile
+          </Title>
+          <Text style={{ fontSize: 13, color: '#b7adb0' }}>
             Complete your profile to unlock all features
           </Text>
         </Space>
