@@ -21,7 +21,6 @@ import {
   CONFIG_VALUE_TYPE_OPTIONS,
   STORE_OVERRIDE_INTENT_OPTIONS,
 } from '@/features/store/constants/configConstants';
-import { useUpsertStoreValue } from '@/features/store/hooks';
 import type {
   ConfigFlatRowItem,
   StoreOverrideIntentEnum,
@@ -31,6 +30,7 @@ import { ConfigValueTypeEnum } from '@/features/store/types';
 import { DRAWER_WIDTHS } from '@/config';
 import { useConfigDetailByStore } from '@/features/admin/hooks/config';
 import { SelectAffectedSpacesModal } from './SelectAffectedSpacesModal';
+import { useUpsertStoreValue } from '@/features/store/hooks/config';
 
 const { Text } = Typography;
 

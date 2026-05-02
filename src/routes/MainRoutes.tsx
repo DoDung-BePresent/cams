@@ -70,7 +70,9 @@ export const MainRoutes = [
   {
     path: '/store',
     element: (
-      <ProtectedRoute allowedRoles={[RoleEnum.StoreManager]}>
+      <ProtectedRoute
+        allowedRoles={[RoleEnum.StoreManager, RoleEnum.BrandManager]}
+      >
         <StoreDashboardLayout />
       </ProtectedRoute>
     ),

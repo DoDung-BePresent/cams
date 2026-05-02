@@ -3,6 +3,7 @@
  */
 import { useState } from 'react';
 import { Avatar, Badge, Button, Dropdown, Flex, Layout, Tag } from 'antd';
+import { useNavigate, useSearchParams, useLocation } from 'react-router';
 
 /**
  * Icons
@@ -17,6 +18,8 @@ import {
   UserOutlined,
   MoonOutlined,
   SunOutlined,
+  ArrowLeftOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -63,11 +66,25 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { user } = useAuth();
   const { isOnline } = useNetworkStatus();
   const { mode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Only show theme toggle for SystemAdmin
   const showThemeToggle = user?.roles[0] === RoleEnum.SystemAdmin;
+
+  // Detect if Brand Manager is "acting as Store Manager"
+  const isActingAsStore =
+    location.pathname.startsWith('/store') &&
+    user?.roles?.includes(RoleEnum.BrandManager) &&
+    !user?.roles?.includes(RoleEnum.StoreManager) &&
+    searchParams.has('storeId');
+
+  const handleBackToBrand = () => {
+    navigate('/brand/stores');
+  };
 
   return (
     <Header style={headerStyle}>
@@ -85,7 +102,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             type='text'
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={onClick}
-            // style={{ , width: 36, height: 36 }}
           />
           {!isOnline && (
             <Tag
@@ -94,6 +110,35 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             >
               Offline Mode
             </Tag>
+          )}
+          {isActingAsStore && (
+            <>
+              <Button
+                type='default'
+                icon={<ArrowLeftOutlined />}
+                onClick={handleBackToBrand}
+                style={{
+                  background: 'rgba(239,68,68,0.12)',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  color: '#fca5a5',
+                }}
+              >
+                Back to Brand
+              </Button>
+              <Tag
+                icon={<EyeOutlined />}
+                color='orange'
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '4px 12px',
+                  border: '1px solid rgba(251,191,36,0.3)',
+                  background: 'rgba(251,191,36,0.12)',
+                }}
+              >
+                Viewing as Store Manager
+              </Tag>
+            </>
           )}
         </Flex>
 

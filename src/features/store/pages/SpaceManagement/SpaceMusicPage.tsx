@@ -15,6 +15,7 @@ import { SpacePlayerCard } from './components/SpacePlayerCard';
 import { useStoreHub } from '@/shared/modules/cams/hooks';
 import { useSpace } from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
+import { useStoreContext } from '@/features/store/hooks';
 
 /**
  * Services
@@ -24,8 +25,8 @@ import { storeHubService } from '@/shared/modules/cams/services';
 export const SpaceMusicPage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
   const navigate = useNavigate();
-  const { accessToken, user } = useAuth();
-  const storeId = user?.storeId || '';
+  const { accessToken } = useAuth();
+  const storeId = useStoreContext() || '';
   const queryClient = useQueryClient();
   const [isJoinedSpace, setIsJoinedSpace] = useState(false);
 

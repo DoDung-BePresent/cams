@@ -20,6 +20,7 @@ import {
   SettingOutlined,
   ArrowLeftOutlined,
   UsergroupAddOutlined,
+  LoginOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -174,6 +175,11 @@ export const StoreList = () => {
         deleteStore.mutate(storeId);
       },
     });
+  };
+
+  const handleViewAsStoreManager = (storeId: string) => {
+    // Navigate to Store Dashboard Layout
+    navigate(`/store/dashboard?storeId=${storeId}`);
   };
 
   // Group stores by city
@@ -524,6 +530,12 @@ export const StoreList = () => {
                     onClick={(e) => e.stopPropagation()}
                   >
                     {[
+                      {
+                        icon: <LoginOutlined />,
+                        title: 'View as Store',
+                        color: '#10b981',
+                        onClick: () => handleViewAsStoreManager(store.id),
+                      },
                       {
                         icon: <EyeOutlined />,
                         title: 'View',

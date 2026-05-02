@@ -51,6 +51,7 @@ import {
   useToggleSpaceStatus,
 } from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
+import { useStoreContext } from '@/features/store/hooks';
 
 /**
  * Components
@@ -107,6 +108,7 @@ export const SpaceList = () => {
   const navigate = useNavigate();
   const { message } = App.useApp();
   const { user } = useAuth();
+  const storeId = useStoreContext();
   const [filter] = useState<SpaceFilter>({
     page: 1,
     pageSize: 200,
@@ -156,7 +158,7 @@ export const SpaceList = () => {
   };
 
   const handleTriggerAnalysis = (spaceId: string) => {
-    if (!user?.storeId || !user?.brandId) {
+    if (!storeId || !user?.brandId) {
       message.warning(
         'Missing store or brand scope. Please re-login and try again.',
       );
@@ -167,7 +169,7 @@ export const SpaceList = () => {
       {
         spaceId,
         body: {
-          storeId: user.storeId,
+          storeId: storeId,
           brandId: user.brandId,
         },
       },
@@ -786,7 +788,7 @@ export const SpaceList = () => {
       <SpaceMusicModal
         open={musicModalOpen}
         spaceId={selectedSpaceId}
-        storeId={user?.storeId || ''}
+        storeId={storeId || ''}
         onClose={() => {
           setMusicModalOpen(false);
           setSelectedSpaceId(null);
@@ -796,7 +798,7 @@ export const SpaceList = () => {
       <QueueManagementModal
         open={queueModalOpen}
         spaceId={selectedSpaceId || ''}
-        storeId={user?.storeId || ''}
+        storeId={storeId || ''}
         onClose={() => {
           setQueueModalOpen(false);
           setSelectedSpaceId(null);
