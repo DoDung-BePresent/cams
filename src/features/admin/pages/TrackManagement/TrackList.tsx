@@ -94,6 +94,22 @@ const getTranscodeLabel = (status?: TranscodeStatusEnum) => {
   }
 };
 
+const statusPillStyle = (isActive: boolean): React.CSSProperties => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 72,
+  height: 24,
+  borderRadius: 12,
+  fontSize: 11,
+  fontWeight: 700,
+  background: isActive ? 'rgba(34,197,94,0.12)' : 'rgba(148,163,184,0.12)',
+  border: isActive
+    ? '1px solid rgba(134,239,172,0.24)'
+    : '1px solid rgba(203,213,225,0.18)',
+  color: isActive ? '#86efac' : '#cbd5e1',
+});
+
 const SkeletonRow = () => (
   <div
     style={{
@@ -257,11 +273,31 @@ export const TrackList = () => {
   const page = isAll ? allPage : blockedPage;
 
   const gridCols = isAll
-    ? '32px 40px 1fr 120px 80px 80px 100px'
-    : '32px 40px 1fr 160px 120px 80px 100px';
+    ? '32px 40px 1fr 120px 80px 80px 72px 96px 100px'
+    : '32px 40px 1fr 160px 120px 80px 72px 96px 100px';
   const headers = isAll
-    ? ['#', '', 'TITLE', 'MOOD', 'BPM', 'DURATION', 'STATUS']
-    : ['#', '', 'TITLE', 'BRAND', 'MOOD', 'DURATION', 'STATUS'];
+    ? [
+        '#',
+        '',
+        'TITLE',
+        'MOOD',
+        'BPM',
+        'DURATION',
+        'STATUS',
+        'TRANSCODE',
+        'ACTIONS',
+      ]
+    : [
+        '#',
+        '',
+        'TITLE',
+        'BRAND',
+        'MOOD',
+        'DURATION',
+        'STATUS',
+        'TRANSCODE',
+        'ACTIONS',
+      ];
 
   return (
     <div
@@ -524,6 +560,15 @@ export const TrackList = () => {
               fontSize: 11,
               fontWeight: 600,
               letterSpacing: 1,
+              textAlign: [
+                'STATUS',
+                'TRANSCODE',
+                'ACTIONS',
+                'DURATION',
+                'BPM',
+              ].includes(h)
+                ? 'center'
+                : 'left',
             }}
           >
             {h}
@@ -574,11 +619,9 @@ export const TrackList = () => {
                   alignItems: 'center',
                   background: isHovered ? C.surfaceHover : 'transparent',
                   transition: 'background 0.15s ease',
-                  cursor: 'pointer',
                 }}
                 onMouseEnter={() => setHoveredId(track.id)}
                 onMouseLeave={() => setHoveredId(null)}
-                onClick={() => handleView(track.id)}
               >
                 {/* Index */}
                 <div style={{ textAlign: 'center' }}>
@@ -674,118 +717,179 @@ export const TrackList = () => {
 
                 {/* BPM (all tab only) */}
                 {isAll && (
-                  <Text style={{ color: C.textMuted, fontSize: 13 }}>—</Text>
+                  <Text
+                    style={{
+                      color: C.textMuted,
+                      fontSize: 13,
+                      textAlign: 'center',
+                    }}
+                  >
+                    —
+                  </Text>
                 )}
 
                 {/* Duration */}
-                <Text style={{ color: C.textMuted, fontSize: 13 }}>
+                <Text
+                  style={{
+                    color: C.textMuted,
+                    fontSize: 13,
+                    textAlign: 'center',
+                  }}
+                >
                   {formatDuration(duration)}
                 </Text>
 
-                {/* Status + actions on hover */}
+                {/* Status */}
                 <div
-                  style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <span style={statusPillStyle(isActive)}>
+                    {isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+
+                {/* Transcode */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Tooltip title={`Transcode: ${transcodeLabel}`}>
-                    <div
+                    <span
                       style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: '50%',
-                        background: transcodeColor,
-                        flexShrink: 0,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        height: 24,
+                        padding: '0 9px',
+                        borderRadius: 12,
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: C.textMuted,
+                        fontSize: 11,
+                        fontWeight: 600,
                       }}
-                    />
+                    >
+                      <span
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: '50%',
+                          background: transcodeColor,
+                          flexShrink: 0,
+                        }}
+                      />
+                      {transcodeLabel}
+                    </span>
                   </Tooltip>
-                  {isHovered && (
-                    <Flex gap={4}>
-                      <Tooltip title='View Details'>
-                        <button
-                          onClick={() => handleView(track.id)}
-                          style={{
-                            width: 26,
-                            height: 26,
-                            borderRadius: 4,
-                            border: 'none',
-                            background: '#2d2528',
-                            color: '#fff',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 12,
-                          }}
-                        >
-                          <EyeOutlined />
-                        </button>
-                      </Tooltip>
-                      {isSystemTrack && isAll && (
-                        <>
-                          <Tooltip title='Edit'>
-                            <button
-                              onClick={() => handleEdit(track.id)}
-                              style={{
-                                width: 26,
-                                height: 26,
-                                borderRadius: 4,
-                                border: 'none',
-                                background: '#2d2528',
-                                color: '#3b82f6',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 12,
-                              }}
-                            >
-                              <EditOutlined />
-                            </button>
-                          </Tooltip>
-                          <Tooltip title='Delete'>
-                            <button
-                              onClick={() => handleDelete(track.id)}
-                              style={{
-                                width: 26,
-                                height: 26,
-                                borderRadius: 4,
-                                border: 'none',
-                                background: '#2d2528',
-                                color: '#ef4444',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 12,
-                              }}
-                            >
-                              <DeleteOutlined />
-                            </button>
-                          </Tooltip>
-                          <Tooltip title={isActive ? 'Deactivate' : 'Activate'}>
-                            <button
-                              onClick={() => handleToggleStatus(track.id)}
-                              style={{
-                                width: 26,
-                                height: 26,
-                                borderRadius: 4,
-                                border: 'none',
-                                background: '#2d2528',
-                                color: isActive ? '#f59e0b' : C.green,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 12,
-                              }}
-                            >
-                              <StopOutlined />
-                            </button>
-                          </Tooltip>
-                        </>
-                      )}
-                    </Flex>
-                  )}
+                </div>
+
+                {/* Actions */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                    opacity: isHovered ? 1 : 0,
+                    pointerEvents: isHovered ? 'auto' : 'none',
+                    transition: 'opacity 0.15s ease',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Flex gap={4}>
+                    <Tooltip title='View Details'>
+                      <button
+                        onClick={() => handleView(track.id)}
+                        style={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: 4,
+                          border: 'none',
+                          background: '#2d2528',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 12,
+                        }}
+                      >
+                        <EyeOutlined />
+                      </button>
+                    </Tooltip>
+                    {isAll && (
+                      <>
+                        <Tooltip title='Edit'>
+                          <button
+                            onClick={() => handleEdit(track.id)}
+                            style={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: 4,
+                              border: 'none',
+                              background: '#2d2528',
+                              color: '#3b82f6',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 12,
+                            }}
+                          >
+                            <EditOutlined />
+                          </button>
+                        </Tooltip>
+                        <Tooltip title='Delete'>
+                          <button
+                            onClick={() => handleDelete(track.id)}
+                            style={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: 4,
+                              border: 'none',
+                              background: '#2d2528',
+                              color: '#ef4444',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 12,
+                            }}
+                          >
+                            <DeleteOutlined />
+                          </button>
+                        </Tooltip>
+                        <Tooltip title={isActive ? 'Deactivate' : 'Activate'}>
+                          <button
+                            onClick={() => handleToggleStatus(track.id)}
+                            style={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: 4,
+                              border: 'none',
+                              background: '#2d2528',
+                              color: isActive ? '#f59e0b' : C.green,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 12,
+                            }}
+                          >
+                            <StopOutlined />
+                          </button>
+                        </Tooltip>
+                      </>
+                    )}
+                  </Flex>
                 </div>
               </div>
             );
