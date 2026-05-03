@@ -433,6 +433,20 @@ export const TrackList = () => {
                         AI
                       </Tag>
                     )}
+                    {!track.brandId && (
+                      <Tag
+                        style={{
+                          marginLeft: 6,
+                          fontSize: 9,
+                          padding: '0 4px',
+                          background: 'rgba(160,174,192,0.15)',
+                          color: '#a0aec0',
+                          border: '1px solid #a0aec030',
+                        }}
+                      >
+                        SYSTEM
+                      </Tag>
+                    )}
                   </Text>
                 </div>
 
