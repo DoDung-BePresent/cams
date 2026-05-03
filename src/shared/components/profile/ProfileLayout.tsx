@@ -29,8 +29,8 @@ const useStyle = createStyles(({ css, prefixCls }) => {
             .${prefixCls}-tabs-tab {
               justify-content: center;
               &:hover {
-                background-color: rgba(239, 68, 68, 0.08);
-                color: #ef4444;
+                background-color: #321516;
+                color: var(--ant-tabs-item-selected-color);
               }
             }
           }

@@ -555,7 +555,9 @@ export const WalletDashboardTab = () => {
         columns={walletColumns}
         dataSource={walletsQuery.data ?? []}
         rowClassName={(row) =>
-          row.balanceTokens < 0 ? 'bg-red-50! border-l-4! border-red-500!' : ''
+          row.balanceTokens < 0
+            ? 'bg-[#2A171B]! border-l-4! border-red-500!'
+            : ''
         }
       />
 
