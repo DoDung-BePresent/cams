@@ -4,6 +4,7 @@
  */
 export const STALE_TIME = {
   instant: 0, // Always refetch (real-time data)
+  xshort: 10 * 1000,
   short: 30 * 1000, // 30 seconds - frequently changing data
   medium: 5 * 60 * 1000, // 5 minutes - default for most queries
   long: 15 * 60 * 1000, // 15 minutes - stable data
