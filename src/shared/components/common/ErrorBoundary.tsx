@@ -52,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.props.fallback}
               {import.meta.env.DEV && this.state.error && (
                 <div className='mx-auto max-w-7xl px-6'>
-                  <details className='mt-6 rounded-sm border border-[var(--ant-color-error)] bg-[var(--ant-red-1)] p-4'>
+                  <details className='mt-6 rounded-sm border border-[var(--ant-color-error)] bg-[#2A171B] p-4'>
                     <summary className='cursor-pointer font-semibold'>
                       Error Details (Dev Only)
                     </summary>
@@ -96,7 +96,7 @@ export class ErrorBoundary extends Component<Props, State> {
           />
           {import.meta.env.DEV && this.state.error && (
             <div className='mx-auto max-w-7xl px-6'>
-              <details className='mt-6 rounded-sm border border-[var(--ant-color-error)] bg-[var(--ant-red-1)] p-4'>
+              <details className='mt-6 rounded-sm border border-[var(--ant-color-error)] bg-[#2A171B] p-4'>
                 <summary className='cursor-pointer font-semibold'>
                   Error Details (Dev Only)
                 </summary>

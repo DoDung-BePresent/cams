@@ -64,7 +64,7 @@ export const FeatureErrorFallback = ({
           style={{
             marginTop: 24,
             padding: 16,
-            background: '#f5f5f5',
+            background: '#2A171B',
             borderRadius: 4,
           }}
         >
