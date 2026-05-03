@@ -34,6 +34,7 @@ import {
   PoweroffOutlined,
   ShopOutlined,
   MoreOutlined,
+  UsergroupAddOutlined,
 } from '@ant-design/icons';
 
 /**
@@ -52,6 +53,9 @@ import {
 } from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
 import { useStoreContext } from '@/features/store/hooks';
+import { storeService } from '@/features/brand/services';
+import { STALE_TIME } from '@/config';
+import { useQueries } from '@tanstack/react-query';
 
 /**
  * Components
@@ -134,6 +138,49 @@ export const SpaceList = () => {
   const deleteSpace = useDeleteSpace();
   const toggleStatus = useToggleSpaceStatus();
   const triggerAnalysis = useTriggerAnalysis();
+
+  const spaces = useMemo(() => data?.items ?? [], [data?.items]);
+  const todayFromUtc = dayjs().startOf('day').toISOString();
+  const todayToUtc = dayjs().endOf('day').toISOString();
+
+  // Fetch people count for each space
+  const peopleQueries = useQueries({
+    queries: spaces.map((space) => ({
+      queryKey: [
+        'store-space-management-people',
+        storeId,
+        space.id,
+        todayFromUtc,
+        todayToUtc,
+      ],
+      queryFn: async () => {
+        if (!storeId) return null;
+        const response = await storeService.getContextAggregate(storeId, {
+          spaceId: space.id,
+          fromUtc: todayFromUtc,
+          toUtc: todayToUtc,
+        });
+        const aggregate = response.data.data;
+        return {
+          spaceId: space.id,
+          people: Math.round(aggregate?.current.crowdDensity.avg ?? 0),
+          samples: aggregate?.current.samples ?? 0,
+        };
+      },
+      staleTime: STALE_TIME.short,
+      enabled: Boolean(storeId && space.id),
+    })),
+  });
+
+  const peopleBySpace = useMemo(
+    () =>
+      new Map(
+        peopleQueries.flatMap((query) =>
+          query.data ? [[query.data.spaceId, query.data]] : [],
+        ),
+      ),
+    [peopleQueries],
+  );
 
   const handleView = (id: string) => {
     setSelectedSpaceId(id);
@@ -255,6 +302,8 @@ export const SpaceList = () => {
   const activeCount = filteredSpaces.filter(
     (s) => s.status === EntityStatusEnum.Active,
   ).length;
+
+  const getSpacePeople = (spaceId: string) => peopleBySpace.get(spaceId);
 
   if (isLoading) {
     return (
@@ -479,6 +528,7 @@ export const SpaceList = () => {
         ) : (
           filteredSpaces.map((space) => {
             const isActive = space.status === EntityStatusEnum.Active;
+            const people = getSpacePeople(space.id);
 
             const moreMenu: MenuProps['items'] = [
               {
@@ -666,10 +716,38 @@ export const SpaceList = () => {
                       WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical',
                       overflow: 'hidden',
+                      marginBottom: 12,
                     }}
                   >
                     {space.description || 'No description provided.'}
                   </Text>
+
+                  {/* People count indicator */}
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      color: people?.samples ? '#86efac' : C.textSubtle,
+                      background: people?.samples
+                        ? 'rgba(34,197,94,0.10)'
+                        : 'rgba(148,163,184,0.10)',
+                      border: `1px solid ${
+                        people?.samples
+                          ? 'rgba(34,197,94,0.22)'
+                          : 'rgba(148,163,184,0.18)'
+                      }`,
+                      borderRadius: 999,
+                      padding: '4px 10px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                    }}
+                  >
+                    <UsergroupAddOutlined style={{ fontSize: 12 }} />
+                    {people?.samples
+                      ? `${people.people} people now`
+                      : 'No people data'}
+                  </div>
                 </div>
 
                 {/* Primary Action Buttons */}
