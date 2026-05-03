@@ -127,7 +127,12 @@ export const LoginForm = () => {
         label={null}
       >
         <Flex justify='space-between'>
-          <Checkbox defaultChecked>Remember me</Checkbox>
+          <Checkbox
+            defaultChecked
+            className='!text-slate-700'
+          >
+            Remember me
+          </Checkbox>
           <Link
             to='/forgot-password'
             className='text-[#1677ff] hover:text-[#4096ff]'

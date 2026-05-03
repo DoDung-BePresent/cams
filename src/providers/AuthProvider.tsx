@@ -8,11 +8,6 @@ import { message } from 'antd';
 import { saveTokens, clearTokens, getAccessToken } from '@/config';
 
 /**
- * Utils
- */
-import { isTokenExpired } from '@/shared/utils';
-
-/**
  * Hooks
  */
 import { useProfile } from '@/shared/modules/auth/hooks';
@@ -44,14 +39,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
   const [accessToken, setAccessToken] = useState<string | null>(() => {
-    const token = getAccessToken();
-    if (token && !isTokenExpired(token)) {
-      return token;
-    }
-    if (token) {
-      clearTokens();
-    }
-    return null;
+    return getAccessToken();
   });
 
   const { data: user, isLoading: isLoadingProfile } = useProfile(!!accessToken);
