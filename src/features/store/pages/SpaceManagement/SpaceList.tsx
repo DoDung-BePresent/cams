@@ -109,12 +109,13 @@ export const SpaceList = () => {
   const { message } = App.useApp();
   const { user } = useAuth();
   const storeId = useStoreContext();
-  const [filter] = useState<SpaceFilter>({
+  const [baseFilter] = useState<Omit<SpaceFilter, 'storeId'>>({
     page: 1,
     pageSize: 200,
     sortBy: 'createdAt',
     isAscending: false,
   });
+  const filter: SpaceFilter = { ...baseFilter, storeId };
 
   const [search, setSearch] = useState('');
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -128,7 +129,7 @@ export const SpaceList = () => {
     (ContextAnalysisResponse & { spaceName?: string }) | null
   >(null);
 
-  const { data, isLoading, refetch } = useSpaces(filter);
+  const { data, isLoading, refetch } = useSpaces(filter, Boolean(storeId));
 
   const deleteSpace = useDeleteSpace();
   const toggleStatus = useToggleSpaceStatus();
