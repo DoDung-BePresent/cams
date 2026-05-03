@@ -16,7 +16,9 @@ export const useBrandDashboard = (filter: BrandDashboardFilter = {}) => {
       const response = await brandDashboardService.getDashboard(filter);
       return response.data.data;
     },
-    staleTime: STALE_TIME.short,
+    staleTime: STALE_TIME.xshort,
+    refetchInterval: STALE_TIME.xshort,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 };
