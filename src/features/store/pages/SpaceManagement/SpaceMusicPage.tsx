@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams } from 'react-router';
 import { Spin, Button, Result } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,7 +15,7 @@ import { SpacePlayerCard } from './components/SpacePlayerCard';
 import { useStoreHub } from '@/shared/modules/cams/hooks';
 import { useSpace } from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
-import { useStoreContext } from '@/features/store/hooks';
+import { useStoreContext, useStoreNavigate } from '@/features/store/hooks';
 
 /**
  * Services
@@ -24,7 +24,7 @@ import { storeHubService } from '@/shared/modules/cams/services';
 
 export const SpaceMusicPage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
-  const navigate = useNavigate();
+  const navigate = useStoreNavigate();
   const { accessToken } = useAuth();
   const storeId = useStoreContext() || '';
   const queryClient = useQueryClient();

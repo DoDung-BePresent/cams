@@ -55,7 +55,7 @@ export const SpaceMusicDrawer = ({
     open && !!spaceId,
   );
 
-  const { isConnected } = useStoreHub(storeId, accessToken, {
+  const { isConnected } = useStoreHub(open ? storeId : null, accessToken, {
     onSpaceStateSync: (syncedSpaceId: string, state) => {
       if (syncedSpaceId === spaceId) {
         queryClient.setQueryData(['cams-space-state', spaceId], state);

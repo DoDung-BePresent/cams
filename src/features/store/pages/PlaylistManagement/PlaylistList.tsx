@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useStoreNavigate } from '@/features/store/hooks';
 import {
   Button,
   Empty,
@@ -46,7 +46,7 @@ const C = {
 };
 
 export const PlaylistList = () => {
-  const navigate = useNavigate();
+  const navigate = useStoreNavigate();
 
   const [search, setSearch] = useState('');
   const [selectedMoodId, setSelectedMoodId] = useState<string | undefined>();

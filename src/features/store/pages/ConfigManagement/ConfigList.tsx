@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useStoreNavigate } from '@/features/store/hooks';
 
 import {
   ConfigDetailModal,
@@ -25,7 +25,7 @@ const DEFAULT_FILTER: ConfigStoreFilter = {
 };
 
 export const ConfigList = () => {
-  const navigate = useNavigate();
+  const navigate = useStoreNavigate();
 
   const [filter, setFilter] = useState<ConfigStoreFilter>(DEFAULT_FILTER);
   const [showFilters, setShowFilters] = useState(false);
