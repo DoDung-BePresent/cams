@@ -203,22 +203,21 @@ export type BrandDashboardIotSpaceHealthItem = {
 };
 
 export type BrandContextIntelligenceSummary = {
-  latestPeopleCount?: number | null;
-  latestNoiseDecibel?: number | null;
-  latestFuzzyConfidence?: number | null;
-  suggestOnlySpaces: number;
+  averagePeopleCount?: number | null;
+  averageNoiseDecibel?: number | null;
+  averageFuzzyConfidence?: number | null;
+  storesWithTelemetry: number;
   samples: number;
-  byStore: BrandContextByStoreItem[];
+  peopleTrend: BrandDashboardDoubleMetricTrend;
+  noiseTrend: BrandDashboardDoubleMetricTrend;
+  fuzzyConfidenceTrend: BrandDashboardDoubleMetricTrend;
 };
 
-export type BrandContextByStoreItem = {
-  storeId: string;
-  storeName: string;
-  storeAddress?: string | null;
-  latestPeopleCount?: number | null;
-  latestNoiseDecibel?: number | null;
-  latestFuzzyConfidence?: number | null;
-  samples: number;
+export type BrandDashboardDoubleMetricTrend = {
+  currentValue?: number | null;
+  previousValue?: number | null;
+  delta?: number | null;
+  percentChange?: number | null;
 };
 
 export type BrandDashboardTopTrackItem = {
