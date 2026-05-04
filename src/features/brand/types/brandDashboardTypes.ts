@@ -1,4 +1,5 @@
 ﻿import type { SpaceTypeEnum } from '@/shared/modules/spaces/types';
+import type { GovernanceModeEnum } from './configTypes';
 
 export enum BrandDashboardPeriodEnum {
   Day = 1,
@@ -132,6 +133,7 @@ export type BrandStoreHealthItem = {
   iotStaleSpaces: number;
   iotUnknownSpaces: number;
   lastPlaybackAtUtc?: string | null;
+  governanceMode: GovernanceModeEnum;
   healthStatus: BrandStoreHealthStatusEnum;
   healthReason: BrandStoreHealthReasonEnum;
 };
@@ -163,16 +165,17 @@ export type BrandLivePlaybackSpaceItem = {
   spaceId: string;
   spaceName: string;
   spaceType: SpaceTypeEnum;
+  governanceMode: GovernanceModeEnum;
   trackId?: string | null;
   trackName?: string | null;
   artist?: string | null;
   moodName?: string | null;
   startedAtUtc?: string | null;
   expectedEndAtUtc?: string | null;
-  isPaused: boolean;
-  isManualOverride: boolean;
-  volumePercent: number;
-  isMuted: boolean;
+  isPaused?: boolean;
+  isManualOverride?: boolean;
+  volumePercent?: number;
+  isMuted?: boolean;
   queueItems?: BrandLivePlaybackQueueItem[] | null;
 };
 
@@ -183,6 +186,7 @@ export type BrandDashboardIotSpaceHealthItem = {
   spaceId: string;
   spaceName: string;
   spaceType: SpaceTypeEnum;
+  governanceMode: GovernanceModeEnum;
   iotDeviceId?: string | null;
   isAssigned: boolean;
   isOnline: boolean;
@@ -199,9 +203,9 @@ export type BrandDashboardIotSpaceHealthItem = {
 };
 
 export type BrandContextIntelligenceSummary = {
-  avgPeopleCount?: number | null;
-  avgNoiseDecibel?: number | null;
-  avgFuzzyConfidence?: number | null;
+  latestPeopleCount?: number | null;
+  latestNoiseDecibel?: number | null;
+  latestFuzzyConfidence?: number | null;
   suggestOnlySpaces: number;
   samples: number;
   byStore: BrandContextByStoreItem[];
@@ -211,9 +215,9 @@ export type BrandContextByStoreItem = {
   storeId: string;
   storeName: string;
   storeAddress?: string | null;
-  avgPeopleCount?: number | null;
-  avgNoiseDecibel?: number | null;
-  avgFuzzyConfidence?: number | null;
+  latestPeopleCount?: number | null;
+  latestNoiseDecibel?: number | null;
+  latestFuzzyConfidence?: number | null;
   samples: number;
 };
 

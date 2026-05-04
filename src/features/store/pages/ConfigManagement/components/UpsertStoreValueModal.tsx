@@ -110,7 +110,6 @@ export const UpsertStoreValueModal = ({
     open,
   );
 
-  // Sync selectedSpaceIds from existing grants when detail loads
   useEffect(() => {
     if (open && detail) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -191,9 +190,7 @@ export const UpsertStoreValueModal = ({
 
   return (
     <Modal
-      title={
-        selectedConfig ? 'Edit Store Config Value' : 'Create Store Config Value'
-      }
+      title='Edit Store Config Value'
       open={open}
       onCancel={handleCancel}
       width={DRAWER_WIDTHS.medium}
@@ -240,6 +237,7 @@ export const UpsertStoreValueModal = ({
             size='large'
             type='primary'
             loading={upsertStoreValue.isPending}
+            disabled={!selectedConfig}
             onClick={() => form.submit()}
           >
             Save Value
@@ -273,8 +271,8 @@ export const UpsertStoreValueModal = ({
           ]}
         >
           <Input
-            placeholder='e.g., cams.playbackFallbackMode'
-            disabled={!!selectedConfig}
+            placeholder='e.g., cams.aiQueueTrackLimit'
+            disabled
           />
         </Form.Item>
 
@@ -286,7 +284,7 @@ export const UpsertStoreValueModal = ({
           <Select
             placeholder='Select config domain'
             options={CONFIG_DOMAIN_OPTIONS}
-            disabled={!!selectedConfig}
+            disabled
           />
         </Form.Item>
 
@@ -298,6 +296,7 @@ export const UpsertStoreValueModal = ({
           <Select
             placeholder='Select value type'
             options={CONFIG_VALUE_TYPE_OPTIONS}
+            disabled
           />
         </Form.Item>
 
@@ -333,7 +332,7 @@ export const UpsertStoreValueModal = ({
 
         {overrideIntent !== undefined && overrideIntent !== 0 && (
           <Space
-            direction='vertical'
+            orientation='vertical'
             size='middle'
             style={{ width: '100%' }}
           >
@@ -342,7 +341,7 @@ export const UpsertStoreValueModal = ({
               extra='Leave empty to apply intent to all child spaces.'
             >
               <Space
-                direction='vertical'
+                orientation='vertical'
                 style={{ width: '100%' }}
               >
                 <Button
@@ -355,7 +354,7 @@ export const UpsertStoreValueModal = ({
                 <Text type='secondary'>
                   {selectedSpaceIds.length > 0
                     ? `${selectedSpaceIds.length} space(s) selected`
-                    : 'No spaces selected — intent applies to all child spaces'}
+                    : 'No spaces selected - intent applies to all child spaces'}
                 </Text>
               </Space>
             </Form.Item>

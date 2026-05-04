@@ -168,7 +168,7 @@ export const EditSharedTrackDrawer = ({
 
   return (
     <Drawer
-      title='Edit Shared Track'
+      title='Edit Track'
       placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}

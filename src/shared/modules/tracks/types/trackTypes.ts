@@ -130,6 +130,7 @@ export interface TrackFilter extends BasePaginationFilter {
   genre?: string;
   provider?: MusicProviderEnum;
   isAiGenerated?: boolean;
+  copyrightClearanceStatuses?: TrackCopyrightClearanceStatus[];
   includeShared?: boolean; // Include tracks with brandId=null (system-wide shared)
   createdFrom?: string; // ISO 8601
   createdTo?: string; // ISO 8601

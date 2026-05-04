@@ -50,6 +50,17 @@ export const COPYRIGHT_CLEARANCE_COLORS: Record<
   [TrackCopyrightClearanceStatus.Rejected]: 'red',
 };
 
+export const COPYRIGHT_CLEARANCE_OPTIONS: SelectProps['options'] =
+  Object.values(TrackCopyrightClearanceStatus)
+    .filter(
+      (value): value is TrackCopyrightClearanceStatus =>
+        typeof value === 'number',
+    )
+    .map((value) => ({
+      label: COPYRIGHT_CLEARANCE_LABELS[value],
+      value,
+    }));
+
 /**
  * Allowed Audio File Extensions (from API_Tracks.md §4.1)
  */

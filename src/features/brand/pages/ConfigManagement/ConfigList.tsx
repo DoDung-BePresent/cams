@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { Button } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router';
 
 import {
@@ -75,11 +73,6 @@ export const ConfigList = () => {
     setFilter({ ...DEFAULT_FILTER });
   };
 
-  const handleCreateBrandValue = () => {
-    setSelectedConfig(null);
-    setBrandValueDrawerOpen(true);
-  };
-
   const handleEditBrandValue = (record: ConfigFlatRowItem) => {
     setSelectedConfig(record);
     setBrandValueDrawerOpen(true);
@@ -128,16 +121,6 @@ export const ConfigList = () => {
             'Manage brand-level config values inherited from tenant policy.',
           keywords: 'brand, config, management, cams',
         }}
-        extra={
-          <Button
-            size='large'
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={handleCreateBrandValue}
-          >
-            Upsert Brand Value
-          </Button>
-        }
       />
 
       <DataTable<ConfigFlatRowItem>
@@ -174,7 +157,7 @@ export const ConfigList = () => {
           },
         }}
         onChange={handleTableChange}
-        scroll={{ x: 1700 }}
+        scroll={{ x: 1500 }}
       />
 
       <UpsertBrandValueDrawer

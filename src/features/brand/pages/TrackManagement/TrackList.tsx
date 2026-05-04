@@ -40,6 +40,8 @@ import { useMoods } from '@/shared/modules/moods/hooks';
 
 import type { TrackFilter } from '@/shared/modules/tracks/types';
 import { TranscodeStatusEnum } from '@/shared/modules/tracks/types';
+import { COPYRIGHT_CLEARANCE_OPTIONS } from '@/shared/modules/tracks/constants';
+import type { TrackCopyrightClearanceStatus } from '@/shared/modules/tracks/types';
 
 const { Text, Title } = Typography;
 
@@ -160,6 +162,9 @@ export const TrackList = () => {
   const [search, setSearch] = useState('');
   const [selectedMoodId, setSelectedMoodId] = useState<string | undefined>();
   const [selectedStatus, setSelectedStatus] = useState<number | undefined>();
+  const [selectedCopyrightStatuses, setSelectedCopyrightStatuses] = useState<
+    TrackCopyrightClearanceStatus[]
+  >([]);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 30;
 
@@ -172,8 +177,11 @@ export const TrackList = () => {
       search: search || undefined,
       moodId: selectedMoodId,
       status: selectedStatus,
+      copyrightClearanceStatuses: selectedCopyrightStatuses.length
+        ? selectedCopyrightStatuses
+        : undefined,
     }),
-    [page, search, selectedMoodId, selectedStatus],
+    [page, search, selectedCopyrightStatuses, selectedMoodId, selectedStatus],
   );
 
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
@@ -351,6 +359,19 @@ export const TrackList = () => {
             allowClear
             style={{ width: 120 }}
           />
+          <Select
+            placeholder='Copyright'
+            mode='multiple'
+            options={COPYRIGHT_CLEARANCE_OPTIONS}
+            value={selectedCopyrightStatuses}
+            onChange={(v) => {
+              setSelectedCopyrightStatuses(v);
+              setPage(1);
+            }}
+            allowClear
+            maxTagCount='responsive'
+            style={{ width: 220 }}
+          />
           <Button
             icon={<ReloadOutlined />}
             onClick={() => refetch()}
@@ -360,12 +381,16 @@ export const TrackList = () => {
               color: C.textMuted,
             }}
           />
-          {(search || selectedMoodId || selectedStatus !== undefined) && (
+          {(search ||
+            selectedMoodId ||
+            selectedStatus !== undefined ||
+            selectedCopyrightStatuses.length > 0) && (
             <Button
               onClick={() => {
                 setSearch('');
                 setSelectedMoodId(undefined);
                 setSelectedStatus(undefined);
+                setSelectedCopyrightStatuses([]);
                 setPage(1);
               }}
               style={{

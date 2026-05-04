@@ -22,6 +22,7 @@ import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import type { PlaylistFilter } from '@/shared/modules/playlists/types';
 import { useTracks } from '@/shared/modules/tracks/hooks';
 import type { TrackFilter } from '@/shared/modules/tracks/types';
+import { TrackCopyrightClearanceStatus } from '@/shared/modules/tracks/types';
 import { isTrackPlaybackBlockedByCopyright } from '@/shared/modules/tracks/utils';
 import { useAddTracksToQueue, useAddPlaylistToQueue } from '../hooks';
 import { QueueInsertMode } from '../types';
@@ -51,6 +52,36 @@ type QueueRestrictionHint = {
 
 const useStyle = createStyles(({ css, prefixCls }) => {
   return {
+    modalGrid: css`
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+
+      @media (max-width: 960px) {
+        grid-template-columns: 1fr;
+      }
+    `,
+    selectorBlock: css`
+      border: 1px solid var(--ant-color-border-secondary);
+      border-radius: 12px;
+      background: var(--ant-color-bg-container);
+      padding: 10px;
+    `,
+    configPane: css`
+      position: sticky;
+      top: 0;
+
+      @media (max-width: 960px) {
+        position: static;
+      }
+    `,
+    sectionCard: css`
+      border: 1px solid var(--ant-color-border-secondary);
+      border-radius: 12px;
+      background: var(--ant-color-bg-container);
+      padding: 12px;
+    `,
     statusStrip: css`
       border: 1px solid var(--ant-color-border-secondary);
       border-radius: 12px;
@@ -58,19 +89,20 @@ const useStyle = createStyles(({ css, prefixCls }) => {
       padding: 10px 12px;
     `,
     queueModeRadio: css`
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 8px;
+      width: 100%;
 
       .${prefixCls}-radio-button-wrapper {
-        flex: 1;
-        min-width: 160px;
+        width: 100%;
         min-height: 44px;
         display: inline-flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         border-radius: 10px;
         margin-inline-start: 0;
+        padding-inline: 12px;
       }
 
       .${prefixCls}-radio-button-wrapper-checked {
@@ -108,15 +140,19 @@ const queueModeOptions = [
 
 const defaultTrackFilter: TrackFilter = {
   page: 1,
-  pageSize: 10,
+  pageSize: 5,
   sortBy: 'createdAt',
   isAscending: false,
   status: 1,
+  copyrightClearanceStatuses: [
+    TrackCopyrightClearanceStatus.Cleared,
+    TrackCopyrightClearanceStatus.NotApplicable,
+  ],
 };
 
 const defaultPlaylistFilter: PlaylistFilter = {
   page: 1,
-  pageSize: 10,
+  pageSize: 5,
   sortBy: 'createdAt',
   isAscending: false,
   status: 1,
@@ -187,10 +223,7 @@ export const AddToQueueModal = ({
   );
 
   const hasActiveTrackFilters =
-    trackFilter.search ||
-    trackFilter.genre ||
-    trackFilter.provider !== undefined ||
-    trackFilter.isAiGenerated !== undefined;
+    trackFilter.search || trackFilter.moodId || trackFilter.genre;
 
   const hasActivePlaylistFilters =
     playlistFilter.search ||
@@ -295,7 +328,7 @@ export const AddToQueueModal = ({
       title='Add to Queue'
       open={open}
       onCancel={handleClose}
-      width={DRAWER_WIDTHS.large}
+      width={DRAWER_WIDTHS.extraLarge}
       destroyOnClose
       centered
       footer={
@@ -320,135 +353,148 @@ export const AddToQueueModal = ({
         </Flex>
       }
     >
-      <Space
-        direction='vertical'
-        size='large'
-        style={{ width: '100%' }}
-      >
-        <div>
-          <OverrideMusicSourceSelector
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            enabledTabs={['tracks', 'playlist']}
-            track={{
-              filter: trackFilter,
-              setFilter: setTrackFilter,
-              showFilters: showTrackFilters,
-              setShowFilters: setShowTrackFilters,
-              hasActiveFilters: !!hasActiveTrackFilters,
-              data: selectableTracks,
-              total: tracksData?.totalItems || 0,
-              isLoading: isLoadingTracks,
-              refetch: refetchTracks,
-              selectedTrackIds,
-              setSelectedTrackIds,
-              defaultFilter: defaultTrackFilter,
-              onTableChange: (pagination, _filters, sorter) => {
-                const currentSorter = Array.isArray(sorter)
-                  ? sorter[0]
-                  : sorter;
+      <div className={styles.modalGrid}>
+        <Space
+          direction='vertical'
+          size='middle'
+          style={{ width: '100%' }}
+        >
+          <div className={styles.selectorBlock}>
+            <OverrideMusicSourceSelector
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              enabledTabs={['tracks', 'playlist']}
+              track={{
+                filter: trackFilter,
+                setFilter: setTrackFilter,
+                showFilters: showTrackFilters,
+                setShowFilters: setShowTrackFilters,
+                hasActiveFilters: !!hasActiveTrackFilters,
+                data: selectableTracks,
+                total: tracksData?.totalItems || 0,
+                isLoading: isLoadingTracks,
+                refetch: refetchTracks,
+                selectedTrackIds,
+                setSelectedTrackIds,
+                defaultFilter: defaultTrackFilter,
+                onTableChange: (pagination, _filters, sorter) => {
+                  const currentSorter = Array.isArray(sorter)
+                    ? sorter[0]
+                    : sorter;
 
-                setTrackFilter((prev) => ({
-                  ...prev,
-                  page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
-                  sortBy: currentSorter.field
-                    ? String(currentSorter.field)
-                    : 'createdAt',
-                  isAscending: currentSorter.order === 'ascend',
-                }));
-              },
-            }}
-            playlist={{
-              filter: playlistFilter,
-              setFilter: setPlaylistFilter,
-              showFilters: showPlaylistFilters,
-              setShowFilters: setShowPlaylistFilters,
-              hasActiveFilters: !!hasActivePlaylistFilters,
-              data: playlistsData?.items || [],
-              total: playlistsData?.totalItems || 0,
-              isLoading: isLoadingPlaylists,
-              refetch: refetchPlaylists,
-              selectedPlaylistId,
-              setSelectedPlaylistId,
-              defaultFilter: defaultPlaylistFilter,
-              moodOptions,
-              onTableChange: (pagination, _filters, sorter) => {
-                const currentSorter = Array.isArray(sorter)
-                  ? sorter[0]
-                  : sorter;
+                  setTrackFilter((prev) => ({
+                    ...prev,
+                    page: pagination.current || 1,
+                    pageSize: pagination.pageSize || 5,
+                    sortBy: currentSorter.field
+                      ? String(currentSorter.field)
+                      : 'createdAt',
+                    isAscending: currentSorter.order === 'ascend',
+                  }));
+                },
+              }}
+              playlist={{
+                filter: playlistFilter,
+                setFilter: setPlaylistFilter,
+                showFilters: showPlaylistFilters,
+                setShowFilters: setShowPlaylistFilters,
+                hasActiveFilters: !!hasActivePlaylistFilters,
+                data: playlistsData?.items || [],
+                total: playlistsData?.totalItems || 0,
+                isLoading: isLoadingPlaylists,
+                refetch: refetchPlaylists,
+                selectedPlaylistId,
+                setSelectedPlaylistId,
+                defaultFilter: defaultPlaylistFilter,
+                moodOptions,
+                onTableChange: (pagination, _filters, sorter) => {
+                  const currentSorter = Array.isArray(sorter)
+                    ? sorter[0]
+                    : sorter;
 
-                setPlaylistFilter((prev) => ({
-                  ...prev,
-                  page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
-                  sortBy: currentSorter.field
-                    ? String(currentSorter.field)
-                    : 'createdAt',
-                  isAscending: currentSorter.order === 'ascend',
-                }));
-              },
-            }}
-          />
-        </div>
-        {queueRestrictionHint && (
-          <Alert
-            type={queueRestrictionHint.kind === 'billing' ? 'error' : 'warning'}
-            showIcon
-            message={
-              queueRestrictionHint.kind === 'billing'
-                ? 'Token billing restriction'
-                : 'Queue policy restriction'
-            }
-            description={queueRestrictionHint.message}
-          />
-        )}
+                  setPlaylistFilter((prev) => ({
+                    ...prev,
+                    page: pagination.current || 1,
+                    pageSize: pagination.pageSize || 5,
+                    sortBy: currentSorter.field
+                      ? String(currentSorter.field)
+                      : 'createdAt',
+                    isAscending: currentSorter.order === 'ascend',
+                  }));
+                },
+              }}
+            />
+          </div>
+          {queueRestrictionHint && (
+            <Alert
+              type={
+                queueRestrictionHint.kind === 'billing' ? 'error' : 'warning'
+              }
+              showIcon
+              message={
+                queueRestrictionHint.kind === 'billing'
+                  ? 'Token billing restriction'
+                  : 'Queue policy restriction'
+              }
+              description={queueRestrictionHint.message}
+            />
+          )}
+        </Space>
 
-        <div>
-          <Text strong>Queue Mode</Text>
-          <Radio.Group
-            className={styles.queueModeRadio}
-            style={{ marginTop: 10 }}
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            options={queueModeOptions.map((option) => ({
-              label: (
-                <Tooltip title={option.description}>
-                  <Space size={6}>
-                    {option.icon}
-                    <Text strong>{option.label}</Text>
-                  </Space>
-                </Tooltip>
-              ),
-              value: option.value,
-            }))}
-            optionType='button'
-            buttonStyle='solid'
-          />
-        </div>
-
-        <div>
-          <SettingSwitch
-            label='Clear existing queue before adding'
-            description='Remove all current tracks from the queue before adding new ones'
-            value={isClearExistingQueue}
-            onChange={setIsClearExistingQueue}
-            className='mb-2! pt-0!'
-          />
-
-          <Text strong>Reason</Text>
-          <TextArea
+        <div className={styles.configPane}>
+          <Space
+            direction='vertical'
             size='large'
-            placeholder='Why are you adding this to the queue?'
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            rows={3}
-            maxLength={500}
-            showCount
-            style={{ marginTop: 8 }}
-          />
+            className={styles.sectionCard}
+            style={{ width: '100%' }}
+          >
+            <div>
+              <Text strong>Queue Mode</Text>
+              <Radio.Group
+                className={styles.queueModeRadio}
+                style={{ marginTop: 10 }}
+                value={mode}
+                onChange={(e) => setMode(e.target.value)}
+                options={queueModeOptions.map((option) => ({
+                  label: (
+                    <Tooltip title={option.description}>
+                      <Space size={6}>
+                        {option.icon}
+                        <Text strong>{option.label}</Text>
+                      </Space>
+                    </Tooltip>
+                  ),
+                  value: option.value,
+                }))}
+                optionType='button'
+                buttonStyle='solid'
+              />
+            </div>
+
+            <div>
+              <SettingSwitch
+                label='Clear existing queue before adding'
+                description='Remove all current tracks from the queue before adding new ones'
+                value={isClearExistingQueue}
+                onChange={setIsClearExistingQueue}
+                className='mb-2! pt-0!'
+              />
+
+              <Text strong>Reason</Text>
+              <TextArea
+                size='large'
+                placeholder='Why are you adding this to the queue?'
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+                maxLength={500}
+                showCount
+                style={{ marginTop: 8 }}
+              />
+            </div>
+          </Space>
         </div>
-      </Space>
+      </div>
     </Modal>
   );
 };

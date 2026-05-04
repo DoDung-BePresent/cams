@@ -14,6 +14,8 @@ import {
  * Constants
  */
 import {
+  COPYRIGHT_CLEARANCE_LABELS,
+  COPYRIGHT_CLEARANCE_OPTIONS,
   GENRE_OPTIONS,
   MUSIC_PROVIDER_OPTIONS,
 } from '@/shared/modules/tracks/constants';
@@ -55,6 +57,7 @@ export const TrackFilter = ({
     filter.genre ||
     filter.moodId ||
     filter.provider !== undefined ||
+    !!filter.copyrightClearanceStatuses?.length ||
     filter.status !== undefined ||
     filter.isAiGenerated !== undefined;
 
@@ -159,6 +162,21 @@ export const TrackFilter = ({
           <Col span={6}>
             <Select
               size='large'
+              placeholder='Copyright Scan'
+              mode='multiple'
+              options={COPYRIGHT_CLEARANCE_OPTIONS}
+              value={filter.copyrightClearanceStatuses}
+              onChange={(value) =>
+                onFilterChange('copyrightClearanceStatuses', value)
+              }
+              style={{ width: '100%' }}
+              maxTagCount='responsive'
+              allowClear
+            />
+          </Col>
+          <Col span={6}>
+            <Select
+              size='large'
               placeholder='AI Generated'
               options={[
                 { label: 'All', value: undefined },
@@ -178,6 +196,7 @@ export const TrackFilter = ({
       {(filter.brandId ||
         filter.genre ||
         filter.provider !== undefined ||
+        !!filter.copyrightClearanceStatuses?.length ||
         filter.status !== undefined ||
         filter.isAiGenerated !== undefined) && (
         <Space wrap>
@@ -226,6 +245,22 @@ export const TrackFilter = ({
               }
             </Tag>
           )}
+          {filter.copyrightClearanceStatuses?.map((status) => (
+            <Tag
+              key={status}
+              closable
+              onClose={() =>
+                onFilterChange(
+                  'copyrightClearanceStatuses',
+                  filter.copyrightClearanceStatuses?.filter(
+                    (item) => item !== status,
+                  ),
+                )
+              }
+            >
+              Copyright: {COPYRIGHT_CLEARANCE_LABELS[status]}
+            </Tag>
+          ))}
           {filter.isAiGenerated !== undefined && (
             <Tag
               closable

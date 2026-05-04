@@ -101,9 +101,6 @@ export const UpsertConfigPolicyDrawer = ({
 
     if (!selectedPolicy) {
       form.resetFields();
-      form.setFieldsValue({
-        tier: 0,
-      });
       return;
     }
 
@@ -125,6 +122,11 @@ export const UpsertConfigPolicyDrawer = ({
   };
 
   const handleSubmit = (values: ConfigPolicyFormValues) => {
+    if (!selectedPolicy) {
+      message.error('Please select an existing policy to edit.');
+      return;
+    }
+
     const hasDefaultValue =
       values.defaultValue !== undefined && values.defaultValue !== '';
 
@@ -139,9 +141,9 @@ export const UpsertConfigPolicyDrawer = ({
       key: values.key,
       domain: values.domain,
       tier: values.tier,
-      defaultValueType: values.defaultValueType,
+      defaultValueType: selectedPolicy.defaultValueType,
       defaultValue: buildDefaultValuePayload(
-        values.defaultValueType,
+        selectedPolicy.defaultValueType,
         values.defaultValue,
       ),
     };
@@ -187,7 +189,7 @@ export const UpsertConfigPolicyDrawer = ({
   return (
     <Drawer
       closeIcon={null}
-      title={selectedPolicy ? 'Edit Config Policy' : 'Create Config Policy'}
+      title='Edit Config Policy'
       open={open}
       onClose={handleCancel}
       width={DRAWER_WIDTHS.medium}
@@ -206,6 +208,7 @@ export const UpsertConfigPolicyDrawer = ({
             size='large'
             type='primary'
             loading={upsertPolicy.isPending}
+            disabled={!selectedPolicy}
             onClick={() => form.submit()}
           >
             Save Policy
@@ -231,7 +234,7 @@ export const UpsertConfigPolicyDrawer = ({
         >
           <Input
             placeholder='e.g., cams.aiQueueTrackLimit'
-            disabled={!!selectedPolicy}
+            disabled
           />
         </Form.Item>
 
@@ -243,7 +246,7 @@ export const UpsertConfigPolicyDrawer = ({
           <Select
             placeholder='Select config domain'
             options={CONFIG_DOMAIN_OPTIONS}
-            disabled={!!selectedPolicy}
+            disabled
           />
         </Form.Item>
 
@@ -255,6 +258,7 @@ export const UpsertConfigPolicyDrawer = ({
           <Select
             placeholder='Select policy tier'
             options={CONFIG_TIER_OPTIONS}
+            disabled
           />
         </Form.Item>
 
@@ -266,6 +270,7 @@ export const UpsertConfigPolicyDrawer = ({
             placeholder='Select default value type'
             options={CONFIG_VALUE_TYPE_OPTIONS}
             allowClear
+            disabled
           />
         </Form.Item>
 

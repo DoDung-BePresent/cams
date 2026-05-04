@@ -69,7 +69,7 @@ export const getConfigColumns = ({
     },
     {
       key: 'edit-store-value',
-      label: 'Upsert Store Value',
+      label: 'Edit Value',
       icon: <EditOutlined />,
       onClick: () => onEditStoreValue(record),
     },
@@ -170,20 +170,6 @@ export const getConfigColumns = ({
       width: 120,
       ellipsis: true,
       render: (value?: string | null) => value || '-',
-    },
-    {
-      title: 'Allow Space Override',
-      dataIndex: 'allowSpaceOverride',
-      key: 'allowSpaceOverride',
-      width: 160,
-      render: (value?: boolean | null) => {
-        if (value === null || value === undefined) {
-          return '-';
-        }
-        return (
-          <Tag color={value ? 'green' : 'default'}>{value ? 'Yes' : 'No'}</Tag>
-        );
-      },
     },
     {
       title: 'Actions',

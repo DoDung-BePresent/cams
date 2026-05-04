@@ -1,6 +1,16 @@
 import { useMemo, useState } from 'react';
-import { Input, Space, Typography, Modal, Button, Flex } from 'antd';
+import {
+  Input,
+  Space,
+  Typography,
+  Modal,
+  Button,
+  Flex,
+  DatePicker,
+  message,
+} from 'antd';
 import { createStyles } from 'antd-style';
+import dayjs, { type Dayjs } from 'dayjs';
 
 import { SettingSwitch } from '@/shared/components';
 import { DRAWER_WIDTHS } from '@/config';
@@ -8,7 +18,10 @@ import { useMoods } from '@/shared/modules/moods/hooks';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
 import { useTracks } from '@/shared/modules/tracks/hooks';
 import type { PlaylistFilter } from '@/shared/modules/playlists/types';
-import type { TrackFilter } from '@/shared/modules/tracks/types';
+import {
+  type TrackFilter,
+  TrackCopyrightClearanceStatus,
+} from '@/shared/modules/tracks/types';
 import { isTrackPlaybackBlockedByCopyright } from '@/shared/modules/tracks/utils';
 import { useOverridePlaylist } from '../hooks';
 import {
@@ -27,6 +40,24 @@ const useStyle = createStyles(({ css }) => {
       border-radius: 12px;
       background: var(--ant-color-bg-container);
       padding: 10px;
+    `,
+    modalGrid: css`
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+
+      @media (max-width: 960px) {
+        grid-template-columns: 1fr;
+      }
+    `,
+    configPane: css`
+      position: sticky;
+      top: 0;
+
+      @media (max-width: 960px) {
+        position: static;
+      }
     `,
     statusStrip: css`
       border: 1px solid var(--ant-color-border-secondary);
@@ -53,15 +84,19 @@ interface OverrideSpaceMusicModalProps {
 
 const defaultTrackFilter: TrackFilter = {
   page: 1,
-  pageSize: 10,
+  pageSize: 5,
   sortBy: 'createdAt',
   isAscending: false,
   status: 1,
+  copyrightClearanceStatuses: [
+    TrackCopyrightClearanceStatus.Cleared,
+    TrackCopyrightClearanceStatus.NotApplicable,
+  ],
 };
 
 const defaultPlaylistFilter: PlaylistFilter = {
   page: 1,
-  pageSize: 10,
+  pageSize: 5,
   sortBy: 'createdAt',
   isAscending: false,
   status: 1,
@@ -88,6 +123,8 @@ export const OverrideSpaceMusicModal = ({
   const [isClearManagerSelectedQueues, setIsClearManagerSelectedQueues] =
     useState(false);
   const [isCutOver, setIsCutOver] = useState(false);
+  const [manualOverrideExpiresAt, setManualOverrideExpiresAt] =
+    useState<Dayjs | null>(null);
 
   const [trackFilter, setTrackFilter] =
     useState<TrackFilter>(defaultTrackFilter);
@@ -131,16 +168,6 @@ export const OverrideSpaceMusicModal = ({
     [moods],
   );
 
-  const moodTypeOptions = useMemo(() => {
-    const uniqueMoodTypes = [
-      ...new Set(moods.map((m) => m.moodType).filter(Boolean)),
-    ];
-    return uniqueMoodTypes.map((moodType) => ({
-      label: `Type ${moodType}`,
-      value: moodType as number,
-    }));
-  }, [moods]);
-
   const filteredMoods = useMemo(() => {
     const keyword = moodFilter.search?.trim().toLowerCase();
 
@@ -151,13 +178,9 @@ export const OverrideSpaceMusicModal = ({
         : mood.name.toLowerCase().includes(keyword) ||
           mood.genre?.toLowerCase().includes(keyword);
 
-      const matchType = moodFilter.moodType
-        ? mood.moodType === moodFilter.moodType
-        : true;
-
-      return matchActive && matchSearch && matchType;
+      return matchActive && matchSearch;
     });
-  }, [moodFilter.moodType, moodFilter.search, moods]);
+  }, [moodFilter.search, moods]);
 
   const selectableTracks = useMemo(
     () =>
@@ -175,17 +198,14 @@ export const OverrideSpaceMusicModal = ({
   }, [filteredMoods, moodFilter.page, moodFilter.pageSize]);
 
   const hasActiveTrackFilters =
-    trackFilter.search ||
-    trackFilter.genre ||
-    trackFilter.provider !== undefined ||
-    trackFilter.isAiGenerated !== undefined;
+    trackFilter.search || trackFilter.moodId || trackFilter.genre;
 
   const hasActivePlaylistFilters =
     playlistFilter.search ||
     playlistFilter.moodId ||
     playlistFilter.isDefault !== undefined;
 
-  const hasActiveMoodFilters = moodFilter.search || moodFilter.moodType;
+  const hasActiveMoodFilters = moodFilter.search;
 
   const resetModalState = () => {
     setActiveTab('tracks');
@@ -195,6 +215,7 @@ export const OverrideSpaceMusicModal = ({
     setReason('');
     setIsClearManagerSelectedQueues(false);
     setIsCutOver(false);
+    setManualOverrideExpiresAt(null);
 
     setTrackFilter(defaultTrackFilter);
     setPlaylistFilter(defaultPlaylistFilter);
@@ -211,6 +232,11 @@ export const OverrideSpaceMusicModal = ({
   };
 
   const handleSubmit = async () => {
+    if (manualOverrideExpiresAt && !manualOverrideExpiresAt.isAfter(dayjs())) {
+      message.warning('Override expiry must be in the future.');
+      return;
+    }
+
     try {
       await overrideSpaceMusic.mutateAsync({
         spaceId,
@@ -226,6 +252,9 @@ export const OverrideSpaceMusicModal = ({
           activeTab === 'mood' && selectedMoodId ? selectedMoodId : undefined,
         isClearManagerSelectedQueues,
         isCutOver,
+        manualOverrideExpiresAtUtc: manualOverrideExpiresAt
+          ? manualOverrideExpiresAt.toDate().toISOString()
+          : undefined,
         reason: reason.trim() || undefined,
       });
 
@@ -240,7 +269,7 @@ export const OverrideSpaceMusicModal = ({
     <Modal
       open={open}
       title='Override Space Music'
-      width={DRAWER_WIDTHS.large}
+      width={DRAWER_WIDTHS.extraLarge}
       onCancel={handleClose}
       destroyOnClose
       centered
@@ -266,11 +295,7 @@ export const OverrideSpaceMusicModal = ({
         </Flex>
       }
     >
-      <Space
-        direction='vertical'
-        size='large'
-        style={{ width: '100%' }}
-      >
+      <div className={styles.modalGrid}>
         <div className={styles.selectorBlock}>
           <OverrideMusicSourceSelector
             activeTab={activeTab}
@@ -296,7 +321,7 @@ export const OverrideSpaceMusicModal = ({
                 setTrackFilter((prev) => ({
                   ...prev,
                   page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
+                  pageSize: pagination.pageSize || 5,
                   sortBy: currentSorter.field
                     ? String(currentSorter.field)
                     : 'createdAt',
@@ -326,7 +351,7 @@ export const OverrideSpaceMusicModal = ({
                 setPlaylistFilter((prev) => ({
                   ...prev,
                   page: pagination.current || 1,
-                  pageSize: pagination.pageSize || 10,
+                  pageSize: pagination.pageSize || 5,
                   sortBy: currentSorter.field
                     ? String(currentSorter.field)
                     : 'createdAt',
@@ -347,38 +372,63 @@ export const OverrideSpaceMusicModal = ({
               selectedMoodId,
               setSelectedMoodId,
               defaultFilter: defaultMoodFilter,
-              moodTypeOptions,
             }}
           />
         </div>
 
-        <div className={styles.sectionCard}>
-          <SettingSwitch
-            label='Clear manager-selected queue items'
-            description='Enable to clear current manager-selected queue before applying override.'
-            value={isClearManagerSelectedQueues}
-            onChange={setIsClearManagerSelectedQueues}
-          />
+        <div className={styles.configPane}>
+          <div className={styles.sectionCard}>
+            <SettingSwitch
+              label='Clear manager-selected queue items'
+              description='Enable to clear current manager-selected queue before applying override.'
+              value={isClearManagerSelectedQueues}
+              onChange={setIsClearManagerSelectedQueues}
+            />
 
-          <SettingSwitch
-            label='Cut over immediately'
-            description='Enable to skip the currently playing track and start the new override list now.'
-            value={isCutOver}
-            onChange={setIsCutOver}
-          />
+            <SettingSwitch
+              label='Cut over immediately'
+              description='Enable to skip the currently playing track and start the new override list now.'
+              value={isCutOver}
+              onChange={setIsCutOver}
+            />
 
-          <Text strong>Reason (optional)</Text>
-          <TextArea
-            size='large'
-            placeholder='Add a short reason for this manual override...'
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            maxLength={500}
-            rows={3}
-            style={{ marginTop: 8 }}
-          />
+            <Space
+              direction='vertical'
+              size={4}
+              style={{ width: '100%', marginBottom: 12 }}
+            >
+              <Text strong>Override expires at (optional)</Text>
+              <Text type='secondary'>
+                Applies to takeover-only, track, playlist, and mood overrides.
+                Leave empty to let CAMS expire it after the playable queue
+                finishes.
+              </Text>
+              <DatePicker
+                showTime={{ format: 'HH:mm' }}
+                format='YYYY-MM-DD HH:mm'
+                value={manualOverrideExpiresAt}
+                onChange={setManualOverrideExpiresAt}
+                disabledDate={(current) =>
+                  !!current && current < dayjs().startOf('day')
+                }
+                placeholder='Select expiry date and time'
+                style={{ width: '100%', marginTop: 4 }}
+              />
+            </Space>
+
+            <Text strong>Reason (optional)</Text>
+            <TextArea
+              size='large'
+              placeholder='Add a short reason for this manual override...'
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={500}
+              rows={3}
+              style={{ marginTop: 8 }}
+            />
+          </div>
         </div>
-      </Space>
+      </div>
     </Modal>
   );
 };

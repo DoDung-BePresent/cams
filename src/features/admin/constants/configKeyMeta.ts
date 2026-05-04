@@ -57,38 +57,15 @@ export const CONFIG_KEY_META: Record<string, ConfigKeyMeta> = {
   },
 
   // ── C. Fuzzy ──────────────────────────────────────────────────────────────
-  'fuzzy.defaultMoodId': {
-    label: 'Default Mood',
-    iconName: 'SmileOutlined',
-  },
   'fuzzy.profileRef': {
     label: 'Fuzzy Profile Reference',
     iconName: 'RobotOutlined',
   },
-  'fuzzy.allowedPlaylists': {
-    label: 'Allowed Playlists (Fuzzy)',
-    iconName: 'UnorderedListOutlined',
-  },
 
   // ── D. Content ────────────────────────────────────────────────────────────
-  'content.defaultPlaylistId': {
-    label: 'Default Playlist',
-    iconName: 'PlayCircleOutlined',
-  },
-  'content.copyrightFallbackPlaylistId': {
-    label: 'Copyright Fallback Playlist',
-    iconName: 'CopyrightOutlined',
-    hardLocked: true,
-    storeBlocked: true,
-    spaceBlocked: true,
-  },
   'content.enableAudioAds': {
     label: 'Enable Audio Ads',
     iconName: 'NotificationOutlined',
-  },
-  'content.allowlist.playlists': {
-    label: 'Playlist Allowlist',
-    iconName: 'UnorderedListOutlined',
   },
 
   // ── E. Governance ─────────────────────────────────────────────────────────
@@ -99,20 +76,7 @@ export const CONFIG_KEY_META: Record<string, ConfigKeyMeta> = {
     storeBlocked: true,
     spaceBlocked: true,
   },
-  'governance.brandProfileRef': {
-    label: 'Brand Profile Reference',
-    iconName: 'ApartmentOutlined',
-    storeBlocked: true,
-    spaceBlocked: true,
-  },
-
   // ── F. Scheduling ─────────────────────────────────────────────────────────
-  'scheduling.slots': {
-    label: 'Schedule Slots',
-    iconName: 'CalendarOutlined',
-    spaceBlocked: true,
-  },
-
   // ── G. CAMS Runtime ───────────────────────────────────────────────────────
   'cams.slidingWindowMinutes': {
     label: 'Sliding Window (min)',
@@ -126,22 +90,6 @@ export const CONFIG_KEY_META: Record<string, ConfigKeyMeta> = {
     label: 'Recent Playback Cooldown',
     iconName: 'PauseCircleOutlined',
   },
-  'cams.sunoPromptTemplate': {
-    label: 'Suno Prompt Template',
-    iconName: 'EditOutlined',
-  },
-  'cams.aiGenerationMode': {
-    label: 'AI Generation Mode',
-    iconName: 'ThunderboltOutlined',
-  },
-  'cams.copyrightScanEnabled': {
-    label: 'Copyright Scan Enabled',
-    iconName: 'ScanOutlined',
-  },
-  'cams.copyrightRiskThreshold': {
-    label: 'Copyright Risk Threshold',
-    iconName: 'WarningOutlined',
-  },
   'cams.moodTrackLimit': {
     label: 'Mood Track Limit',
     iconName: 'FilterOutlined',
@@ -153,6 +101,10 @@ export const CONFIG_KEY_META: Record<string, ConfigKeyMeta> = {
   'cams.isAiPriorityInsert': {
     label: 'AI Priority Insert',
     iconName: 'VerticalAlignTopOutlined',
+  },
+  'cams.enableAutoMoodTransition': {
+    label: 'Enable Auto Mood Transition',
+    iconName: 'ThunderboltOutlined',
   },
 
   // ── H. System ─────────────────────────────────────────────────────────────
@@ -195,3 +147,10 @@ export const CONFIG_KEY_SELECT_OPTIONS = Object.entries(CONFIG_KEY_META).map(
     value: key,
   }),
 );
+
+export const TENANT_CONFIG_KEY_SELECT_OPTIONS = Object.entries(CONFIG_KEY_META)
+  .filter(([key]) => !key.startsWith('sys.'))
+  .map(([key, meta]) => ({
+    label: `${meta.label} (${key})`,
+    value: key,
+  }));

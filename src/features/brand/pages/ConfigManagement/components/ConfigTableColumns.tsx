@@ -69,7 +69,7 @@ export const getConfigColumns = ({
     },
     {
       key: 'edit-brand-value',
-      label: 'Upsert Brand Value',
+      label: 'Edit Value',
       icon: <EditOutlined />,
       onClick: () => onEditBrandValue(record),
     },
@@ -170,20 +170,6 @@ export const getConfigColumns = ({
       width: 120,
       ellipsis: true,
       render: (value?: string | null) => value || '-',
-    },
-    {
-      title: 'Allow Store Override',
-      dataIndex: 'allowStoreOverride',
-      key: 'allowStoreOverride',
-      width: 160,
-      render: (value?: boolean | null) => {
-        if (value === null || value === undefined) {
-          return '-';
-        }
-        return (
-          <Tag color={value ? 'green' : 'default'}>{value ? 'Yes' : 'No'}</Tag>
-        );
-      },
     },
     {
       title: 'Actions',
