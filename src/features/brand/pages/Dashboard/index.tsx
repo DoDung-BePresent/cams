@@ -45,6 +45,7 @@ import dayjs from 'dayjs';
 
 import {
   BrandDashboardPeriodEnum,
+  BrandStoreHealthReasonEnum,
   BrandStoreHealthStatusEnum,
   GOVERNANCE_MODE_LABELS,
   GovernanceModeEnum,
@@ -304,6 +305,52 @@ const getIotMeta = (status?: IotHealthStatusEnum) => {
     default:
       return { label: 'Unknown', color: C.subtle, tag: 'default' as const };
   }
+};
+
+const getStoreHealthMeta = (
+  status?: BrandStoreHealthStatusEnum,
+  reason?: BrandStoreHealthReasonEnum,
+) => {
+  const statusMeta =
+    status === BrandStoreHealthStatusEnum.Healthy
+      ? { label: 'Healthy', tag: 'success' as const, color: C.green }
+      : status === BrandStoreHealthStatusEnum.Attention
+        ? { label: 'Warning', tag: 'warning' as const, color: C.orange }
+        : { label: 'Inactive', tag: 'default' as const, color: C.subtle };
+
+  const reasonLabel =
+    reason === BrandStoreHealthReasonEnum.StoreInactive
+      ? 'Store disabled'
+      : reason === BrandStoreHealthReasonEnum.IotOfflineSpaceDetected
+        ? 'IoT offline'
+        : reason === BrandStoreHealthReasonEnum.IotStaleSpaceDetected
+          ? 'IoT stale'
+          : reason === BrandStoreHealthReasonEnum.IotUnknownSpaceDetected
+            ? 'IoT missing'
+            : reason === BrandStoreHealthReasonEnum.NoActivePlayback
+              ? 'No active playback'
+              : 'Operational';
+
+  const reasonDetail =
+    reason === BrandStoreHealthReasonEnum.StoreInactive
+      ? 'Store is inactive'
+      : reason === BrandStoreHealthReasonEnum.IotOfflineSpaceDetected
+        ? 'At least one device reports offline'
+        : reason === BrandStoreHealthReasonEnum.IotStaleSpaceDetected
+          ? 'Latest telemetry is older than 3 minutes'
+          : reason === BrandStoreHealthReasonEnum.IotUnknownSpaceDetected
+            ? 'Telemetry is missing or unreadable'
+            : reason === BrandStoreHealthReasonEnum.NoActivePlayback
+              ? 'Active spaces exist but none is playing'
+              : 'No blocking issue detected';
+
+  return { ...statusMeta, reasonLabel, reasonDetail };
+};
+
+const getTrackScopeLabel = (scope?: TrackScopeEnum) => {
+  if (scope === TrackScopeEnum.BrandOwned) return 'Brand';
+  if (scope === TrackScopeEnum.Global) return 'Global';
+  return 'Unknown';
 };
 
 const getIotStatusFromSpaceState = (state?: SpaceStateDto | null) => {
@@ -2375,57 +2422,122 @@ const StoreHealth = ({
             </div>
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
-            {rows.slice(0, 6).map((row) => (
-              <div
-                key={row.storeId}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr auto auto',
-                  gap: 8,
-                  alignItems: 'center',
-                }}
-              >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'minmax(0,1fr) 58px minmax(78px,.9fr) 44px',
+                columnGap: 10,
+                color: C.subtle,
+                fontSize: 10,
+                fontWeight: 900,
+                alignItems: 'center',
+              }}
+            >
+              <span>Store</span>
+              <span style={{ textAlign: 'center' }}>Status</span>
+              <span>Reason</span>
+              <span style={{ textAlign: 'right' }}>Playing</span>
+            </div>
+            {rows.slice(0, 6).map((row) => {
+              const meta = getStoreHealthMeta(
+                row.healthStatus,
+                row.healthReason,
+              );
+
+              return (
                 <div
+                  key={row.storeId}
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    minWidth: 0,
+                    display: 'grid',
+                    gridTemplateColumns:
+                      'minmax(0,1fr) 58px minmax(78px,.9fr) 44px',
+                    columnGap: 10,
+                    alignItems: 'start',
                   }}
                 >
-                  <Text
-                    ellipsis
-                    style={{ color: C.muted, fontSize: 12, minWidth: 0 }}
+                  <div
+                    style={{
+                      minWidth: 0,
+                    }}
                   >
-                    {row.storeName}
+                    <Text
+                      ellipsis
+                      title={row.storeName}
+                      style={{
+                        color: C.muted,
+                        display: 'block',
+                        fontSize: 12,
+                        lineHeight: '18px',
+                        minWidth: 0,
+                        width: '100%',
+                      }}
+                    >
+                      {row.storeName}
+                    </Text>
+                    <div style={{ marginTop: 3 }}>
+                      <GovernanceModeBadge
+                        mode={row.governanceMode}
+                        compact
+                      />
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <Tag
+                      color={meta.tag}
+                      style={{ margin: 0, fontSize: 10 }}
+                    >
+                      {meta.label}
+                    </Tag>
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <Text
+                      ellipsis
+                      title={meta.reasonDetail}
+                      style={{
+                        color: meta.color,
+                        display: 'block',
+                        fontSize: 11,
+                        fontWeight: 800,
+                      }}
+                    >
+                      {meta.reasonLabel}
+                    </Text>
+                    <Text
+                      ellipsis
+                      style={{
+                        color: C.subtle,
+                        display: 'block',
+                        fontSize: 9,
+                      }}
+                    >
+                      {row.iotOfflineSpaces > 0
+                        ? `${row.iotOfflineSpaces} offline`
+                        : row.iotStaleSpaces > 0
+                          ? `${row.iotStaleSpaces} stale`
+                          : row.iotUnknownSpaces > 0
+                            ? `${row.iotUnknownSpaces} unknown`
+                            : `${formatAgo(row.lastPlaybackAtUtc)}`}
+                    </Text>
+                  </div>
+                  <Text
+                    style={{
+                      color:
+                        row.playingSpaces > 0 || row.activeSpaces === 0
+                          ? C.green
+                          : C.orange,
+                      display: 'block',
+                      fontSize: 12,
+                      fontWeight: 900,
+                      lineHeight: '18px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    {row.playingSpaces}/{row.activeSpaces}
                   </Text>
-                  <GovernanceModeBadge
-                    mode={row.governanceMode}
-                    compact
-                  />
                 </div>
-                <Tag
-                  color={
-                    row.healthStatus === BrandStoreHealthStatusEnum.Healthy
-                      ? 'success'
-                      : row.healthStatus ===
-                          BrandStoreHealthStatusEnum.Attention
-                        ? 'warning'
-                        : 'default'
-                  }
-                  style={{ margin: 0, fontSize: 10 }}
-                >
-                  {row.healthStatus === BrandStoreHealthStatusEnum.Healthy
-                    ? 'Healthy'
-                    : row.healthStatus === BrandStoreHealthStatusEnum.Attention
-                      ? 'Warning'
-                      : 'Inactive'}
-                </Tag>
-                <Text style={{ color: C.green, fontSize: 12, fontWeight: 800 }}>
-                  {row.playingSpaces}/{row.activeSpaces}
-                </Text>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -2490,6 +2602,7 @@ const IotHealth = ({
               </Text>
               <Text
                 ellipsis
+                title={row.storeName}
                 style={{ color: C.muted, fontSize: 12 }}
               >
                 {row.storeName}
@@ -2522,6 +2635,7 @@ const TopTracks = ({
     title='Top Tracks'
     viewPath='/brand/tracks'
     minHeight={258}
+    style={{ height: '100%' }}
   >
     {loading ? (
       <Skeleton
@@ -2532,12 +2646,30 @@ const TopTracks = ({
       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
     ) : (
       <div style={{ display: 'grid', gap: 8 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              '22px minmax(120px,1.4fr) minmax(90px,1fr) auto minmax(58px,.7fr)',
+            gap: 8,
+            color: C.subtle,
+            fontSize: 10,
+            fontWeight: 900,
+          }}
+        >
+          <span>#</span>
+          <span>Track</span>
+          <span>Scope / Mood</span>
+          <span>Plays</span>
+          <span>Last</span>
+        </div>
         {tracks.slice(0, 5).map((track, index) => (
           <div
             key={track.trackId ?? `${track.trackName}-${index}`}
             style={{
               display: 'grid',
-              gridTemplateColumns: '22px 1fr auto auto',
+              gridTemplateColumns:
+                '22px minmax(120px,1.4fr) minmax(90px,1fr) auto minmax(58px,.7fr)',
               gap: 8,
               alignItems: 'center',
             }}
@@ -2557,24 +2689,41 @@ const TopTracks = ({
                 {track.artist || 'Unknown artist'}
               </Text>
             </div>
-            <Tag
-              color={
-                track.scope === TrackScopeEnum.BrandOwned
-                  ? 'green'
-                  : track.scope === TrackScopeEnum.Global
-                    ? 'blue'
-                    : 'default'
-              }
-              style={{ margin: 0, fontSize: 10 }}
-            >
-              {track.scope === TrackScopeEnum.BrandOwned
-                ? 'Brand-owned'
-                : track.scope === TrackScopeEnum.Global
-                  ? 'Global'
-                  : 'Unknown'}
-            </Tag>
+            <div style={{ minWidth: 0 }}>
+              <Tag
+                color={
+                  track.scope === TrackScopeEnum.BrandOwned
+                    ? 'green'
+                    : track.scope === TrackScopeEnum.Global
+                      ? 'blue'
+                      : 'default'
+                }
+                style={{ margin: 0, fontSize: 10 }}
+              >
+                {getTrackScopeLabel(track.scope)}
+              </Tag>
+              <Text
+                ellipsis
+                style={{
+                  color: C.subtle,
+                  display: 'block',
+                  fontSize: 9,
+                  marginTop: 2,
+                }}
+              >
+                {track.moodName || 'No mood'}
+                {track.isAiGenerated ? ' · AI' : ''}
+              </Text>
+            </div>
             <Text style={{ color: C.green, fontSize: 12, fontWeight: 900 }}>
               {formatNumber(track.plays)}
+            </Text>
+            <Text
+              ellipsis
+              title={track.lastPlayedAtUtc ?? undefined}
+              style={{ color: C.subtle, fontSize: 10 }}
+            >
+              {formatAgo(track.lastPlayedAtUtc)}
             </Text>
           </div>
         ))}
@@ -2698,15 +2847,20 @@ const ContextBillingAi = ({
   ];
 
   return (
-    <Row gutter={[10, 10]}>
+    <Row
+      gutter={[10, 10]}
+      style={{ alignItems: 'stretch', height: '100%', width: '100%' }}
+    >
       <Col
         xs={24}
         lg={12}
+        style={{ display: 'flex' }}
       >
         <Panel
           title='Context Intelligence'
           viewPath='/brand/stores'
           minHeight={258}
+          style={{ height: '100%' }}
         >
           {loading ? (
             <Skeleton
@@ -2754,11 +2908,13 @@ const ContextBillingAi = ({
       <Col
         xs={24}
         lg={6}
+        style={{ display: 'flex' }}
       >
         <Panel
           title='Billing'
           viewPath='/brand/tokens'
           minHeight={258}
+          style={{ height: '100%' }}
         >
           {loading ? (
             <Skeleton
@@ -2804,11 +2960,13 @@ const ContextBillingAi = ({
       <Col
         xs={24}
         lg={6}
+        style={{ display: 'flex' }}
       >
         <Panel
           title='AI Generation'
           viewPath='/brand/suno-ai'
           minHeight={258}
+          style={{ height: '100%' }}
         >
           {loading ? (
             <Skeleton
@@ -3194,6 +3352,7 @@ export const BrandDashboard = () => {
         <Col
           xs={24}
           xl={7}
+          style={{ display: 'flex' }}
         >
           <TopTracks
             tracks={data?.topTracks ?? []}
@@ -3203,6 +3362,7 @@ export const BrandDashboard = () => {
         <Col
           xs={24}
           xl={17}
+          style={{ display: 'flex' }}
         >
           <ContextBillingAi
             data={data}

@@ -26,11 +26,15 @@ import type {
   StoreOverrideIntentEnum,
   UpsertStoreValueRequest,
 } from '@/features/store/types';
-import { ConfigValueTypeEnum } from '@/features/store/types';
+import {
+  ConfigScopeTypeEnum,
+  ConfigValueTypeEnum,
+} from '@/features/store/types';
 import { DRAWER_WIDTHS } from '@/config';
 import { useConfigDetailByStore } from '@/features/admin/hooks/config';
 import { SelectAffectedSpacesModal } from './SelectAffectedSpacesModal';
 import { useUpsertStoreValue } from '@/features/store/hooks/config';
+import { useStoreContext } from '@/features/store/hooks';
 
 const { Text } = Typography;
 
@@ -101,9 +105,12 @@ export const UpsertStoreValueModal = ({
   const overrideIntent = Form.useWatch('overrideIntent', form);
   const [spaceSelectorOpen, setSpaceSelectorOpen] = useState(false);
   const [selectedSpaceIds, setSelectedSpaceIds] = useState<string[]>([]);
+  const contextStoreId = useStoreContext();
 
   const storeId =
-    selectedConfig?.scopeType === 2 ? selectedConfig?.scopeId : undefined;
+    selectedConfig?.scopeType === ConfigScopeTypeEnum.Store
+      ? selectedConfig?.scopeId
+      : contextStoreId;
   const { data: detail } = useConfigDetailByStore(
     selectedConfig?.key,
     storeId,
@@ -140,6 +147,7 @@ export const UpsertStoreValueModal = ({
     }
 
     const request: UpsertStoreValueRequest = {
+      storeId,
       key: values.key,
       domain: values.domain,
       valueType: values.valueType,

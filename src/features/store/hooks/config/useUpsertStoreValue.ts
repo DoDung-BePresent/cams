@@ -7,15 +7,18 @@ import {
   StoreOverrideIntentEnum,
   type UpsertStoreValueRequest,
 } from '@/features/store/types';
+import { useStoreContext } from '@/features/store/hooks';
 import { handleApiError } from '@/shared/utils';
 
 export const useUpsertStoreValue = () => {
   const queryClient = useQueryClient();
+  const contextStoreId = useStoreContext();
 
   return useMutation({
     mutationFn: (request: UpsertStoreValueRequest) =>
       configService.upsertStoreValue({
         ...request,
+        storeId: request.storeId ?? contextStoreId,
         overrideIntent: request.overrideIntent ?? StoreOverrideIntentEnum.None,
       }),
     onSuccess: (response) => {

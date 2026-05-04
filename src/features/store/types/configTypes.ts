@@ -52,12 +52,14 @@ export type ConfigFlatRowItem = {
 };
 
 export type ConfigStoreFilter = BasePaginationFilter & {
+  storeId?: string;
   domain?: ConfigDomainEnum;
   key?: string;
   keyPrefix?: string;
 };
 
 export type UpsertStoreValueRequest = {
+  storeId?: string;
   key: string;
   domain: ConfigDomainEnum;
   valueType: ConfigValueTypeEnum;

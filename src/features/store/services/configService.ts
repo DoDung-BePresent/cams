@@ -9,7 +9,9 @@ import type { Result } from '@/shared/types';
 
 const CONFIG_ENDPOINTS = {
   store: '/api/cms/config/store',
+  storeById: (storeId: string) => `/api/cms/config/store/${storeId}`,
   storeValue: '/api/cms/config/store-value',
+  storeValueById: (storeId: string) => `/api/cms/config/store/${storeId}/value`,
 } as const;
 
 export const configService = {
@@ -29,11 +31,21 @@ export const configService = {
     if (filter.key) params.append('key', filter.key);
     if (filter.keyPrefix) params.append('keyPrefix', filter.keyPrefix);
 
+    const endpoint = filter.storeId
+      ? CONFIG_ENDPOINTS.storeById(filter.storeId)
+      : CONFIG_ENDPOINTS.store;
+
     return api.get<ConfigStorePaginationResult>(
-      `${CONFIG_ENDPOINTS.store}?${params.toString()}`,
+      `${endpoint}?${params.toString()}`,
     );
   },
 
-  upsertStoreValue: (data: UpsertStoreValueRequest) =>
-    api.put<Result<string>>(CONFIG_ENDPOINTS.storeValue, data),
+  upsertStoreValue: (data: UpsertStoreValueRequest) => {
+    const { storeId, ...payload } = data;
+    const endpoint = storeId
+      ? CONFIG_ENDPOINTS.storeValueById(storeId)
+      : CONFIG_ENDPOINTS.storeValue;
+
+    return api.put<Result<string>>(endpoint, payload);
+  },
 };
