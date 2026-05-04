@@ -141,6 +141,10 @@ export type StoreContextRawLogItem = {
   avgNoise?: number | null;
   crowdDensity?: number | null;
   currentWeather?: string | null;
+  fuzzyReason?: string | null;
+  fuzzyConfidence?: number | null;
+  isSuggestOnly?: boolean;
+  fuzzyScoreJson?: string | null;
 };
 
 export type StoreContextTimeSeriesFilter = {
@@ -157,6 +161,7 @@ export type StoreContextTimeSeriesPoint = {
   avgHumidity?: number | null;
   avgNoise?: number | null;
   avgCrowdDensity?: number | null;
+  avgFuzzyConfidence?: number | null;
 };
 
 export type StoreContextTimeSeriesResponse = {
@@ -196,6 +201,7 @@ export type StoreContextAggregateSummary = {
   humidity: MetricMinMaxAvg;
   noise: MetricMinMaxAvg;
   crowdDensity: MetricMinMaxAvg;
+  fuzzyConfidence: MetricMinMaxAvg;
 };
 
 export type StoreContextTrendSummary = {
@@ -203,6 +209,7 @@ export type StoreContextTrendSummary = {
   humidity: MetricTrend;
   noise: MetricTrend;
   crowdDensity: MetricTrend;
+  fuzzyConfidence: MetricTrend;
   samples: MetricTrend;
 };
 

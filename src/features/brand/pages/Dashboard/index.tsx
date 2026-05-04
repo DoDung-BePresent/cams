@@ -12,6 +12,7 @@ import {
   Col,
   Empty,
   message,
+  Modal,
   Progress,
   Row,
   Segmented,
@@ -41,8 +42,10 @@ import {
   WalletOutlined,
   WifiOutlined,
 } from '@ant-design/icons';
+import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 
+import { STALE_TIME } from '@/config';
 import {
   BrandDashboardPeriodEnum,
   BrandStoreHealthReasonEnum,
@@ -52,12 +55,16 @@ import {
   IotHealthStatusEnum,
   TrackScopeEnum,
   WalletLockStatusEnum,
+  type BrandDashboardDoubleMetricTrend,
   type BrandDashboardMetricTrend,
   type BrandDashboardIotSpaceHealthItem,
+  type BrandStoreHealthItem,
   type BrandDashboardTopTrackItem,
   type BrandLivePlaybackQueueItem,
   type BrandLivePlaybackSpaceItem,
+  type StoreContextAggregateResponse,
 } from '@/features/brand/types';
+import { storeService } from '@/features/brand/services';
 import {
   useBrandDashboard,
   useBrandDashboardRealtime,
@@ -116,6 +123,14 @@ const hasDocumentUserActivation = () => {
 const EMPTY_LIVE_PLAYBACK_ITEMS: BrandLivePlaybackSpaceItem[] = [];
 const EMPTY_IOT_SPACE_HEALTH_ITEMS: BrandDashboardIotSpaceHealthItem[] = [];
 const DASHBOARD_KPI_CARD_HEIGHT = 140;
+
+type ContextDrilldownTarget = {
+  scope: 'store' | 'space';
+  storeId: string;
+  storeName: string;
+  spaceId?: string;
+  spaceName?: string;
+};
 
 const C = {
   surface: '#18181b',
@@ -267,6 +282,27 @@ const formatPlayTrendText = (
 ) => {
   if (!trend) return undefined;
   return `${formatSigned(trend.delta)} plays ${comparisonLabel}`;
+};
+
+const formatDoubleTrendText = (
+  trend?: BrandDashboardDoubleMetricTrend | null,
+  suffix = '',
+  isConfidence = false,
+) => {
+  if (!trend) return '0 vs previous period';
+  const rawDelta = trend.delta ?? 0;
+  const delta = isConfidence
+    ? (normalizeConfidenceTrendValue(rawDelta) ?? 0)
+    : rawDelta;
+  const displayDelta = Math.round(Math.abs(delta));
+  const sign = delta > 0 ? '+' : delta < 0 ? '-' : '';
+
+  return `${sign}${formatNumber(displayDelta)}${suffix} vs previous period`;
+};
+
+const normalizeConfidenceTrendValue = (value?: number | null) => {
+  if (value == null) return value;
+  return value <= 1 && value >= -1 ? value * 100 : value;
 };
 
 type TrendDirection = 'up' | 'down' | 'flat';
@@ -2331,9 +2367,11 @@ const navButton = (side: 'left' | 'right'): React.CSSProperties => ({
 const StoreHealth = ({
   data,
   loading,
+  onInspect,
 }: {
   data: ReturnType<typeof useBrandDashboard>['data'];
   loading?: boolean;
+  onInspect?: (row: BrandStoreHealthItem) => void;
 }) => {
   const rows = data?.storeHealth ?? [];
   const healthy = rows.filter(
@@ -2422,6 +2460,18 @@ const StoreHealth = ({
             </div>
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
+            {onInspect ? (
+              <Text
+                style={{
+                  color: C.subtle,
+                  display: 'block',
+                  fontSize: 10,
+                  marginBottom: 2,
+                }}
+              >
+                Click a row to view People, Noise and Confidence.
+              </Text>
+            ) : null}
             <div
               style={{
                 display: 'grid',
@@ -2453,7 +2503,16 @@ const StoreHealth = ({
                     gridTemplateColumns:
                       'minmax(0,1fr) 58px minmax(78px,.9fr) 44px',
                     columnGap: 10,
+                    cursor: onInspect ? 'pointer' : 'default',
                     alignItems: 'start',
+                  }}
+                  onClick={() => onInspect?.(row)}
+                  role={onInspect ? 'button' : undefined}
+                  tabIndex={onInspect ? 0 : undefined}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      onInspect?.(row);
+                    }
                   }}
                 >
                   <div
@@ -2548,9 +2607,11 @@ const StoreHealth = ({
 const IotHealth = ({
   rows,
   loading,
+  onInspect,
 }: {
   rows: BrandDashboardIotSpaceHealthItem[];
   loading?: boolean;
+  onInspect?: (row: BrandDashboardIotSpaceHealthItem) => void;
 }) => (
   <Panel
     title='IoT Space Health'
@@ -2567,6 +2628,18 @@ const IotHealth = ({
       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
     ) : (
       <div style={{ display: 'grid', gap: 8 }}>
+        {onInspect ? (
+          <Text
+            style={{
+              color: C.subtle,
+              display: 'block',
+              fontSize: 10,
+              marginBottom: 2,
+            }}
+          >
+            Click a row to view People, Noise and Confidence.
+          </Text>
+        ) : null}
         <div
           style={{
             display: 'grid',
@@ -2590,8 +2663,17 @@ const IotHealth = ({
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1.2fr 1fr auto auto',
+                cursor: onInspect ? 'pointer' : 'default',
                 gap: 8,
                 alignItems: 'center',
+              }}
+              onClick={() => onInspect?.(row)}
+              role={onInspect ? 'button' : undefined}
+              tabIndex={onInspect ? 0 : undefined}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  onInspect?.(row);
+                }
               }}
             >
               <Text
@@ -2732,63 +2814,238 @@ const TopTracks = ({
   </Panel>
 );
 
-const Spark = ({
+const ContextMetricGauge = ({
+  label,
+  value,
   color,
-  values,
-  maxHint,
+  percent,
+  hint,
+  trendValues,
 }: {
+  label: string;
+  value: string;
   color: string;
-  values: number[];
-  maxHint?: number;
+  percent: number;
+  hint: string;
+  trendValues: Array<number | null | undefined>;
 }) => {
-  const points = values.filter((value) => Number.isFinite(value));
-  const plotValues = points.length > 1 ? points : Array(8).fill(points[0] ?? 0);
-  const max = Math.max(maxHint ?? 0, ...plotValues, 1);
-  const width = 110;
-  const height = 58;
+  const clampedPercent = Math.max(0, Math.min(100, percent));
+  const points = trendValues.filter((item): item is number =>
+    Number.isFinite(item),
+  );
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
+  const range = Math.max(max - min, 1);
+  const width = 120;
+  const height = 48;
   const top = 8;
-  const bottom = 48;
-  const step = width / Math.max(plotValues.length - 1, 1);
-  const polylinePoints = plotValues
-    .map((value, index) => {
-      const ratio = Math.max(0, Math.min(1, value / max));
+  const bottom = 40;
+  const step = width / Math.max(points.length - 1, 1);
+  const polylinePoints = points
+    .map((item, index) => {
+      const ratio = (item - min) / range;
       return `${Math.round(index * step)},${Math.round(bottom - ratio * (bottom - top))}`;
     })
     .join(' ');
 
-  const lastValue = plotValues.at(-1) ?? 0;
-  const lastRatio = Math.max(0, Math.min(1, lastValue / max));
-  const lastX = Math.round((plotValues.length - 1) * step);
-  const lastY = Math.round(bottom - lastRatio * (bottom - top));
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,.035)',
+        border: `1px solid ${C.borderSoft}`,
+        borderRadius: 8,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 144,
+        padding: 10,
+      }}
+    >
+      <Text style={{ color: C.subtle, fontSize: 10, fontWeight: 800 }}>
+        {label}
+      </Text>
+      <div style={{ color: C.text, fontSize: 20, fontWeight: 900 }}>
+        {value}
+      </div>
+      <div style={{ flex: 1, minHeight: 52 }}>
+        {points.length > 1 ? (
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ height: 52, width: '100%' }}
+          >
+            <line
+              x1={0}
+              y1={bottom}
+              x2={width}
+              y2={bottom}
+              stroke='rgba(255,255,255,.08)'
+              strokeWidth='1'
+            />
+            <polyline
+              fill='none'
+              points={polylinePoints}
+              stroke={color}
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2.4'
+            />
+          </svg>
+        ) : (
+          <div style={{ paddingTop: 30 }}>
+            <div
+              style={{
+                background: 'rgba(255,255,255,.08)',
+                borderRadius: 999,
+                height: 4,
+                overflow: 'hidden',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  background: color,
+                  borderRadius: 999,
+                  height: '100%',
+                  width: `${clampedPercent}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+      <Text
+        ellipsis
+        title={hint}
+        style={{
+          color: C.subtle,
+          display: 'block',
+          fontSize: 10,
+          marginTop: 8,
+        }}
+      >
+        {hint}
+      </Text>
+    </div>
+  );
+};
+
+const formatContextDecimal = (value?: number | null, suffix = '') =>
+  value == null ? `0${suffix}` : `${Math.round(value)}${suffix}`;
+
+const formatConfidencePercent = (value?: number | null) => {
+  if (value == null) return '0%';
+  const percent = value <= 1 ? value * 100 : value;
+  return `${Math.round(percent)}%`;
+};
+
+const ContextPopupMetric = ({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: string;
+  color: string;
+}) => {
+  return (
+    <div
+      style={{
+        background: C.surface2,
+        border: `1px solid ${C.borderSoft}`,
+        borderRadius: 8,
+        minHeight: 112,
+        padding: 16,
+      }}
+    >
+      <Text style={{ color: C.subtle, fontSize: 11, fontWeight: 900 }}>
+        {label}
+      </Text>
+      <div style={{ color: C.text, fontSize: 30, fontWeight: 950 }}>
+        {value}
+      </div>
+      <div
+        style={{
+          background: color,
+          borderRadius: 999,
+          height: 3,
+          marginTop: 12,
+          width: 38,
+        }}
+      />
+    </div>
+  );
+};
+
+const ContextMetricsPopup = ({
+  target,
+  aggregate,
+  loading,
+  onClose,
+}: {
+  target: ContextDrilldownTarget | null;
+  aggregate?: StoreContextAggregateResponse;
+  loading?: boolean;
+  onClose: () => void;
+}) => {
+  const current = aggregate?.current;
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      style={{ width: '100%', maxWidth: 132 }}
+    <Modal
+      open={Boolean(target)}
+      onCancel={onClose}
+      centered
+      footer={null}
+      title={
+        <div style={{ display: 'grid', gap: 2 }}>
+          <Text style={{ color: C.text, fontSize: 16, fontWeight: 900 }}>
+            {target?.scope === 'space' ? target.spaceName : target?.storeName}
+          </Text>
+          <Text style={{ color: C.subtle, fontSize: 12 }}>
+            {target?.scope === 'space'
+              ? `${target.storeName} · Space context`
+              : 'Store context'}
+          </Text>
+        </div>
+      }
+      width={460}
+      styles={{
+        body: { background: '#111113', padding: 16 },
+        header: {
+          background: C.surface,
+          borderBottom: `1px solid ${C.border}`,
+        },
+      }}
     >
-      <line
-        x1={0}
-        y1={bottom}
-        x2={width}
-        y2={bottom}
-        stroke='rgba(255,255,255,.08)'
-        strokeWidth='1'
-      />
-      <polyline
-        fill='none'
-        stroke={color}
-        strokeWidth='2.4'
-        strokeLinecap='round'
-        strokeLinejoin='round'
-        points={polylinePoints}
-      />
-      <circle
-        cx={lastX}
-        cy={lastY}
-        r='3'
-        fill={color}
-      />
-    </svg>
+      {loading ? (
+        <Skeleton
+          active
+          paragraph={{ rows: 4 }}
+        />
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gap: 10,
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          }}
+        >
+          <ContextPopupMetric
+            label='People'
+            value={formatNumber(current?.crowdDensity.avg)}
+            color={C.blue}
+          />
+          <ContextPopupMetric
+            label='Noise'
+            value={formatContextDecimal(current?.noise.avg, ' dB')}
+            color={C.green}
+          />
+          <ContextPopupMetric
+            label='Confidence'
+            value={formatConfidencePercent(current?.fuzzyConfidence.avg)}
+            color={C.orange}
+          />
+        </div>
+      )}
+    </Modal>
   );
 };
 
@@ -2800,49 +3057,50 @@ const ContextBillingAi = ({
   loading?: boolean;
 }) => {
   const context = data?.contextIntelligence;
-  const storeContextRows = context?.byStore ?? [];
-  const peopleValues =
-    storeContextRows
-      .map((row) => row.latestPeopleCount)
-      .filter((value): value is number => value != null) ?? [];
-  const noiseValues =
-    storeContextRows
-      .map((row) => row.latestNoiseDecibel)
-      .filter((value): value is number => value != null) ?? [];
-  const confidenceValues =
-    storeContextRows
-      .map((row) => row.latestFuzzyConfidence)
-      .filter((value): value is number => value != null) ?? [];
+  const averagePeopleCount = context?.averagePeopleCount ?? 0;
+  const averageNoiseDecibel = context?.averageNoiseDecibel ?? 0;
+  const averageFuzzyConfidence = context?.averageFuzzyConfidence ?? 0;
+  const confidencePercent =
+    averageFuzzyConfidence <= 1
+      ? averageFuzzyConfidence * 100
+      : averageFuzzyConfidence;
   const metricCards = [
     {
       label: 'People',
-      value: formatNumber(context?.latestPeopleCount),
+      value: formatNumber(context?.averagePeopleCount),
       color: C.blue,
-      sparkValues:
-        peopleValues.length > 0
-          ? peopleValues
-          : [context?.latestPeopleCount ?? 0],
-      maxHint: Math.max(20, context?.latestPeopleCount ?? 0, ...peopleValues),
+      percent: Math.min(100, (averagePeopleCount / 50) * 100),
+      hint: formatDoubleTrendText(context?.peopleTrend),
+      trendValues: [
+        context?.peopleTrend.previousValue,
+        context?.peopleTrend.currentValue,
+      ],
     },
     {
       label: 'Noise',
-      value: `${Math.round(context?.latestNoiseDecibel ?? 0)} dB`,
+      value: `${Math.round(averageNoiseDecibel)} dB`,
       color: C.green,
-      sparkValues:
-        noiseValues.length > 0
-          ? noiseValues
-          : [context?.latestNoiseDecibel ?? 0],
-      maxHint: 100,
+      percent: Math.min(100, (averageNoiseDecibel / 100) * 100),
+      hint: formatDoubleTrendText(context?.noiseTrend, ' dB'),
+      trendValues: [
+        context?.noiseTrend.previousValue,
+        context?.noiseTrend.currentValue,
+      ],
     },
     {
       label: 'Confidence',
-      value: `${Math.round((context?.latestFuzzyConfidence ?? 0) * 100)}%`,
+      value: `${Math.round(confidencePercent)}%`,
       color: C.orange,
-      sparkValues:
-        confidenceValues.length > 0
-          ? confidenceValues
-          : [context?.latestFuzzyConfidence ?? 0],
-      maxHint: 1,
+      percent: confidencePercent,
+      hint: formatDoubleTrendText(context?.fuzzyConfidenceTrend, '%', true),
+      trendValues: [
+        normalizeConfidenceTrendValue(
+          context?.fuzzyConfidenceTrend.previousValue,
+        ),
+        normalizeConfidenceTrendValue(
+          context?.fuzzyConfidenceTrend.currentValue,
+        ),
+      ],
     },
   ];
 
@@ -2868,40 +3126,42 @@ const ContextBillingAi = ({
               paragraph={{ rows: 5 }}
             />
           ) : (
-            <Row gutter={[8, 8]}>
-              {metricCards.map((item) => (
-                <Col
-                  xs={24}
-                  md={8}
-                  key={item.label}
-                >
-                  <div
-                    style={{
-                      background: 'rgba(255,255,255,.035)',
-                      border: `1px solid ${C.borderSoft}`,
-                      borderRadius: 8,
-                      padding: 10,
-                    }}
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  justifyContent: 'space-between',
+                }}
+              >
+                <Text style={{ color: C.muted, fontSize: 11 }}>
+                  Brand average from latest telemetry
+                </Text>
+                <Text style={{ color: C.subtle, fontSize: 11 }}>
+                  {formatNumber(context?.storesWithTelemetry)}/
+                  {formatNumber(data?.overview.totalStores)} stores with
+                  telemetry · {formatNumber(context?.samples)} samples
+                </Text>
+              </div>
+              <Row gutter={[8, 8]}>
+                {metricCards.map((item) => (
+                  <Col
+                    xs={24}
+                    md={8}
+                    key={item.label}
                   >
-                    <Text
-                      style={{ color: C.subtle, fontSize: 10, fontWeight: 800 }}
-                    >
-                      {item.label}
-                    </Text>
-                    <div
-                      style={{ color: C.text, fontSize: 20, fontWeight: 900 }}
-                    >
-                      {item.value}
-                    </div>
-                    <Spark
+                    <ContextMetricGauge
+                      label={item.label}
+                      value={item.value}
                       color={item.color}
-                      values={item.sparkValues}
-                      maxHint={item.maxHint}
+                      percent={item.percent}
+                      hint={item.hint}
+                      trendValues={item.trendValues}
                     />
-                  </div>
-                </Col>
-              ))}
-            </Row>
+                  </Col>
+                ))}
+              </Row>
+            </div>
           )}
         </Panel>
       </Col>
@@ -3022,6 +3282,8 @@ export const BrandDashboard = () => {
   const navigate = useNavigate();
   const [period, setPeriod] = useState(BrandDashboardPeriodEnum.Day);
   const [activePlaybackIndex, setActivePlaybackIndex] = useState(0);
+  const [contextDrilldownTarget, setContextDrilldownTarget] =
+    useState<ContextDrilldownTarget | null>(null);
   const filter = useMemo(() => ({ period, top: 10 }), [period]);
   const { data, isLoading, isFetching, refetch } = useBrandDashboard(filter);
   const playbackItems = data?.livePlayback.items ?? EMPTY_LIVE_PLAYBACK_ITEMS;
@@ -3041,11 +3303,81 @@ export const BrandDashboard = () => {
   });
   const overview = data?.overview;
   const iotRows = data?.iotSpaceHealth ?? EMPTY_IOT_SPACE_HEALTH_ITEMS;
+  const dashboardFromUtc = data?.fromUtc;
+  const dashboardToUtc = data?.toUtc;
+  const dashboardPeriod = data?.period ?? period;
   const iotBySpace = useMemo(
     () => new Map(iotRows.map((row) => [row.spaceId, row])),
     [iotRows],
   );
+  const contextQueryWindow = useMemo(() => {
+    if (!dashboardFromUtc || !dashboardToUtc) return null;
+
+    const from = dayjs(dashboardFromUtc);
+    const to = dayjs(dashboardToUtc);
+    const durationMs = Math.max(to.diff(from), 1);
+
+    return {
+      fromUtc: dashboardFromUtc,
+      toUtc: dashboardToUtc,
+      compareFromUtc: from.subtract(durationMs, 'millisecond').toISOString(),
+      compareToUtc: dashboardFromUtc,
+      granularity:
+        dashboardPeriod === BrandDashboardPeriodEnum.Day
+          ? ('hour' as const)
+          : ('day' as const),
+    };
+  }, [dashboardFromUtc, dashboardPeriod, dashboardToUtc]);
+  const contextAggregateQuery = useQuery({
+    queryKey: [
+      'brand-dashboard-context-aggregate',
+      contextDrilldownTarget?.storeId,
+      contextDrilldownTarget?.spaceId,
+      contextQueryWindow?.fromUtc,
+      contextQueryWindow?.toUtc,
+      contextQueryWindow?.compareFromUtc,
+    ],
+    queryFn: async () => {
+      if (!contextDrilldownTarget || !contextQueryWindow) {
+        throw new Error('Missing context target.');
+      }
+
+      const response = await storeService.getContextAggregate(
+        contextDrilldownTarget.storeId,
+        {
+          spaceId: contextDrilldownTarget.spaceId,
+          fromUtc: contextQueryWindow.fromUtc,
+          toUtc: contextQueryWindow.toUtc,
+          compareFromUtc: contextQueryWindow.compareFromUtc,
+          compareToUtc: contextQueryWindow.compareToUtc,
+        },
+      );
+
+      return response.data.data;
+    },
+    enabled: Boolean(contextDrilldownTarget && contextQueryWindow),
+    staleTime: STALE_TIME.short,
+  });
   const dashboardPlaybackUnlockRef = useRef<(() => void) | null>(null);
+  const handleInspectStoreContext = useCallback((row: BrandStoreHealthItem) => {
+    setContextDrilldownTarget({
+      scope: 'store',
+      storeId: row.storeId,
+      storeName: row.storeName,
+    });
+  }, []);
+  const handleInspectSpaceContext = useCallback(
+    (row: BrandDashboardIotSpaceHealthItem) => {
+      setContextDrilldownTarget({
+        scope: 'space',
+        storeId: row.storeId,
+        storeName: row.storeName,
+        spaceId: row.spaceId,
+        spaceName: row.spaceName,
+      });
+    },
+    [],
+  );
   const handlePlaybackUnlockReady = useCallback(
     (handler: (() => void) | null) => {
       dashboardPlaybackUnlockRef.current = handler;
@@ -3316,6 +3648,7 @@ export const BrandDashboard = () => {
           <StoreHealth
             data={data}
             loading={isLoading}
+            onInspect={handleInspectStoreContext}
           />
         </Col>
         <Col
@@ -3326,6 +3659,7 @@ export const BrandDashboard = () => {
           <IotHealth
             rows={iotRows}
             loading={isLoading}
+            onInspect={handleInspectSpaceContext}
           />
         </Col>
         <Col
@@ -3434,6 +3768,13 @@ export const BrandDashboard = () => {
           <span style={{ color: C.orange }}>Energetic</span>
         </span>
       </div>
+
+      <ContextMetricsPopup
+        target={contextDrilldownTarget}
+        aggregate={contextAggregateQuery.data}
+        loading={contextAggregateQuery.isFetching}
+        onClose={() => setContextDrilldownTarget(null)}
+      />
     </div>
   );
 };
