@@ -88,6 +88,13 @@ api.interceptors.response.use(
 
     // Handle refresh request failure
     if (error.response?.status === 401 && isRefreshRequest) {
+      console.error(
+        '[Auth] Refresh token request returned 401. Response:',
+        error.response?.data,
+      );
+      console.error(
+        '[Auth] This means refresh token cookie was not sent or is invalid/expired.',
+      );
       processQueue(error, null);
       clearTokens();
       window.location.href = '/login?session=expired';
@@ -129,6 +136,13 @@ api.interceptors.response.use(
         throw new Error('No access token available for refresh');
       }
 
+      console.log('[Auth] Starting refresh token request...');
+      console.log(
+        '[Auth] Current (expired) access token exists:',
+        !!currentToken,
+      );
+      console.log('[Auth] withCredentials: true (cookie should be sent)');
+
       const response = await api.post('/api/auth/refresh-token', {}, {
         headers: {
           Authorization: `Bearer ${currentToken}`,
@@ -154,6 +168,23 @@ api.interceptors.response.use(
           : new Error('Refresh token process failed');
 
       processQueue(normalizedError, null);
+
+      if (axios.isAxiosError(refreshError)) {
+        console.error(
+          '[Auth] Refresh failed with status:',
+          refreshError.response?.status,
+        );
+        console.error(
+          '[Auth] Refresh error response:',
+          refreshError.response?.data,
+        );
+        console.error(
+          '[Auth] Request headers sent:',
+          refreshError.config?.headers,
+        );
+      } else {
+        console.error('[Auth] Refresh failed (non-axios):', refreshError);
+      }
 
       if (isAuthFailure(refreshError)) {
         clearTokens();

@@ -14,7 +14,6 @@ import {
 } from 'antd';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
-import { useNavigate } from 'react-router';
 
 /**
  * Icons
@@ -52,7 +51,7 @@ import {
   useToggleSpaceStatus,
 } from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
-import { useStoreContext } from '@/features/store/hooks';
+import { useStoreContext, useStoreNavigate } from '@/features/store/hooks';
 import { storeService } from '@/features/brand/services';
 import { STALE_TIME } from '@/config';
 import { useQueries } from '@tanstack/react-query';
@@ -109,7 +108,7 @@ const C = {
 };
 
 export const SpaceList = () => {
-  const navigate = useNavigate();
+  const navigate = useStoreNavigate();
   const { message } = App.useApp();
   const { user } = useAuth();
   const storeId = useStoreContext();
