@@ -125,6 +125,11 @@ export const trackService = {
       params.append('provider', filter.provider.toString());
     if (filter.isAiGenerated !== undefined)
       params.append('isAiGenerated', filter.isAiGenerated.toString());
+    if (filter.copyrightClearanceStatuses?.length) {
+      filter.copyrightClearanceStatuses.forEach((status) => {
+        params.append('copyrightClearanceStatuses', status.toString());
+      });
+    }
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
     if (filter.includeShared !== undefined)

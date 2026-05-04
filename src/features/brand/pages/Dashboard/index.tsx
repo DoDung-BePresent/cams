@@ -45,7 +45,10 @@ import dayjs from 'dayjs';
 
 import {
   BrandDashboardPeriodEnum,
+  BrandStoreHealthReasonEnum,
   BrandStoreHealthStatusEnum,
+  GOVERNANCE_MODE_LABELS,
+  GovernanceModeEnum,
   IotHealthStatusEnum,
   TrackScopeEnum,
   WalletLockStatusEnum,
@@ -65,6 +68,7 @@ import {
   useUpdateAudioState,
 } from '@/shared/modules/cams/hooks';
 import {
+  RepeatButton,
   SpacePlayer,
   type SpacePlayerAudioAnalysis,
   type SpacePlayerHandle,
@@ -80,8 +84,8 @@ import {
 } from '@/shared/modules/cams/utils';
 import {
   PlaybackCommand,
+  QueueEndBehavior,
   QueueItemStatus,
-  type QueueEndBehavior,
   type SpaceStateDto,
   type SpaceStateResponse,
 } from '@/shared/modules/cams/types';
@@ -90,6 +94,12 @@ import { SPACE_TYPE_LABELS } from '@/shared/modules/spaces/constants';
 
 const { Title, Text } = Typography;
 const PLAYBACK_UNLOCK_TOAST_KEY = 'brand-dashboard-playback-unlock';
+
+const QUEUE_END_BEHAVIOR_LABELS: Record<number, string> = {
+  [QueueEndBehavior.Stop]: 'Repeat off',
+  [QueueEndBehavior.RepeatQueue]: 'Repeat all',
+  [QueueEndBehavior.ReturnToSchedule]: 'Repeat one',
+};
 
 const hasDocumentUserActivation = () => {
   if (typeof navigator === 'undefined') return true;
@@ -121,6 +131,59 @@ const C = {
   text: '#f8f7f7',
   muted: '#b7adb0',
   subtle: '#857b80',
+};
+
+const GOVERNANCE_MODE_STYLE: Record<
+  GovernanceModeEnum,
+  { color: string; background: string; border: string }
+> = {
+  [GovernanceModeEnum.StrictSync]: {
+    color: '#fde68a',
+    background: 'rgba(245,158,11,.13)',
+    border: 'rgba(245,158,11,.45)',
+  },
+  [GovernanceModeEnum.AIMode]: {
+    color: '#86efac',
+    background: 'rgba(34,197,94,.12)',
+    border: 'rgba(34,197,94,.42)',
+  },
+  [GovernanceModeEnum.Freedom]: {
+    color: '#93c5fd',
+    background: 'rgba(59,130,246,.12)',
+    border: 'rgba(59,130,246,.42)',
+  },
+};
+
+const getGovernanceModeStyle = (mode?: GovernanceModeEnum | null) =>
+  GOVERNANCE_MODE_STYLE[mode ?? GovernanceModeEnum.Freedom] ??
+  GOVERNANCE_MODE_STYLE[GovernanceModeEnum.Freedom];
+
+const GovernanceModeBadge = ({
+  mode,
+  compact = false,
+}: {
+  mode?: GovernanceModeEnum | null;
+  compact?: boolean;
+}) => {
+  const safeMode = mode ?? GovernanceModeEnum.Freedom;
+  const style = getGovernanceModeStyle(safeMode);
+
+  return (
+    <Tag
+      style={{
+        margin: 0,
+        color: style.color,
+        borderColor: style.border,
+        background: style.background,
+        fontSize: compact ? 9 : 10,
+        fontWeight: 900,
+        lineHeight: compact ? '16px' : '18px',
+        paddingInline: compact ? 5 : 7,
+      }}
+    >
+      {GOVERNANCE_MODE_LABELS[safeMode] ?? 'Freedom'}
+    </Tag>
+  );
 };
 
 const panel = (minHeight?: number): React.CSSProperties => ({
@@ -242,6 +305,52 @@ const getIotMeta = (status?: IotHealthStatusEnum) => {
     default:
       return { label: 'Unknown', color: C.subtle, tag: 'default' as const };
   }
+};
+
+const getStoreHealthMeta = (
+  status?: BrandStoreHealthStatusEnum,
+  reason?: BrandStoreHealthReasonEnum,
+) => {
+  const statusMeta =
+    status === BrandStoreHealthStatusEnum.Healthy
+      ? { label: 'Healthy', tag: 'success' as const, color: C.green }
+      : status === BrandStoreHealthStatusEnum.Attention
+        ? { label: 'Warning', tag: 'warning' as const, color: C.orange }
+        : { label: 'Inactive', tag: 'default' as const, color: C.subtle };
+
+  const reasonLabel =
+    reason === BrandStoreHealthReasonEnum.StoreInactive
+      ? 'Store disabled'
+      : reason === BrandStoreHealthReasonEnum.IotOfflineSpaceDetected
+        ? 'IoT offline'
+        : reason === BrandStoreHealthReasonEnum.IotStaleSpaceDetected
+          ? 'IoT stale'
+          : reason === BrandStoreHealthReasonEnum.IotUnknownSpaceDetected
+            ? 'IoT missing'
+            : reason === BrandStoreHealthReasonEnum.NoActivePlayback
+              ? 'No active playback'
+              : 'Operational';
+
+  const reasonDetail =
+    reason === BrandStoreHealthReasonEnum.StoreInactive
+      ? 'Store is inactive'
+      : reason === BrandStoreHealthReasonEnum.IotOfflineSpaceDetected
+        ? 'At least one device reports offline'
+        : reason === BrandStoreHealthReasonEnum.IotStaleSpaceDetected
+          ? 'Latest telemetry is older than 3 minutes'
+          : reason === BrandStoreHealthReasonEnum.IotUnknownSpaceDetected
+            ? 'Telemetry is missing or unreadable'
+            : reason === BrandStoreHealthReasonEnum.NoActivePlayback
+              ? 'Active spaces exist but none is playing'
+              : 'No blocking issue detected';
+
+  return { ...statusMeta, reasonLabel, reasonDetail };
+};
+
+const getTrackScopeLabel = (scope?: TrackScopeEnum) => {
+  if (scope === TrackScopeEnum.BrandOwned) return 'Brand';
+  if (scope === TrackScopeEnum.Global) return 'Global';
+  return 'Unknown';
 };
 
 const getIotStatusFromSpaceState = (state?: SpaceStateDto | null) => {
@@ -420,6 +529,39 @@ const KpiCard = ({
         ) : null}
       </div>
     </div>
+  </div>
+);
+
+const BrandWelcomeEqualizer = () => (
+  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 20 }}>
+    <style>{`
+      @keyframes brandEq1 { 0%,100%{height:5px} 48%{height:18px} }
+      @keyframes brandEq2 { 0%,100%{height:14px} 42%{height:6px} }
+      @keyframes brandEq3 { 0%,100%{height:8px} 58%{height:20px} }
+      @keyframes brandEq4 { 0%,100%{height:17px} 34%{height:6px} }
+      @keyframes brandEqGlow { 0%,100%{opacity:.45; transform:scaleX(.96)} 50%{opacity:.95; transform:scaleX(1.02)} }
+    `}</style>
+    {[
+      'brandEq1 1.08s ease-in-out infinite',
+      'brandEq2 .92s ease-in-out infinite',
+      'brandEq3 1.22s ease-in-out infinite',
+      'brandEq4 1s ease-in-out infinite',
+    ].map((animation, index) => (
+      <div
+        key={index}
+        style={{
+          width: 4,
+          height: 8,
+          borderRadius: 2,
+          background:
+            index % 2 === 0
+              ? `linear-gradient(180deg, ${C.red}, ${C.orange})`
+              : `linear-gradient(180deg, ${C.orange}, ${C.red})`,
+          boxShadow: `0 0 18px ${C.red}66`,
+          animation,
+        }}
+      />
+    ))}
   </div>
 );
 
@@ -614,7 +756,7 @@ const WaveVisualizer = ({
       <style>{`
       @keyframes bmWaveGlow { 0%,100% { opacity: .42; } 50% { opacity: .95; } }
       @keyframes bmDiscPulse { 0%,100% { transform: scale(.96); opacity: .48; } 50% { transform: scale(1.05); opacity: .95; } }
-      @keyframes bmCoverBeatBump { 0% { transform: scale(1); } 24% { transform: scale(var(--cover-beat-scale, 1.18)) translateY(var(--cover-beat-lift, -2px)); } 62% { transform: scale(.975); } 100% { transform: scale(1); } }
+      @keyframes bmCoverBeatBump { 0% { transform: scale(var(--cover-live-scale, 1)); } 24% { transform: scale(var(--cover-beat-scale, 1.18)) translateY(var(--cover-beat-lift, -2px)); } 62% { transform: scale(.985); } 100% { transform: scale(var(--cover-live-scale, 1)); } }
       .brand-live-cover.beat-bump { animation: bmCoverBeatBump 260ms cubic-bezier(.16,.82,.25,1.08); will-change: transform; }
     `}</style>
       <div
@@ -710,6 +852,36 @@ const formatDuration = (seconds?: number | null) => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
+const formatStatusDuration = (seconds?: number | null) => {
+  const safeSeconds = Math.max(0, Math.floor(seconds ?? 0));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const remainingSeconds = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds
+      .toString()
+      .padStart(2, '0')}`;
+  }
+
+  return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+const getStateCountdownSeconds = (
+  expiresAtUtc: string | null | undefined,
+  remainingSeconds: number | null | undefined,
+  nowMs: number,
+) => {
+  if (expiresAtUtc) {
+    const expiresAtMs = dayjs(expiresAtUtc).valueOf();
+    if (Number.isFinite(expiresAtMs)) {
+      return Math.max(0, Math.ceil((expiresAtMs - nowMs) / 1000));
+    }
+  }
+
+  return remainingSeconds ?? null;
+};
+
 const getPlaybackDurationSeconds = (space: BrandLivePlaybackSpaceItem) => {
   if (!space.startedAtUtc || !space.expectedEndAtUtc) return 0;
   return Math.max(
@@ -725,7 +897,7 @@ const getPlaybackElapsedSeconds = (
 ) => {
   return getEffectiveSeekOffset(
     state ?? {
-      isPaused: space.isPaused,
+      isPaused: space.isPaused ?? true,
       pausePositionSeconds: null,
       seekOffsetSeconds: null,
       startedAtUtc: space.startedAtUtc ?? null,
@@ -825,6 +997,7 @@ const mergeSpaceStateIntoPlayback = (
         queueItemId: queueItem.queueItemId,
         trackId: queueItem.trackId,
         trackName: queueItem.trackName,
+        artist: queueItem.artist,
         position: queueItem.position ?? queueItem.orderIndex,
         queueStatus: queueItem.queueStatus,
         source: queueItem.source,
@@ -842,13 +1015,14 @@ const mergeSpaceStateIntoPlayback = (
     trackId: currentQueueItem?.trackId ?? space.trackId,
     trackName:
       state.currentTrackName ?? currentQueueItem?.trackName ?? space.trackName,
+    artist: state.currentArtist ?? currentQueueItem?.artist ?? space.artist,
     moodName: state.moodName ?? space.moodName,
     startedAtUtc: state.startedAtUtc ?? space.startedAtUtc,
     expectedEndAtUtc: state.expectedEndAtUtc ?? space.expectedEndAtUtc,
-    isPaused: state.isPaused,
-    isManualOverride: state.isManualOverride,
-    volumePercent: state.volumePercent,
-    isMuted: state.isMuted,
+    isPaused: state.isPaused ?? space.isPaused ?? true,
+    isManualOverride: state.isManualOverride ?? space.isManualOverride ?? false,
+    volumePercent: state.volumePercent ?? space.volumePercent ?? 100,
+    isMuted: state.isMuted ?? space.isMuted ?? false,
     queueItems: queueItems.length ? queueItems : space.queueItems,
   };
 };
@@ -861,6 +1035,15 @@ type LivePlaybackProps = {
   activeIndex: number;
   onActiveIndexChange: (index: number) => void;
   onPlaybackUnlockReady?: (handler: (() => void) | null) => void;
+};
+
+const EMPTY_AUDIO_ANALYSIS: SpacePlayerAudioAnalysis = {
+  energy: 0,
+  bass: 0,
+  treble: 0,
+  beat: 0,
+  beatId: 0,
+  beatStrength: 0,
 };
 
 const LivePlayback = ({
@@ -892,16 +1075,16 @@ const LivePlayback = ({
   const [playbackFocusPhase, setPlaybackFocusPhase] = useState<
     'idle' | 'entering' | 'open' | 'closing'
   >('idle');
-  const [audioAnalysis, setAudioAnalysis] = useState<SpacePlayerAudioAnalysis>({
-    energy: 0,
-    bass: 0,
-    treble: 0,
-    beat: 0,
-    beatId: 0,
-    beatStrength: 0,
-  });
+  const [audioAnalysis, setAudioAnalysis] =
+    useState<SpacePlayerAudioAnalysis>(EMPTY_AUDIO_ANALYSIS);
   const hiddenPlayerRef = useRef<SpacePlayerHandle>(null);
   const coverArtRef = useRef<HTMLDivElement>(null);
+  const audioAnalysisRef =
+    useRef<SpacePlayerAudioAnalysis>(EMPTY_AUDIO_ANALYSIS);
+  const lastAudioAnalysisRenderMsRef = useRef(0);
+  const lastCoverBeatIdRef = useRef(0);
+  const coverBeatTimerRef = useRef<number | null>(null);
+  const preloadedCoverImagesRef = useRef<Set<string>>(new Set());
   const playbackUnlockToastShownRef = useRef(false);
   const playbackFocusTimerRef = useRef<number | null>(null);
   const playbackFocusFrameRef = useRef<number | null>(null);
@@ -912,11 +1095,12 @@ const LivePlayback = ({
   const activeStartedAtUtc = active?.startedAtUtc;
   const activeExpectedEndAtUtc = active?.expectedEndAtUtc;
   const activeIsPaused = active?.isPaused ?? true;
-  const handleAudioAnalysis = useCallback(
-    (nextAnalysis: SpacePlayerAudioAnalysis) => {
-      setAudioAnalysis(nextAnalysis);
-    },
-    [],
+  const activeIsManualOverride = active?.isManualOverride ?? false;
+  const activeIsScheduling = activeSpaceState?.isScheduling ?? false;
+  const activeIsMuted = active?.isMuted ?? false;
+  const hasStatusCountdown = Boolean(
+    activeSpaceState?.manualOverrideExpiresAtUtc ||
+    activeSpaceState?.schedulingEndsAtUtc,
   );
 
   useEffect(() => {
@@ -931,7 +1115,8 @@ const LivePlayback = ({
   }, [activeSpaceId, activeSpaceState?.currentQueueItemId]);
 
   useEffect(() => {
-    if (!activeSpaceId || activeIsPaused) return undefined;
+    if (!activeSpaceId || (activeIsPaused && !hasStatusCountdown))
+      return undefined;
 
     const initialTick = window.setTimeout(() => setNowMs(Date.now()), 0);
     const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -944,6 +1129,7 @@ const LivePlayback = ({
     activeStartedAtUtc,
     activeExpectedEndAtUtc,
     activeIsPaused,
+    hasStatusCountdown,
   ]);
 
   const mood = getCamsMoodTheme(active?.moodName);
@@ -959,35 +1145,165 @@ const LivePlayback = ({
     queueRows.find((queue) => queue.queueStatus === 1) ??
     queueRows[0];
   const displayArtist = active
-    ? (topTracks.find((track) => track.trackId === active.trackId)?.artist ??
-      active.artist ??
+    ? (active.artist ??
+      topTracks.find((track) => track.trackId === active.trackId)?.artist ??
       'Unknown artist')
     : 'Unknown artist';
   const playing = Boolean(
     active &&
     (activeSpaceState?.currentQueueItemId ?? active.trackId) &&
-    !active.isPaused,
+    !activeIsPaused,
+  );
+  const activeCoverImageUrl = currentQueue?.coverImageUrl ?? null;
+  const applyCoverAudioAnalysis = useCallback(
+    (nextAnalysis: SpacePlayerAudioAnalysis) => {
+      const coverArt = coverArtRef.current;
+      if (!coverArt) return;
+
+      if (!playing) {
+        coverArt.style.setProperty('--cover-live-scale', '1');
+        coverArt.style.setProperty('--cover-live-shadow-spread', '7px');
+        coverArt.style.setProperty('--cover-live-shadow-glow', '34px');
+        coverArt.style.setProperty('--cover-live-inner-glow', '26px');
+        coverArt.style.setProperty('--cover-live-saturate', '1');
+        coverArt.style.setProperty('--cover-live-brightness', '1');
+        coverArt.classList.remove('beat-bump');
+        lastCoverBeatIdRef.current = 0;
+        return;
+      }
+
+      const liveScale = Math.min(
+        1.2,
+        1 +
+          nextAnalysis.energy * 0.07 +
+          nextAnalysis.bass * 0.055 +
+          nextAnalysis.treble * 0.025 +
+          nextAnalysis.beatStrength * 0.025,
+      );
+
+      coverArt.style.setProperty(
+        '--cover-beat-lift',
+        `${-2 - nextAnalysis.beatStrength * 3}px`,
+      );
+      coverArt.style.setProperty(
+        '--cover-beat-scale',
+        `${1.14 + nextAnalysis.beatStrength * 0.12}`,
+      );
+      coverArt.style.setProperty('--cover-live-scale', `${liveScale}`);
+      coverArt.style.setProperty(
+        '--cover-live-shadow-spread',
+        `${7 + nextAnalysis.bass * 8 + nextAnalysis.treble * 5}px`,
+      );
+      coverArt.style.setProperty(
+        '--cover-live-shadow-glow',
+        `${
+          34 +
+          nextAnalysis.energy * 52 +
+          nextAnalysis.bass * 24 +
+          nextAnalysis.beatStrength * 24
+        }px`,
+      );
+      coverArt.style.setProperty(
+        '--cover-live-inner-glow',
+        `${26 + nextAnalysis.treble * 18}px`,
+      );
+      coverArt.style.setProperty(
+        '--cover-live-saturate',
+        `${1 + nextAnalysis.treble * 0.42}`,
+      );
+      coverArt.style.setProperty(
+        '--cover-live-brightness',
+        `${1 + nextAnalysis.energy * 0.12}`,
+      );
+
+      if (
+        nextAnalysis.beatId <= 0 ||
+        nextAnalysis.beatId === lastCoverBeatIdRef.current
+      ) {
+        return;
+      }
+
+      lastCoverBeatIdRef.current = nextAnalysis.beatId;
+      if (coverBeatTimerRef.current) {
+        window.clearTimeout(coverBeatTimerRef.current);
+      }
+      coverArt.classList.remove('beat-bump');
+      void coverArt.offsetWidth;
+      coverArt.classList.add('beat-bump');
+      coverBeatTimerRef.current = window.setTimeout(() => {
+        coverArt.classList.remove('beat-bump');
+        coverBeatTimerRef.current = null;
+      }, 270);
+    },
+    [playing],
+  );
+  const handleAudioAnalysis = useCallback(
+    (nextAnalysis: SpacePlayerAudioAnalysis) => {
+      const previousAnalysis = audioAnalysisRef.current;
+      audioAnalysisRef.current = nextAnalysis;
+      applyCoverAudioAnalysis(nextAnalysis);
+
+      const now = Date.now();
+      const shouldRenderWave =
+        now - lastAudioAnalysisRenderMsRef.current >= 80 ||
+        nextAnalysis.beatId !== previousAnalysis.beatId;
+
+      if (shouldRenderWave) {
+        lastAudioAnalysisRenderMsRef.current = now;
+        setAudioAnalysis(nextAnalysis);
+      }
+    },
+    [applyCoverAudioAnalysis],
   );
 
   useEffect(() => {
-    if (!playing || audioAnalysis.beatId <= 0) return undefined;
+    applyCoverAudioAnalysis(audioAnalysisRef.current);
+  }, [applyCoverAudioAnalysis]);
 
-    const coverArt = coverArtRef.current;
-    if (!coverArt) return undefined;
+  useEffect(() => {
+    if (!activeCoverImageUrl) return undefined;
+    if (preloadedCoverImagesRef.current.has(activeCoverImageUrl))
+      return undefined;
 
-    coverArt.classList.remove('beat-bump');
-    void coverArt.offsetWidth;
-    coverArt.classList.add('beat-bump');
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = activeCoverImageUrl;
+    preloadedCoverImagesRef.current.add(activeCoverImageUrl);
 
-    const timer = window.setTimeout(() => {
-      coverArt.classList.remove('beat-bump');
-    }, 270);
+    return undefined;
+  }, [activeCoverImageUrl]);
 
-    return () => window.clearTimeout(timer);
-  }, [audioAnalysis.beatId, playing]);
+  useEffect(
+    () => () => {
+      if (coverBeatTimerRef.current) {
+        window.clearTimeout(coverBeatTimerRef.current);
+      }
+    },
+    [],
+  );
+  const manualOverrideRemainingSeconds = getStateCountdownSeconds(
+    activeSpaceState?.manualOverrideExpiresAtUtc,
+    activeSpaceState?.manualOverrideRemainingSeconds,
+    nowMs,
+  );
+  const schedulingRemainingSeconds = getStateCountdownSeconds(
+    activeSpaceState?.schedulingEndsAtUtc,
+    activeSpaceState?.schedulingRemainingSeconds,
+    nowMs,
+  );
+  const schedulingOriginLabel =
+    activeSpaceState?.schedulingSlotOrigin === 2
+      ? 'Brand schedule'
+      : activeSpaceState?.schedulingSlotOrigin === 1
+        ? 'Space schedule'
+        : 'Scheduling';
 
   const isCommanding = playbackControl.isPending || updateAudio.isPending;
   const hlsUrl = activeSpaceState?.hlsUrl ?? currentQueue?.hlsUrl ?? null;
+  const activeQueueEndBehavior =
+    activeSpaceState?.queueEndBehavior ?? QueueEndBehavior.Stop;
+  const activeQueueEndBehaviorLabel =
+    QUEUE_END_BEHAVIOR_LABELS[Number(activeQueueEndBehavior)] ?? 'Repeat off';
   const fallbackElapsed = active
     ? getPlaybackElapsedSeconds(active, nowMs, activeSpaceState)
     : 0;
@@ -1137,18 +1453,21 @@ const LivePlayback = ({
   const handleToggleMute = () =>
     updateAudio.mutate({
       spaceId: active.spaceId,
-      data: { isMuted: !active.isMuted },
+      data: { isMuted: !activeIsMuted },
     });
   const handleVolumeChangeComplete = (volume: number) =>
     updateAudio.mutate({
       spaceId: active.spaceId,
       data: { volumePercent: Math.max(0, Math.min(100, Math.floor(volume))) },
     });
-  const handleQueueEndBehaviorChange = (next: number) =>
+  const handleQueueEndBehaviorChange = (next: number) => {
+    if (updateAudio.isPending) return;
+
     updateAudio.mutate({
       spaceId: active.spaceId,
       data: { queueEndBehavior: next as QueueEndBehavior },
     });
+  };
   const seekFromPointer = (clientX: number, element: HTMLDivElement) => {
     if (!effectiveDuration || isCommanding) return;
     const rect = element.getBoundingClientRect();
@@ -1404,10 +1723,10 @@ const LivePlayback = ({
                   )}
                 </button>
                 <Tag
-                  color={active.isPaused ? 'warning' : 'error'}
+                  color={activeIsPaused ? 'warning' : 'error'}
                   style={{ margin: 0, fontSize: 10, fontWeight: 800 }}
                 >
-                  {active.isPaused ? 'Paused' : 'Now Playing'}
+                  {activeIsPaused ? 'Paused' : 'Now Playing'}
                 </Tag>
                 <Tag
                   color={iot.tag}
@@ -1415,6 +1734,7 @@ const LivePlayback = ({
                 >
                   {iot.label}
                 </Tag>
+                <GovernanceModeBadge mode={active.governanceMode} />
               </div>
             </div>
 
@@ -1442,34 +1762,39 @@ const LivePlayback = ({
                   className='brand-live-cover'
                   style={
                     {
-                      '--cover-beat-lift': `${-2 - audioAnalysis.beatStrength * 3}px`,
-                      '--cover-beat-scale': `${1.14 + audioAnalysis.beatStrength * 0.12}`,
+                      '--cover-beat-lift': '-2px',
+                      '--cover-beat-scale': '1.14',
+                      '--cover-live-scale': '1',
+                      '--cover-live-shadow-spread': '7px',
+                      '--cover-live-shadow-glow': '34px',
+                      '--cover-live-inner-glow': '26px',
+                      '--cover-live-saturate': '1',
+                      '--cover-live-brightness': '1',
                       position: 'relative',
                       zIndex: 2,
                       width: isPlaybackExpanded ? 210 : 128,
                       height: isPlaybackExpanded ? 210 : 128,
                       borderRadius: '50%',
-                      background: currentQueue?.coverImageUrl
-                        ? `center / cover no-repeat url(${currentQueue.coverImageUrl})`
+                      backgroundImage: activeCoverImageUrl
+                        ? `url("${activeCoverImageUrl}")`
                         : `radial-gradient(circle at 38% 30%, ${mood.color}66 0%, rgba(15,23,42,.96) 100%)`,
+                      backgroundPosition: 'center',
+                      backgroundSize: 'cover',
+                      backgroundRepeat: 'no-repeat',
                       border: `1px solid ${mood.color}77`,
                       boxShadow: playing
-                        ? `0 0 0 ${7 + audioAnalysis.bass * 8 + audioAnalysis.treble * 5}px ${mood.color}2f, 0 0 ${34 + audioAnalysis.energy * 52 + audioAnalysis.bass * 24 + audioAnalysis.beatStrength * 24}px ${mood.color}88, inset 0 0 ${26 + audioAnalysis.treble * 18}px rgba(255,255,255,.08), inset 0 0 34px rgba(0,0,0,.54)`
+                        ? `0 0 0 var(--cover-live-shadow-spread) ${mood.color}2f, 0 0 var(--cover-live-shadow-glow) ${mood.color}88, inset 0 0 var(--cover-live-inner-glow) rgba(255,255,255,.08), inset 0 0 34px rgba(0,0,0,.54)`
                         : `0 0 18px ${mood.color}2f`,
-                      transform: `scale(${
-                        playing
-                          ? 1 +
-                            audioAnalysis.energy * 0.07 +
-                            audioAnalysis.bass * 0.055 +
-                            audioAnalysis.treble * 0.025 +
-                            audioAnalysis.beatStrength * 0.025
-                          : 1
-                      })`,
+                      transform: 'scale(var(--cover-live-scale))',
                       filter: playing
-                        ? `saturate(${1 + audioAnalysis.treble * 0.42}) brightness(${1 + audioAnalysis.energy * 0.12})`
+                        ? 'saturate(var(--cover-live-saturate)) brightness(var(--cover-live-brightness))'
                         : undefined,
                       transition:
                         'transform 90ms linear, box-shadow 90ms linear, filter 90ms linear',
+                      contain: 'paint',
+                      willChange: playing
+                        ? 'transform, box-shadow, filter'
+                        : undefined,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1477,6 +1802,12 @@ const LivePlayback = ({
                     } as React.CSSProperties & {
                       '--cover-beat-lift': string;
                       '--cover-beat-scale': string;
+                      '--cover-live-scale': string;
+                      '--cover-live-shadow-spread': string;
+                      '--cover-live-shadow-glow': string;
+                      '--cover-live-inner-glow': string;
+                      '--cover-live-saturate': string;
+                      '--cover-live-brightness': string;
                     }
                   }
                 >
@@ -1498,7 +1829,7 @@ const LivePlayback = ({
                       border: '1px solid rgba(255,255,255,.18)',
                     }}
                   />
-                  {!currentQueue?.coverImageUrl ? (
+                  {!activeCoverImageUrl ? (
                     <SoundOutlined
                       style={{ color: mood.color, fontSize: 42 }}
                     />
@@ -1549,12 +1880,52 @@ const LivePlayback = ({
                   >
                     {active.moodName || mood.label}
                   </Tag>
-                  {active.isManualOverride ? (
+                  {activeIsManualOverride ? (
                     <Tag
-                      color='processing'
-                      style={{ margin: 0, fontSize: 10 }}
+                      style={{
+                        margin: 0,
+                        borderColor: 'rgba(245,158,11,.42)',
+                        background: 'rgba(245,158,11,.13)',
+                        color: '#fbbf24',
+                        fontSize: isPlaybackExpanded ? 12 : 10,
+                        fontWeight: 900,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}
                     >
+                      <ThunderboltOutlined />
                       Manual
+                      {manualOverrideRemainingSeconds != null ? (
+                        <span style={{ color: '#fed7aa' }}>
+                          TTL{' '}
+                          {formatStatusDuration(manualOverrideRemainingSeconds)}
+                        </span>
+                      ) : null}
+                    </Tag>
+                  ) : null}
+                  {activeIsScheduling ? (
+                    <Tag
+                      style={{
+                        margin: 0,
+                        borderColor: 'rgba(59,130,246,.42)',
+                        background: 'rgba(59,130,246,.13)',
+                        color: '#93c5fd',
+                        fontSize: isPlaybackExpanded ? 12 : 10,
+                        fontWeight: 900,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}
+                    >
+                      <CalendarOutlined />
+                      {schedulingOriginLabel}
+                      {schedulingRemainingSeconds != null ? (
+                        <span style={{ color: '#bfdbfe' }}>
+                          Ends{' '}
+                          {formatStatusDuration(schedulingRemainingSeconds)}
+                        </span>
+                      ) : null}
                     </Tag>
                   ) : null}
                 </div>
@@ -1656,14 +2027,61 @@ const LivePlayback = ({
                   marginTop: 7,
                 }}
               >
-                <button
-                  onClick={handleToggleMute}
-                  disabled={updateAudio.isPending}
-                  style={bareIconButton(active.isMuted ? C.red : C.muted)}
-                  aria-label={active.isMuted ? 'Unmute' : 'Mute'}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    minWidth: 0,
+                  }}
                 >
-                  {active.isMuted ? <MutedOutlined /> : <SoundOutlined />}
-                </button>
+                  <button
+                    onClick={handleToggleMute}
+                    disabled={updateAudio.isPending}
+                    style={bareIconButton(activeIsMuted ? C.red : C.muted)}
+                    aria-label={activeIsMuted ? 'Unmute' : 'Mute'}
+                  >
+                    {activeIsMuted ? <MutedOutlined /> : <SoundOutlined />}
+                  </button>
+                  <div
+                    title={`${activeQueueEndBehaviorLabel}. Click to change queue end behavior.`}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: 32,
+                      width: 32,
+                      padding: 0,
+                      borderRadius: 999,
+                      border: `1px solid ${
+                        activeQueueEndBehavior === QueueEndBehavior.Stop
+                          ? 'rgba(255,255,255,.08)'
+                          : 'rgba(59,130,246,.42)'
+                      }`,
+                      background:
+                        activeQueueEndBehavior === QueueEndBehavior.Stop
+                          ? 'rgba(255,255,255,.035)'
+                          : 'linear-gradient(135deg, rgba(37,99,235,.18), rgba(59,130,246,.10))',
+                      boxShadow:
+                        activeQueueEndBehavior === QueueEndBehavior.Stop
+                          ? undefined
+                          : '0 0 0 1px rgba(59,130,246,.08), 0 0 18px rgba(59,130,246,.18)',
+                      opacity: updateAudio.isPending ? 0.58 : 1,
+                      pointerEvents: updateAudio.isPending ? 'none' : 'auto',
+                      transition:
+                        'background 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+                    }}
+                  >
+                    <RepeatButton
+                      queueEndBehavior={activeQueueEndBehavior}
+                      onChange={(next) =>
+                        handleQueueEndBehaviorChange(Number(next))
+                      }
+                      size={isPlaybackExpanded ? 18 : 16}
+                      className='text-gray-400 hover:text-gray-200'
+                    />
+                  </div>
+                </div>
                 <div
                   style={{
                     display: 'inline-flex',
@@ -2004,44 +2422,122 @@ const StoreHealth = ({
             </div>
           </div>
           <div style={{ display: 'grid', gap: 8 }}>
-            {rows.slice(0, 6).map((row) => (
-              <div
-                key={row.storeId}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr auto auto',
-                  gap: 8,
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  ellipsis
-                  style={{ color: C.muted, fontSize: 12 }}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns:
+                  'minmax(0,1fr) 58px minmax(78px,.9fr) 44px',
+                columnGap: 10,
+                color: C.subtle,
+                fontSize: 10,
+                fontWeight: 900,
+                alignItems: 'center',
+              }}
+            >
+              <span>Store</span>
+              <span style={{ textAlign: 'center' }}>Status</span>
+              <span>Reason</span>
+              <span style={{ textAlign: 'right' }}>Playing</span>
+            </div>
+            {rows.slice(0, 6).map((row) => {
+              const meta = getStoreHealthMeta(
+                row.healthStatus,
+                row.healthReason,
+              );
+
+              return (
+                <div
+                  key={row.storeId}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      'minmax(0,1fr) 58px minmax(78px,.9fr) 44px',
+                    columnGap: 10,
+                    alignItems: 'start',
+                  }}
                 >
-                  {row.storeName}
-                </Text>
-                <Tag
-                  color={
-                    row.healthStatus === BrandStoreHealthStatusEnum.Healthy
-                      ? 'success'
-                      : row.healthStatus ===
-                          BrandStoreHealthStatusEnum.Attention
-                        ? 'warning'
-                        : 'default'
-                  }
-                  style={{ margin: 0, fontSize: 10 }}
-                >
-                  {row.healthStatus === BrandStoreHealthStatusEnum.Healthy
-                    ? 'Healthy'
-                    : row.healthStatus === BrandStoreHealthStatusEnum.Attention
-                      ? 'Warning'
-                      : 'Inactive'}
-                </Tag>
-                <Text style={{ color: C.green, fontSize: 12, fontWeight: 800 }}>
-                  {row.playingSpaces}/{row.activeSpaces}
-                </Text>
-              </div>
-            ))}
+                  <div
+                    style={{
+                      minWidth: 0,
+                    }}
+                  >
+                    <Text
+                      ellipsis
+                      title={row.storeName}
+                      style={{
+                        color: C.muted,
+                        display: 'block',
+                        fontSize: 12,
+                        lineHeight: '18px',
+                        minWidth: 0,
+                        width: '100%',
+                      }}
+                    >
+                      {row.storeName}
+                    </Text>
+                    <div style={{ marginTop: 3 }}>
+                      <GovernanceModeBadge
+                        mode={row.governanceMode}
+                        compact
+                      />
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <Tag
+                      color={meta.tag}
+                      style={{ margin: 0, fontSize: 10 }}
+                    >
+                      {meta.label}
+                    </Tag>
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <Text
+                      ellipsis
+                      title={meta.reasonDetail}
+                      style={{
+                        color: meta.color,
+                        display: 'block',
+                        fontSize: 11,
+                        fontWeight: 800,
+                      }}
+                    >
+                      {meta.reasonLabel}
+                    </Text>
+                    <Text
+                      ellipsis
+                      style={{
+                        color: C.subtle,
+                        display: 'block',
+                        fontSize: 9,
+                      }}
+                    >
+                      {row.iotOfflineSpaces > 0
+                        ? `${row.iotOfflineSpaces} offline`
+                        : row.iotStaleSpaces > 0
+                          ? `${row.iotStaleSpaces} stale`
+                          : row.iotUnknownSpaces > 0
+                            ? `${row.iotUnknownSpaces} unknown`
+                            : `${formatAgo(row.lastPlaybackAtUtc)}`}
+                    </Text>
+                  </div>
+                  <Text
+                    style={{
+                      color:
+                        row.playingSpaces > 0 || row.activeSpaces === 0
+                          ? C.green
+                          : C.orange,
+                      display: 'block',
+                      fontSize: 12,
+                      fontWeight: 900,
+                      lineHeight: '18px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    {row.playingSpaces}/{row.activeSpaces}
+                  </Text>
+                </div>
+              );
+            })}
           </div>
         </>
       )}
@@ -2106,6 +2602,7 @@ const IotHealth = ({
               </Text>
               <Text
                 ellipsis
+                title={row.storeName}
                 style={{ color: C.muted, fontSize: 12 }}
               >
                 {row.storeName}
@@ -2138,6 +2635,7 @@ const TopTracks = ({
     title='Top Tracks'
     viewPath='/brand/tracks'
     minHeight={258}
+    style={{ height: '100%' }}
   >
     {loading ? (
       <Skeleton
@@ -2148,12 +2646,30 @@ const TopTracks = ({
       <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
     ) : (
       <div style={{ display: 'grid', gap: 8 }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns:
+              '22px minmax(120px,1.4fr) minmax(90px,1fr) auto minmax(58px,.7fr)',
+            gap: 8,
+            color: C.subtle,
+            fontSize: 10,
+            fontWeight: 900,
+          }}
+        >
+          <span>#</span>
+          <span>Track</span>
+          <span>Scope / Mood</span>
+          <span>Plays</span>
+          <span>Last</span>
+        </div>
         {tracks.slice(0, 5).map((track, index) => (
           <div
             key={track.trackId ?? `${track.trackName}-${index}`}
             style={{
               display: 'grid',
-              gridTemplateColumns: '22px 1fr auto auto',
+              gridTemplateColumns:
+                '22px minmax(120px,1.4fr) minmax(90px,1fr) auto minmax(58px,.7fr)',
               gap: 8,
               alignItems: 'center',
             }}
@@ -2173,24 +2689,41 @@ const TopTracks = ({
                 {track.artist || 'Unknown artist'}
               </Text>
             </div>
-            <Tag
-              color={
-                track.scope === TrackScopeEnum.BrandOwned
-                  ? 'green'
-                  : track.scope === TrackScopeEnum.Global
-                    ? 'blue'
-                    : 'default'
-              }
-              style={{ margin: 0, fontSize: 10 }}
-            >
-              {track.scope === TrackScopeEnum.BrandOwned
-                ? 'Brand-owned'
-                : track.scope === TrackScopeEnum.Global
-                  ? 'Global'
-                  : 'Unknown'}
-            </Tag>
+            <div style={{ minWidth: 0 }}>
+              <Tag
+                color={
+                  track.scope === TrackScopeEnum.BrandOwned
+                    ? 'green'
+                    : track.scope === TrackScopeEnum.Global
+                      ? 'blue'
+                      : 'default'
+                }
+                style={{ margin: 0, fontSize: 10 }}
+              >
+                {getTrackScopeLabel(track.scope)}
+              </Tag>
+              <Text
+                ellipsis
+                style={{
+                  color: C.subtle,
+                  display: 'block',
+                  fontSize: 9,
+                  marginTop: 2,
+                }}
+              >
+                {track.moodName || 'No mood'}
+                {track.isAiGenerated ? ' · AI' : ''}
+              </Text>
+            </div>
             <Text style={{ color: C.green, fontSize: 12, fontWeight: 900 }}>
               {formatNumber(track.plays)}
+            </Text>
+            <Text
+              ellipsis
+              title={track.lastPlayedAtUtc ?? undefined}
+              style={{ color: C.subtle, fontSize: 10 }}
+            >
+              {formatAgo(track.lastPlayedAtUtc)}
             </Text>
           </div>
         ))}
@@ -2199,23 +2732,65 @@ const TopTracks = ({
   </Panel>
 );
 
-const Spark = ({ color, seed }: { color: string; seed: number }) => (
-  <svg
-    viewBox='0 0 110 58'
-    style={{ width: '100%', maxWidth: 132 }}
-  >
-    <polyline
-      fill='none'
-      stroke={color}
-      strokeWidth='2.4'
-      points={Array.from(
-        { length: 14 },
-        (_, i) =>
-          `${i * 8},${48 - (Math.sin(i * 0.9 + seed) * 14 + Math.cos(i * 0.45 + seed) * 8 + 18)}`,
-      ).join(' ')}
-    />
-  </svg>
-);
+const Spark = ({
+  color,
+  values,
+  maxHint,
+}: {
+  color: string;
+  values: number[];
+  maxHint?: number;
+}) => {
+  const points = values.filter((value) => Number.isFinite(value));
+  const plotValues = points.length > 1 ? points : Array(8).fill(points[0] ?? 0);
+  const max = Math.max(maxHint ?? 0, ...plotValues, 1);
+  const width = 110;
+  const height = 58;
+  const top = 8;
+  const bottom = 48;
+  const step = width / Math.max(plotValues.length - 1, 1);
+  const polylinePoints = plotValues
+    .map((value, index) => {
+      const ratio = Math.max(0, Math.min(1, value / max));
+      return `${Math.round(index * step)},${Math.round(bottom - ratio * (bottom - top))}`;
+    })
+    .join(' ');
+
+  const lastValue = plotValues.at(-1) ?? 0;
+  const lastRatio = Math.max(0, Math.min(1, lastValue / max));
+  const lastX = Math.round((plotValues.length - 1) * step);
+  const lastY = Math.round(bottom - lastRatio * (bottom - top));
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ width: '100%', maxWidth: 132 }}
+    >
+      <line
+        x1={0}
+        y1={bottom}
+        x2={width}
+        y2={bottom}
+        stroke='rgba(255,255,255,.08)'
+        strokeWidth='1'
+      />
+      <polyline
+        fill='none'
+        stroke={color}
+        strokeWidth='2.4'
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        points={polylinePoints}
+      />
+      <circle
+        cx={lastX}
+        cy={lastY}
+        r='3'
+        fill={color}
+      />
+    </svg>
+  );
+};
 
 const ContextBillingAi = ({
   data,
@@ -2223,181 +2798,225 @@ const ContextBillingAi = ({
 }: {
   data: ReturnType<typeof useBrandDashboard>['data'];
   loading?: boolean;
-}) => (
-  <Row gutter={[10, 10]}>
-    <Col
-      xs={24}
-      lg={12}
+}) => {
+  const context = data?.contextIntelligence;
+  const storeContextRows = context?.byStore ?? [];
+  const peopleValues =
+    storeContextRows
+      .map((row) => row.latestPeopleCount)
+      .filter((value): value is number => value != null) ?? [];
+  const noiseValues =
+    storeContextRows
+      .map((row) => row.latestNoiseDecibel)
+      .filter((value): value is number => value != null) ?? [];
+  const confidenceValues =
+    storeContextRows
+      .map((row) => row.latestFuzzyConfidence)
+      .filter((value): value is number => value != null) ?? [];
+  const metricCards = [
+    {
+      label: 'People',
+      value: formatNumber(context?.latestPeopleCount),
+      color: C.blue,
+      sparkValues:
+        peopleValues.length > 0
+          ? peopleValues
+          : [context?.latestPeopleCount ?? 0],
+      maxHint: Math.max(20, context?.latestPeopleCount ?? 0, ...peopleValues),
+    },
+    {
+      label: 'Noise',
+      value: `${Math.round(context?.latestNoiseDecibel ?? 0)} dB`,
+      color: C.green,
+      sparkValues:
+        noiseValues.length > 0
+          ? noiseValues
+          : [context?.latestNoiseDecibel ?? 0],
+      maxHint: 100,
+    },
+    {
+      label: 'Confidence',
+      value: `${Math.round((context?.latestFuzzyConfidence ?? 0) * 100)}%`,
+      color: C.orange,
+      sparkValues:
+        confidenceValues.length > 0
+          ? confidenceValues
+          : [context?.latestFuzzyConfidence ?? 0],
+      maxHint: 1,
+    },
+  ];
+
+  return (
+    <Row
+      gutter={[10, 10]}
+      style={{ alignItems: 'stretch', height: '100%', width: '100%' }}
     >
-      <Panel
-        title='Context Intelligence'
-        viewPath='/brand/stores'
-        minHeight={258}
+      <Col
+        xs={24}
+        lg={12}
+        style={{ display: 'flex' }}
       >
-        {loading ? (
-          <Skeleton
-            active
-            paragraph={{ rows: 5 }}
-          />
-        ) : (
-          <Row gutter={[8, 8]}>
-            {[
-              {
-                label: 'People',
-                value: formatNumber(data?.contextIntelligence.avgPeopleCount),
-                color: C.blue,
-                seed: 1,
-              },
-              {
-                label: 'Noise',
-                value: `${Math.round(data?.contextIntelligence.avgNoiseDecibel ?? 0)} dB`,
-                color: C.green,
-                seed: 2,
-              },
-              {
-                label: 'Confidence',
-                value: `${Math.round((data?.contextIntelligence.avgFuzzyConfidence ?? 0) * 100)}%`,
-                color: C.orange,
-                seed: 3,
-              },
-            ].map((item) => (
-              <Col
-                xs={24}
-                md={8}
-                key={item.label}
-              >
-                <div
-                  style={{
-                    background: 'rgba(255,255,255,.035)',
-                    border: `1px solid ${C.borderSoft}`,
-                    borderRadius: 8,
-                    padding: 10,
-                  }}
+        <Panel
+          title='Context Intelligence'
+          viewPath='/brand/stores'
+          minHeight={258}
+          style={{ height: '100%' }}
+        >
+          {loading ? (
+            <Skeleton
+              active
+              paragraph={{ rows: 5 }}
+            />
+          ) : (
+            <Row gutter={[8, 8]}>
+              {metricCards.map((item) => (
+                <Col
+                  xs={24}
+                  md={8}
+                  key={item.label}
                 >
-                  <Text
-                    style={{ color: C.subtle, fontSize: 10, fontWeight: 800 }}
+                  <div
+                    style={{
+                      background: 'rgba(255,255,255,.035)',
+                      border: `1px solid ${C.borderSoft}`,
+                      borderRadius: 8,
+                      padding: 10,
+                    }}
                   >
-                    {item.label}
-                  </Text>
-                  <div style={{ color: C.text, fontSize: 20, fontWeight: 900 }}>
-                    {item.value}
+                    <Text
+                      style={{ color: C.subtle, fontSize: 10, fontWeight: 800 }}
+                    >
+                      {item.label}
+                    </Text>
+                    <div
+                      style={{ color: C.text, fontSize: 20, fontWeight: 900 }}
+                    >
+                      {item.value}
+                    </div>
+                    <Spark
+                      color={item.color}
+                      values={item.sparkValues}
+                      maxHint={item.maxHint}
+                    />
                   </div>
-                  <Spark
-                    color={item.color}
-                    seed={item.seed}
-                  />
-                </div>
-              </Col>
-            ))}
-          </Row>
-        )}
-      </Panel>
-    </Col>
-    <Col
-      xs={24}
-      lg={6}
-    >
-      <Panel
-        title='Billing'
-        viewPath='/brand/tokens'
-        minHeight={258}
+                </Col>
+              ))}
+            </Row>
+          )}
+        </Panel>
+      </Col>
+      <Col
+        xs={24}
+        lg={6}
+        style={{ display: 'flex' }}
       >
-        {loading ? (
-          <Skeleton
-            active
-            paragraph={{ rows: 5 }}
-          />
-        ) : (
-          <div style={{ display: 'grid', gap: 14 }}>
-            <Text style={{ color: C.subtle, fontSize: 11 }}>Wallet</Text>
-            <div style={{ color: C.text, fontSize: 26, fontWeight: 900 }}>
-              {formatCompact(data?.billing.balanceTokens)}
-            </div>
-            <Progress
-              percent={Math.min(
-                100,
-                ((data?.billing.rangeUsageTokens ?? 0) /
-                  Math.max(data?.billing.balanceTokens ?? 1, 1)) *
-                  100,
-              )}
-              showInfo={false}
-              strokeColor={C.blue}
-              railColor='rgba(255,255,255,.1)'
+        <Panel
+          title='Billing'
+          viewPath='/brand/tokens'
+          minHeight={258}
+          style={{ height: '100%' }}
+        >
+          {loading ? (
+            <Skeleton
+              active
+              paragraph={{ rows: 5 }}
             />
-            <Text style={{ color: C.subtle, fontSize: 11 }}>
-              {data?.billing.lockStatus === WalletLockStatusEnum.None
-                ? 'Active wallet'
-                : 'Wallet locked'}
-            </Text>
-            <TrendLine
-              text={`${formatCompact(data?.billing.rangeUsageTokens)} used this period, ${
-                formatTokenUsageTrendText(data?.billing.rangeUsageTrend) ??
-                '0 used vs previous period'
-              }`}
-              tone={getUsageTrendTone(data?.billing.rangeUsageTrend?.delta)}
-              direction={getTrendDirection(
-                data?.billing.rangeUsageTrend?.delta,
-              )}
-            />
-          </div>
-        )}
-      </Panel>
-    </Col>
-    <Col
-      xs={24}
-      lg={6}
-    >
-      <Panel
-        title='AI Generation'
-        viewPath='/brand/suno-ai'
-        minHeight={258}
-      >
-        {loading ? (
-          <Skeleton
-            active
-            paragraph={{ rows: 5 }}
-          />
-        ) : (
-          <div style={{ display: 'grid', gap: 9 }}>
-            <div style={{ color: C.text, fontSize: 28, fontWeight: 900 }}>
-              {formatNumber(data?.aiGeneration.totalInRange)}
-            </div>
-            <Progress
-              percent={
-                data?.aiGeneration.totalInRange
-                  ? Math.round(
-                      (data.aiGeneration.completed /
-                        data.aiGeneration.totalInRange) *
-                        100,
-                    )
-                  : 0
-              }
-              showInfo={false}
-              strokeColor={C.green}
-              railColor='rgba(255,255,255,.1)'
-            />
-            {[
-              ['Queued', data?.aiGeneration.queued],
-              ['Processing', data?.aiGeneration.processing],
-              ['Completed', data?.aiGeneration.completed],
-              ['Failed', data?.aiGeneration.failed],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                style={{ display: 'flex', justifyContent: 'space-between' }}
-              >
-                <Text style={{ color: C.muted, fontSize: 12 }}>{label}</Text>
-                <Text style={{ color: C.text, fontSize: 12, fontWeight: 900 }}>
-                  {value ?? 0}
-                </Text>
+          ) : (
+            <div style={{ display: 'grid', gap: 14 }}>
+              <Text style={{ color: C.subtle, fontSize: 11 }}>Wallet</Text>
+              <div style={{ color: C.text, fontSize: 26, fontWeight: 900 }}>
+                {formatCompact(data?.billing.balanceTokens)}
               </div>
-            ))}
-          </div>
-        )}
-      </Panel>
-    </Col>
-  </Row>
-);
+              <Progress
+                percent={Math.min(
+                  100,
+                  ((data?.billing.rangeUsageTokens ?? 0) /
+                    Math.max(data?.billing.balanceTokens ?? 1, 1)) *
+                    100,
+                )}
+                showInfo={false}
+                strokeColor={C.blue}
+                railColor='rgba(255,255,255,.1)'
+              />
+              <Text style={{ color: C.subtle, fontSize: 11 }}>
+                {data?.billing.lockStatus === WalletLockStatusEnum.None
+                  ? 'Active wallet'
+                  : 'Wallet locked'}
+              </Text>
+              <TrendLine
+                text={`${formatCompact(data?.billing.rangeUsageTokens)} used this period, ${
+                  formatTokenUsageTrendText(data?.billing.rangeUsageTrend) ??
+                  '0 used vs previous period'
+                }`}
+                tone={getUsageTrendTone(data?.billing.rangeUsageTrend?.delta)}
+                direction={getTrendDirection(
+                  data?.billing.rangeUsageTrend?.delta,
+                )}
+              />
+            </div>
+          )}
+        </Panel>
+      </Col>
+      <Col
+        xs={24}
+        lg={6}
+        style={{ display: 'flex' }}
+      >
+        <Panel
+          title='AI Generation'
+          viewPath='/brand/suno-ai'
+          minHeight={258}
+          style={{ height: '100%' }}
+        >
+          {loading ? (
+            <Skeleton
+              active
+              paragraph={{ rows: 5 }}
+            />
+          ) : (
+            <div style={{ display: 'grid', gap: 9 }}>
+              <div style={{ color: C.text, fontSize: 28, fontWeight: 900 }}>
+                {formatNumber(data?.aiGeneration.totalInRange)}
+              </div>
+              <Progress
+                percent={
+                  data?.aiGeneration.totalInRange
+                    ? Math.round(
+                        (data.aiGeneration.completed /
+                          data.aiGeneration.totalInRange) *
+                          100,
+                      )
+                    : 0
+                }
+                showInfo={false}
+                strokeColor={C.green}
+                railColor='rgba(255,255,255,.1)'
+              />
+              {[
+                ['Queued', data?.aiGeneration.queued],
+                ['Processing', data?.aiGeneration.processing],
+                ['Completed', data?.aiGeneration.completed],
+                ['Failed', data?.aiGeneration.failed],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  style={{ display: 'flex', justifyContent: 'space-between' }}
+                >
+                  <Text style={{ color: C.muted, fontSize: 12 }}>{label}</Text>
+                  <Text
+                    style={{ color: C.text, fontSize: 12, fontWeight: 900 }}
+                  >
+                    {value ?? 0}
+                  </Text>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </Col>
+    </Row>
+  );
+};
 
 export const BrandDashboard = () => {
   const navigate = useNavigate();
@@ -2467,33 +3086,77 @@ export const BrandDashboard = () => {
     <div style={{ paddingBottom: 34 }}>
       <div
         style={{
+          background:
+            'radial-gradient(circle at 12% 0%, rgba(239,68,68,.2), transparent 30%), radial-gradient(circle at 70% 10%, rgba(245,158,11,.1), transparent 28%), linear-gradient(135deg, #18181b 0%, #171012 54%, #0f0f11 100%)',
+          border: `1px solid ${C.border}`,
+          borderRadius: 14,
+          padding: '16px 22px',
+          marginBottom: 12,
+          overflow: 'hidden',
+          position: 'relative',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 14,
-          marginBottom: 14,
+          alignItems: 'flex-start',
+          gap: 12,
           flexWrap: 'wrap',
         }}
       >
+        <div
+          style={{
+            position: 'absolute',
+            right: 22,
+            top: 10,
+            width: 170,
+            height: 56,
+            borderRadius: '50%',
+            background:
+              'linear-gradient(90deg, rgba(239,68,68,.14), rgba(245,158,11,.08), transparent)',
+            filter: 'blur(28px)',
+            pointerEvents: 'none',
+          }}
+        />
         <div>
-          <Text style={{ color: C.subtle, fontSize: 12, fontWeight: 800 }}>
-            Brand Manager
-          </Text>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 8,
+            }}
+          >
+            <BrandWelcomeEqualizer />
+            <span
+              style={{
+                color: C.red,
+                fontSize: 10,
+                fontWeight: 950,
+                letterSpacing: 2.4,
+                textTransform: 'uppercase',
+              }}
+            >
+              Brand Manager
+            </span>
+          </div>
           <Title
             level={3}
-            style={{ margin: '2px 0 0', color: C.text }}
+            style={{ margin: '0 0 4px', color: C.text, lineHeight: 1.18 }}
           >
-            {data?.brandName
-              ? `${data.brandName} Dashboard`
-              : 'Brand Dashboard'}
+            Welcome back{data?.brandName ? `, ${data.brandName}` : ''}
           </Title>
+          <Text style={{ color: C.muted, fontSize: 13 }}>
+            Monitor live playback, store health, IoT context, and brand music
+            performance in realtime.
+          </Text>
         </div>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 8,
             flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           <Segmented
@@ -2689,6 +3352,7 @@ export const BrandDashboard = () => {
         <Col
           xs={24}
           xl={7}
+          style={{ display: 'flex' }}
         >
           <TopTracks
             tracks={data?.topTracks ?? []}
@@ -2698,6 +3362,7 @@ export const BrandDashboard = () => {
         <Col
           xs={24}
           xl={17}
+          style={{ display: 'flex' }}
         >
           <ContextBillingAi
             data={data}

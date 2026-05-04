@@ -115,6 +115,11 @@ export const UpsertSystemValueDrawer = ({
   };
 
   const handleSubmit = (values: SystemValueFormValues) => {
+    if (!selectedConfig) {
+      message.error('Please select an existing system value to edit.');
+      return;
+    }
+
     if (values.valueType === undefined || values.valueType === null) {
       message.error('Please select value type.');
       return;
@@ -177,11 +182,7 @@ export const UpsertSystemValueDrawer = ({
   return (
     <Drawer
       closeIcon={null}
-      title={
-        selectedConfig
-          ? 'Edit System Config Value'
-          : 'Create System Config Value'
-      }
+      title={'Edit System Config Value'}
       open={open}
       onClose={handleCancel}
       destroyOnHidden
@@ -201,6 +202,7 @@ export const UpsertSystemValueDrawer = ({
             size='large'
             type='primary'
             loading={upsertSystemValue.isPending}
+            disabled={!selectedConfig}
             onClick={() => form.submit()}
           >
             Save Value
@@ -226,7 +228,7 @@ export const UpsertSystemValueDrawer = ({
         >
           <Input
             placeholder='e.g., cams.aiQueueTrackLimit'
-            disabled={!!selectedConfig}
+            disabled
           />
         </Form.Item>
 
@@ -238,7 +240,7 @@ export const UpsertSystemValueDrawer = ({
           <Select
             placeholder='Select config domain'
             options={CONFIG_DOMAIN_OPTIONS}
-            disabled={!!selectedConfig}
+            disabled
           />
         </Form.Item>
 
@@ -250,6 +252,7 @@ export const UpsertSystemValueDrawer = ({
           <Select
             placeholder='Select value type'
             options={CONFIG_VALUE_TYPE_OPTIONS}
+            disabled
           />
         </Form.Item>
 

@@ -43,6 +43,8 @@ import { useMoods } from '@/shared/modules/moods/hooks';
 
 import type { TrackFilter } from '@/shared/modules/tracks/types';
 import { TranscodeStatusEnum } from '@/shared/modules/tracks/types';
+import { COPYRIGHT_CLEARANCE_OPTIONS } from '@/shared/modules/tracks/constants';
+import type { TrackCopyrightClearanceStatus } from '@/shared/modules/tracks/types';
 
 const { Text, Title } = Typography;
 
@@ -156,6 +158,9 @@ export const TrackList = () => {
   const [allSearch, setAllSearch] = useState('');
   const [allMoodId, setAllMoodId] = useState<string | undefined>();
   const [allStatus, setAllStatus] = useState<number | undefined>();
+  const [allCopyrightStatuses, setAllCopyrightStatuses] = useState<
+    TrackCopyrightClearanceStatus[]
+  >([]);
   const [allPage, setAllPage] = useState(1);
 
   const [blockedSearch, setBlockedSearch] = useState('');
@@ -173,8 +178,11 @@ export const TrackList = () => {
       search: allSearch || undefined,
       moodId: allMoodId,
       status: allStatus,
+      copyrightClearanceStatuses: allCopyrightStatuses.length
+        ? allCopyrightStatuses
+        : undefined,
     }),
-    [allPage, allSearch, allMoodId, allStatus],
+    [allCopyrightStatuses, allMoodId, allPage, allSearch, allStatus],
   );
 
   const blockedFilter: TrackFilter = useMemo(
@@ -480,6 +488,19 @@ export const TrackList = () => {
                 allowClear
                 style={{ width: 120 }}
               />
+              <Select
+                placeholder='Copyright'
+                mode='multiple'
+                options={COPYRIGHT_CLEARANCE_OPTIONS}
+                value={allCopyrightStatuses}
+                onChange={(v) => {
+                  setAllCopyrightStatuses(v);
+                  setAllPage(1);
+                }}
+                allowClear
+                maxTagCount='responsive'
+                style={{ width: 220 }}
+              />
             </>
           ) : (
             <Select
@@ -505,23 +526,28 @@ export const TrackList = () => {
               color: C.textMuted,
             }}
           />
-          {isAll && (allSearch || allMoodId || allStatus !== undefined) && (
-            <Button
-              onClick={() => {
-                setAllSearch('');
-                setAllMoodId(undefined);
-                setAllStatus(undefined);
-                setAllPage(1);
-              }}
-              style={{
-                background: 'transparent',
-                border: `1px solid ${C.border}`,
-                color: C.textMuted,
-              }}
-            >
-              Clear
-            </Button>
-          )}
+          {isAll &&
+            (allSearch ||
+              allMoodId ||
+              allStatus !== undefined ||
+              allCopyrightStatuses.length > 0) && (
+              <Button
+                onClick={() => {
+                  setAllSearch('');
+                  setAllMoodId(undefined);
+                  setAllStatus(undefined);
+                  setAllCopyrightStatuses([]);
+                  setAllPage(1);
+                }}
+                style={{
+                  background: 'transparent',
+                  border: `1px solid ${C.border}`,
+                  color: C.textMuted,
+                }}
+              >
+                Clear
+              </Button>
+            )}
           {!isAll && (blockedSearch || blockedBrandId) && (
             <Button
               onClick={() => {

@@ -25,7 +25,10 @@ import { useTracks } from '@/shared/modules/tracks/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
 
 import type { TrackFilter } from '@/shared/modules/tracks/types';
-import { TranscodeStatusEnum } from '@/shared/modules/tracks/types';
+import {
+  TrackCopyrightClearanceStatus,
+  TranscodeStatusEnum,
+} from '@/shared/modules/tracks/types';
 
 const { Text, Title } = Typography;
 
@@ -158,6 +161,10 @@ export const TrackList = () => {
       search: search || undefined,
       moodId: selectedMoodId,
       status: selectedStatus,
+      copyrightClearanceStatuses: [
+        TrackCopyrightClearanceStatus.Cleared,
+        TrackCopyrightClearanceStatus.NotApplicable,
+      ],
     }),
     [page, search, selectedMoodId, selectedStatus],
   );

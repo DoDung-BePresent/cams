@@ -35,6 +35,7 @@ import type {
 } from '@/shared/modules/spaces/types';
 import { SPACE_TYPE_LABELS } from '@/shared/modules/spaces/constants';
 import { EntityStatusEnum } from '@/shared/types';
+import { useStoreContext } from '@/features/store/hooks';
 
 const { Text } = Typography;
 
@@ -69,8 +70,9 @@ export const ConfigDetailModal = ({
 }: ConfigDetailModalProps) => {
   const [spaceListPage, setSpaceListPage] = useState(1);
   const spaceListPageSize = 5;
+  const contextStoreId = useStoreContext();
 
-  const storeId = data?.scopeType === 2 ? data?.scopeId : undefined;
+  const storeId = data?.scopeType === 2 ? data?.scopeId : contextStoreId;
 
   const { data: detail, isLoading: isDetailLoading } = useConfigDetailByStore(
     data?.key,

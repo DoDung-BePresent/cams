@@ -100,7 +100,7 @@ export const StoreSettings = () => {
     isRefetching,
   } = useQuery({
     queryKey: ['store-settings', 'business-hours', storeId],
-    queryFn: () => configService.getStoreList({ keyPrefix: 'ops.' }),
+    queryFn: () => configService.getStoreList({ keyPrefix: 'ops.', storeId }),
     enabled: !!storeId,
     select: (data) => data.data?.items ?? [],
   });
@@ -175,12 +175,14 @@ export const StoreSettings = () => {
       const closeValue = values.closeTime.format('HH:mm');
 
       await configService.upsertStoreValue({
+        storeId,
         key: OPEN_KEY,
         domain: ConfigDomainEnum.Ops,
         valueType: ConfigValueTypeEnum.String,
         value: openValue,
       });
       await configService.upsertStoreValue({
+        storeId,
         key: CLOSE_KEY,
         domain: ConfigDomainEnum.Ops,
         valueType: ConfigValueTypeEnum.String,

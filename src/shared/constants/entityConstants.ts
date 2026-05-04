@@ -35,7 +35,7 @@ export const ENTITY_STATUS_COLORS: Record<EntityStatusEnum, string> = {
  * Common Pagination Sizes
  */
 //TODO: Đưa ra common constants
-export const PAGINATION_SIZES = [10, 20, 50, 100];
+export const PAGINATION_SIZES = [5, 10, 20, 50, 100];
 
 /**
  * Default Page Size

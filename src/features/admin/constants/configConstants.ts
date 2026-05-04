@@ -13,7 +13,6 @@ export const CONFIG_DOMAIN_OPTIONS: SelectProps['options'] = [
   { label: 'Fuzzy', value: ConfigDomainEnum.Fuzzy },
   { label: 'Content', value: ConfigDomainEnum.Content },
   { label: 'Governance', value: ConfigDomainEnum.Governance },
-  { label: 'Scheduling', value: ConfigDomainEnum.Scheduling },
   { label: 'CAMS', value: ConfigDomainEnum.Cams },
   { label: 'System', value: ConfigDomainEnum.Sys },
 ];

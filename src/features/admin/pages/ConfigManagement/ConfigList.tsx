@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Button, Tabs } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Tabs } from 'antd';
 import { useNavigate } from 'react-router';
 
 import {
@@ -172,19 +171,9 @@ export const ConfigList = () => {
     setPolicyFilter({ ...DEFAULT_FILTER });
   };
 
-  const handleCreateSystemValue = () => {
-    setSelectedSystemConfig(null);
-    setSystemValueDrawerOpen(true);
-  };
-
   const handleEditSystemValue = (record: ConfigFlatRowItem) => {
     setSelectedSystemConfig(record);
     setSystemValueDrawerOpen(true);
-  };
-
-  const handleCreatePolicy = () => {
-    setSelectedPolicy(null);
-    setPolicyDrawerOpen(true);
   };
 
   const handleEditPolicy = (record: ConfigPolicyRowItem) => {
@@ -246,27 +235,6 @@ export const ConfigList = () => {
     currentPage: policyFilter.page ?? 1,
     pageSize: policyFilter.pageSize ?? 10,
   });
-
-  const headerAction =
-    activeTab === 'policy' ? (
-      <Button
-        size='large'
-        type='primary'
-        icon={<PlusOutlined />}
-        onClick={handleCreatePolicy}
-      >
-        Upsert Policy
-      </Button>
-    ) : (
-      <Button
-        size='large'
-        type='primary'
-        icon={<PlusOutlined />}
-        onClick={handleCreateSystemValue}
-      >
-        Upsert System Value
-      </Button>
-    );
 
   const tabItems = [
     {
@@ -365,7 +333,6 @@ export const ConfigList = () => {
             'Manage config policy templates and system config values in separate tabs.',
           keywords: 'config, governance, system, policy, admin',
         }}
-        extra={headerAction}
       />
 
       <Tabs

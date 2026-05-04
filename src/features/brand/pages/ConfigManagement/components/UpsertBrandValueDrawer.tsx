@@ -104,7 +104,6 @@ export const UpsertBrandValueDrawer = ({
 
   const { data: detail } = useConfigDetailByBrand(selectedConfig?.key, open);
 
-  // Sync selectedStoreIds from existing grants when detail loads
   useEffect(() => {
     if (open && detail) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -186,9 +185,7 @@ export const UpsertBrandValueDrawer = ({
   return (
     <Drawer
       closeIcon={null}
-      title={
-        selectedConfig ? 'Edit Brand Config Value' : 'Create Brand Config Value'
-      }
+      title='Edit Brand Config Value'
       destroyOnHidden
       open={open}
       onClose={handleCancel}
@@ -234,6 +231,7 @@ export const UpsertBrandValueDrawer = ({
             size='large'
             type='primary'
             loading={upsertBrandValue.isPending}
+            disabled={!selectedConfig}
             onClick={() => form.submit()}
           >
             Save Value
@@ -268,7 +266,7 @@ export const UpsertBrandValueDrawer = ({
         >
           <Input
             placeholder='e.g., cams.aiQueueTrackLimit'
-            disabled={!!selectedConfig}
+            disabled
           />
         </Form.Item>
 
@@ -280,7 +278,7 @@ export const UpsertBrandValueDrawer = ({
           <Select
             placeholder='Select config domain'
             options={CONFIG_DOMAIN_OPTIONS}
-            disabled={!!selectedConfig}
+            disabled
           />
         </Form.Item>
 
@@ -292,6 +290,7 @@ export const UpsertBrandValueDrawer = ({
           <Select
             placeholder='Select value type'
             options={CONFIG_VALUE_TYPE_OPTIONS}
+            disabled
           />
         </Form.Item>
 
@@ -327,7 +326,7 @@ export const UpsertBrandValueDrawer = ({
 
         {overrideIntent !== undefined && overrideIntent !== 0 && (
           <Space
-            direction='vertical'
+            orientation='vertical'
             size='middle'
             style={{ width: '100%' }}
           >
@@ -336,7 +335,7 @@ export const UpsertBrandValueDrawer = ({
               extra='Leave empty to apply intent to all child stores.'
             >
               <Space
-                direction='vertical'
+                orientation='vertical'
                 style={{ width: '100%' }}
               >
                 <Button
@@ -349,7 +348,7 @@ export const UpsertBrandValueDrawer = ({
                 <Text type='secondary'>
                   {selectedStoreIds.length > 0
                     ? `${selectedStoreIds.length} store(s) selected`
-                    : 'No stores selected — intent applies to all child stores'}
+                    : 'No stores selected - intent applies to all child stores'}
                 </Text>
               </Space>
             </Form.Item>

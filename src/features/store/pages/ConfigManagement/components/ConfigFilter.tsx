@@ -14,7 +14,7 @@ import type {
   ConfigStoreFilter,
 } from '@/features/store/types';
 import {
-  CONFIG_KEY_SELECT_OPTIONS,
+  TENANT_CONFIG_KEY_SELECT_OPTIONS,
   getConfigKeyLabel,
 } from '@/features/admin/constants';
 
@@ -105,7 +105,7 @@ export const ConfigFilter = ({
             <Select
               size='large'
               placeholder='Filter by key'
-              options={CONFIG_KEY_SELECT_OPTIONS}
+              options={TENANT_CONFIG_KEY_SELECT_OPTIONS}
               value={filter.key}
               onChange={(value) => onFilterChange('key', value)}
               style={{ width: '100%' }}

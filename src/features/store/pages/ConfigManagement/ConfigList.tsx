@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { Button } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
 import { useStoreNavigate } from '@/features/store/hooks';
 
 import {
@@ -75,11 +73,6 @@ export const ConfigList = () => {
     setFilter({ ...DEFAULT_FILTER });
   };
 
-  const handleCreateStoreValue = () => {
-    setSelectedConfig(null);
-    setStoreValueDrawerOpen(true);
-  };
-
   const handleEditStoreValue = (record: ConfigFlatRowItem) => {
     setSelectedConfig(record);
     setStoreValueDrawerOpen(true);
@@ -128,16 +121,6 @@ export const ConfigList = () => {
             'Manage store-level config values inherited from parent scopes.',
           keywords: 'store, config, management, cams',
         }}
-        extra={
-          <Button
-            size='large'
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={handleCreateStoreValue}
-          >
-            Upsert Store Value
-          </Button>
-        }
       />
 
       <DataTable<ConfigFlatRowItem>
@@ -174,7 +157,7 @@ export const ConfigList = () => {
           },
         }}
         onChange={handleTableChange}
-        scroll={{ x: 1700 }}
+        scroll={{ x: 1500 }}
       />
 
       <UpsertStoreValueModal

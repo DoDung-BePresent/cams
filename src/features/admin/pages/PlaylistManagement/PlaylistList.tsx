@@ -127,7 +127,7 @@ export const PlaylistList = () => {
   const handleDelete = (id: string) => {
     const playlist = playlists.find((p) => p.id === id);
     AppModal.confirm({
-      title: 'Delete Shared Playlist',
+      title: 'Delete Playlist',
       content: (
         <div>
           <p>
@@ -172,7 +172,6 @@ export const PlaylistList = () => {
     onAddTracks: handleAddTracks,
     onToggleStatus: handleToggleStatus,
     onDelete: handleDelete,
-    isActionAllowed: (record) => !record.brandId,
   });
 
   const playlistColumns = [

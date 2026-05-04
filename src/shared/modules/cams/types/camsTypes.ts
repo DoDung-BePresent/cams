@@ -92,6 +92,7 @@ export interface SpaceQueueItemResponse {
   queueItemId: string;
   trackId: string;
   trackName: string;
+  artist?: string | null;
   position: number;
   queueStatus: QueueItemStatus;
   source: QueueItemSource;
@@ -155,6 +156,7 @@ export interface SpaceStateDto {
   brandId: string;
   currentQueueItemId: string | null; // Changed from currentPlaylistId
   currentTrackName: string | null; // Changed from currentPlaylistName
+  currentArtist?: string | null;
   hlsUrl: string | null;
   moodName: string | null;
   isManualOverride: boolean;
@@ -230,6 +232,7 @@ export interface OverridePlaylistRequest {
   trackIds?: string[] | null; // NEW: Direct track selection
   isClearManagerSelectedQueues?: boolean; // NEW: Clear existing queue
   isCutOver?: boolean | null; // NEW: Immediate cutover behavior
+  manualOverrideExpiresAtUtc?: string | null; // Optional exact expiry time
   reason?: string | null; // Optional reason for audit trail
 }
 
@@ -332,6 +335,7 @@ export interface SpaceStateResponse {
   brandId: string;
   currentQueueItemId: string | null; // Changed from currentPlaylistId
   currentTrackName: string | null; // Changed from currentPlaylistName
+  currentArtist?: string | null;
   hlsUrl: string | null;
   moodName: string | null;
   isManualOverride: boolean;

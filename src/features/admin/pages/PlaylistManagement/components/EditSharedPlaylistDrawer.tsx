@@ -94,7 +94,7 @@ export const EditSharedPlaylistDrawer = ({
   return (
     <Drawer
       closeIcon={null}
-      title='Edit Shared Playlist'
+      title='Edit Playlist'
       placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
