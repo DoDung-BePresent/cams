@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react';
 import { Card, Flex, Button, Space, Alert, Switch, Tag } from 'antd';
 import { FolderOpenOutlined, SaveOutlined } from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import type { DateSelectArg, EventClickArg } from '@fullcalendar/core';
 import type FullCalendar from '@fullcalendar/react';
 import dayjs from 'dayjs';
 
 import { PageHeader } from '@/shared/components';
+import { useStoreNavigate } from '@/features/store/hooks';
 import { useSpace } from '@/shared/modules/spaces/hooks';
 import {
   useApplyScheduleSource,
@@ -54,7 +55,7 @@ const WEEKDAY_NAMES = [
  * 4. Slots are saved to space schedule
  */
 export const SpaceSchedulePage = () => {
-  const navigate = useNavigate();
+  const navigate = useStoreNavigate();
   const params = useParams();
   const spaceId = params.spaceId;
   const calendarRef = useRef<FullCalendar | null>(null);
