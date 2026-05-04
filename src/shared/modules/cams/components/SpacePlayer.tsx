@@ -55,6 +55,33 @@ const canAttemptAudiblePlayback = (audio: HTMLAudioElement) =>
 const isNotAllowedError = (err: unknown) =>
   err instanceof DOMException && err.name === 'NotAllowedError';
 
+const buildStateSyncKey = (state: SpaceStateResponse) =>
+  [
+    state.currentQueueItemId ?? '',
+    state.isPaused ? '1' : '0',
+    state.startedAtUtc ?? '',
+    state.hlsUrl ?? '',
+  ].join('|');
+
+const buildPlaybackIdentityKey = (
+  state: SpaceStateResponse | null | undefined,
+) =>
+  [
+    state?.currentQueueItemId ?? '',
+    state?.hlsUrl ?? '',
+    state?.startedAtUtc ?? '',
+  ].join('|');
+
+const buildMediaReloadKey = (
+  hlsUrl: string | null,
+  state: SpaceStateResponse | null | undefined,
+) =>
+  [
+    hlsUrl ?? '',
+    state?.currentQueueItemId ?? '',
+    state?.currentTrackName ?? '',
+  ].join('|');
+
 export type SpacePlayerAudioAnalysis = {
   energy: number;
   bass: number;
@@ -84,6 +111,7 @@ interface SpacePlayerProps {
   onToggleMute?: () => void;
   onRewind10?: () => void;
   onForward10?: () => void;
+  onTrackEnded?: () => void;
   isPreviousDisabled?: boolean;
   isNextDisabled?: boolean;
   onQueueEndBehaviorChange?: (next: number) => void;
@@ -108,6 +136,7 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       onToggleMute,
       onRewind10,
       onForward10,
+      onTrackEnded,
       isPreviousDisabled,
       isNextDisabled,
       onQueueEndBehaviorChange,
@@ -129,6 +158,9 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
     const beatIdRef = useRef(0);
     const lastBeatAtRef = useRef(0);
     const lastAnalysisEmitRef = useRef(0);
+    const loadedMediaKeyRef = useRef<string | null>(null);
+    const isPlayingRef = useRef(isPlaying);
+    const lastTrackEndedKeyRef = useRef<string | null>(null);
     const smoothedAnalysisRef = useRef({
       energy: 0,
       bass: 0,
@@ -166,8 +198,16 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
     useEffect(() => {
       stateRef.current = state;
     }, [state]);
+    useEffect(() => {
+      isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
+    const hlsReloadKey = buildMediaReloadKey(hlsUrl, state);
+    useEffect(() => {
+      lastTrackEndedKeyRef.current = null;
+    }, [hlsReloadKey]);
     // Keep local seek authoritative briefly to avoid snap-back from stale server state.
     const localSeekLockRef = useRef<{
+      playbackIdentityKey: string;
       targetSeconds: number;
       startedAtMs: number;
     } | null>(null);
@@ -370,9 +410,11 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
     useEffect(() => {
       console.log('🎯 HLS Effect triggered:', {
         hlsUrl: hlsUrl?.substring(0, 50),
+        hlsReloadKey,
       });
 
       if (!hlsUrl || !audioRef.current) {
+        loadedMediaKeyRef.current = null;
         // ✅ Cleanup old HLS instance if URL becomes null
         if (hlsRef.current) {
           console.log('🧹 Cleaning up HLS instance (no URL)');
@@ -383,6 +425,7 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       }
 
       const audio = audioRef.current;
+      loadedMediaKeyRef.current = null;
 
       // ✅ Destroy existing HLS instance before creating new one
       if (hlsRef.current) {
@@ -404,6 +447,7 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
         hls.attachMedia(audio);
 
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          loadedMediaKeyRef.current = hlsReloadKey;
           console.log('✅ HLS manifest parsed successfully');
 
           // Recompute seek offset fresh at manifest-ready time to avoid using a stale
@@ -432,7 +476,25 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
             audio.currentTime = seekTarget;
           }
 
-          // DO NOT autoplay here based on stale isPlaying, we rely on the state sync effect
+          const latestState = stateRef.current;
+          if (
+            latestState &&
+            !latestState.isPaused &&
+            isPlayingRef.current &&
+            canAttemptAudiblePlayback(audio)
+          ) {
+            audio.play().catch((err) => {
+              if (isNotAllowedError(err)) {
+                waitingForUserActivationRef.current = true;
+                console.info(
+                  'Playback blocked until user interacts with the page',
+                );
+                return;
+              }
+
+              console.error('âŒ Play failed after HLS reload:', err);
+            });
+          }
         });
 
         hls.on(Hls.Events.MANIFEST_LOADING, () => {
@@ -474,6 +536,7 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
         // Native HLS support (Safari)
         console.log('🍎 Using native HLS support (Safari)');
+        loadedMediaKeyRef.current = hlsReloadKey;
         audio.src = hlsUrl;
 
         // Apply pending seek for Safari — recompute fresh to account for load delay.
@@ -492,10 +555,11 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
 
         // DO NOT autoplay here based on stale isPlaying, we rely on the state sync effect
       } else {
+        loadedMediaKeyRef.current = null;
         console.error('❌ HLS playback not supported in this browser');
         message.error('HLS playback not supported in this browser');
       }
-    }, [hlsUrl]);
+    }, [hlsReloadKey, hlsUrl]);
 
     // ✅ Sync audio playback state from server (SpaceStateSync)
     useEffect(() => {
@@ -505,12 +569,8 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
 
       // Build a lightweight key representing the meaningful parts of this state.
       // Two renders with the same key are identical — no need to re-sync.
-      const stateKey = [
-        state.currentQueueItemId ?? '',
-        state.isPaused ? '1' : '0',
-        state.startedAtUtc ?? '',
-        state.hlsUrl ?? '',
-      ].join('|');
+      const stateKey = buildStateSyncKey(state);
+      const playbackIdentityKey = buildPlaybackIdentityKey(state);
 
       // Re-entrant guard: skip only if we're mid-processing AND the state hasn't changed.
       if (isSyncingRef.current && lastSyncedStateKeyRef.current === stateKey) {
@@ -552,10 +612,22 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       );
 
       const localSeekLock = localSeekLockRef.current;
-      if (localSeekLock) {
-        const lockAgeMs = Date.now() - localSeekLock.startedAtMs;
+      if (
+        localSeekLock &&
+        localSeekLock.playbackIdentityKey !== playbackIdentityKey
+      ) {
+        localSeekLockRef.current = null;
+        if (seekTimeoutRef.current) {
+          clearTimeout(seekTimeoutRef.current);
+          seekTimeoutRef.current = null;
+        }
+      }
+
+      const activeLocalSeekLock = localSeekLockRef.current;
+      if (activeLocalSeekLock) {
+        const lockAgeMs = Date.now() - activeLocalSeekLock.startedAtMs;
         const serverCaughtUp =
-          Math.abs(expectedPosition - localSeekLock.targetSeconds) <=
+          Math.abs(expectedPosition - activeLocalSeekLock.targetSeconds) <=
           LOCAL_SEEK_MATCH_TOLERANCE_SECONDS;
 
         if (serverCaughtUp || lockAgeMs > LOCAL_SEEK_LOCK_MS) {
@@ -575,6 +647,12 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       }
 
       // ✅ Check if paused for too long (> 30s) — need HLS reload
+      if (hlsUrl && loadedMediaKeyRef.current !== hlsReloadKey) {
+        pendingSeekRef.current = expectedPosition;
+        isSyncingRef.current = false;
+        return;
+      }
+
       const pauseDuration = lastPauseTimeRef.current
         ? Date.now() - lastPauseTimeRef.current
         : 0;
@@ -675,7 +753,7 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       setTimeout(() => {
         isSyncingRef.current = false;
       }, 150);
-    }, [state, isPlaying, hlsUrl]);
+    }, [state, isPlaying, hlsUrl, hlsReloadKey]);
 
     // Sync volume
     useEffect(() => {
@@ -767,6 +845,14 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
 
       const handleEnded = () => {
         console.log('Track ended');
+        const latestState = stateRef.current;
+        if (!latestState?.currentQueueItemId) return;
+
+        const endedKey = buildPlaybackIdentityKey(latestState);
+        if (!endedKey || lastTrackEndedKeyRef.current === endedKey) return;
+
+        lastTrackEndedKeyRef.current = endedKey;
+        onTrackEnded?.();
       };
 
       audio.addEventListener('timeupdate', handleTimeUpdate);
@@ -782,7 +868,7 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
         audio.removeEventListener('canplay', handleCanPlay);
         audio.removeEventListener('ended', handleEnded);
       };
-    }, [onTimeUpdate, onDurationChange]);
+    }, [onTimeUpdate, onDurationChange, onTrackEnded]);
 
     // Handle seek (scrub) - immediate local scrub on change, remote seek on afterChange
     const handleSeek = (value: number) => {
@@ -798,6 +884,7 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       isUserSeekingRef.current = false; // drag ended — lock takes over
       const seekTime = (value / 100) * duration;
       localSeekLockRef.current = {
+        playbackIdentityKey: buildPlaybackIdentityKey(stateRef.current),
         targetSeconds: seekTime,
         startedAtMs: Date.now(),
       };

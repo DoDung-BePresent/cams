@@ -26,7 +26,7 @@ class StoreHubService {
   private currentStoreId: string | null = null;
   private joinedSpaceIds = new Set<string>();
   private joinedSpaceRefCounts = new Map<string, number>();
-  private eventHandlers: StoreHubEventHandlers = {};
+  private eventHandlers = new Set<StoreHubEventHandlers>();
 
   /**
    * Clock offset in ms: clientNow - serverNow at connection time.
@@ -38,6 +38,46 @@ class StoreHubService {
   /** Exposed to playbackHelpers so seek math can compensate for clock skew. */
   public get serverClockOffsetMs(): number {
     return this._serverClockOffsetMs;
+  }
+
+  public addEventHandlers(handlers: StoreHubEventHandlers): () => void {
+    this.eventHandlers.add(handlers);
+
+    return () => {
+      this.eventHandlers.delete(handlers);
+    };
+  }
+
+  private emitConnected(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onConnected?.());
+  }
+
+  private emitDisconnected(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onDisconnected?.());
+  }
+
+  private emitReconnecting(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onReconnecting?.());
+  }
+
+  private emitReconnected(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onReconnected?.());
+  }
+
+  private emitPlayStream(payload: PlayStreamPayload): void {
+    this.eventHandlers.forEach((handlers) => handlers.onPlayStream?.(payload));
+  }
+
+  private emitPlaybackStateChanged(payload: PlaybackStateChangedPayload): void {
+    this.eventHandlers.forEach((handlers) =>
+      handlers.onPlaybackStateChanged?.(payload),
+    );
+  }
+
+  private emitSpaceStateSync(state: SpaceStateDto): void {
+    this.eventHandlers.forEach((handlers) =>
+      handlers.onSpaceStateSync?.(state.spaceId, state),
+    );
   }
 
   /**
@@ -58,11 +98,14 @@ class StoreHubService {
     token: string,
     handlers: StoreHubEventHandlers = {},
   ): Promise<void> {
+    if (Object.keys(handlers).length > 0) {
+      this.addEventHandlers(handlers);
+    }
+
     // ✅ Prevent double-connect
     if (this.isConnected() && this.currentStoreId === storeId) {
       console.log('⏭️ Already connected to this store');
-      this.eventHandlers = handlers;
-      handlers.onConnected?.();
+      this.emitConnected();
       return;
     }
 
@@ -73,7 +116,6 @@ class StoreHubService {
         await this.disconnect();
       }
 
-      this.eventHandlers = handlers;
       this.currentStoreId = storeId;
 
       const hubUrl = `${env.baseUrl}/hubs/store`;
@@ -121,7 +163,7 @@ class StoreHubService {
       await this.joinStore(storeId);
 
       // Trigger connected callback
-      this.eventHandlers.onConnected?.();
+      this.emitConnected();
     } catch (error) {
       console.error('❌ Failed to connect to StoreHub:', error);
       this.connection = null;
@@ -275,7 +317,7 @@ class StoreHubService {
     // PlayStream event (new track/playlist)
     this.connection.on('PlayStream', (payload: PlayStreamPayload) => {
       console.log('📡 PlayStream event:', payload);
-      this.eventHandlers.onPlayStream?.(payload);
+      this.emitPlayStream(payload);
     });
 
     // PlaybackStateChanged event (pause/resume/skip)
@@ -283,20 +325,20 @@ class StoreHubService {
       'PlaybackStateChanged',
       (payload: PlaybackStateChangedPayload) => {
         console.log('📡 PlaybackStateChanged event:', payload);
-        this.eventHandlers.onPlaybackStateChanged?.(payload);
+        this.emitPlaybackStateChanged(payload);
       },
     );
 
     // SpaceStateSync event (full state sync)
     this.connection.on('SpaceStateSync', (state: SpaceStateDto) => {
       console.log('📡 SpaceStateSync event:', state);
-      this.eventHandlers.onSpaceStateSync?.(state.spaceId, state);
+      this.emitSpaceStateSync(state);
     });
 
     // Connection lifecycle events
     this.connection.onreconnecting(() => {
       console.log('🔄 SignalR reconnecting...');
-      this.eventHandlers.onReconnecting?.();
+      this.emitReconnecting();
     });
 
     this.connection.onreconnected(async () => {
@@ -320,13 +362,13 @@ class StoreHubService {
           }),
         );
       } finally {
-        this.eventHandlers.onReconnected?.();
+        this.emitReconnected();
       }
     });
 
     this.connection.onclose(() => {
       console.log('❌ SignalR connection closed');
-      this.eventHandlers.onDisconnected?.();
+      this.emitDisconnected();
     });
   }
 
@@ -353,7 +395,6 @@ class StoreHubService {
       this.currentStoreId = null;
       this.joinedSpaceIds.clear();
       this.joinedSpaceRefCounts.clear();
-      this.eventHandlers = {};
     }
   }
 }

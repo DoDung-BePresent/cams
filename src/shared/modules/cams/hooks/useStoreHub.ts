@@ -68,6 +68,7 @@ export const useStoreHub = (
       clearTimeout(disconnectTimer);
       disconnectTimer = null;
     }
+    let unsubscribeHubHandlers: (() => void) | null = null;
 
     const connect = async () => {
       // ✅ Prevent double-connect in Strict Mode
@@ -92,7 +93,7 @@ export const useStoreHub = (
           hasToken: !!token,
         });
 
-        await storeHubService.connect(storeId, token, {
+        unsubscribeHubHandlers = storeHubService.addEventHandlers({
           onPlayStream: (payload) => {
             console.log('🎵 PlayStream event received:', payload);
             handlersRef.current.onPlayStream?.(payload);
@@ -133,6 +134,8 @@ export const useStoreHub = (
           },
         });
 
+        await storeHubService.connect(storeId, token);
+
         connectionState.isConnecting = false;
       } catch (err) {
         console.error('❌ Failed to connect to StoreHub:', err);
@@ -163,6 +166,8 @@ export const useStoreHub = (
       connectionState.isConnecting = false;
 
       clearTimeout(timer);
+      unsubscribeHubHandlers?.();
+      unsubscribeHubHandlers = null;
 
       console.log('👋 Disconnecting from StoreHub...');
 
