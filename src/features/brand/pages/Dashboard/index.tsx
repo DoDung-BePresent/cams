@@ -1474,6 +1474,8 @@ const LivePlayback = ({
   const handleSkipPrevious = () =>
     sendPlaybackCommand(PlaybackCommand.SkipPrevious);
   const handleSkipNext = () => sendPlaybackCommand(PlaybackCommand.SkipNext);
+  const handleTrackEnded = () =>
+    sendPlaybackCommand(PlaybackCommand.TrackEnded);
   const handleSeek = (seconds: number) =>
     sendPlaybackCommand(PlaybackCommand.Seek, {
       seekPositionSeconds: Math.max(0, Math.floor(seconds)),
@@ -1628,6 +1630,7 @@ const LivePlayback = ({
               onPlayPause={handlePlayPause}
               onSkipNext={handleSkipNext}
               onSkipPrevious={handleSkipPrevious}
+              onTrackEnded={handleTrackEnded}
               onSeek={handleSeek}
               onVolumeChangeComplete={handleVolumeChangeComplete}
               onToggleMute={handleToggleMute}

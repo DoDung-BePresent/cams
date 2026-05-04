@@ -141,6 +141,7 @@ export const SpacePlayerCard = ({
 
   const volumeUpdateTimeoutRef = useRef<number | null>(null);
   const prevTapTimestampRef = useRef<number>(0);
+  const lastTrackEndedPlaybackKeyRef = useRef<string | null>(null);
   const PREV_DOUBLE_TAP_MS = 2000;
 
   const hlsUrl = spaceState?.hlsUrl || null;
@@ -410,6 +411,30 @@ export const SpacePlayerCard = ({
       seekPositionSeconds: 10,
     });
   }, [space.id, isPending, playbackControl]);
+
+  const handleTrackEnded = useCallback(() => {
+    const playbackKey = [
+      spaceState?.currentQueueItemId ?? '',
+      spaceState?.startedAtUtc ?? '',
+    ].join('|');
+    if (
+      !spaceState?.currentQueueItemId ||
+      lastTrackEndedPlaybackKeyRef.current === playbackKey
+    ) {
+      return;
+    }
+
+    lastTrackEndedPlaybackKeyRef.current = playbackKey;
+    playbackControl.mutate({
+      spaceId: space.id,
+      command: PlaybackCommand.TrackEnded,
+    });
+  }, [
+    playbackControl,
+    space.id,
+    spaceState?.currentQueueItemId,
+    spaceState?.startedAtUtc,
+  ]);
 
   const handleVolumeChange = useCallback(
     (value: number) => {
@@ -1494,6 +1519,7 @@ export const SpacePlayerCard = ({
     onSeek: handleSeek,
     onRewind10: handleRewind10,
     onForward10: handleForward10,
+    onTrackEnded: handleTrackEnded,
     onVolumeChangeComplete: handleVolumeChangeBackend,
     onToggleMute: handleToggleMute,
     onQueueEndBehaviorChange: (next: string | number) =>
