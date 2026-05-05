@@ -225,13 +225,12 @@ const renderEventContent = (eventInfo: any) => {
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            flexWrap: 'wrap',
           }}
         >
-          <span style={{ fontWeight: 600, fontSize: 13 }}>
+          <span style={{ fontWeight: 600, fontSize: 12 }}>
             {eventInfo.event.title}
           </span>
-          <span style={{ fontSize: 11, opacity: 0.9 }}>
+          <span style={{ fontSize: 9, opacity: 0.9 }}>
             {eventInfo.timeText}
           </span>
         </div>
