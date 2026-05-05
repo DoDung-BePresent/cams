@@ -7,4 +7,5 @@ export const ADMIN_ROUTE_MAP: Record<string, string> = {
   tracks: '/admin/tracks',
   playlists: '/admin/playlists',
   'billing-packages': '/admin/billing-packages',
+  iot: '/admin/iot',
 };

@@ -43,6 +43,7 @@ export const storeService = {
       params.append('isAscending', filter.isAscending.toString());
     if (filter.city) params.append('city', filter.city);
     if (filter.district) params.append('district', filter.district);
+    if (filter.brandId) params.append('brandId', filter.brandId);
     if (filter.status !== undefined)
       params.append('status', filter.status.toString());
     filter.storeIds?.forEach((id) => params.append('storeIds', id));

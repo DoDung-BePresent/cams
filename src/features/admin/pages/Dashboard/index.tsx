@@ -1,35 +1,69 @@
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Col, Row, Skeleton, Typography } from 'antd';
+import { Col, Progress, Row, Skeleton, Table, Tag, Typography } from 'antd';
 import {
+  ApiOutlined,
   AppstoreOutlined,
-  SettingOutlined,
-  TeamOutlined,
-  UnorderedListOutlined,
+  CloudServerOutlined,
+  CustomerServiceOutlined,
+  DashboardOutlined,
+  LineChartOutlined,
+  PlayCircleOutlined,
+  RobotOutlined,
+  ShopOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
 
-import { useBrands, useAccounts } from '@/features/admin/hooks';
+import { useAdminDashboard } from '@/features/admin/hooks';
 import { useAuth } from '@/providers';
+import type {
+  AdminBrandHealthItem,
+  AdminDashboardTopTrackItem,
+} from '@/features/admin/types';
 
 const { Title, Text } = Typography;
 
 const C = {
   surface: '#18181b',
+  surface2: '#121214',
   surfaceHover: '#242126',
   border: '#2d2528',
   red: '#ef4444',
+  green: '#22c55e',
+  amber: '#f59e0b',
+  blue: '#3b82f6',
+  purple: '#a855f7',
   text: '#f8f7f7',
   muted: '#b7adb0',
   subtle: '#857b80',
 };
 
+const formatNumber = (value?: number | null) =>
+  typeof value === 'number'
+    ? new Intl.NumberFormat('en-US').format(value)
+    : '0';
+
+const formatCompact = (value?: number | null) =>
+  typeof value === 'number'
+    ? new Intl.NumberFormat('en-US', {
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      }).format(value)
+    : '0';
+
+const trendText = (delta?: number | null, suffix = '') => {
+  if (!delta) return 'No change';
+  return `${delta > 0 ? '+' : ''}${formatNumber(delta)}${suffix}`;
+};
+
 const Equalizer = () => (
-  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 24 }}>
+  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 22 }}>
     <style>{`
-      @keyframes adminEq1 { 0%,100%{height:6px} 50%{height:22px} }
-      @keyframes adminEq2 { 0%,100%{height:16px} 40%{height:7px} }
-      @keyframes adminEq3 { 0%,100%{height:10px} 60%{height:24px} }
-      @keyframes adminEq4 { 0%,100%{height:20px} 30%{height:8px} }
+      @keyframes adminEq1 { 0%,100%{height:6px} 50%{height:20px} }
+      @keyframes adminEq2 { 0%,100%{height:15px} 40%{height:7px} }
+      @keyframes adminEq3 { 0%,100%{height:10px} 60%{height:22px} }
+      @keyframes adminEq4 { 0%,100%{height:18px} 30%{height:8px} }
     `}</style>
     {[
       'adminEq1 1.1s ease-in-out infinite',
@@ -43,7 +77,7 @@ const Equalizer = () => (
           width: 4,
           height: 10,
           borderRadius: 2,
-          background: C.red,
+          background: index === 1 ? C.amber : C.red,
           animation,
         }}
       />
@@ -52,311 +86,580 @@ const Equalizer = () => (
 );
 
 const StatCard = ({
+  icon,
   label,
   value,
-  loading,
+  sub,
+  trend,
   accent = C.red,
+  loading,
 }: {
+  icon: ReactNode;
   label: string;
   value: number | string;
-  loading?: boolean;
+  sub: string;
+  trend?: string;
   accent?: string;
+  loading?: boolean;
 }) => (
   <div
     style={{
+      minHeight: 132,
+      height: '100%',
       background: C.surface,
       border: `1px solid ${C.border}`,
-      borderRadius: 14,
-      padding: '20px 24px',
-      minHeight: 118,
-    }}
-  >
-    <Text
-      style={{
-        color: C.muted,
-        fontSize: 12,
-        fontWeight: 800,
-        letterSpacing: 1,
-        textTransform: 'uppercase',
-      }}
-    >
-      {label}
-    </Text>
-    <div style={{ marginTop: 10 }}>
-      {loading ? (
-        <Skeleton.Input
-          active
-          size='small'
-          style={{ width: 70 }}
-        />
-      ) : (
-        <span
-          style={{
-            color: accent,
-            fontSize: 36,
-            fontWeight: 800,
-            lineHeight: 1,
-          }}
-        >
-          {value}
-        </span>
-      )}
-    </div>
-  </div>
-);
-
-const QuickCard = ({
-  icon,
-  title,
-  desc,
-  accent,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-  accent: string;
-  onClick: () => void;
-}) => (
-  <div
-    onClick={onClick}
-    style={{
-      background: C.surface,
-      border: `1px solid ${C.border}`,
-      borderRadius: 14,
-      padding: '22px 24px',
-      cursor: 'pointer',
-      transition: 'all 0.18s ease',
-      minHeight: 150,
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.borderColor = accent;
-      e.currentTarget.style.background = C.surfaceHover;
-      e.currentTarget.style.transform = 'translateY(-2px)';
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.borderColor = C.border;
-      e.currentTarget.style.background = C.surface;
-      e.currentTarget.style.transform = 'translateY(0)';
+      borderRadius: 8,
+      padding: 18,
+      display: 'flex',
+      gap: 14,
     }}
   >
     <div
       style={{
-        width: 44,
-        height: 44,
-        borderRadius: 12,
+        width: 38,
+        height: 38,
+        borderRadius: 8,
         background: `${accent}18`,
         color: accent,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontSize: 22,
-        marginBottom: 14,
+        fontSize: 18,
+        flexShrink: 0,
       }}
     >
       {icon}
     </div>
-    <Title
-      level={5}
-      style={{ margin: '0 0 5px', color: C.text }}
+    <div style={{ minWidth: 0 }}>
+      <Text style={{ color: C.muted, fontSize: 12, fontWeight: 800 }}>
+        {label}
+      </Text>
+      <div style={{ marginTop: 10 }}>
+        {loading ? (
+          <Skeleton.Input
+            active
+            size='small'
+            style={{ width: 78 }}
+          />
+        ) : (
+          <span
+            style={{
+              color: C.text,
+              fontSize: 28,
+              fontWeight: 900,
+              lineHeight: 1,
+            }}
+          >
+            {value}
+          </span>
+        )}
+      </div>
+      <Text
+        style={{ color: C.muted, display: 'block', marginTop: 8, fontSize: 12 }}
+      >
+        {sub}
+      </Text>
+      {trend && (
+        <Text
+          style={{
+            color: trend.startsWith('-') ? C.red : C.green,
+            fontWeight: 800,
+            fontSize: 11,
+          }}
+        >
+          {trend}
+        </Text>
+      )}
+    </div>
+  </div>
+);
+
+const Panel = ({
+  title,
+  extra,
+  children,
+}: {
+  title: string;
+  extra?: ReactNode;
+  children: ReactNode;
+}) => (
+  <div
+    style={{
+      background: C.surface,
+      border: `1px solid ${C.border}`,
+      borderRadius: 8,
+      padding: 16,
+      height: '100%',
+    }}
+  >
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: 12,
+        marginBottom: 14,
+      }}
     >
-      {title}
-    </Title>
-    <Text style={{ color: C.muted, fontSize: 13 }}>{desc}</Text>
+      <Title
+        level={5}
+        style={{ margin: 0, color: C.text }}
+      >
+        {title}
+      </Title>
+      {extra}
+    </div>
+    {children}
   </div>
 );
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [period] = useState<1 | 2 | 3 | 4>(1);
+  const { data: result, isLoading } = useAdminDashboard({ period, top: 6 });
+  const data = result?.data;
 
-  const { data: brandsData, isLoading: brandsLoading } = useBrands({
-    page: 1,
-    pageSize: 1,
-  });
-  const { data: accountsData, isLoading: accountsLoading } = useAccounts({
-    page: 1,
-    pageSize: 1,
-  });
+  const iotPercent = useMemo(() => {
+    const assigned = data?.iotHealth.assignedDevices ?? 0;
+    if (assigned === 0) return 0;
+    return Math.round(((data?.iotHealth.onlineDevices ?? 0) / assigned) * 100);
+  }, [data]);
+
+  const brandColumns = [
+    {
+      title: 'Brand',
+      dataIndex: 'brandName',
+      render: (value: string, record: AdminBrandHealthItem) => (
+        <div>
+          <Text style={{ color: C.text, fontWeight: 800 }}>{value}</Text>
+          <Text style={{ display: 'block', color: C.subtle, fontSize: 12 }}>
+            {record.stores} stores / {record.spaces} spaces
+          </Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Playback',
+      dataIndex: 'playingSpaces',
+      width: 110,
+      render: (value: number) => (
+        <Tag color={value > 0 ? 'green' : 'default'}>{value} live</Tag>
+      ),
+    },
+    {
+      title: 'IoT',
+      width: 135,
+      render: (_: unknown, record: AdminBrandHealthItem) => (
+        <Text
+          style={{
+            color: record.offlineDevices > 0 ? C.amber : C.green,
+            fontWeight: 800,
+          }}
+        >
+          {record.onlineDevices}/{record.assignedDevices}
+        </Text>
+      ),
+    },
+    {
+      title: 'Wallet',
+      dataIndex: 'balanceTokens',
+      width: 110,
+      render: (value: number) => (
+        <Text style={{ color: C.text }}>{formatCompact(value)}</Text>
+      ),
+    },
+  ];
+
+  const trackColumns = [
+    {
+      title: 'Track',
+      dataIndex: 'trackName',
+      render: (value: string, record: AdminDashboardTopTrackItem) => (
+        <div>
+          <Text style={{ color: C.text, fontWeight: 800 }}>{value}</Text>
+          <Text style={{ display: 'block', color: C.subtle, fontSize: 12 }}>
+            {record.artist || 'Unknown artist'}
+          </Text>
+        </div>
+      ),
+    },
+    {
+      title: 'Scope',
+      dataIndex: 'scope',
+      width: 96,
+      render: (value: number) => (
+        <Tag color={value === 1 ? 'blue' : 'green'}>
+          {value === 1 ? 'Global' : 'Brand'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Plays',
+      dataIndex: 'plays',
+      width: 82,
+      render: (value: number) => (
+        <Text style={{ color: C.green, fontWeight: 900 }}>{value}</Text>
+      ),
+    },
+  ];
 
   return (
-    <div style={{ paddingBottom: 40 }}>
+    <div style={{ paddingBottom: 36 }}>
       <div
         style={{
           background:
-            'radial-gradient(circle at 12% 0%, rgba(239,68,68,0.22), transparent 34%), linear-gradient(135deg, #18181b 0%, #161112 54%, #0f0f11 100%)',
+            'radial-gradient(circle at 12% 0%, rgba(239,68,68,0.22), transparent 30%), radial-gradient(circle at 84% 20%, rgba(245,158,11,0.12), transparent 24%), linear-gradient(135deg, #18181b 0%, #161112 56%, #0f0f11 100%)',
           border: `1px solid ${C.border}`,
-          borderRadius: 20,
-          padding: '36px 40px',
-          marginBottom: 28,
-          overflow: 'hidden',
-          position: 'relative',
+          borderRadius: 14,
+          padding: '24px 28px',
+          marginBottom: 18,
+          display: 'flex',
+          justifyContent: 'space-between',
+          gap: 20,
+          alignItems: 'center',
         }}
       >
+        <div>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              marginBottom: 12,
+            }}
+          >
+            <Equalizer />
+            <span
+              style={{
+                color: C.red,
+                fontSize: 11,
+                fontWeight: 900,
+                letterSpacing: 3,
+              }}
+            >
+              SYSTEM ADMIN
+            </span>
+          </div>
+          <Title
+            level={2}
+            style={{ margin: 0, color: C.text }}
+          >
+            Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
+          </Title>
+          <Text style={{ color: C.muted }}>
+            Monitor platform health, IoT command readiness, playback, billing,
+            and AI generation.
+          </Text>
+        </div>
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 14,
-            marginBottom: 16,
+            gap: 8,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
           }}
         >
-          <Equalizer />
-          <span
-            style={{
-              color: C.red,
-              fontSize: 11,
-              fontWeight: 800,
-              letterSpacing: 3,
-              textTransform: 'uppercase',
-            }}
-          >
-            System Admin
-          </span>
+          <Tag color='red'>Realtime</Tag>
+          <Tag color='default'>Updated {data ? 'now' : '...'}</Tag>
         </div>
-        <Title
-          level={2}
-          style={{ margin: '0 0 8px', color: C.text }}
-        >
-          Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
-        </Title>
-        <Text style={{ color: C.muted, fontSize: 15 }}>
-          Monitor platform health, shared music assets, brand access, and system
-          policy.
-        </Text>
       </div>
 
       <Row
-        gutter={[16, 16]}
-        style={{ marginBottom: 28 }}
+        gutter={[12, 12]}
+        style={{ marginBottom: 12 }}
       >
         <Col
           xs={24}
-          sm={12}
-          lg={6}
+          md={12}
+          xl={6}
         >
           <StatCard
-            label='Total Brands'
-            value={brandsData?.totalItems ?? 0}
-            loading={brandsLoading}
+            icon={<AppstoreOutlined />}
+            label='Brands'
+            value={formatNumber(data?.overview.totalBrands)}
+            sub={`${formatNumber(data?.overview.activeBrands)} active brands`}
+            trend={trendText(data?.overview.totalBrandsTrend.delta)}
+            loading={isLoading}
           />
         </Col>
         <Col
           xs={24}
-          sm={12}
-          lg={6}
+          md={12}
+          xl={6}
         >
           <StatCard
-            label='Total Accounts'
-            value={accountsData?.totalItems ?? 0}
-            loading={accountsLoading}
-            accent='#3b82f6'
+            icon={<ShopOutlined />}
+            label='Stores / Spaces'
+            value={`${formatNumber(data?.overview.totalStores)} / ${formatNumber(data?.overview.totalSpaces)}`}
+            sub={`${formatNumber(data?.overview.activeSpaces)} active spaces`}
+            trend={trendText(data?.overview.totalSpacesTrend.delta, ' spaces')}
+            accent={C.blue}
+            loading={isLoading}
           />
         </Col>
         <Col
           xs={24}
-          sm={12}
-          lg={6}
+          md={12}
+          xl={6}
         >
           <StatCard
-            label='System Playlists'
-            value='Library'
-            accent='#a855f7'
+            icon={<PlayCircleOutlined />}
+            label='Live Playback'
+            value={formatNumber(data?.overview.spacesCurrentlyPlaying)}
+            sub={`${formatNumber(data?.overview.spacesPaused)} paused, ${formatNumber(data?.overview.spacesManualOverride)} manual`}
+            trend={trendText(data?.overview.totalPlaysTrend.delta, ' plays')}
+            accent={C.green}
+            loading={isLoading}
           />
         </Col>
         <Col
           xs={24}
-          sm={12}
-          lg={6}
+          md={12}
+          xl={6}
         >
           <StatCard
-            label='Policy Control'
-            value='Live'
-            accent='#22c55e'
+            icon={<CloudServerOutlined />}
+            label='IoT Health'
+            value={`${iotPercent}%`}
+            sub={`${formatNumber(data?.iotHealth.onlineDevices)} online / ${formatNumber(data?.iotHealth.assignedDevices)} assigned`}
+            trend={`${formatNumber(data?.iotHealth.pendingCommands)} pending commands`}
+            accent={C.amber}
+            loading={isLoading}
           />
         </Col>
       </Row>
 
-      <Text
-        style={{
-          color: C.subtle,
-          fontSize: 11,
-          fontWeight: 800,
-          letterSpacing: 2,
-          textTransform: 'uppercase',
-          display: 'block',
-          marginBottom: 16,
-        }}
+      <Row
+        gutter={[12, 12]}
+        style={{ marginBottom: 12 }}
       >
-        Admin Control Center
-      </Text>
-      <Row gutter={[16, 16]}>
         <Col
           xs={24}
-          sm={12}
-          lg={6}
+          xl={10}
         >
-          <QuickCard
-            icon={<AppstoreOutlined />}
-            title='Brands'
-            desc='Manage tenant brands and music policy ownership'
-            accent={C.red}
-            onClick={() => navigate('/admin/brands')}
-          />
+          <Panel
+            title='Brand Health'
+            extra={
+              <Text
+                onClick={() => navigate('/admin/iot')}
+                style={{ color: C.blue, cursor: 'pointer' }}
+              >
+                IoT details
+              </Text>
+            }
+          >
+            <Table
+              rowKey='brandId'
+              size='small'
+              pagination={false}
+              loading={isLoading}
+              columns={brandColumns}
+              dataSource={data?.brandHealth ?? []}
+            />
+          </Panel>
         </Col>
         <Col
           xs={24}
-          sm={12}
-          lg={6}
+          xl={8}
         >
-          <QuickCard
-            icon={<TeamOutlined />}
-            title='Accounts'
-            desc='Create managers, assign roles, and reset access'
-            accent='#3b82f6'
-            onClick={() => navigate('/admin/accounts')}
-          />
+          <Panel
+            title='IoT Command Center'
+            extra={<ApiOutlined style={{ color: C.amber }} />}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+                marginBottom: 16,
+              }}
+            >
+              {[
+                ['Assigned', data?.iotHealth.assignedDevices, C.blue],
+                ['Online', data?.iotHealth.onlineDevices, C.green],
+                ['Offline', data?.iotHealth.offlineDevices, C.red],
+                ['Stale', data?.iotHealth.staleDevices, C.amber],
+              ].map(([label, value, color]) => (
+                <div
+                  key={label as string}
+                  style={{
+                    background: C.surface2,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    padding: 12,
+                  }}
+                >
+                  <Text style={{ color: C.subtle, fontSize: 12 }}>{label}</Text>
+                  <div
+                    style={{
+                      color: color as string,
+                      fontSize: 24,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {formatNumber(value as number)}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Progress
+              percent={iotPercent}
+              strokeColor={C.green}
+              trailColor='#333'
+            />
+            <Text style={{ color: C.muted, fontSize: 12 }}>
+              {formatNumber(data?.iotHealth.failedCommands24h)} command failures
+              in the last 24 hours.
+            </Text>
+          </Panel>
         </Col>
         <Col
           xs={24}
-          sm={12}
-          lg={6}
+          xl={6}
         >
-          <QuickCard
-            icon={<UnorderedListOutlined />}
-            title='Playlist Library'
-            desc='Control shared playlists available across brands'
-            accent='#a855f7'
-            onClick={() => navigate('/admin/playlists')}
-          />
-        </Col>
-        <Col
-          xs={24}
-          sm={12}
-          lg={6}
-        >
-          <QuickCard
-            icon={<SettingOutlined />}
-            title='Config Policy'
-            desc='Tune platform rules, runtime limits, and overrides'
-            accent='#f59e0b'
-            onClick={() => navigate('/admin/config-management')}
-          />
-        </Col>
-        <Col
-          xs={24}
-          sm={12}
-          lg={6}
-        >
-          <QuickCard
-            icon={<WalletOutlined />}
-            title='Billing'
-            desc='Review wallet packages and token purchase activity'
-            accent='#22c55e'
-            onClick={() => navigate('/admin/billing')}
-          />
+          <Panel
+            title='Platform Billing'
+            extra={<WalletOutlined style={{ color: C.green }} />}
+          >
+            <div style={{ color: C.text, fontSize: 34, fontWeight: 900 }}>
+              {formatCompact(data?.billing.totalBalanceTokens)}
+            </div>
+            <Text style={{ color: C.muted, display: 'block' }}>
+              Total wallet balance
+            </Text>
+            <Text
+              style={{
+                color: C.red,
+                display: 'block',
+                marginTop: 12,
+                fontWeight: 800,
+              }}
+            >
+              {formatNumber(data?.billing.lockedWallets)} locked wallets
+            </Text>
+            <Text style={{ color: C.green, display: 'block', marginTop: 8 }}>
+              {trendText(data?.billing.rangeUsageTrend.delta, ' tokens used')}
+            </Text>
+          </Panel>
         </Col>
       </Row>
+
+      <Row gutter={[12, 12]}>
+        <Col
+          xs={24}
+          xl={10}
+        >
+          <Panel
+            title='Top Tracks'
+            extra={<CustomerServiceOutlined style={{ color: C.purple }} />}
+          >
+            <Table
+              rowKey={(row) => row.trackId || row.trackName}
+              size='small'
+              pagination={false}
+              loading={isLoading}
+              columns={trackColumns}
+              dataSource={data?.topTracks ?? []}
+            />
+          </Panel>
+        </Col>
+        <Col
+          xs={24}
+          xl={7}
+        >
+          <Panel
+            title='Live Spaces'
+            extra={<LineChartOutlined style={{ color: C.blue }} />}
+          >
+            {(data?.livePlayback.items ?? []).map((item) => (
+              <div
+                key={item.spaceId}
+                style={{
+                  borderBottom: `1px solid ${C.border}`,
+                  padding: '9px 0',
+                }}
+              >
+                <Text style={{ color: C.text, fontWeight: 800 }}>
+                  {item.spaceName}
+                </Text>
+                <Text
+                  style={{ color: C.subtle, display: 'block', fontSize: 12 }}
+                >
+                  {item.brandName} / {item.storeName}
+                </Text>
+                <Tag color={item.isPaused ? 'gold' : 'green'}>
+                  {item.isPaused ? 'Paused' : 'Playing'}
+                </Tag>
+                {item.isManualOverride && <Tag color='red'>Manual</Tag>}
+              </div>
+            ))}
+          </Panel>
+        </Col>
+        <Col
+          xs={24}
+          xl={7}
+        >
+          <Panel
+            title='AI Generation'
+            extra={<RobotOutlined style={{ color: C.red }} />}
+          >
+            <div style={{ color: C.text, fontSize: 34, fontWeight: 900 }}>
+              {formatNumber(data?.aiGeneration.totalInRange)}
+            </div>
+            <Text
+              style={{ color: C.muted, display: 'block', marginBottom: 14 }}
+            >
+              Requests in range
+            </Text>
+            {[
+              ['Queued', data?.aiGeneration.queued],
+              ['Processing', data?.aiGeneration.processing],
+              ['Completed', data?.aiGeneration.completed],
+              ['Failed', data?.aiGeneration.failed],
+            ].map(([label, value]) => (
+              <div
+                key={label as string}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: 8,
+                }}
+              >
+                <Text style={{ color: C.muted }}>{label}</Text>
+                <Text style={{ color: C.text, fontWeight: 900 }}>
+                  {formatNumber(value as number)}
+                </Text>
+              </div>
+            ))}
+          </Panel>
+        </Col>
+      </Row>
+
+      <div
+        onClick={() => navigate('/admin/iot')}
+        style={{
+          marginTop: 12,
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 8,
+          padding: 16,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+        }}
+      >
+        <DashboardOutlined style={{ color: C.amber, fontSize: 22 }} />
+        <div>
+          <Text style={{ color: C.text, fontWeight: 900 }}>
+            Open IoT Management
+          </Text>
+          <Text style={{ color: C.muted, display: 'block' }}>
+            Inspect every space device, send operational commands, and monitor
+            command acknowledgements.
+          </Text>
+        </div>
+      </div>
     </div>
   );
 };

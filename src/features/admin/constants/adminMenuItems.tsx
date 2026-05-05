@@ -15,6 +15,7 @@ import {
   CustomerServiceOutlined,
   UnorderedListOutlined,
   DollarOutlined,
+  CloudServerOutlined,
 } from '@ant-design/icons';
 
 export const ADMIN_MENU_ITEMS: ItemType[] = [
@@ -57,5 +58,10 @@ export const ADMIN_MENU_ITEMS: ItemType[] = [
     key: 'billing-packages',
     icon: <DollarOutlined />,
     label: 'Token packages',
+  },
+  {
+    key: 'iot',
+    icon: <CloudServerOutlined />,
+    label: 'IoT Management',
   },
 ];

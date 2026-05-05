@@ -54,6 +54,11 @@ const BillingPackages = Loadable(
   'AdminBillingPackages',
 );
 
+const AdminIotManagementPage = Loadable(
+  () => import('@/features/admin/pages/IotManagement/IotManagementPage'),
+  'AdminIotManagementPage',
+);
+
 export const adminRoutes = [
   {
     path: 'dashboard',
@@ -86,6 +91,10 @@ export const adminRoutes = [
   {
     path: 'billing-packages',
     element: <BillingPackages />,
+  },
+  {
+    path: 'iot',
+    element: <AdminIotManagementPage />,
   },
   {
     path: 'profile/*',

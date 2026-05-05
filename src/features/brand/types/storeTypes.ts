@@ -37,6 +37,7 @@ export type StoreFilter = {
   status?: EntityStatusEnum;
   city?: string;
   district?: string;
+  brandId?: string;
   createdFrom?: string; // ISO 8601
   createdTo?: string; // ISO 8601
   storeManagerName?: string;
