@@ -174,7 +174,7 @@ export const SlotActionsPopover = ({
                 value={startTime}
                 onChange={setStartTime}
                 format='HH:mm'
-                minuteStep={15}
+                minuteStep={5}
                 style={{ width: '100%' }}
               />
             </Form.Item>
@@ -192,7 +192,7 @@ export const SlotActionsPopover = ({
                 value={endTime}
                 onChange={setEndTime}
                 format='HH:mm'
-                minuteStep={15}
+                minuteStep={5}
                 style={{ width: '100%' }}
               />
             </Form.Item>

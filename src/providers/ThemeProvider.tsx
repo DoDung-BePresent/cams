@@ -29,15 +29,15 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [mode, setMode] = useState<ThemeMode>(() => {
-    const savedMode = localStorage.getItem('theme-mode') as ThemeMode;
-    return savedMode || 'dark'; // Default to dark mode
-  });
+  // Hard coded to dark theme mode
+  const [mode, setMode] = useState<ThemeMode>('dark');
 
   useEffect(() => {
-    localStorage.setItem('theme-mode', mode);
-    document.documentElement.setAttribute('data-theme', mode);
-  }, [mode]);
+    // Clear any old theme-mode from localStorage
+    localStorage.removeItem('theme-mode');
+    // Always set dark theme
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }, []);
 
   const toggleTheme = (event?: React.MouseEvent) => {
     const newMode = mode === 'light' ? 'dark' : 'light';
