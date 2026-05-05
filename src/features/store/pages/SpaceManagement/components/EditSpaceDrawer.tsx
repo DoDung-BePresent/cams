@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Drawer,
@@ -10,17 +10,26 @@ import {
   Spin,
   Row,
   Col,
+  Segmented,
+  Space,
 } from 'antd';
 
 /**
  * Hooks
  */
-import { useSpace, useUpdateSpace } from '@/shared/modules/spaces/hooks';
+import {
+  useSpace,
+  useUpdateSpace,
+  useCreateSpaceFuzzyOverrideProfile,
+} from '@/shared/modules/spaces/hooks';
 
 /**
  * Types
  */
-import type { UpdateSpaceRequest } from '@/shared/modules/spaces/types';
+import type {
+  UpdateSpaceRequest,
+  SpaceFuzzyOverrideProfileRequest,
+} from '@/shared/modules/spaces/types';
 
 /**
  * Constants
@@ -36,6 +45,8 @@ import { updateSpaceValidation } from '@/shared/modules/spaces/validations';
  * Utils
  */
 import { nullToUndefined } from '@/shared/utils/formHelpers';
+import { SpaceFuzzyOverrideFields } from './SpaceFuzzyOverrideFields';
+import { pickSpaceFuzzyOverrideBody } from './spaceFuzzyOverrideUtils';
 
 /**
  * Configs
@@ -49,15 +60,25 @@ type EditSpaceDrawerProps = {
   onSuccess: () => void;
 };
 
+type EditSpaceFormValues = UpdateSpaceRequest & {
+  fuzzy?: Partial<SpaceFuzzyOverrideProfileRequest>;
+};
+
 export const EditSpaceDrawer = ({
   open,
   spaceId,
   onClose,
   onSuccess,
 }: EditSpaceDrawerProps) => {
-  const [form] = Form.useForm<UpdateSpaceRequest>();
-  const { data: space, isLoading } = useSpace(spaceId || undefined, open);
+  const [form] = Form.useForm<EditSpaceFormValues>();
+  const [activeTab, setActiveTab] = useState<'basic' | 'fuzzy'>('basic');
+  const {
+    data: space,
+    isLoading,
+    refetch,
+  } = useSpace(spaceId || undefined, open);
   const updateSpace = useUpdateSpace();
+  const createFuzzyProfile = useCreateSpaceFuzzyOverrideProfile();
 
   // Pre-fill form when space data is loaded
   useEffect(() => {
@@ -71,19 +92,88 @@ export const EditSpaceDrawer = ({
         cameraId: nullToUndefined(space.cameraId),
         roiCoordinates: nullToUndefined(space.roiCoordinates),
         wiFiSensorId: nullToUndefined(space.wiFiSensorId),
+        ioTDeviceId: nullToUndefined(space.ioTDeviceId),
+        fuzzy: {
+          name: space.activeFuzzyProfileName ?? undefined,
+          chillBpmMin: space.chillBpmMin ?? undefined,
+          chillBpmMax: space.chillBpmMax ?? undefined,
+          focusBpmMin: space.focusBpmMin ?? undefined,
+          focusBpmMax: space.focusBpmMax ?? undefined,
+          energeticBpmMin: space.energeticBpmMin ?? undefined,
+          energeticBpmMax: space.energeticBpmMax ?? undefined,
+          pressureLowMax: space.pressureLowMax ?? undefined,
+          pressureCriticalMin: space.pressureCriticalMin ?? undefined,
+          noiseQuietMaxDb:
+            space.noiseQuietMaxDb ??
+            space.stressComfortableMax ??
+            space.densitySparseMax ??
+            undefined,
+          noiseLoudMinDb:
+            space.noiseLoudMinDb ??
+            space.stressHighMin ??
+            space.densityCrowdedMin ??
+            undefined,
+          spaceCapacity: space.spaceCapacity ?? undefined,
+          defaultDecibelWhenNull:
+            space.defaultDecibelWhenNull ??
+            space.defaultDensityRatioWhenNull ??
+            undefined,
+          chillMoodCandidates: space.chillMoodCandidates?.length
+            ? space.chillMoodCandidates
+            : undefined,
+          focusMoodCandidates: space.focusMoodCandidates?.length
+            ? space.focusMoodCandidates
+            : undefined,
+          energeticMoodCandidates: space.energeticMoodCandidates?.length
+            ? space.energeticMoodCandidates
+            : undefined,
+          allowedPlaylistIds: space.allowedPlaylistIds?.length
+            ? space.allowedPlaylistIds
+            : undefined,
+        },
       });
     }
   }, [space, open, form]);
 
-  const handleSubmit = async (values: UpdateSpaceRequest) => {
+  useEffect(() => {
+    if (open && spaceId) {
+      void refetch();
+    }
+  }, [open, spaceId, refetch]);
+
+  const handleSubmit = async (values: EditSpaceFormValues) => {
     if (!spaceId) return;
 
-    updateSpace.mutate(
-      { id: spaceId, data: values },
+    const { fuzzy, ...spacePayload } = values;
+    const fuzzyBody = pickSpaceFuzzyOverrideBody(fuzzy);
+
+    try {
+      await updateSpace.mutateAsync({ id: spaceId, data: spacePayload });
+
+      // Keep user expectation simple: if fuzzy values are present in this form,
+      // apply + activate the space override profile in the same Update action.
+      if (Object.keys(fuzzyBody).length > 0) {
+        await createFuzzyProfile.mutateAsync({ spaceId, body: fuzzyBody });
+      }
+
+      handleCancel();
+      onSuccess();
+    } catch {
+      // Error messages are already handled in mutation hooks.
+    }
+  };
+
+  const handleCreateFuzzyOverride = () => {
+    if (!spaceId) return;
+    const fuzzy = form.getFieldValue('fuzzy') as
+      | Partial<SpaceFuzzyOverrideProfileRequest>
+      | undefined;
+    const body = pickSpaceFuzzyOverrideBody(fuzzy);
+    createFuzzyProfile.mutate(
+      { spaceId, body },
       {
         onSuccess: () => {
-          handleCancel();
-          onSuccess();
+          void refetch();
         },
       },
     );
@@ -91,6 +181,7 @@ export const EditSpaceDrawer = ({
 
   const handleCancel = () => {
     form.resetFields();
+    setActiveTab('basic');
     onClose();
   };
 
@@ -117,7 +208,7 @@ export const EditSpaceDrawer = ({
             size='large'
             type='primary'
             onClick={() => form.submit()}
-            loading={updateSpace.isPending}
+            loading={updateSpace.isPending || createFuzzyProfile.isPending}
             disabled={isLoading}
           >
             Update Space
@@ -142,63 +233,100 @@ export const EditSpaceDrawer = ({
             },
           }}
         >
-          <Form.Item
-            label='Space Name'
-            name='name'
-            rules={updateSpaceValidation.name}
-          >
-            <Input placeholder='e.g., Main Counter, VIP Hall' />
-          </Form.Item>
+          <Segmented
+            block
+            size='large'
+            value={activeTab}
+            onChange={(value) => setActiveTab(value as 'basic' | 'fuzzy')}
+            options={[
+              { label: 'Basic Information', value: 'basic' },
+              { label: 'Fuzzy Profile', value: 'fuzzy' },
+            ]}
+            style={{ marginBottom: 24 }}
+          />
 
-          <Form.Item
-            label='Space Type'
-            name='type'
-          >
-            <Select
-              placeholder='Select space type'
-              options={SPACE_TYPE_OPTIONS}
-            />
-          </Form.Item>
+          <div style={{ display: activeTab === 'basic' ? 'block' : 'none' }}>
+            <Form.Item
+              label='Space Name'
+              name='name'
+              rules={updateSpaceValidation.name}
+            >
+              <Input placeholder='e.g., Main Counter, VIP Hall' />
+            </Form.Item>
 
-          <Form.Item
-            label='Description'
-            name='description'
-            rules={updateSpaceValidation.description}
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder='Brief description of this space...'
-            />
-          </Form.Item>
+            <Form.Item
+              label='Space Type'
+              name='type'
+            >
+              <Select
+                placeholder='Select space type'
+                options={SPACE_TYPE_OPTIONS}
+              />
+            </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label='Max Occupancy'
-                name='maxOccupancy'
-                rules={updateSpaceValidation.maxOccupancy}
+            <Form.Item
+              label='Description'
+              name='description'
+              rules={updateSpaceValidation.description}
+            >
+              <Input.TextArea
+                rows={3}
+                placeholder='Brief description of this space...'
+              />
+            </Form.Item>
+
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  label='Max Occupancy'
+                  name='maxOccupancy'
+                  rules={updateSpaceValidation.maxOccupancy}
+                >
+                  <InputNumber
+                    min={1}
+                    style={{ width: '100%' }}
+                    placeholder='e.g., 50'
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label='Critical Queue Threshold'
+                  name='criticalQueueThreshold'
+                  rules={updateSpaceValidation.criticalQueueThreshold}
+                >
+                  <InputNumber
+                    min={1}
+                    style={{ width: '100%' }}
+                    placeholder='e.g., 10'
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item
+              label='IoT Device ID'
+              name='ioTDeviceId'
+              tooltip='Device identifier used by CAMS telemetry query for this space'
+            >
+              <Input placeholder='e.g., esp32-people-counter' />
+            </Form.Item>
+          </div>
+          <div style={{ display: activeTab === 'fuzzy' ? 'block' : 'none' }}>
+            <SpaceFuzzyOverrideFields storeIdForPlaylists={space?.storeId} />
+
+            <Space>
+              <Button
+                size='large'
+                type='primary'
+                onClick={handleCreateFuzzyOverride}
+                loading={createFuzzyProfile.isPending}
+                block
               >
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder='e.g., 50'
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label='Critical Queue Threshold'
-                name='criticalQueueThreshold'
-                rules={updateSpaceValidation.criticalQueueThreshold}
-              >
-                <InputNumber
-                  min={1}
-                  style={{ width: '100%' }}
-                  placeholder='e.g., 10'
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+                Create &amp; Activate Space Profile
+              </Button>
+            </Space>
+          </div>
         </Form>
       )}
     </Drawer>

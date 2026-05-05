@@ -1,5 +1,5 @@
 import type { SelectProps } from 'antd';
-import { MusicProviderEnum } from '../types';
+import { MusicProviderEnum, TrackCopyrightClearanceStatus } from '../types';
 
 /**
  * Music Provider Options (for Select dropdown)
@@ -24,6 +24,42 @@ export const MUSIC_PROVIDER_COLORS: Record<MusicProviderEnum, string> = {
   [MusicProviderEnum.Custom]: 'blue',
   [MusicProviderEnum.Suno]: 'purple',
 };
+
+/**
+ * Copyright clearance labels and colors.
+ */
+export const COPYRIGHT_CLEARANCE_LABELS: Record<
+  TrackCopyrightClearanceStatus,
+  string
+> = {
+  [TrackCopyrightClearanceStatus.NotApplicable]: 'Not Applicable',
+  [TrackCopyrightClearanceStatus.PendingScan]: 'Pending Scan',
+  [TrackCopyrightClearanceStatus.PendingReview]: 'Pending Review',
+  [TrackCopyrightClearanceStatus.Cleared]: 'Cleared',
+  [TrackCopyrightClearanceStatus.Rejected]: 'Rejected',
+};
+
+export const COPYRIGHT_CLEARANCE_COLORS: Record<
+  TrackCopyrightClearanceStatus,
+  string
+> = {
+  [TrackCopyrightClearanceStatus.NotApplicable]: 'default',
+  [TrackCopyrightClearanceStatus.PendingScan]: 'gold',
+  [TrackCopyrightClearanceStatus.PendingReview]: 'orange',
+  [TrackCopyrightClearanceStatus.Cleared]: 'success',
+  [TrackCopyrightClearanceStatus.Rejected]: 'red',
+};
+
+export const COPYRIGHT_CLEARANCE_OPTIONS: SelectProps['options'] =
+  Object.values(TrackCopyrightClearanceStatus)
+    .filter(
+      (value): value is TrackCopyrightClearanceStatus =>
+        typeof value === 'number',
+    )
+    .map((value) => ({
+      label: COPYRIGHT_CLEARANCE_LABELS[value],
+      value,
+    }));
 
 /**
  * Allowed Audio File Extensions (from API_Tracks.md §4.1)

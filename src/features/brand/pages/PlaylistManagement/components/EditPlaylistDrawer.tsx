@@ -1,21 +1,14 @@
 import { useEffect } from 'react';
 import {
-  Drawer,
+  Modal,
   Form,
   Input,
   Select,
-  Switch,
   Button,
   Flex,
   Spin,
   Typography,
-  Alert,
 } from 'antd';
-
-/**
- * Icons
- */
-import { InfoCircleOutlined } from '@ant-design/icons';
 
 /**
  * Hooks
@@ -40,8 +33,9 @@ import type { UpdatePlaylistRequest } from '@/shared/modules/playlists/types';
  * Configs
  */
 import { DRAWER_WIDTHS } from '@/config';
+import { SettingSwitch } from '@/shared/components';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface EditPlaylistDrawerProps {
   open: boolean;
@@ -98,13 +92,12 @@ export const EditPlaylistDrawer = ({
   }));
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Edit Playlist'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={handleCancel}
+      onCancel={handleCancel}
+      centered
       footer={
         <Flex
           justify='end'
@@ -166,15 +159,6 @@ export const EditPlaylistDrawer = ({
               />
             </Form.Item>
 
-            <Alert
-              message='Store Cannot Be Changed'
-              description='Playlists are permanently assigned to a store and cannot be moved.'
-              type='info'
-              icon={<InfoCircleOutlined />}
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
-
             <Form.Item
               label='Mood'
               name='moodId'
@@ -213,31 +197,19 @@ export const EditPlaylistDrawer = ({
             </Title>
 
             <Form.Item
-              label='Default Playlist'
               name='isDefault'
               valuePropName='checked'
+              style={{ marginBottom: 0 }}
             >
-              <Switch
-                checkedChildren='Yes'
-                unCheckedChildren='No'
+              <SettingSwitch
+                label='Default Playlist'
+                description='Set this playlist as the default for the store'
+                className='pt-0!'
               />
             </Form.Item>
           </div>
-
-          {/* Read-only Info */}
-          {playlist && (
-            <div style={{ marginTop: 16 }}>
-              <Text type='secondary'>
-                Store: <strong>{playlist.storeName || 'N/A'}</strong>
-              </Text>
-              <br />
-              <Text type='secondary'>
-                Tracks: <strong>{playlist.trackCount}</strong>
-              </Text>
-            </div>
-          )}
         </Form>
       )}
-    </Drawer>
+    </Modal>
   );
 };

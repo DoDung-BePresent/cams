@@ -1,18 +1,46 @@
-import { useState } from 'react';
-import { Button } from 'antd';
-import { useNavigate } from 'react-router';
+import { useState, useMemo } from 'react';
+import {
+  Alert,
+  App,
+  Button,
+  Descriptions,
+  Tag,
+  Input,
+  Spin,
+  Empty,
+  Typography,
+  Dropdown,
+  Tooltip,
+} from 'antd';
+import type { MenuProps } from 'antd';
+import dayjs from 'dayjs';
 
 /**
  * Icons
  */
-import { PlusOutlined } from '@ant-design/icons';
+import {
+  PlusOutlined,
+  SearchOutlined,
+  ReloadOutlined,
+  EyeOutlined,
+  CalendarOutlined,
+  SoundOutlined,
+  UnorderedListOutlined,
+  QrcodeOutlined,
+  ExperimentOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PoweroffOutlined,
+  ShopOutlined,
+  MoreOutlined,
+  UsergroupAddOutlined,
+} from '@ant-design/icons';
 
 /**
  * Types
  */
-import type { SpaceListItem, SpaceFilter } from '@/shared/modules/spaces/types';
-import type { TablePaginationConfig } from 'antd';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
+import type { SpaceFilter } from '@/shared/modules/spaces/types';
+import { EntityStatusEnum } from '@/shared/types';
 
 /**
  * Hooks
@@ -23,91 +51,149 @@ import {
   useToggleSpaceStatus,
 } from '@/shared/modules/spaces/hooks';
 import { useAuth } from '@/providers';
+import { useStoreContext, useStoreNavigate } from '@/features/store/hooks';
+import { storeService } from '@/features/brand/services';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Components
  */
-import { DataTable, PageHeader, AppModal } from '@/shared/components';
+import { PageHeader, AppModal } from '@/shared/components';
 import {
-  getSpaceColumns,
-  CreateSpaceDrawer,
-  EditSpaceDrawer,
-  SpaceFilter as SpaceFilterComponent,
-  SpaceDetailDrawer,
-  SpaceMusicDrawer,
+  CreateSpaceModal,
+  EditSpaceModal,
+  SpaceDetailModal,
+  SpaceMusicModal,
 } from './components';
 import {
   PairDeviceModal,
-  QueueManagementDrawer,
+  QueueManagementModal,
 } from '@/shared/modules/cams/components';
+import { useTriggerAnalysis } from '@/shared/modules/cams/hooks';
 
 /**
  * Constants
  */
-import { PAGINATION_SIZES } from '@/shared/constants';
+import {
+  SPACE_TYPE_LABELS,
+  SPACE_TYPE_COLORS,
+} from '@/features/store/constants';
+import { getLivePeopleForSpaces } from '@/features/brand/utils/livePeople';
+import type { ContextAnalysisResponse } from '@/shared/modules/cams/types';
+
+const { Text, Title } = Typography;
+
+const moodLabelMap: Record<number, string> = {
+  0: 'Chill',
+  1: 'Focus',
+  2: 'Energetic',
+};
+
+const toMoodLabel = (value: number | string | null | undefined) => {
+  if (value === null || value === undefined) return '-';
+  if (typeof value === 'number') return moodLabelMap[value] ?? String(value);
+  return value;
+};
+
+// ─── Constants ──────────────────────────────────────────────────────────────
+const C = {
+  bg: '#0f0f11',
+  surface: '#18181b',
+  surfaceHover: '#242126',
+  border: '#2d2528',
+  green: '#ef4444',
+  text: '#f8f7f7',
+  textMuted: '#b7adb0',
+  textSubtle: '#857b80',
+};
+
+const LIVE_POLL_MS = 5000;
+const LIVE_PAGE_SIZE = 300;
 
 export const SpaceList = () => {
-  const navigate = useNavigate();
+  const navigate = useStoreNavigate();
+  const { message } = App.useApp();
   const { user } = useAuth();
-  const [filter, setFilter] = useState<SpaceFilter>({
+  const storeId = useStoreContext();
+  const [baseFilter] = useState<Omit<SpaceFilter, 'storeId'>>({
     page: 1,
-    pageSize: 10,
+    pageSize: 200,
     sortBy: 'createdAt',
     isAscending: false,
   });
+  const filter: SpaceFilter = { ...baseFilter, storeId };
 
-  const [showFilters, setShowFilters] = useState(false);
-  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
-  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
-  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
-  const [musicDrawerOpen, setMusicDrawerOpen] = useState(false);
-  const [queueDrawerOpen, setQueueDrawerOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [musicModalOpen, setMusicModalOpen] = useState(false);
+  const [queueModalOpen, setQueueModalOpen] = useState(false);
   const [pairDeviceModalOpen, setPairDeviceModalOpen] = useState(false);
   const [selectedSpaceId, setSelectedSpaceId] = useState<string | null>(null);
+  const [lastAnalysis, setLastAnalysis] = useState<
+    (ContextAnalysisResponse & { spaceName?: string }) | null
+  >(null);
 
-  const { data, isLoading, refetch } = useSpaces(filter);
+  const { data, isLoading, refetch } = useSpaces(filter, Boolean(storeId));
 
   const deleteSpace = useDeleteSpace();
   const toggleStatus = useToggleSpaceStatus();
+  const triggerAnalysis = useTriggerAnalysis();
 
-  const handleSearch = (value: string) => {
-    setFilter((prev) => ({ ...prev, search: value, page: 1 }));
-  };
+  const spaces = useMemo(() => data?.items ?? [], [data?.items]);
+  const todayFromUtc = dayjs().startOf('day').toISOString();
+  const todayToUtc = dayjs().endOf('day').toISOString();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleFilterChange = (key: keyof SpaceFilter, value: any) => {
-    setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
-  };
+  const liveLogsQuery = useQuery({
+    queryKey: [
+      'store-space-management',
+      'live-people',
+      storeId,
+      todayFromUtc,
+      todayToUtc,
+    ],
+    queryFn: async () => {
+      if (!storeId) throw new Error('Store ID is required.');
+      const response = await storeService.getContextRawLogs(storeId, {
+        page: 1,
+        pageSize: LIVE_PAGE_SIZE,
+        fromUtc: todayFromUtc,
+        toUtc: todayToUtc,
+      });
+      return response.data.items ?? [];
+    },
+    enabled: Boolean(storeId),
+    staleTime: 0,
+    refetchInterval: LIVE_POLL_MS,
+    refetchIntervalInBackground: true,
+  });
 
-  const handleTableChange = (
-    pagination: TablePaginationConfig,
-    _filters: Record<string, FilterValue | null>,
-    sorter: SorterResult<SpaceListItem> | SorterResult<SpaceListItem>[],
-  ) => {
-    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
-
-    setFilter((prev) => ({
-      ...prev,
-      page: pagination.current || 1,
-      pageSize: pagination.pageSize || 10,
-      sortBy: currentSorter.field ? String(currentSorter.field) : 'createdAt',
-      isAscending: currentSorter.order === 'ascend',
-    }));
-  };
+  const peopleBySpace = useMemo(() => {
+    return new Map(
+      getLivePeopleForSpaces(liveLogsQuery.data ?? [], spaces).map((sample) => [
+        sample.spaceId,
+        sample,
+      ]),
+    );
+  }, [liveLogsQuery.data, spaces]);
 
   const handleView = (id: string) => {
     setSelectedSpaceId(id);
-    setDetailsDrawerOpen(true);
+    setDetailsModalOpen(true);
   };
 
   const handleManageMusic = (id: string) => {
-    setSelectedSpaceId(id);
-    setMusicDrawerOpen(true);
+    navigate(`/store/spaces/${id}/music`);
+  };
+
+  const handleManageSchedule = (id: string) => {
+    navigate(`/store/spaces/${id}/schedule`);
   };
 
   const handleManageQueue = (id: string) => {
     setSelectedSpaceId(id);
-    setQueueDrawerOpen(true);
+    setQueueModalOpen(true);
   };
 
   const handlePairDevice = (id: string) => {
@@ -115,9 +201,41 @@ export const SpaceList = () => {
     setPairDeviceModalOpen(true);
   };
 
+  const handleTriggerAnalysis = (spaceId: string) => {
+    if (!storeId || !user?.brandId) {
+      message.warning(
+        'Missing store or brand scope. Please re-login and try again.',
+      );
+      return;
+    }
+
+    triggerAnalysis.mutate(
+      {
+        spaceId,
+        body: {
+          storeId: storeId,
+          brandId: user.brandId,
+        },
+      },
+      {
+        onSuccess: (response) => {
+          const analysis = response.data.data;
+          if (!analysis) return;
+          const spaceName = data?.items.find((s) => s.id === spaceId)?.name;
+          setLastAnalysis({
+            ...analysis,
+            spaceName,
+          });
+          setSelectedSpaceId(spaceId);
+          setDetailsModalOpen(true);
+        },
+      },
+    );
+  };
+
   const handleEdit = (spaceId: string) => {
     setSelectedSpaceId(spaceId);
-    setEditDrawerOpen(true);
+    setEditModalOpen(true);
   };
 
   const handleDelete = (spaceId: string) => {
@@ -141,7 +259,7 @@ export const SpaceList = () => {
     const space = data?.items.find((s) => s.id === spaceId);
     const action = space?.status === 1 ? 'deactivate' : 'activate';
 
-    AppModal.confirm({
+    AppModal.warning({
       title: 'Toggle Space Status',
       content: `Are you sure you want to ${action} "${space?.name}"?`,
       okText: action.charAt(0).toUpperCase() + action.slice(1),
@@ -152,15 +270,6 @@ export const SpaceList = () => {
       onOk: () => {
         toggleStatus.mutate(spaceId);
       },
-    });
-  };
-
-  const handleReset = () => {
-    setFilter({
-      page: 1,
-      pageSize: 10,
-      sortBy: 'createdAt',
-      isAscending: false,
     });
   };
 
@@ -175,18 +284,46 @@ export const SpaceList = () => {
     },
   ];
 
-  const columns = getSpaceColumns({
-    onView: handleView,
-    onManageMusic: handleManageMusic,
-    onManageQueue: handleManageQueue,
-    onPairDevice: handlePairDevice,
-    onEdit: handleEdit,
-    onDelete: handleDelete,
-    onToggleStatus: handleToggleStatus,
-  });
+  // Filter spaces by search
+  const filteredSpaces = useMemo(() => {
+    if (!search) return data?.items || [];
+    const q = search.toLowerCase();
+    return (data?.items || []).filter(
+      (s) =>
+        s.name?.toLowerCase().includes(q) ||
+        s.description?.toLowerCase().includes(q),
+    );
+  }, [data?.items, search]);
+
+  const activeCount = filteredSpaces.filter(
+    (s) => s.status === EntityStatusEnum.Active,
+  ).length;
+
+  const getSpacePeople = (spaceId: string) => peopleBySpace.get(spaceId);
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '60vh',
+        }}
+      >
+        <Spin size='large' />
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'transparent',
+        padding: '0 0 40px',
+      }}
+    >
       <PageHeader
         title='Space Management'
         breadcrumbs={breadcrumbs}
@@ -195,95 +332,566 @@ export const SpaceList = () => {
           keywords: 'space, management, store, locations',
         }}
         extra={
-          <Button
-            size='large'
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={() => setCreateDrawerOpen(true)}
-          >
-            Create Space
-          </Button>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={() => {
+                refetch();
+                liveLogsQuery.refetch();
+              }}
+              style={{
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                color: C.textMuted,
+              }}
+            />
+            <Button
+              size='large'
+              type='primary'
+              icon={<PlusOutlined />}
+              onClick={() => setCreateModalOpen(true)}
+              style={{
+                background: C.green,
+                border: 'none',
+                fontWeight: 700,
+                color: '#fff',
+              }}
+            >
+              Create Space
+            </Button>
+          </div>
         }
       />
 
-      <DataTable<SpaceListItem>
-        filter={
-          <SpaceFilterComponent
-            filter={filter}
-            showAdvanced={showFilters}
-            onSearch={handleSearch}
-            onFilterChange={handleFilterChange}
-            onToggleAdvanced={() => setShowFilters(!showFilters)}
-            onRefresh={() => refetch()}
-            onReset={handleReset}
-          />
-        }
-        columns={columns}
-        dataSource={data?.items || []}
-        rowKey='id'
-        loading={isLoading}
-        pagination={{
-          current: filter.page,
-          pageSize: filter.pageSize,
-          total: data?.totalItems || 0,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} spaces`,
-          pageSizeOptions: PAGINATION_SIZES,
-          onChange: (page, size) => {
-            setFilter((prev) => ({ ...prev, page, pageSize: size }));
-          },
+      {lastAnalysis && (
+        <Alert
+          showIcon
+          type='info'
+          style={{
+            marginBottom: 24,
+            background: '#182b3a',
+            border: '1px solid #164c7e',
+            color: '#fff',
+          }}
+          message={
+            <span style={{ color: '#fff', fontWeight: 600 }}>
+              Last AI analysis: {lastAnalysis.spaceName ?? lastAnalysis.spaceId}
+            </span>
+          }
+          action={
+            <Button
+              size='large'
+              onClick={() => setLastAnalysis(null)}
+              style={{
+                background: 'transparent',
+                color: '#fff',
+                borderColor: '#164c7e',
+              }}
+            >
+              Clear
+            </Button>
+          }
+          description={
+            <Descriptions
+              size='small'
+              column={{ xxl: 4, xl: 3, lg: 3, md: 3, sm: 2, xs: 1 }}
+              style={{ marginTop: 8 }}
+            >
+              <Descriptions.Item
+                label={<span style={{ color: '#5f5f67' }}>Mood</span>}
+              >
+                <Tag color='purple'>{toMoodLabel(lastAnalysis.targetMood)}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={<span style={{ color: '#5f5f67' }}>Rule</span>}
+              >
+                <Tag color='blue'>
+                  {lastAnalysis.triggeredRule || 'DEFAULT'}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={<span style={{ color: '#5f5f67' }}>BPM Range</span>}
+              >
+                <span style={{ color: '#fff' }}>
+                  {lastAnalysis.recommendedBpmMin} -{' '}
+                  {lastAnalysis.recommendedBpmMax}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={<span style={{ color: '#5f5f67' }}>Target BPM</span>}
+              >
+                <span style={{ color: '#fff' }}>
+                  {lastAnalysis.recommendedBpmTarget}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={<span style={{ color: '#5f5f67' }}>Mood Changed</span>}
+              >
+                <Tag color={lastAnalysis.moodChanged ? 'success' : 'default'}>
+                  {lastAnalysis.moodChanged ? 'Yes' : 'No'}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={
+                  <span style={{ color: '#5f5f67' }}>Analyzed At (UTC)</span>
+                }
+              >
+                <span style={{ color: '#fff' }}>
+                  {lastAnalysis.analyzedAtUtc
+                    ? dayjs(lastAnalysis.analyzedAtUtc)
+                        .utc()
+                        .format('YYYY-MM-DD HH:mm:ss')
+                    : '-'}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={<span style={{ color: '#5f5f67' }}>Reason</span>}
+              >
+                <span style={{ color: '#fff' }}>
+                  {lastAnalysis.reason || '-'}
+                </span>
+              </Descriptions.Item>
+            </Descriptions>
+          }
+        />
+      )}
+
+      {/* Search bar & Stats */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          marginBottom: 32,
+          flexWrap: 'wrap',
         }}
-        onChange={handleTableChange}
-      />
+      >
+        <Input
+          placeholder='Search spaces by name, description...'
+          prefix={<SearchOutlined style={{ color: C.textSubtle }} />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            flex: 1,
+            maxWidth: 400,
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 10,
+            color: '#fff',
+            height: 48,
+          }}
+        />
+        <div style={{ display: 'flex', gap: 12 }}>
+          <div
+            style={{
+              color: C.textMuted,
+              fontSize: 13,
+              background: C.surface,
+              padding: '10px 16px',
+              borderRadius: 8,
+            }}
+          >
+            Total:{' '}
+            <strong style={{ color: C.text }}>{filteredSpaces.length}</strong>
+          </div>
+          <div
+            style={{
+              color: C.textMuted,
+              fontSize: 13,
+              background: C.surface,
+              padding: '10px 16px',
+              borderRadius: 8,
+            }}
+          >
+            Active: <strong style={{ color: C.green }}>{activeCount}</strong>
+          </div>
+        </div>
+      </div>
 
-      <CreateSpaceDrawer
-        open={createDrawerOpen}
-        onClose={() => setCreateDrawerOpen(false)}
+      {/* ─── Grid View (Space cards) ─────────────────────────── */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gap: 24,
+        }}
+      >
+        {filteredSpaces.length === 0 ? (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: 80 }}>
+            <Empty
+              description={
+                <Text style={{ color: C.textSubtle }}>No spaces found</Text>
+              }
+            />
+          </div>
+        ) : (
+          filteredSpaces.map((space) => {
+            const isActive = space.status === EntityStatusEnum.Active;
+            const people = getSpacePeople(space.id);
+
+            const moreMenu: MenuProps['items'] = [
+              {
+                key: 'pair-device',
+                icon: <QrcodeOutlined />,
+                label: 'Pair Device',
+                onClick: (e) => {
+                  e.domEvent.stopPropagation();
+                  handlePairDevice(space.id);
+                },
+              },
+              {
+                key: 'trigger-analysis',
+                icon: <ExperimentOutlined />,
+                label: 'Trigger AI Analysis',
+                onClick: (e) => {
+                  e.domEvent.stopPropagation();
+                  handleTriggerAnalysis(space.id);
+                },
+              },
+              {
+                key: 'edit',
+                icon: <EditOutlined />,
+                label: 'Edit Space',
+                onClick: (e) => {
+                  e.domEvent.stopPropagation();
+                  handleEdit(space.id);
+                },
+              },
+              { type: 'divider' },
+              {
+                key: 'toggle-status',
+                icon: <PoweroffOutlined />,
+                label: isActive ? 'Deactivate' : 'Activate',
+                onClick: (e) => {
+                  e.domEvent.stopPropagation();
+                  handleToggleStatus(space.id);
+                },
+                danger: isActive,
+              },
+              { type: 'divider' },
+              {
+                key: 'delete',
+                icon: <DeleteOutlined />,
+                label: 'Delete Space',
+                onClick: (e) => {
+                  e.domEvent.stopPropagation();
+                  handleDelete(space.id);
+                },
+                danger: true,
+              },
+            ];
+
+            return (
+              <div
+                key={space.id}
+                onClick={() => handleView(space.id)}
+                style={{
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 16,
+                  padding: 24,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor =
+                    'rgba(248,113,113,0.34)';
+                  (e.currentTarget as HTMLDivElement).style.background =
+                    C.surfaceHover;
+                  (e.currentTarget as HTMLDivElement).style.transform =
+                    'translateY(-3px)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.borderColor =
+                    C.border;
+                  (e.currentTarget as HTMLDivElement).style.background =
+                    C.surface;
+                  (e.currentTarget as HTMLDivElement).style.transform =
+                    'translateY(0)';
+                }}
+              >
+                {/* Status bar */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 3,
+                    background: isActive ? C.green : C.textSubtle,
+                  }}
+                />
+
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    marginBottom: 16,
+                  }}
+                >
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 14 }}
+                  >
+                    <div
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 12,
+                        background: isActive
+                          ? 'rgba(239,68,68,0.1)'
+                          : 'rgba(83,83,83,0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <ShopOutlined
+                        style={{
+                          color: isActive ? C.green : C.textSubtle,
+                          fontSize: 24,
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Title
+                        level={5}
+                        style={{
+                          margin: '0 0 4px',
+                          color: C.text,
+                          fontSize: 16,
+                        }}
+                      >
+                        {space.name}
+                      </Title>
+                      <Tag
+                        color={SPACE_TYPE_COLORS[space.type] as string}
+                        style={{ margin: 0 }}
+                      >
+                        {SPACE_TYPE_LABELS[space.type]}
+                      </Tag>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <Tag
+                      color={isActive ? 'success' : 'default'}
+                      style={{ margin: 0 }}
+                    >
+                      {isActive ? 'Active' : 'Inactive'}
+                    </Tag>
+                    <Dropdown
+                      menu={{ items: moreMenu }}
+                      trigger={['click']}
+                      placement='bottomRight'
+                    >
+                      <Button
+                        type='text'
+                        icon={
+                          <MoreOutlined
+                            style={{ fontSize: 18, color: C.textMuted }}
+                          />
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ padding: '4px 8px', height: 'auto' }}
+                      />
+                    </Dropdown>
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, marginBottom: 20 }}>
+                  <Text
+                    style={{
+                      color: C.textSubtle,
+                      fontSize: 13,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      marginBottom: 12,
+                    }}
+                  >
+                    {space.description || 'No description provided.'}
+                  </Text>
+
+                  {/* People count indicator */}
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      color: people?.samples ? '#86efac' : C.textSubtle,
+                      background: people?.samples
+                        ? 'rgba(34,197,94,0.10)'
+                        : 'rgba(148,163,184,0.10)',
+                      border: `1px solid ${
+                        people?.samples
+                          ? 'rgba(34,197,94,0.22)'
+                          : 'rgba(148,163,184,0.18)'
+                      }`,
+                      borderRadius: 999,
+                      padding: '4px 10px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                    }}
+                  >
+                    <UsergroupAddOutlined style={{ fontSize: 12 }} />
+                    {people?.samples
+                      ? `${people.people} people now`
+                      : 'No people data'}
+                  </div>
+                  {people?.measuredAtUtc && (
+                    <Text
+                      style={{
+                        display: 'block',
+                        marginTop: 8,
+                        color: C.textSubtle,
+                        fontSize: 11,
+                      }}
+                    >
+                      Updated {dayjs(people.measuredAtUtc).format('HH:mm:ss')}
+                    </Text>
+                  )}
+                </div>
+
+                {/* Primary Action Buttons */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 8,
+                    borderTop: `1px solid ${C.border}`,
+                    paddingTop: 16,
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {[
+                    {
+                      icon: <EyeOutlined />,
+                      title: 'View Details',
+                      color: '#fff',
+                      onClick: () => handleView(space.id),
+                    },
+                    {
+                      icon: <CalendarOutlined />,
+                      title: 'Schedule',
+                      color: '#a855f7',
+                      onClick: () => handleManageSchedule(space.id),
+                    },
+                    {
+                      icon: <SoundOutlined />,
+                      title: 'Music',
+                      color: '#3b82f6',
+                      onClick: () => handleManageMusic(space.id),
+                    },
+                    {
+                      icon: <UnorderedListOutlined />,
+                      title: 'Queue',
+                      color: '#f59e0b',
+                      onClick: () => handleManageQueue(space.id),
+                    },
+                  ].map((btn, idx) => (
+                    <Tooltip
+                      key={idx}
+                      title={btn.title}
+                    >
+                      <button
+                        onClick={btn.onClick}
+                        style={{
+                          flex: 1,
+                          height: 36,
+                          borderRadius: 8,
+                          border: 'none',
+                          background: '#202024',
+                          color: C.textMuted,
+                          cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 15,
+                        }}
+                        onMouseEnter={(e) => {
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.background = '#2d2528';
+                          (e.currentTarget as HTMLButtonElement).style.color =
+                            btn.color;
+                        }}
+                        onMouseLeave={(e) => {
+                          (
+                            e.currentTarget as HTMLButtonElement
+                          ).style.background = '#202024';
+                          (e.currentTarget as HTMLButtonElement).style.color =
+                            C.textMuted;
+                        }}
+                      >
+                        {btn.icon}
+                      </button>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <CreateSpaceModal
+        open={createModalOpen}
+        storeId={storeId}
+        onClose={() => setCreateModalOpen(false)}
         onSuccess={() => {
-          setCreateDrawerOpen(false);
+          setCreateModalOpen(false);
           refetch();
         }}
       />
 
-      <EditSpaceDrawer
-        open={editDrawerOpen}
+      <EditSpaceModal
+        open={editModalOpen}
         spaceId={selectedSpaceId}
         onClose={() => {
-          setEditDrawerOpen(false);
+          setEditModalOpen(false);
           setSelectedSpaceId(null);
         }}
         onSuccess={() => {
-          setEditDrawerOpen(false);
+          setEditModalOpen(false);
           setSelectedSpaceId(null);
           refetch();
         }}
       />
 
-      <SpaceDetailDrawer
-        open={detailsDrawerOpen}
+      <SpaceDetailModal
+        open={detailsModalOpen}
         spaceId={selectedSpaceId ?? undefined}
         onClose={() => {
-          setDetailsDrawerOpen(false);
+          setDetailsModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />
 
-      <SpaceMusicDrawer
-        open={musicDrawerOpen}
+      <SpaceMusicModal
+        open={musicModalOpen}
         spaceId={selectedSpaceId}
-        storeId={user?.storeId || ''}
+        storeId={storeId || ''}
         onClose={() => {
-          setMusicDrawerOpen(false);
+          setMusicModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />
 
-      <QueueManagementDrawer
-        open={queueDrawerOpen}
+      <QueueManagementModal
+        open={queueModalOpen}
         spaceId={selectedSpaceId || ''}
-        storeId={user?.storeId || ''}
+        storeId={storeId || ''}
         onClose={() => {
-          setQueueDrawerOpen(false);
+          setQueueModalOpen(false);
           setSelectedSpaceId(null);
         }}
       />

@@ -3,6 +3,7 @@
  */
 import { useState } from 'react';
 import { Avatar, Badge, Button, Dropdown, Flex, Layout, Tag } from 'antd';
+import { useNavigate, useSearchParams, useLocation } from 'react-router';
 
 /**
  * Icons
@@ -14,14 +15,17 @@ import {
   FullscreenOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  MessageOutlined,
   UserOutlined,
+  MoonOutlined,
+  SunOutlined,
+  ArrowLeftOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 
 /**
  * Hooks
  */
-import { useAuth } from '@/providers';
+import { useAuth, useTheme } from '@/providers';
 import { useFullscreen, useNetworkStatus } from '@/shared/hooks';
 
 /**
@@ -33,6 +37,7 @@ import { UserDropdownContent } from './UserDropdownContent';
  * Configs
  */
 import { AVATAR_SIZE } from '@/config';
+import { RoleEnum } from '@/shared/types';
 
 type AppHeaderProps = {
   collapsed: boolean;
@@ -42,9 +47,7 @@ type AppHeaderProps = {
 const { Header } = Layout;
 
 const headerStyle: React.CSSProperties = {
-  background: 'white',
   height: 60,
-  borderBottom: '1px solid #F0F0F0',
   display: 'flex',
   alignItems: 'center',
   paddingInline: 10,
@@ -52,14 +55,36 @@ const headerStyle: React.CSSProperties = {
   position: 'sticky',
   top: 0,
   zIndex: 100,
+  background: 'rgba(15,15,17,0.82)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  borderBottom: '1px solid rgba(80,45,50,0.7)',
 };
 
 export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
   const { isFullscreen, toggleFullscreen } = useFullscreen();
   const { user } = useAuth();
   const { isOnline } = useNetworkStatus();
+  const { mode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Only show theme toggle for SystemAdmin
+  const showThemeToggle = user?.roles[0] === RoleEnum.SystemAdmin;
+
+  // Detect if Brand Manager is "acting as Store Manager"
+  const isActingAsStore =
+    location.pathname.startsWith('/store') &&
+    user?.roles?.includes(RoleEnum.BrandManager) &&
+    !user?.roles?.includes(RoleEnum.StoreManager) &&
+    searchParams.has('storeId');
+
+  const handleBackToBrand = () => {
+    navigate('/brand/stores');
+  };
 
   return (
     <Header style={headerStyle}>
@@ -77,7 +102,6 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             type='text'
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={onClick}
-            // style={{ , width: 36, height: 36 }}
           />
           {!isOnline && (
             <Tag
@@ -86,6 +110,35 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             >
               Offline Mode
             </Tag>
+          )}
+          {isActingAsStore && (
+            <>
+              <Button
+                type='default'
+                icon={<ArrowLeftOutlined />}
+                onClick={handleBackToBrand}
+                style={{
+                  background: 'rgba(239,68,68,0.12)',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  color: '#fca5a5',
+                }}
+              >
+                Back to Brand
+              </Button>
+              <Tag
+                icon={<EyeOutlined />}
+                color='orange'
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: '4px 12px',
+                  border: '1px solid rgba(251,191,36,0.3)',
+                  background: 'rgba(251,191,36,0.12)',
+                }}
+              >
+                Viewing as Store Manager
+              </Tag>
+            </>
           )}
         </Flex>
 
@@ -104,11 +157,14 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             }
             style={{ width: 36, height: 36 }}
           />
-          <Button
-            type='text'
-            icon={<MessageOutlined />}
-            style={{ width: 36, height: 36 }}
-          />
+          {showThemeToggle && (
+            <Button
+              type='text'
+              onClick={(e) => toggleTheme(e)}
+              icon={mode === 'dark' ? <MoonOutlined /> : <SunOutlined />}
+              style={{ width: 36, height: 36 }}
+            />
+          )}
           <Button
             type='text'
             onClick={toggleFullscreen}
@@ -126,9 +182,12 @@ export const AppHeader = ({ collapsed, onClick }: AppHeaderProps) => {
             }}
             trigger={['click']}
             placement='bottomRight'
-            dropdownRender={() => (
+            popupRender={() => (
               <div
-                className='overflow-hidden rounded-sm bg-white shadow-md'
+                className='overflow-hidden rounded-sm shadow-md'
+                style={{
+                  backgroundColor: 'var(--ant-color-bg-elevated)',
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <UserDropdownContent />

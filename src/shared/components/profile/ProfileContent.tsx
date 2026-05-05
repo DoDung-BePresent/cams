@@ -216,20 +216,24 @@ export const ProfileContent = () => {
                 >
                   <Text
                     type='secondary'
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 12, color: '#857b80' }}
                   >
                     First Name
                   </Text>
                   <div
                     style={{
                       padding: '8px 12px',
-                      border: '1px solid #d9d9d9',
+                      border: '1px solid #2d2528',
                       borderRadius: 6,
-                      background: '#fafafa',
+                      background: 'rgba(255,255,255,0.03)',
                       minHeight: 40,
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                   >
-                    <Text>{profile?.firstName ?? '—'}</Text>
+                    <Text style={{ color: '#b7adb0' }}>
+                      {profile?.firstName ?? '—'}
+                    </Text>
                   </div>
                 </Flex>
               </Col>
@@ -243,20 +247,24 @@ export const ProfileContent = () => {
                 >
                   <Text
                     type='secondary'
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 12, color: '#857b80' }}
                   >
                     Last Name
                   </Text>
                   <div
                     style={{
                       padding: '8px 12px',
-                      border: '1px solid #d9d9d9',
+                      border: '1px solid #2d2528',
                       borderRadius: 6,
-                      background: '#fafafa',
+                      background: 'rgba(255,255,255,0.03)',
                       minHeight: 40,
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                   >
-                    <Text>{profile?.lastName ?? '—'}</Text>
+                    <Text style={{ color: '#b7adb0' }}>
+                      {profile?.lastName ?? '—'}
+                    </Text>
                   </div>
                 </Flex>
               </Col>
@@ -270,25 +278,29 @@ export const ProfileContent = () => {
                 >
                   <Text
                     type='secondary'
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 12, color: '#857b80' }}
                   >
                     Email Address
                   </Text>
                   <div
                     style={{
                       padding: '8px 12px',
-                      border: '1px solid #d9d9d9',
+                      border: '1px solid #2d2528',
                       borderRadius: 6,
-                      background: '#fafafa',
+                      background: 'rgba(255,255,255,0.03)',
                       minHeight: 40,
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                   >
                     <Flex
                       align='center'
                       gap='small'
                     >
-                      <MailOutlined style={{ color: '#8c8c8c' }} />
-                      <Text>{profile?.email ?? '—'}</Text>
+                      <MailOutlined style={{ color: '#857b80' }} />
+                      <Text style={{ color: '#b7adb0' }}>
+                        {profile?.email ?? '—'}
+                      </Text>
                       {profile?.emailConfirmed ? (
                         <Badge status='success' />
                       ) : (
@@ -308,25 +320,29 @@ export const ProfileContent = () => {
                 >
                   <Text
                     type='secondary'
-                    style={{ fontSize: 12 }}
+                    style={{ fontSize: 12, color: '#857b80' }}
                   >
                     Phone Number
                   </Text>
                   <div
                     style={{
                       padding: '8px 12px',
-                      border: '1px solid #d9d9d9',
+                      border: '1px solid #2d2528',
                       borderRadius: 6,
-                      background: '#fafafa',
+                      background: 'rgba(255,255,255,0.03)',
                       minHeight: 40,
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                   >
                     <Flex
                       align='center'
                       gap='small'
                     >
-                      <PhoneOutlined style={{ color: '#8c8c8c' }} />
-                      <Text>{profile?.phoneNumber ?? 'Not provided'}</Text>
+                      <PhoneOutlined style={{ color: '#857b80' }} />
+                      <Text style={{ color: '#b7adb0' }}>
+                        {profile?.phoneNumber ?? 'Not provided'}
+                      </Text>
                       {profile?.phoneNumber &&
                         (profile.phoneNumberConfirmed ? (
                           <Badge status='success' />
@@ -358,17 +374,19 @@ export const ProfileContent = () => {
                     >
                       <Text
                         type='secondary'
-                        style={{ fontSize: 12 }}
+                        style={{ fontSize: 12, color: '#857b80' }}
                       >
                         Brand
                       </Text>
                       <div
                         style={{
                           padding: '8px 12px',
-                          border: '1px solid #d9d9d9',
+                          border: '1px solid #2d2528',
                           borderRadius: 6,
-                          background: '#fafafa',
+                          background: 'rgba(255,255,255,0.03)',
                           minHeight: 40,
+                          display: 'flex',
+                          alignItems: 'center',
                         }}
                       >
                         <Tag color='blue'>{profile.brandName}</Tag>
@@ -387,17 +405,19 @@ export const ProfileContent = () => {
                     >
                       <Text
                         type='secondary'
-                        style={{ fontSize: 12 }}
+                        style={{ fontSize: 12, color: '#857b80' }}
                       >
                         Store
                       </Text>
                       <div
                         style={{
                           padding: '8px 12px',
-                          border: '1px solid #d9d9d9',
+                          border: '1px solid #2d2528',
                           borderRadius: 6,
-                          background: '#fafafa',
+                          background: 'rgba(255,255,255,0.03)',
                           minHeight: 40,
+                          display: 'flex',
+                          alignItems: 'center',
                         }}
                       >
                         <Tag color='green'>{profile.storeName}</Tag>

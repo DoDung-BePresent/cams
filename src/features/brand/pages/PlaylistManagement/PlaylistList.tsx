@@ -1,63 +1,76 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Button } from 'antd';
-
-/**
- * Icons
- */
-import { PlusOutlined } from '@ant-design/icons';
-
-/**
- * Components
- */
-import { PageHeader, DataTable, AppModal } from '@/shared/components';
 import {
-  AddTracksDrawer,
+  Button,
+  Empty,
+  Flex,
+  Input,
+  Pagination,
+  Select,
+  Skeleton,
+  Table,
+  Tag,
+  Typography,
+} from 'antd';
+import {
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
+
+import { AppModal } from '@/shared/components';
+import {
+  AddTracksModal,
   getPlaylistColumns,
-  PlaylistDetailsDrawer,
+  PlaylistDetailsModal,
 } from '@/shared/modules/playlists/components';
 import {
-  PlaylistFilter as PlaylistFilterComponent,
-  CreatePlaylistDrawer,
-  EditPlaylistDrawer,
-} from './components';
-
-/**
- * Hooks
- */
-import {
-  usePlaylists,
   useDeletePlaylist,
+  usePlaylists,
   useTogglePlaylistStatus,
 } from '@/shared/modules/playlists/hooks';
 import { useStores } from '@/features/brand/hooks';
 import { useMoods } from '@/shared/modules/moods/hooks';
+import { CreatePlaylistDrawer, EditPlaylistDrawer } from './components';
 
-/**
- * Constants
- */
-import { PAGINATION_SIZES } from '@/shared/constants';
+import type { PlaylistFilter } from '@/shared/modules/playlists/types';
 
-/**
- * Types
- */
-import type {
-  PlaylistFilter,
-  PlaylistListItem,
-} from '@/shared/modules/playlists/types';
-import type { TablePaginationConfig } from 'antd';
-import type { FilterValue, SorterResult } from 'antd/es/table/interface';
+const { Text, Title } = Typography;
+
+const C = {
+  surface: '#18181b',
+  border: '#2d2528',
+  red: '#ef4444',
+  text: '#f8f7f7',
+  textMuted: '#b7adb0',
+  textSubtle: '#857b80',
+};
 
 export const PlaylistList = () => {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<PlaylistFilter>({
-    page: 1,
-    pageSize: 10,
-    sortBy: 'createdAt',
-    isAscending: false,
-  });
 
-  const [showFilters, setShowFilters] = useState(false);
+  const [search, setSearch] = useState('');
+  const [selectedMoodId, setSelectedMoodId] = useState<string | undefined>();
+  const [selectedStoreId, setSelectedStoreId] = useState<string | undefined>();
+  const [selectedStatus, setSelectedStatus] = useState<number | undefined>();
+  const [page, setPage] = useState(1);
+  const pageSize = 24;
+
+  const filter: PlaylistFilter = useMemo(
+    () => ({
+      page,
+      pageSize,
+      sortBy: 'createdAt',
+      isAscending: false,
+      search: search || undefined,
+      moodId: selectedMoodId,
+      storeId: selectedStoreId,
+      status: selectedStatus,
+      includeShared: true,
+    }),
+    [page, search, selectedMoodId, selectedStoreId, selectedStatus],
+  );
+
   const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
@@ -71,34 +84,18 @@ export const PlaylistList = () => {
     status: 1,
   });
   const { data: moodsData } = useMoods();
-
   const deletePlaylist = useDeletePlaylist();
   const toggleStatus = useTogglePlaylistStatus();
 
-  const handleSearch = (value: string) => {
-    setFilter((prev) => ({ ...prev, search: value, page: 1 }));
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleFilterChange = (key: keyof PlaylistFilter, value: any) => {
-    setFilter((prev) => ({ ...prev, [key]: value, page: 1 }));
-  };
-
-  const handleTableChange = (
-    pagination: TablePaginationConfig,
-    _filters: Record<string, FilterValue | null>,
-    sorter: SorterResult<PlaylistListItem> | SorterResult<PlaylistListItem>[],
-  ) => {
-    const currentSorter = Array.isArray(sorter) ? sorter[0] : sorter;
-
-    setFilter((prev) => ({
-      ...prev,
-      page: pagination.current || 1,
-      pageSize: pagination.pageSize || 10,
-      sortBy: currentSorter.field ? String(currentSorter.field) : 'createdAt',
-      isAscending: currentSorter.order === 'ascend',
-    }));
-  };
+  const playlists = data?.items || [];
+  const storeOptions = (storesData?.items || []).map((store) => ({
+    label: store.name,
+    value: store.id,
+  }));
+  const moodOptions = (moodsData || []).map((mood) => ({
+    label: mood.name,
+    value: mood.id,
+  }));
 
   const handleView = (id: string) => {
     setSelectedPlaylistId(id);
@@ -116,153 +113,296 @@ export const PlaylistList = () => {
   };
 
   const handleDelete = (id: string) => {
-    const playlist = data?.items.find((p) => p.id === id);
-
+    const playlist = playlists.find((p) => p.id === id);
     AppModal.confirm({
       title: 'Delete Playlist',
       content: (
         <div>
           <p>
-            Are you sure you want to delete playlist{' '}
-            <strong>"{playlist?.name}"</strong>?
+            Are you sure you want to delete <strong>"{playlist?.name}"</strong>?
           </p>
-          <p style={{ color: '#ff4d4f', marginTop: 8 }}>
-            This action cannot be undone!
+          <p style={{ color: '#e22134', marginTop: 8 }}>
+            This action cannot be undone.
           </p>
         </div>
       ),
       okText: 'Delete',
       cancelText: 'Cancel',
-      okButtonProps: {
-        danger: true,
-      },
-      onOk: () => {
-        deletePlaylist.mutate(id, {
-          onSuccess: () => refetch(),
-        });
-      },
+      okButtonProps: { danger: true },
+      onOk: () => deletePlaylist.mutate(id, { onSuccess: () => refetch() }),
     });
   };
 
   const handleToggleStatus = (id: string) => {
-    const playlist = data?.items.find((p) => p.id === id);
+    const playlist = playlists.find((p) => p.id === id);
     const action = playlist?.status === 1 ? 'deactivate' : 'activate';
-
-    AppModal.confirm({
+    AppModal.warning({
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} Playlist`,
-      content: `Are you sure you want to ${action} playlist "${playlist?.name}"?`,
+      content: `Are you sure you want to ${action} "${playlist?.name}"?`,
       okText: action.charAt(0).toUpperCase() + action.slice(1),
       cancelText: 'Cancel',
-      okButtonProps: {
-        danger: playlist?.status === 1,
-      },
-      onOk: () => {
-        toggleStatus.mutate(id, {
-          onSuccess: () => refetch(),
-        });
-      },
+      okButtonProps: { danger: playlist?.status === 1 },
+      onOk: () => toggleStatus.mutate(id, { onSuccess: () => refetch() }),
     });
   };
 
-  const handleReset = () => {
-    setFilter({
-      page: 1,
-      pageSize: 10,
-      sortBy: 'createdAt',
-      isAscending: false,
-    });
-  };
-
-  const breadcrumbs = [
-    {
-      title: 'Dashboard',
-      onClick: () => navigate('/brand/dashboard'),
-      className: 'cursor-pointer',
-    },
-    {
-      title: 'Playlist Management',
-    },
-  ];
-
-  const columns = getPlaylistColumns({
+  const playlistColumns = getPlaylistColumns({
     onView: handleView,
     onEdit: handleEdit,
-    onDelete: handleDelete,
-    onToggleStatus: handleToggleStatus,
     onAddTracks: handleAddTracks,
+    onToggleStatus: handleToggleStatus,
+    onDelete: handleDelete,
+    isActionAllowed: (record) => Boolean(record.brandId),
   });
 
-  // Transform stores data to options
-  const storeOptions = (storesData?.items || []).map((store) => ({
-    label: store.name || 'Unnamed Store',
-    value: store.id,
-  }));
-
-  // Transform moods data to options
-  const moodOptions = (moodsData || []).map((mood) => ({
-    label: mood.name || 'Unnamed Mood',
-    value: mood.id,
-  }));
+  const clearFilters = () => {
+    setSearch('');
+    setSelectedMoodId(undefined);
+    setSelectedStoreId(undefined);
+    setSelectedStatus(undefined);
+    setPage(1);
+  };
 
   return (
-    <div>
-      <PageHeader
-        title='Playlist Management'
-        breadcrumbs={breadcrumbs}
-        extra={
+    <div
+      style={{
+        minHeight: '100vh',
+        background: 'transparent',
+        padding: '0 0 40px',
+      }}
+    >
+      <div style={{ marginBottom: 24 }}>
+        <Flex
+          align='center'
+          justify='space-between'
+          wrap='wrap'
+          gap={12}
+          style={{ marginBottom: 20 }}
+        >
+          <div>
+            <nav style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+              <span
+                onClick={() => navigate('/brand/dashboard')}
+                style={{ color: C.textMuted, fontSize: 12, cursor: 'pointer' }}
+              >
+                Dashboard
+              </span>
+              <span style={{ color: C.textSubtle }}>/</span>
+              <span style={{ color: C.text, fontSize: 12 }}>
+                Playlist Management
+              </span>
+            </nav>
+            <Title
+              level={3}
+              style={{ margin: 0, color: C.text, fontWeight: 700 }}
+            >
+              Playlist Management
+            </Title>
+          </div>
           <Button
             type='primary'
             size='large'
             icon={<PlusOutlined />}
             onClick={() => setCreateDrawerOpen(true)}
+            style={{
+              background: C.red,
+              border: 'none',
+              color: '#fff',
+              fontWeight: 700,
+            }}
           >
-            Create Playlist
+            New Playlist
           </Button>
-        }
-      />
+        </Flex>
 
-      {/* Filter Component */}
-      <DataTable<PlaylistListItem>
-        filter={
-          <PlaylistFilterComponent
-            filter={filter}
-            showAdvanced={showFilters}
-            stores={storeOptions}
-            moods={moodOptions}
-            onSearch={handleSearch}
-            onFilterChange={handleFilterChange}
-            onToggleAdvanced={() => setShowFilters(!showFilters)}
-            onRefresh={() => refetch()}
-            onReset={handleReset}
+        <Flex
+          gap={10}
+          wrap='wrap'
+          align='center'
+        >
+          <Input
+            placeholder='Search playlists...'
+            prefix={<SearchOutlined style={{ color: C.textSubtle }} />}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            allowClear
+            style={{
+              flex: 1,
+              minWidth: 220,
+              maxWidth: 340,
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              color: C.text,
+              height: 40,
+            }}
           />
-        }
-        columns={columns}
-        dataSource={data?.items || []}
-        loading={isLoading}
-        rowKey='id'
-        pagination={{
-          current: filter.page,
-          pageSize: filter.pageSize,
-          total: data?.totalItems || 0,
-          showSizeChanger: true,
-          showTotal: (total) => `Total ${total} playlists`,
-          pageSizeOptions: PAGINATION_SIZES,
-          onChange: (page, size) => {
-            setFilter((prev) => ({ ...prev, page, pageSize: size }));
-          },
-        }}
-        onChange={handleTableChange}
-        scroll={{ x: 1400 }}
-      />
+          <Select
+            placeholder='Mood'
+            options={moodOptions}
+            value={selectedMoodId}
+            onChange={(value) => {
+              setSelectedMoodId(value);
+              setPage(1);
+            }}
+            allowClear
+            style={{ width: 160 }}
+          />
+          <Select
+            placeholder='Store'
+            options={storeOptions}
+            value={selectedStoreId}
+            onChange={(value) => {
+              setSelectedStoreId(value);
+              setPage(1);
+            }}
+            allowClear
+            showSearch
+            optionFilterProp='label'
+            style={{ width: 180 }}
+          />
+          <Select
+            placeholder='Status'
+            options={[
+              { label: 'Active', value: 1 },
+              { label: 'Inactive', value: 0 },
+            ]}
+            value={selectedStatus}
+            onChange={(value) => {
+              setSelectedStatus(value);
+              setPage(1);
+            }}
+            allowClear
+            style={{ width: 130 }}
+          />
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => refetch()}
+            style={{
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              color: C.textMuted,
+            }}
+          />
+          {(search ||
+            selectedMoodId ||
+            selectedStoreId ||
+            selectedStatus !== undefined) && (
+            <Button
+              onClick={clearFilters}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${C.border}`,
+                color: C.textMuted,
+              }}
+            >
+              Clear
+            </Button>
+          )}
+        </Flex>
 
-      {/* Create Playlist Drawer */}
+        <Flex
+          gap={6}
+          wrap='wrap'
+          style={{ marginTop: 10 }}
+        >
+          {selectedMoodId && (
+            <Tag
+              closable
+              onClose={() => setSelectedMoodId(undefined)}
+              color='purple'
+            >
+              {moodOptions.find((m) => m.value === selectedMoodId)?.label}
+            </Tag>
+          )}
+          {selectedStoreId && (
+            <Tag
+              closable
+              onClose={() => setSelectedStoreId(undefined)}
+            >
+              {storeOptions.find((s) => s.value === selectedStoreId)?.label}
+            </Tag>
+          )}
+          {selectedStatus !== undefined && (
+            <Tag
+              closable
+              onClose={() => setSelectedStatus(undefined)}
+              color={selectedStatus === 1 ? 'success' : 'default'}
+            >
+              {selectedStatus === 1 ? 'Active' : 'Inactive'}
+            </Tag>
+          )}
+        </Flex>
+      </div>
+
+      <Flex
+        justify='space-between'
+        align='center'
+        style={{ marginBottom: 16 }}
+      >
+        <Text style={{ color: C.textSubtle, fontSize: 13 }}>
+          {isLoading ? '...' : `${data?.totalItems ?? 0} playlists`}
+        </Text>
+      </Flex>
+
+      {isLoading ? (
+        <Skeleton
+          active
+          paragraph={{ rows: 8 }}
+        />
+      ) : playlists.length === 0 ? (
+        <Flex
+          justify='center'
+          style={{ padding: 80 }}
+        >
+          <Empty
+            description={
+              <Text style={{ color: C.textSubtle }}>No playlists found</Text>
+            }
+          />
+        </Flex>
+      ) : (
+        <Table
+          rowKey='id'
+          columns={playlistColumns}
+          dataSource={playlists}
+          pagination={false}
+          scroll={{ x: 760 }}
+          style={{
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 12,
+            overflow: 'hidden',
+          }}
+          onRow={(record) => ({
+            onDoubleClick: () => handleView(record.id),
+          })}
+        />
+      )}
+
+      {(data?.totalItems ?? 0) > pageSize && (
+        <Flex
+          justify='center'
+          style={{ marginTop: 36 }}
+        >
+          <Pagination
+            current={page}
+            pageSize={pageSize}
+            total={data?.totalItems ?? 0}
+            onChange={(nextPage) => setPage(nextPage)}
+            showSizeChanger={false}
+          />
+        </Flex>
+      )}
+
       <CreatePlaylistDrawer
         open={createDrawerOpen}
         onClose={() => setCreateDrawerOpen(false)}
         onSuccess={() => refetch()}
       />
-
-      {/* Edit Playlist Drawer */}
       <EditPlaylistDrawer
         open={editDrawerOpen}
         playlistId={selectedPlaylistId}
@@ -272,9 +412,7 @@ export const PlaylistList = () => {
         }}
         onSuccess={() => refetch()}
       />
-
-      {/* Details Drawer */}
-      <PlaylistDetailsDrawer
+      <PlaylistDetailsModal
         open={detailsDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {
@@ -282,9 +420,7 @@ export const PlaylistList = () => {
           setSelectedPlaylistId(undefined);
         }}
       />
-
-      {/* Add Tracks Drawer */}
-      <AddTracksDrawer
+      <AddTracksModal
         open={addTracksDrawerOpen}
         playlistId={selectedPlaylistId}
         onClose={() => {

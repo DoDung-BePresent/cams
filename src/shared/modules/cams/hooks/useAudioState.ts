@@ -1,6 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { message } from 'antd';
-import { QUERY_KEYS } from '@/config';
+import { useMutation } from '@tanstack/react-query';
 import { handleApiError } from '@/shared/utils';
 import { camsService } from '../services';
 import type { UpdateAudioStateRequest } from '../types';
@@ -20,8 +18,6 @@ import type { UpdateAudioStateRequest } from '../types';
  * });
  */
 export const useUpdateAudioState = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({
       spaceId,
@@ -30,10 +26,8 @@ export const useUpdateAudioState = () => {
       spaceId: string;
       data: UpdateAudioStateRequest;
     }) => camsService.updateAudioState(spaceId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.cams.all });
-      message.success('Audio state updated');
-    },
+    onSuccess: () => {},
+
     onError: (error) => {
       handleApiError(error);
     },

@@ -1,11 +1,12 @@
 import {
-  Drawer,
+  Modal,
   Descriptions,
   Tag,
   Progress,
   Space,
   Spin,
   Flex,
+  Alert,
   Typography,
 } from 'antd';
 
@@ -36,9 +37,16 @@ import { formatDateTime, formatDuration } from '@/shared/utils';
  */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
 import {
+  COPYRIGHT_CLEARANCE_COLORS,
+  COPYRIGHT_CLEARANCE_LABELS,
   MUSIC_PROVIDER_LABELS,
   MUSIC_PROVIDER_COLORS,
 } from '@/shared/modules/tracks/constants';
+import { TrackCopyrightClearanceStatus } from '@/shared/modules/tracks/types';
+import {
+  getTrackPlaybackBlockedMessage,
+  isTrackPlaybackBlockedByCopyright,
+} from '@/shared/modules/tracks/utils';
 
 /**
  * Configs
@@ -59,6 +67,12 @@ export const TrackDetailsDrawer = ({
   onClose,
 }: TrackDetailsDrawerProps) => {
   const { data: track, isLoading } = useTrack(trackId, open);
+  const isCopyrightBlocked = isTrackPlaybackBlockedByCopyright(
+    track?.copyrightClearanceStatus,
+  );
+  const blockedMessage = getTrackPlaybackBlockedMessage(
+    track?.copyrightClearanceStatus,
+  );
 
   // Auto-poll metadata status for newly uploaded tracks
   const { isPolling, attempts, maxAttempts, status } = useTrackMetadataPolling(
@@ -69,13 +83,16 @@ export const TrackDetailsDrawer = ({
   );
 
   return (
-    <Drawer
-      closeIcon={null}
+    <Modal
       title='Track Details'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={onClose}
+      onCancel={onClose}
+      centered
+      footer={null}
+      styles={{
+        body: { maxHeight: '80vh', overflowY: 'auto', paddingRight: 12 },
+      }}
     >
       {isLoading ? (
         <Flex
@@ -99,23 +116,40 @@ export const TrackDetailsDrawer = ({
             status={status}
           />
 
-          {/* Audio Player */}
-          {track.hlsUrl && (
-            <div>
-              <Title
-                level={5}
-                className='mb-4!'
-              >
-                Audio Player
-              </Title>
-              <HLSAudioPlayer
-                hlsUrl={track.hlsUrl}
-                title={track.title}
-                artist={track.artist}
-                coverImageUrl={track.coverImageUrl}
-              />
-            </div>
+          {isCopyrightBlocked && (
+            <Alert
+              type={
+                track?.copyrightClearanceStatus ===
+                TrackCopyrightClearanceStatus.PendingScan
+                  ? 'warning'
+                  : 'error'
+              }
+              showIcon
+              message='Playback blocked by copyright policy'
+              description={blockedMessage}
+            />
           )}
+
+          {/* Audio Player — always mount like store drawer so missing CDN URL shows fallback, not a blank panel */}
+          <div>
+            <Title
+              level={5}
+              className='mb-4!'
+            >
+              Audio Player
+            </Title>
+            <HLSAudioPlayer
+              hlsUrl={track.hlsUrl}
+              title={track.title}
+              artist={track.artist}
+              coverImageUrl={track.coverImageUrl}
+              shouldStop={!open}
+              unavailableMessage={
+                isCopyrightBlocked ? blockedMessage : undefined
+              }
+              disabled={isCopyrightBlocked}
+            />
+          </div>
 
           {/* Basic Info */}
           <Descriptions
@@ -145,6 +179,23 @@ export const TrackDetailsDrawer = ({
             <Descriptions.Item label='Status'>
               <Tag color={ENTITY_STATUS_COLORS[track.status]}>
                 {ENTITY_STATUS_LABELS[track.status]}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label='Copyright'>
+              <Tag
+                color={
+                  COPYRIGHT_CLEARANCE_COLORS[
+                    track.copyrightClearanceStatus ??
+                      TrackCopyrightClearanceStatus.Cleared
+                  ]
+                }
+              >
+                {
+                  COPYRIGHT_CLEARANCE_LABELS[
+                    track.copyrightClearanceStatus ??
+                      TrackCopyrightClearanceStatus.Cleared
+                  ]
+                }
               </Tag>
             </Descriptions.Item>
           </Descriptions>
@@ -266,6 +317,6 @@ export const TrackDetailsDrawer = ({
       ) : (
         <div style={{ textAlign: 'center', padding: 40 }}>Track not found</div>
       )}
-    </Drawer>
+    </Modal>
   );
 };

@@ -13,11 +13,6 @@ import {
 } from '@ant-design/icons';
 
 /**
- * Utils
- */
-import { formatDateTime } from '@/shared/utils';
-
-/**
  * Constants
  */
 import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
@@ -26,8 +21,15 @@ import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
  * Types
  */
 import type { ColumnsType } from 'antd/es/table';
-import type { PlaylistListItem } from '@/shared/modules/playlists/types';
+import type {
+  PlaylistListItem,
+  PlaylistTrackItem,
+} from '@/shared/modules/playlists/types';
 import type { EntityStatusEnum } from '@/shared/types';
+
+type PlaylistRow = PlaylistListItem & {
+  tracks?: PlaylistTrackItem[];
+};
 
 interface PlaylistColumnActions {
   onView: (id: string) => void;
@@ -35,6 +37,8 @@ interface PlaylistColumnActions {
   onDelete?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
   onAddTracks?: (id: string) => void;
+  /** If provided, edit/delete/toggle/addTracks actions are only shown when this returns true */
+  isActionAllowed?: (record: PlaylistListItem) => boolean;
 }
 
 export const getPlaylistColumns = ({
@@ -43,6 +47,7 @@ export const getPlaylistColumns = ({
   onDelete,
   onToggleStatus,
   onAddTracks,
+  isActionAllowed,
 }: PlaylistColumnActions): ColumnsType<PlaylistListItem> => [
   {
     title: 'No.',
@@ -62,42 +67,49 @@ export const getPlaylistColumns = ({
         size={0}
       >
         <span style={{ fontWeight: 500 }}>{name}</span>
-        {record.storeName && (
+        {!record.storeId && !record.brandId ? (
+          <Tag
+            color='purple'
+            style={{ fontSize: 11, marginTop: 2 }}
+          >
+            Shared
+          </Tag>
+        ) : record.storeName ? (
           <span style={{ fontSize: 12, color: '#999' }}>
             Store: {record.storeName}
           </span>
-        )}
+        ) : null}
       </Space>
     ),
   },
+
   {
     title: 'Mood',
     dataIndex: 'moodName',
     key: 'moodName',
-    width: 120,
-    render: (moodName: string) =>
-      moodName ? <Tag color='blue'>{moodName}</Tag> : '—',
+    width: 140,
+    render: (moodName?: string | null) =>
+      moodName ? <Tag color='default'>{moodName}</Tag> : <span>—</span>,
   },
+
   {
     title: 'Tracks',
     dataIndex: 'trackCount',
     key: 'trackCount',
-    width: 100,
+    width: 120,
     sorter: true,
     align: 'center',
-    render: (count: number) => (
-      <Tag color={count > 0 ? 'success' : 'default'}>{count}</Tag>
-    ),
+    render: (count: number | null | undefined, record: PlaylistRow) => {
+      const trackCount =
+        typeof count === 'number' ? count : (record.tracks?.length ?? 0);
+      return (
+        <Tag color={trackCount > 0 ? 'success' : 'default'}>
+          {trackCount} {trackCount === 1 ? 'track' : 'tracks'}
+        </Tag>
+      );
+    },
   },
-  {
-    title: 'Default',
-    dataIndex: 'isDefault',
-    key: 'isDefault',
-    width: 100,
-    align: 'center',
-    render: (isDefault: boolean) =>
-      isDefault ? <Tag color='gold'>Default</Tag> : '—',
-  },
+
   {
     title: 'Status',
     dataIndex: 'status',
@@ -109,14 +121,7 @@ export const getPlaylistColumns = ({
       </Tag>
     ),
   },
-  {
-    title: 'Created At',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
-    width: 160,
-    sorter: true,
-    render: (date: string) => formatDateTime(date),
-  },
+
   {
     title: 'Actions',
     key: 'actions',
@@ -132,12 +137,17 @@ export const getPlaylistColumns = ({
         },
       ];
 
+      const actionAllowed = !isActionAllowed || isActionAllowed(record);
+
       // Add management actions if handlers provided
-      if (onEdit || onAddTracks || onToggleStatus || onDelete) {
+      if (
+        actionAllowed &&
+        (onEdit || onAddTracks || onToggleStatus || onDelete)
+      ) {
         menuItems.push({ type: 'divider' });
       }
 
-      if (onEdit) {
+      if (onEdit && actionAllowed) {
         menuItems.push({
           key: 'edit',
           icon: <EditOutlined />,
@@ -146,7 +156,7 @@ export const getPlaylistColumns = ({
         });
       }
 
-      if (onAddTracks) {
+      if (onAddTracks && actionAllowed) {
         menuItems.push({
           key: 'add-tracks',
           icon: <PlusOutlined />,
@@ -155,7 +165,7 @@ export const getPlaylistColumns = ({
         });
       }
 
-      if (onToggleStatus) {
+      if (onToggleStatus && actionAllowed) {
         menuItems.push({
           key: 'toggle',
           icon: <PoweroffOutlined />,
@@ -164,7 +174,7 @@ export const getPlaylistColumns = ({
         });
       }
 
-      if (onDelete) {
+      if (onDelete && actionAllowed) {
         menuItems.push({ type: 'divider' });
         menuItems.push({
           key: 'delete',

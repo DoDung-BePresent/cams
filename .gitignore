@@ -15,6 +15,16 @@ dist-ssr
 # Vercel
 .vercel
 
+# Environment variables
+.env
+
+# Drawio files
+*.drawio
+*.drawio.bkp
+
+# Temporary / generated docs
+TOKEN_REFRESH_IMPLEMENTATION_GUIDE.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

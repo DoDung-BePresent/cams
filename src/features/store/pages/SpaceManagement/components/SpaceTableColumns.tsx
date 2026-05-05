@@ -7,8 +7,10 @@ import {
   PoweroffOutlined,
   MoreOutlined,
   SoundOutlined,
+  CalendarOutlined,
   QrcodeOutlined,
   UnorderedListOutlined,
+  ExperimentOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -30,9 +32,11 @@ import {
 
 type SpaceColumnActions = {
   onView: (id: string) => void;
+  onManageSchedule: (id: string) => void;
   onManageMusic: (id: string) => void;
   onManageQueue: (id: string) => void;
   onPairDevice: (id: string) => void;
+  onTriggerAnalysis: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleStatus: (id: string) => void;
@@ -40,9 +44,11 @@ type SpaceColumnActions = {
 
 export const getSpaceColumns = ({
   onView,
+  onManageSchedule,
   onManageMusic,
   onManageQueue,
   onPairDevice,
+  onTriggerAnalysis,
   onEdit,
   onDelete,
   onToggleStatus,
@@ -119,6 +125,12 @@ export const getSpaceColumns = ({
           onClick: () => onView(record.id),
         },
         {
+          key: 'manage-schedule',
+          icon: <CalendarOutlined />,
+          label: 'Manage Schedule',
+          onClick: () => onManageSchedule(record.id),
+        },
+        {
           key: 'manage-music',
           icon: <SoundOutlined />,
           label: 'Manage Music',
@@ -135,6 +147,12 @@ export const getSpaceColumns = ({
           icon: <QrcodeOutlined />,
           label: 'Pair Device',
           onClick: () => onPairDevice(record.id),
+        },
+        {
+          key: 'trigger-analysis',
+          icon: <ExperimentOutlined />,
+          label: 'Trigger AI Analysis',
+          onClick: () => onTriggerAnalysis(record.id),
         },
         {
           key: 'edit',

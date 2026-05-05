@@ -66,7 +66,7 @@ export const DataTable = <T extends AnyObject = any>({
       >
         <Table
           {...tableProps}
-          className={styles.customTable}
+          className={[styles.customTable, className].filter(Boolean).join(' ')}
           styles={{
             pagination: {
               root: {

@@ -4,6 +4,7 @@
  */
 export const STALE_TIME = {
   instant: 0, // Always refetch (real-time data)
+  xshort: 10 * 1000,
   short: 30 * 1000, // 30 seconds - frequently changing data
   medium: 5 * 60 * 1000, // 5 minutes - default for most queries
   long: 15 * 60 * 1000, // 15 minutes - stable data
@@ -74,6 +75,40 @@ export const QUERY_KEYS = {
     list: (filter?: Record<string, unknown>) =>
       ['moods', 'list', filter] as const,
     detail: (id?: string) => ['moods', 'detail', id] as const,
+  },
+  fuzzyProfileTemplates: {
+    forSelect: ['fuzzy-profile-templates', 'for-select'] as const,
+    manage: (page?: number, pageSize?: number) =>
+      ['fuzzy-profile-templates', 'manage', page, pageSize] as const,
+    detail: (id?: string) => ['fuzzy-profile-templates', 'detail', id] as const,
+  },
+  config: {
+    all: ['config'] as const,
+    systemList: (filter?: Record<string, unknown>) =>
+      ['config', 'system', 'list', filter] as const,
+    policyList: (filter?: Record<string, unknown>) =>
+      ['config', 'policy', 'list', filter] as const,
+    brandList: (filter?: Record<string, unknown>) =>
+      ['config', 'brand', 'list', filter] as const,
+    storeList: (filter?: Record<string, unknown>) =>
+      ['config', 'store', 'list', filter] as const,
+    spaceList: (filter?: Record<string, unknown>) =>
+      ['config', 'space', 'list', filter] as const,
+    brandDetail: (key?: string) => ['config', 'brand', 'detail', key] as const,
+    storeDetail: (storeId?: string, key?: string) =>
+      ['config', 'store', 'detail', storeId, key] as const,
+    spaceDetail: (spaceId?: string, key?: string) =>
+      ['config', 'space', 'detail', spaceId, key] as const,
+  },
+  schedules: {
+    all: ['schedules'] as const,
+    brand: ['schedules', 'brand'] as const,
+    bootstrap: (spaceId?: string) =>
+      ['schedules', 'space', 'bootstrap', spaceId] as const,
+    library: (brandId?: string) =>
+      ['schedules', 'brand', 'library', brandId] as const,
+    templates: (brandId?: string) =>
+      ['schedules', 'brand', 'templates', brandId] as const,
   },
   // CAMS
   cams: {

@@ -1,47 +1,215 @@
 import type { ThemeConfig } from 'antd';
 
-export const antTheme: ThemeConfig = {
-  cssVar: { key: '_,:root,css-var-my-theme-id' },
-  token: {
-    fontFamily: 'Inter',
-    borderRadius: 4,
+const darkFadeTokens = {
+  fontFamily: 'Outfit, sans-serif',
+  borderRadius: 8,
+  colorPrimary: '#ef4444',
+  colorPrimaryHover: '#f87171',
+  colorPrimaryActive: '#dc2626',
+  colorInfo: '#ef4444',
+  colorSuccess: '#22c55e',
+  colorWarning: '#f59e0b',
+  colorError: '#ef4444',
+  colorLink: '#f87171',
+  colorLinkHover: '#fecaca',
+  colorLinkActive: '#ef4444',
+  colorText: '#f8f7f7',
+  colorTextSecondary: '#b7adb0',
+  colorTextTertiary: '#857b80',
+  colorBgBase: '#0f0f11',
+  colorBgLayout: '#0f0f11',
+  colorBgContainer: '#18181b',
+  colorBgElevated: '#202024',
+  colorBorder: '#2d2528',
+  colorBorderSecondary: '#252528',
+};
+
+const darkFadeComponents: ThemeConfig['components'] = {
+  Layout: {
+    headerBg: 'rgba(15, 15, 17, 0.82)',
+    bodyBg: '#0f0f11',
+    footerBg: '#0f0f11',
+    siderBg: '#111113',
   },
-  components: {
-    Typography: {
-      titleMarginBottom: 0,
-    },
-    Form: {
-      labelColor: 'var(--color-gray)',
-    },
-    Menu: {
-      itemMarginInline: 0,
-      itemMarginBlock: 0,
-      itemBorderRadius: 0,
-      itemHeight: 46,
-    },
-    Button: {
-      fontSizeLG: 14,
-    },
-    Input: {
-      fontSizeLG: 14,
-    },
-    InputNumber: {
-      fontSizeLG: 14,
-    },
-    Select: {
-      fontSizeLG: 14,
-    },
-    Card: {
-      colorBorderSecondary: '#E6EBF1',
-    },
-    Tabs: {
-      horizontalItemGutter: 0,
-    },
-    DatePicker: {
-      fontSizeLG: 14,
-    },
-    Divider: {
-      marginLG: 0,
-    },
+  Typography: {
+    titleMarginBottom: 0,
+    colorText: '#f8f7f7',
+    colorTextSecondary: '#b7adb0',
+  },
+  Form: {
+    labelColor: '#b7adb0',
+  },
+  Menu: {
+    itemMarginInline: 0,
+    itemMarginBlock: 0,
+    itemBorderRadius: 8,
+    itemHeight: 46,
+    colorBgContainer: '#111113',
+    colorItemBg: '#111113',
+    colorItemBgHover: '#242126',
+    colorItemBgSelected: '#2a171b',
+    colorItemText: '#b7adb0',
+    colorItemTextHover: '#ffffff',
+    colorItemTextSelected: '#ffffff',
+  },
+  Button: {
+    fontSizeLG: 14,
+    colorPrimary: '#ef4444',
+    colorPrimaryHover: '#f87171',
+    colorPrimaryActive: '#dc2626',
+    primaryColor: '#ffffff',
+    colorBgContainerDisabled: '#3d2a2d',
+    colorTextDisabled: '#8a7175',
+    borderColorDisabled: '#3d2a2d',
+  },
+  Input: {
+    fontSizeLG: 14,
+    colorBgContainer: '#18181b',
+    colorBorder: '#2d2528',
+    colorText: '#f8f7f7',
+    colorTextPlaceholder: '#857b80',
+    colorBgContainerDisabled: '#111113',
+  },
+  InputNumber: {
+    fontSizeLG: 14,
+    colorBgContainer: '#18181b',
+    colorBorder: '#2d2528',
+    colorText: '#f8f7f7',
+  },
+  Select: {
+    fontSizeLG: 14,
+    colorBgContainer: '#18181b',
+    colorBgElevated: '#202024',
+    colorBorder: '#2d2528',
+    colorText: '#f8f7f7',
+    colorTextPlaceholder: '#857b80',
+    optionSelectedBg: '#2a171b',
+  },
+  Card: {
+    colorBgContainer: '#18181b',
+    colorBorderSecondary: '#252528',
+    headerFontSize: 14,
+    colorText: '#f8f7f7',
+    colorTextHeading: '#ffffff',
+  },
+  Tabs: {
+    horizontalItemGutter: 0,
+    colorPrimary: '#ef4444',
+    colorText: '#b7adb0',
+  },
+  DatePicker: {
+    fontSizeLG: 14,
+    colorBgContainer: '#18181b',
+    colorBgElevated: '#202024',
+    colorBorder: '#2d2528',
+    colorText: '#f8f7f7',
+    colorTextPlaceholder: '#857b80',
+    cellHoverBg: '#EF4444',
+  },
+  Divider: {
+    marginLG: 0,
+    colorSplit: '#252528',
+  },
+  Table: {
+    colorBgContainer: '#141416',
+    colorText: '#f8f7f7',
+    colorTextHeading: '#ffffff',
+    colorBorderSecondary: '#252528',
+    headerBg: '#1a1a1d',
+    rowHoverBg: '#222226',
+  },
+  Drawer: {
+    colorBgElevated: '#18181b',
+    colorBgMask: 'rgba(0, 0, 0, 0.72)',
+    colorText: '#f8f7f7',
+  },
+  Modal: {
+    contentBg: '#18181b',
+    headerBg: '#18181b',
+    colorBgMask: 'rgba(0, 0, 0, 0.72)',
+    colorText: '#f8f7f7',
+  },
+  Dropdown: {
+    colorBgElevated: '#202024',
+    colorText: '#f8f7f7',
+    controlItemBgHover: '#2a171b',
+  },
+  Collapse: {
+    colorBgContainer: '#18181b',
+    colorBorder: '#252528',
+    headerBg: '#141416',
+    colorText: '#f8f7f7',
+  },
+  Segmented: {
+    itemSelectedBg: '#ef4444',
+    itemSelectedColor: '#ffffff',
+    itemColor: '#b7adb0',
+    itemHoverColor: '#ffffff',
+    trackBg: '#202024',
+  },
+  Switch: {
+    colorPrimary: '#ef4444',
+    colorPrimaryHover: '#f87171',
+  },
+  Radio: {
+    colorPrimary: '#ef4444',
+    colorBgContainer: '#18181b',
+    colorBorder: '#2d2528',
+    colorText: '#f8f7f7',
+  },
+  Checkbox: {
+    colorPrimary: '#ef4444',
+    colorBgContainer: '#18181b',
+    colorBorder: '#2d2528',
+    colorText: '#f8f7f7',
+  },
+  Slider: {
+    colorPrimary: '#ef4444',
+    colorPrimaryBorder: '#ef4444',
+    trackBg: '#3b3034',
+    trackHoverBg: '#5b222b',
+  },
+  Alert: {
+    colorInfoBg: '#241519',
+    colorInfoBorder: '#7f1d1d',
+    colorSuccessBg: '#102116',
+    colorSuccessBorder: '#22c55e',
+    colorWarningBg: '#261d0f',
+    colorWarningBorder: '#f59e0b',
+    colorErrorBg: '#2a1114',
+    colorErrorBorder: '#ef4444',
+  },
+  Spin: {
+    colorPrimary: '#ef4444',
+  },
+  Progress: {
+    colorText: '#f8f7f7',
+    defaultColor: '#ef4444',
+  },
+  Tooltip: {
+    colorBgSpotlight: '#202024',
+    colorTextLightSolid: '#ffffff',
+  },
+  Popover: {
+    colorBgElevated: '#202024',
+    colorText: '#f8f7f7',
+    colorBorder: '#2d2528',
+  },
+  Tag: {
+    defaultBg: '#202024',
+    defaultColor: '#b7adb0',
+    colorBorder: '#2d2528',
+    colorSuccess: '#22c55e',
+    colorInfo: '#ef4444',
+    colorWarning: '#f59e0b',
+    colorError: '#ef4444',
   },
 };
+
+export const antTheme: ThemeConfig = {
+  cssVar: { key: '_,:root,css-var-my-theme-id' },
+  token: darkFadeTokens,
+  components: darkFadeComponents,
+};
+
+export const antDarkTheme: ThemeConfig = antTheme;

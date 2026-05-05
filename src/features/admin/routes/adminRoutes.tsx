@@ -18,9 +18,20 @@ const BrandList = Loadable(
   'BrandList',
 );
 
+const FuzzyProfileTemplateList = Loadable(
+  () =>
+    import('@/features/admin/pages/FuzzyProfileTemplateManagement/FuzzyProfileTemplateList'),
+  'FuzzyProfileTemplateList',
+);
+
 const AccountList = Loadable(
   () => import('@/features/admin/pages/AccountManagement/AccountList'),
   'AccountList',
+);
+
+const ConfigList = Loadable(
+  () => import('@/features/admin/pages/ConfigManagement/ConfigList'),
+  'ConfigList',
 );
 
 const TrackList = Loadable(
@@ -38,6 +49,16 @@ const AdminProfile = Loadable(
   'AdminProfile',
 );
 
+const BillingPackages = Loadable(
+  () => import('@/features/admin/pages/BillingPackages'),
+  'AdminBillingPackages',
+);
+
+const AdminIotManagementPage = Loadable(
+  () => import('@/features/admin/pages/IotManagement/IotManagementPage'),
+  'AdminIotManagementPage',
+);
+
 export const adminRoutes = [
   {
     path: 'dashboard',
@@ -48,8 +69,16 @@ export const adminRoutes = [
     element: <BrandList />,
   },
   {
+    path: 'ai-fuzzy-templates',
+    element: <FuzzyProfileTemplateList />,
+  },
+  {
     path: 'accounts',
     element: <AccountList />,
+  },
+  {
+    path: 'config-management',
+    element: <ConfigList />,
   },
   {
     path: 'tracks',
@@ -60,6 +89,14 @@ export const adminRoutes = [
     element: <PlaylistList />,
   },
   {
+    path: 'billing-packages',
+    element: <BillingPackages />,
+  },
+  {
+    path: 'iot',
+    element: <AdminIotManagementPage />,
+  },
+  {
     path: 'profile/*',
     element: <AdminProfile />,
   },
@@ -67,7 +104,7 @@ export const adminRoutes = [
     path: '*',
     element: (
       <Navigate
-        to='/store/dashboard'
+        to='/admin/dashboard'
         replace
       />
     ),

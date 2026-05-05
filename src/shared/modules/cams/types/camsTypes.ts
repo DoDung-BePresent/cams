@@ -48,6 +48,11 @@ export enum OverrideMode {
   Mood = 2,
 }
 
+export enum SchedulingSlotOrigin {
+  Space = 1,
+  Brand = 2,
+}
+
 /**
  * Queue Insert Mode Enum (from API_CAMS.md § 3.3.2)
  * ⚠️ NEW (2026-03-23): Queue insert modes
@@ -76,6 +81,7 @@ export enum QueueItemStatus {
 export enum QueueItemSource {
   AI = 0,
   Manager = 1,
+  Scheduling = 2,
 }
 
 /**
@@ -86,11 +92,13 @@ export interface SpaceQueueItemResponse {
   queueItemId: string;
   trackId: string;
   trackName: string;
+  artist?: string | null;
   position: number;
   queueStatus: QueueItemStatus;
   source: QueueItemSource;
   hlsUrl: string | null;
   isReadyToStream: boolean;
+  coverImageUrl?: string | null; // Optional cover image URL for display
 }
 
 /**
@@ -116,6 +124,23 @@ export interface SpaceQueueItemDto {
   durationSec: number | null;
   coverImageUrl: string | null;
   orderIndex: number;
+  queueStatus?: QueueItemStatus | number | null;
+  source?: number | null;
+  isReadyToStream?: boolean | null;
+}
+
+export interface FuzzySignalContribution {
+  signal: string;
+  chillDelta: number;
+  focusDelta: number;
+  energeticDelta: number;
+}
+
+export interface FuzzyScoreBreakdown {
+  chillScore: number;
+  focusScore: number;
+  energeticScore: number;
+  signalContributions?: FuzzySignalContribution[] | null;
 }
 
 /**
@@ -131,10 +156,21 @@ export interface SpaceStateDto {
   brandId: string;
   currentQueueItemId: string | null; // Changed from currentPlaylistId
   currentTrackName: string | null; // Changed from currentPlaylistName
+  currentArtist?: string | null;
   hlsUrl: string | null;
   moodName: string | null;
   isManualOverride: boolean;
   overrideMode: OverrideMode | null;
+  overrideReason?: string | null;
+  manualOverrideActivatedAtUtc?: string | null;
+  manualOverrideExpiresAtUtc?: string | null;
+  manualOverrideTtlSeconds?: number | null;
+  manualOverrideRemainingSeconds?: number | null;
+  isScheduling?: boolean;
+  schedulingSlotId?: string | null;
+  schedulingSlotOrigin?: SchedulingSlotOrigin | null;
+  schedulingEndsAtUtc?: string | null;
+  schedulingRemainingSeconds?: number | null;
   startedAtUtc: string | null;
   expectedEndAtUtc: string | null;
   seekOffsetSeconds: number | null; // Always null in SignalR
@@ -143,6 +179,8 @@ export interface SpaceStateDto {
   pendingQueueItemId: string | null; // Changed from pendingPlaylistId
   pendingOverrideReason: string | null;
   volumePercent: number; // NEW: 0-100
+  isIotDeviceOffline?: boolean; // NEW: Latest telemetry reports device offline
+  isIotDeviceAssigned?: boolean;
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
@@ -154,6 +192,9 @@ export interface SpaceStateDto {
   fuzzyRule?: string | null; // Triggered rule name (e.g., "RULE_1_RUSH_HOUR")
   fuzzyReason?: string | null; // Human-readable reason (e.g., "Critical pressure detected")
   isBpmFallback?: boolean | null; // True if using mood-only selection (not enough BPM data)
+  fuzzyConfidence?: number | null;
+  fuzzyScoreBreakdown?: FuzzyScoreBreakdown | null;
+  isSuggestOnly?: boolean;
 }
 
 /**
@@ -190,7 +231,34 @@ export interface OverridePlaylistRequest {
   moodId?: string | null;
   trackIds?: string[] | null; // NEW: Direct track selection
   isClearManagerSelectedQueues?: boolean; // NEW: Clear existing queue
+  isCutOver?: boolean | null; // NEW: Immediate cutover behavior
+  manualOverrideExpiresAtUtc?: string | null; // Optional exact expiry time
   reason?: string | null; // Optional reason for audit trail
+}
+
+/** POST /api/cams/trigger-analysis/{spaceId} */
+export interface TriggerAnalysisRequest {
+  storeId: string;
+  brandId: string;
+  spaceMaxOccupancy?: number;
+}
+
+/** Response payload from POST /api/cams/trigger-analysis/{spaceId} */
+export interface ContextAnalysisResponse {
+  spaceId: string;
+  targetMood: number | string;
+  recommendedBpmTarget: number;
+  recommendedBpmMin: number;
+  recommendedBpmMax: number;
+  targetMoodType?: number | string;
+  moodChanged: boolean;
+  previousMood?: number | string | null;
+  pressure?: number | string;
+  stress?: number | string;
+  density?: number | string;
+  triggeredRule: string;
+  reason: string;
+  analyzedAtUtc: string;
 }
 
 /**
@@ -224,6 +292,14 @@ export interface ReorderQueueRequest {
 }
 
 /**
+ * Remove queue items request (from API_CAMS.md)
+ * DELETE /api/cams/spaces/{spaceId}/queue
+ */
+export interface RemoveQueueItemsRequest {
+  queueItemIds: string[];
+}
+
+/**
  * Update audio state request (from API_CAMS.md)
  * ⚠️ NEW (2026-03-23): Volume/mute/queue end behavior control
  */
@@ -233,13 +309,17 @@ export interface UpdateAudioStateRequest {
   queueEndBehavior?: QueueEndBehavior;
 }
 
+export interface UpdateSchedulingStateRequest {
+  isScheduling: boolean;
+}
+
 /**
  * Playback control request (from API_CAMS.md § 3.3)
  */
 export interface PlaybackControlRequest {
   command: PlaybackCommand;
   seekPositionSeconds?: number | null;
-  targetTrackId?: string | null;
+  targetQueueItemId?: string | null;
 }
 
 /**
@@ -255,10 +335,21 @@ export interface SpaceStateResponse {
   brandId: string;
   currentQueueItemId: string | null; // Changed from currentPlaylistId
   currentTrackName: string | null; // Changed from currentPlaylistName
+  currentArtist?: string | null;
   hlsUrl: string | null;
   moodName: string | null;
   isManualOverride: boolean;
   overrideMode: OverrideMode | null;
+  overrideReason?: string | null;
+  manualOverrideActivatedAtUtc?: string | null;
+  manualOverrideExpiresAtUtc?: string | null;
+  manualOverrideTtlSeconds?: number | null;
+  manualOverrideRemainingSeconds?: number | null;
+  isScheduling?: boolean;
+  schedulingSlotId?: string | null;
+  schedulingSlotOrigin?: SchedulingSlotOrigin | null;
+  schedulingEndsAtUtc?: string | null;
+  schedulingRemainingSeconds?: number | null;
   startedAtUtc: string | null;
   expectedEndAtUtc: string | null;
   seekOffsetSeconds: number | null; // Calculated server-side in REST
@@ -267,6 +358,8 @@ export interface SpaceStateResponse {
   pendingQueueItemId: string | null; // Changed from pendingPlaylistId
   pendingOverrideReason: string | null;
   volumePercent: number; // NEW: 0-100
+  isIotDeviceOffline?: boolean; // Latest telemetry reports device offline
+  isIotDeviceAssigned?: boolean;
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
@@ -278,6 +371,9 @@ export interface SpaceStateResponse {
   fuzzyRule?: string | null; // Triggered rule name (e.g., "RULE_1_RUSH_HOUR")
   fuzzyReason?: string | null; // Human-readable reason (e.g., "Critical pressure detected")
   isBpmFallback?: boolean | null; // True if using mood-only selection (not enough BPM data)
+  fuzzyConfidence?: number | null;
+  fuzzyScoreBreakdown?: FuzzyScoreBreakdown | null;
+  isSuggestOnly?: boolean;
 }
 
 /**

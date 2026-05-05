@@ -1,4 +1,5 @@
 import { Input, Space, Flex, Button, Select, Tag, Row, Col } from 'antd';
+import type { SelectProps } from 'antd';
 
 /**
  * Icons
@@ -13,6 +14,8 @@ import {
  * Constants
  */
 import {
+  COPYRIGHT_CLEARANCE_LABELS,
+  COPYRIGHT_CLEARANCE_OPTIONS,
   GENRE_OPTIONS,
   MUSIC_PROVIDER_OPTIONS,
 } from '@/shared/modules/tracks/constants';
@@ -26,8 +29,12 @@ import type { TrackFilter as TrackFilterType } from '@/shared/modules/tracks/typ
 interface TrackFilterProps {
   filter: TrackFilterType;
   showAdvanced: boolean;
+  brandOptions?: SelectProps['options'];
   onSearch: (value: string) => void;
-  onFilterChange: (key: keyof TrackFilterType, value: any) => void;
+  onFilterChange: (
+    key: keyof TrackFilterType,
+    value: TrackFilterType[keyof TrackFilterType] | undefined,
+  ) => void;
   onToggleAdvanced: () => void;
   onRefresh: () => void;
   onReset: () => void;
@@ -37,6 +44,7 @@ interface TrackFilterProps {
 export const TrackFilter = ({
   filter,
   showAdvanced,
+  brandOptions,
   onSearch,
   onFilterChange,
   onToggleAdvanced,
@@ -45,9 +53,11 @@ export const TrackFilter = ({
 }: TrackFilterProps) => {
   const hasActiveFilters =
     filter.search ||
+    filter.brandId ||
     filter.genre ||
     filter.moodId ||
     filter.provider !== undefined ||
+    !!filter.copyrightClearanceStatuses?.length ||
     filter.status !== undefined ||
     filter.isAiGenerated !== undefined;
 
@@ -106,6 +116,19 @@ export const TrackFilter = ({
           <Col span={6}>
             <Select
               size='large'
+              placeholder='Filter by Brand'
+              options={brandOptions}
+              value={filter.brandId}
+              onChange={(value) => onFilterChange('brandId', value)}
+              style={{ width: '100%' }}
+              allowClear
+              showSearch
+              optionFilterProp='label'
+            />
+          </Col>
+          <Col span={6}>
+            <Select
+              size='large'
               placeholder='Filter by Genre'
               options={GENRE_OPTIONS}
               value={filter.genre}
@@ -139,6 +162,21 @@ export const TrackFilter = ({
           <Col span={6}>
             <Select
               size='large'
+              placeholder='Copyright Scan'
+              mode='multiple'
+              options={COPYRIGHT_CLEARANCE_OPTIONS}
+              value={filter.copyrightClearanceStatuses}
+              onChange={(value) =>
+                onFilterChange('copyrightClearanceStatuses', value)
+              }
+              style={{ width: '100%' }}
+              maxTagCount='responsive'
+              allowClear
+            />
+          </Col>
+          <Col span={6}>
+            <Select
+              size='large'
               placeholder='AI Generated'
               options={[
                 { label: 'All', value: undefined },
@@ -155,11 +193,26 @@ export const TrackFilter = ({
       )}
 
       {/* Active Filters Display */}
-      {(filter.genre ||
+      {(filter.brandId ||
+        filter.genre ||
         filter.provider !== undefined ||
+        !!filter.copyrightClearanceStatuses?.length ||
         filter.status !== undefined ||
         filter.isAiGenerated !== undefined) && (
         <Space wrap>
+          {filter.brandId && (
+            <Tag
+              closable
+              onClose={() => onFilterChange('brandId', undefined)}
+            >
+              Brand:{' '}
+              {
+                brandOptions?.find((o) => o.value === filter.brandId)?.label as
+                  | string
+                  | undefined
+              }
+            </Tag>
+          )}
           {filter.genre && (
             <Tag
               closable
@@ -192,6 +245,22 @@ export const TrackFilter = ({
               }
             </Tag>
           )}
+          {filter.copyrightClearanceStatuses?.map((status) => (
+            <Tag
+              key={status}
+              closable
+              onClose={() =>
+                onFilterChange(
+                  'copyrightClearanceStatuses',
+                  filter.copyrightClearanceStatuses?.filter(
+                    (item) => item !== status,
+                  ),
+                )
+              }
+            >
+              Copyright: {COPYRIGHT_CLEARANCE_LABELS[status]}
+            </Tag>
+          ))}
           {filter.isAiGenerated !== undefined && (
             <Tag
               closable

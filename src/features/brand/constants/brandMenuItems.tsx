@@ -9,9 +9,10 @@ import {
   TeamOutlined,
   CustomerServiceOutlined,
   UnorderedListOutlined,
-  TabletOutlined,
   CalendarOutlined,
-  ControlOutlined,
+  SettingOutlined,
+  ThunderboltOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 
 export const BRAND_MENU_ITEMS: ItemType[] = [
@@ -41,18 +42,23 @@ export const BRAND_MENU_ITEMS: ItemType[] = [
     label: 'Playlist Management',
   },
   {
-    key: 'devices',
-    icon: <TabletOutlined />,
-    label: 'Device Management',
+    key: 'config-management',
+    icon: <SettingOutlined />,
+    label: 'Config Management',
+  },
+  {
+    key: 'suno-ai',
+    icon: <ThunderboltOutlined />,
+    label: 'AI Music Generator',
+  },
+  {
+    key: 'tokens',
+    icon: <WalletOutlined />,
+    label: 'Tokens & top-up',
   },
   {
     key: 'schedule',
     icon: <CalendarOutlined />,
     label: 'Schedule',
-  },
-  {
-    key: 'music-control',
-    icon: <ControlOutlined />,
-    label: 'Music Control',
   },
 ];

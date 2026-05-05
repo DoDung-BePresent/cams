@@ -18,11 +18,14 @@ import type { PaginationResult, Result } from '@/shared/types';
  */
 const TRACK_ENDPOINTS = {
   list: '/api/tracks',
+  blockedForAdmin: '/api/tracks/admin/blocked',
   detail: (id: string) => `/api/tracks/${id}`,
   create: '/api/tracks',
   update: (id: string) => `/api/tracks/${id}`,
   delete: (id: string) => `/api/tracks/${id}`,
   toggleStatus: (id: string) => `/api/tracks/${id}/toggle-status`,
+  copyrightClearance: (id: string, approve: boolean) =>
+    `/api/tracks/${id}/copyright-clearance?approve=${approve}`,
   retranscode: (id: string) => `/api/tracks/${id}/retranscode`, // NEW
 } as const;
 
@@ -122,11 +125,51 @@ export const trackService = {
       params.append('provider', filter.provider.toString());
     if (filter.isAiGenerated !== undefined)
       params.append('isAiGenerated', filter.isAiGenerated.toString());
+    if (filter.copyrightClearanceStatuses?.length) {
+      filter.copyrightClearanceStatuses.forEach((status) => {
+        params.append('copyrightClearanceStatuses', status.toString());
+      });
+    }
+    if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
+    if (filter.createdTo) params.append('createdTo', filter.createdTo);
+    if (filter.includeShared !== undefined)
+      params.append('includeShared', filter.includeShared.toString());
+
+    return api.get<PaginationResult<TrackListItem>>(
+      `${TRACK_ENDPOINTS.list}?${params.toString()}`,
+    );
+  },
+
+  /**
+   * GET /api/tracks/admin/blocked - List blocked tracks for admin
+   * Authorization: SystemAdmin only
+   */
+  getBlockedForAdmin: (filter: TrackFilter = {}) => {
+    const params = new URLSearchParams();
+
+    if (filter.page) params.append('page', filter.page.toString());
+    if (filter.pageSize) params.append('pageSize', filter.pageSize.toString());
+
+    if (filter.search) params.append('search', filter.search);
+    if (filter.sortBy) params.append('sortBy', filter.sortBy);
+    if (filter.isAscending !== undefined)
+      params.append('isAscending', filter.isAscending.toString());
+
+    if (filter.status !== undefined)
+      params.append('status', filter.status.toString());
+
+    if (filter.brandId) params.append('brandId', filter.brandId);
+    if (filter.moodId) params.append('moodId', filter.moodId);
+    if (filter.genre) params.append('genre', filter.genre);
+    if (filter.provider !== undefined)
+      params.append('provider', filter.provider.toString());
+    if (filter.isAiGenerated !== undefined)
+      params.append('isAiGenerated', filter.isAiGenerated.toString());
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
 
     return api.get<PaginationResult<TrackListItem>>(
-      `${TRACK_ENDPOINTS.list}?${params.toString()}`,
+      `${TRACK_ENDPOINTS.blockedForAdmin}?${params.toString()}`,
     );
   },
 
@@ -198,6 +241,14 @@ export const trackService = {
    */
   toggleStatus: (id: string) => {
     return api.put<Result>(TRACK_ENDPOINTS.toggleStatus(id));
+  },
+
+  /**
+   * POST /api/tracks/{id}/copyright-clearance?approve={bool}
+   * Authorization: SystemAdmin, BrandManager
+   */
+  setCopyrightClearance: (id: string, approve: boolean) => {
+    return api.post<Result>(TRACK_ENDPOINTS.copyrightClearance(id, approve));
   },
 
   /**

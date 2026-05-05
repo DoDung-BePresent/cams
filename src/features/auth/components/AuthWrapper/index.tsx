@@ -1,7 +1,7 @@
 /**
  * Node modules
  */
-import { Card, Flex } from 'antd';
+import { Flex } from 'antd';
 
 /**
  * Components
@@ -12,20 +12,13 @@ import { AuthHeader } from './AuthHeader';
 
 export const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className='relative min-h-dvh'>
+    <div className='relative min-h-dvh font-sans'>
       <Flex
         vertical
-        className='h-screen'
+        className='min-h-screen'
       >
         <AuthHeader />
-        <Flex
-          flex={1}
-          align='center'
-          justify='center'
-          className='px-4'
-        >
-          <Card className='shadow-1 w-120 lg:p-4!'>{children}</Card>
-        </Flex>
+        <main className='w-full flex-1'>{children}</main>
         <AuthFooter />
       </Flex>
       <AuthBackground />

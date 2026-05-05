@@ -83,6 +83,7 @@ export const EditAccountDrawer = ({
         email: account.email,
         phoneNumber: nullToUndefined(account.phoneNumber),
       });
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setExistingAvatarUrl(account.avatarUrl ?? null);
     }
   }, [account, open, form]);
@@ -107,6 +108,7 @@ export const EditAccountDrawer = ({
           handleCancel();
           onSuccess();
         },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onError: (error: any) => {
           const errorCode = error.response?.data?.errorCode;
           const fieldErrors = error.response?.data?.errors;
@@ -261,7 +263,7 @@ export const EditAccountDrawer = ({
               name='phoneNumber'
               rules={updateAccountValidation.phoneNumber}
             >
-              <Input placeholder='+84901234567 or 0901234567' />
+              <Input placeholder='0901234567' />
             </Form.Item>
 
             <Form.Item

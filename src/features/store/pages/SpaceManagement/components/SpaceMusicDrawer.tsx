@@ -55,12 +55,16 @@ export const SpaceMusicDrawer = ({
     open && !!spaceId,
   );
 
-  const { isConnected } = useStoreHub(storeId, accessToken, {
-    onSpaceStateSync: (syncedSpaceId: string) => {
+  const { isConnected } = useStoreHub(open ? storeId : null, accessToken, {
+    onSpaceStateSync: (syncedSpaceId: string, state) => {
       if (syncedSpaceId === spaceId) {
+        queryClient.setQueryData(['cams-space-state', spaceId], state);
+      }
+    },
+    onReconnected: () => {
+      if (spaceId) {
         queryClient.invalidateQueries({
           queryKey: ['cams-space-state', spaceId],
-          refetchType: 'active',
         });
       }
     },
@@ -78,6 +82,9 @@ export const SpaceMusicDrawer = ({
       .then(() => {
         joined = true;
         setIsJoinedSpace(true);
+        queryClient.invalidateQueries({
+          queryKey: ['cams-space-state', spaceId],
+        });
       })
       .catch((error) => {
         console.error('❌ Failed to join space group:', error);
@@ -96,7 +103,7 @@ export const SpaceMusicDrawer = ({
           console.error('❌ Failed to leave space group:', error);
         });
     };
-  }, [open, spaceId, isConnected]);
+  }, [open, spaceId, isConnected, queryClient]);
 
   return (
     <Drawer

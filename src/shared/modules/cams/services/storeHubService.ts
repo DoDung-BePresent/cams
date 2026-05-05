@@ -24,7 +24,61 @@ type StoreHubEventHandlers = {
 class StoreHubService {
   private connection: HubConnection | null = null;
   private currentStoreId: string | null = null;
-  private eventHandlers: StoreHubEventHandlers = {};
+  private joinedSpaceIds = new Set<string>();
+  private joinedSpaceRefCounts = new Map<string, number>();
+  private eventHandlers = new Set<StoreHubEventHandlers>();
+
+  /**
+   * Clock offset in ms: clientNow - serverNow at connection time.
+   * Positive means client clock is ahead of server.
+   * Used by getEffectiveSeekOffset to correct seek positions.
+   */
+  private _serverClockOffsetMs = 0;
+
+  /** Exposed to playbackHelpers so seek math can compensate for clock skew. */
+  public get serverClockOffsetMs(): number {
+    return this._serverClockOffsetMs;
+  }
+
+  public addEventHandlers(handlers: StoreHubEventHandlers): () => void {
+    this.eventHandlers.add(handlers);
+
+    return () => {
+      this.eventHandlers.delete(handlers);
+    };
+  }
+
+  private emitConnected(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onConnected?.());
+  }
+
+  private emitDisconnected(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onDisconnected?.());
+  }
+
+  private emitReconnecting(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onReconnecting?.());
+  }
+
+  private emitReconnected(): void {
+    this.eventHandlers.forEach((handlers) => handlers.onReconnected?.());
+  }
+
+  private emitPlayStream(payload: PlayStreamPayload): void {
+    this.eventHandlers.forEach((handlers) => handlers.onPlayStream?.(payload));
+  }
+
+  private emitPlaybackStateChanged(payload: PlaybackStateChangedPayload): void {
+    this.eventHandlers.forEach((handlers) =>
+      handlers.onPlaybackStateChanged?.(payload),
+    );
+  }
+
+  private emitSpaceStateSync(state: SpaceStateDto): void {
+    this.eventHandlers.forEach((handlers) =>
+      handlers.onSpaceStateSync?.(state.spaceId, state),
+    );
+  }
 
   /**
    * Check if connection is active
@@ -44,9 +98,14 @@ class StoreHubService {
     token: string,
     handlers: StoreHubEventHandlers = {},
   ): Promise<void> {
+    if (Object.keys(handlers).length > 0) {
+      this.addEventHandlers(handlers);
+    }
+
     // ✅ Prevent double-connect
     if (this.isConnected() && this.currentStoreId === storeId) {
       console.log('⏭️ Already connected to this store');
+      this.emitConnected();
       return;
     }
 
@@ -57,7 +116,6 @@ class StoreHubService {
         await this.disconnect();
       }
 
-      this.eventHandlers = handlers;
       this.currentStoreId = storeId;
 
       const hubUrl = `${env.baseUrl}/hubs/store`;
@@ -105,7 +163,7 @@ class StoreHubService {
       await this.joinStore(storeId);
 
       // Trigger connected callback
-      this.eventHandlers.onConnected?.();
+      this.emitConnected();
     } catch (error) {
       console.error('❌ Failed to connect to StoreHub:', error);
       this.connection = null;
@@ -182,7 +240,16 @@ class StoreHubService {
 
     try {
       console.log('🎵 Joining space group:', spaceId);
+      const currentRefCount = this.joinedSpaceRefCounts.get(spaceId) ?? 0;
+      this.joinedSpaceRefCounts.set(spaceId, currentRefCount + 1);
+
+      if (this.joinedSpaceIds.has(spaceId)) {
+        console.log('Already joined space group:', spaceId);
+        return;
+      }
+
       await this.connection.invoke('JoinSpaceAsync', spaceId);
+      this.joinedSpaceIds.add(spaceId);
       console.log('✅ Joined space group successfully:', spaceId);
     } catch (error) {
       console.error('❌ Failed to join space group:', error);
@@ -205,7 +272,21 @@ class StoreHubService {
 
     try {
       console.log('👋 Leaving space group:', spaceId);
+      const currentRefCount = this.joinedSpaceRefCounts.get(spaceId) ?? 0;
+      if (currentRefCount > 1) {
+        this.joinedSpaceRefCounts.set(spaceId, currentRefCount - 1);
+        console.log('Space still in use, keeping group joined:', spaceId);
+        return;
+      }
+
+      this.joinedSpaceRefCounts.delete(spaceId);
+
+      if (!this.joinedSpaceIds.has(spaceId)) {
+        return;
+      }
+
       await this.connection.invoke('LeaveSpaceAsync', spaceId);
+      this.joinedSpaceIds.delete(spaceId);
       console.log('✅ Left space group successfully:', spaceId);
     } catch (error) {
       console.error('❌ Failed to leave space group:', error);
@@ -219,10 +300,24 @@ class StoreHubService {
   private registerEventListeners(): void {
     if (!this.connection) return;
 
+    // Server ack after JoinSpaceAsync / JoinManagerRoomAsync (camelCase over the wire)
+    this.connection.on(
+      'connectionconfirmed',
+      (data: { serverTimeUtc?: string } | null) => {
+        if (data?.serverTimeUtc) {
+          const serverMs = new Date(data.serverTimeUtc).getTime();
+          this._serverClockOffsetMs = Date.now() - serverMs;
+          console.log(
+            `🕐 Server clock offset computed: ${this._serverClockOffsetMs.toFixed(0)}ms (client − server)`,
+          );
+        }
+      },
+    );
+
     // PlayStream event (new track/playlist)
     this.connection.on('PlayStream', (payload: PlayStreamPayload) => {
       console.log('📡 PlayStream event:', payload);
-      this.eventHandlers.onPlayStream?.(payload);
+      this.emitPlayStream(payload);
     });
 
     // PlaybackStateChanged event (pause/resume/skip)
@@ -230,37 +325,50 @@ class StoreHubService {
       'PlaybackStateChanged',
       (payload: PlaybackStateChangedPayload) => {
         console.log('📡 PlaybackStateChanged event:', payload);
-        this.eventHandlers.onPlaybackStateChanged?.(payload);
+        this.emitPlaybackStateChanged(payload);
       },
     );
 
     // SpaceStateSync event (full state sync)
     this.connection.on('SpaceStateSync', (state: SpaceStateDto) => {
       console.log('📡 SpaceStateSync event:', state);
-      this.eventHandlers.onSpaceStateSync?.(state.spaceId, state);
+      this.emitSpaceStateSync(state);
     });
 
     // Connection lifecycle events
     this.connection.onreconnecting(() => {
       console.log('🔄 SignalR reconnecting...');
-      this.eventHandlers.onReconnecting?.();
+      this.emitReconnecting();
     });
 
-    this.connection.onreconnected(() => {
+    this.connection.onreconnected(async () => {
       console.log('✅ SignalR reconnected');
-      this.eventHandlers.onReconnected?.();
+      try {
+        // Rejoin manager room after reconnect
+        if (this.currentStoreId) {
+          await this.joinStore(this.currentStoreId);
+        }
 
-      // Rejoin manager room after reconnect
-      if (this.currentStoreId) {
-        this.joinStore(this.currentStoreId).catch((err) => {
-          console.error('❌ Failed to rejoin after reconnect:', err);
-        });
+        // Rejoin all active space groups after reconnect.
+        const spaceIds = Array.from(this.joinedSpaceIds);
+        await Promise.all(
+          spaceIds.map(async (spaceId) => {
+            try {
+              await this.connection?.invoke('JoinSpaceAsync', spaceId);
+              console.log('✅ Rejoined space group after reconnect:', spaceId);
+            } catch (err) {
+              console.error('❌ Failed to rejoin space group:', spaceId, err);
+            }
+          }),
+        );
+      } finally {
+        this.emitReconnected();
       }
     });
 
     this.connection.onclose(() => {
       console.log('❌ SignalR connection closed');
-      this.eventHandlers.onDisconnected?.();
+      this.emitDisconnected();
     });
   }
 
@@ -285,7 +393,8 @@ class StoreHubService {
     } finally {
       this.connection = null;
       this.currentStoreId = null;
-      this.eventHandlers = {};
+      this.joinedSpaceIds.clear();
+      this.joinedSpaceRefCounts.clear();
     }
   }
 }

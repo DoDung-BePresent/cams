@@ -99,6 +99,7 @@ export const CreateAccountDrawer = ({
         handleCancel();
         onSuccess();
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onError: (error: any) => {
         const errorCode = error.response?.data?.errorCode;
         const fieldErrors = error.response?.data?.errors;
@@ -170,6 +171,7 @@ export const CreateAccountDrawer = ({
       width={DRAWER_WIDTHS.medium}
       open={open}
       onClose={handleCancel}
+      destroyOnHidden
       footer={
         <Flex
           justify='end'
@@ -195,6 +197,7 @@ export const CreateAccountDrawer = ({
       <Form
         size='large'
         form={form}
+        autoComplete='off'
         layout='vertical'
         onFinish={handleSubmit}
         initialValues={{
@@ -273,7 +276,10 @@ export const CreateAccountDrawer = ({
             rules={createAccountValidation.phoneNumber}
             style={{ marginTop: 16 }}
           >
-            <Input placeholder='+84901234567 or 0901234567' />
+            <Input
+              placeholder='0901234567'
+              autoComplete='none'
+            />
           </Form.Item>
 
           <Form.Item

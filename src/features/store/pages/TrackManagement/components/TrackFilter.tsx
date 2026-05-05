@@ -27,7 +27,10 @@ interface TrackFilterProps {
   filter: TrackFilterType;
   showAdvanced: boolean;
   onSearch: (value: string) => void;
-  onFilterChange: (key: keyof TrackFilterType, value: any) => void;
+  onFilterChange: (
+    key: keyof TrackFilterType,
+    value: TrackFilterType[keyof TrackFilterType] | undefined,
+  ) => void;
   onToggleAdvanced: () => void;
   onRefresh: () => void;
   onReset: () => void;

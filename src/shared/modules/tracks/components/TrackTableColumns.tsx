@@ -1,4 +1,4 @@
-import { Space, Tag, Image, Dropdown, Button, type MenuProps } from 'antd';
+import { Tag, Image, Dropdown, Button, type MenuProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 
 /**
@@ -12,31 +12,27 @@ import {
   PoweroffOutlined,
 } from '@ant-design/icons';
 import { MusicIcon } from 'lucide-react';
+import { TitleCell } from './TitleCell';
 
 /**
  * Utils
  */
-import { formatDuration, formatDateTime } from '@/shared/utils';
-
-/**
- * Components
- */
-import { MetadataStatusBadge } from './MetadataStatusBadge';
+import { formatDuration } from '@/shared/utils';
 
 /**
  * Constants
  */
-import { ENTITY_STATUS_LABELS, ENTITY_STATUS_COLORS } from '@/shared/constants';
+
 import {
-  MUSIC_PROVIDER_LABELS,
-  MUSIC_PROVIDER_COLORS,
+  COPYRIGHT_CLEARANCE_COLORS,
+  COPYRIGHT_CLEARANCE_LABELS,
 } from '@/shared/modules/tracks/constants';
 
 /**
  * Types
  */
 import type {
-  MusicProviderEnum,
+  TrackCopyrightClearanceStatus,
   TrackListItem,
 } from '@/shared/modules/tracks/types';
 
@@ -46,13 +42,53 @@ interface TrackColumnActions {
   onDelete?: (id: string) => void;
   onToggleStatus?: (id: string) => void;
   onPreview?: (id: string) => void;
+  /** If provided, edit/delete/toggle actions are only shown when this returns true */
+  isActionAllowed?: (record: TrackListItem) => boolean;
 }
+
+const MOOD_COLORS = [
+  'magenta',
+  'red',
+  'volcano',
+  'orange',
+  'gold',
+  'lime',
+  'green',
+  'cyan',
+  'blue',
+  'geekblue',
+  'purple',
+];
+
+const getMoodColor = (mood: string) => {
+  if (!mood) return 'default';
+
+  const lowerMood = mood.toLowerCase();
+  if (lowerMood.includes('social') || lowerMood.includes('party'))
+    return 'volcano';
+  if (lowerMood.includes('romant') || lowerMood.includes('love'))
+    return 'magenta';
+  if (lowerMood.includes('focus') || lowerMood.includes('study'))
+    return 'geekblue';
+  if (lowerMood.includes('calm') || lowerMood.includes('relax')) return 'green';
+  if (lowerMood.includes('sad') || lowerMood.includes('chill')) return 'purple';
+  if (lowerMood.includes('happy') || lowerMood.includes('joy')) return 'gold';
+  if (lowerMood.includes('energ') || lowerMood.includes('workout'))
+    return 'orange';
+
+  let hash = 0;
+  for (let i = 0; i < mood.length; i++) {
+    hash = mood.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return MOOD_COLORS[Math.abs(hash) % MOOD_COLORS.length];
+};
 
 export const getTrackColumns = ({
   onView,
   onEdit,
   onDelete,
   onToggleStatus,
+  isActionAllowed,
 }: TrackColumnActions): ColumnsType<TrackListItem> => [
   {
     title: 'No.',
@@ -95,26 +131,11 @@ export const getTrackColumns = ({
     title: 'Title',
     dataIndex: 'title',
     key: 'title',
-    width: 250,
+    width: 280,
     sorter: true,
-    render: (title: string, record: TrackListItem) => (
-      <Space
-        direction='vertical'
-        size={0}
-      >
-        <span style={{ fontWeight: 500 }}>{title}</span>
-        {record.artist && (
-          <span style={{ fontSize: 12, color: '#999' }}>{record.artist}</span>
-        )}
-      </Space>
+    render: (_title: string, record: TrackListItem) => (
+      <TitleCell record={record} />
     ),
-  },
-  {
-    title: 'Genre',
-    dataIndex: 'genre',
-    key: 'genre',
-    width: 120,
-    render: (genre: string) => genre && <Tag>{genre}</Tag>,
   },
   {
     title: 'Mood',
@@ -122,68 +143,33 @@ export const getTrackColumns = ({
     key: 'moodName',
     width: 120,
     render: (moodName: string) =>
-      moodName && <Tag color='blue'>{moodName}</Tag>,
+      moodName && <Tag color={getMoodColor(moodName)}>{moodName}</Tag>,
   },
   {
     title: 'Duration',
     dataIndex: 'durationSec',
     key: 'durationSec',
-    width: 100,
+    width: 120,
     sorter: true,
     render: (duration: number) => formatDuration(duration),
   },
   {
-    title: 'Provider',
-    dataIndex: 'provider',
-    key: 'provider',
-    width: 120,
-    render: (provider: MusicProviderEnum) =>
-      provider !== undefined && (
-        <Tag color={MUSIC_PROVIDER_COLORS[provider]}>
-          {MUSIC_PROVIDER_LABELS[provider]}
-        </Tag>
-      ),
-  },
-  {
-    title: 'Metadata',
-    key: 'metadata',
-    width: 150,
-    render: (_: unknown, record: TrackListItem) => (
-      <MetadataStatusBadge track={record} />
-    ),
-  },
-  {
-    title: 'Plays',
-    dataIndex: 'playCount',
-    key: 'playCount',
-    width: 100,
-    sorter: true,
-    align: 'right',
-  },
-  {
-    title: 'Status',
-    dataIndex: 'status',
-    key: 'status',
-    width: 100,
-    render: (status: MusicProviderEnum) => (
-      <Tag color={ENTITY_STATUS_COLORS[status]}>
-        {ENTITY_STATUS_LABELS[status]}
+    title: 'Copyright',
+    dataIndex: 'copyrightClearanceStatus',
+    key: 'copyrightClearanceStatus',
+    width: 140,
+    render: (status: TrackCopyrightClearanceStatus) => (
+      <Tag color={COPYRIGHT_CLEARANCE_COLORS[status]}>
+        {COPYRIGHT_CLEARANCE_LABELS[status]}
       </Tag>
     ),
   },
-  {
-    title: 'Created At',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
-    width: 160,
-    sorter: true,
-    render: (date: string) => formatDateTime(date),
-  },
+
   {
     title: 'Actions',
     key: 'actions',
     fixed: 'right',
-    width: 80,
+    width: 100,
     render: (_, record: TrackListItem) => {
       const menuItems: MenuProps['items'] = [
         {
@@ -194,11 +180,13 @@ export const getTrackColumns = ({
         },
       ];
 
+      const actionAllowed = !isActionAllowed || isActionAllowed(record);
+
       if (onEdit || onToggleStatus || onDelete) {
-        menuItems.push({ type: 'divider' });
+        if (actionAllowed) menuItems.push({ type: 'divider' });
       }
 
-      if (onEdit) {
+      if (onEdit && actionAllowed) {
         menuItems.push({
           key: 'edit',
           icon: <EditOutlined />,
@@ -207,7 +195,7 @@ export const getTrackColumns = ({
         });
       }
 
-      if (onToggleStatus) {
+      if (onToggleStatus && actionAllowed) {
         menuItems.push({
           key: 'toggle',
           icon: <PoweroffOutlined />,
@@ -216,7 +204,7 @@ export const getTrackColumns = ({
         });
       }
 
-      if (onDelete) {
+      if (onDelete && actionAllowed) {
         if (onEdit || onToggleStatus) {
           menuItems.push({ type: 'divider' });
         }

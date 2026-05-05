@@ -1,4 +1,4 @@
-import { Drawer, Descriptions, Tag, Spin, Alert, Space, Flex } from 'antd';
+import { Modal, Descriptions, Tag, Spin, Alert, Space, Flex } from 'antd';
 
 /**
  * Icons
@@ -16,6 +16,10 @@ import {
  * Hooks
  */
 import { useStore } from '@/features/brand/hooks';
+import {
+  GOVERNANCE_MODE_LABELS,
+  GovernanceModeEnum,
+} from '@/features/brand/types';
 
 /**
  * Constants
@@ -47,13 +51,17 @@ export const StoreDetailDrawer = ({
   const { data: store, isLoading, error } = useStore(storeId, open);
 
   return (
-    <Drawer
+    <Modal
       closeIcon={null}
       title='Store Details'
-      placement='right'
       width={DRAWER_WIDTHS.medium}
       open={open}
-      onClose={onClose}
+      onCancel={onClose}
+      centered
+      footer={null}
+      styles={{
+        body: { maxHeight: '75vh', overflowY: 'auto', paddingRight: 12 },
+      }}
     >
       {isLoading && (
         <Flex
@@ -99,6 +107,19 @@ export const StoreDetailDrawer = ({
                 color={ENTITY_STATUS_COLORS[store.status]}
               >
                 {ENTITY_STATUS_LABELS[store.status]}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label='Governance Mode'>
+              <Tag
+                color={
+                  store.governanceMode === GovernanceModeEnum.StrictSync
+                    ? 'blue'
+                    : store.governanceMode === GovernanceModeEnum.AIMode
+                      ? 'purple'
+                      : 'gold'
+                }
+              >
+                {GOVERNANCE_MODE_LABELS[store.governanceMode]}
               </Tag>
             </Descriptions.Item>
             {store.contactNumber && (
@@ -235,6 +256,6 @@ export const StoreDetailDrawer = ({
           </Descriptions>
         </Space>
       )}
-    </Drawer>
+    </Modal>
   );
 };

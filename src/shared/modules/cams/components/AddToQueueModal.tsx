@@ -1,25 +1,38 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
+  Alert,
   Modal,
-  Tabs,
-  Select,
+  Button,
+  Flex,
   Radio,
   Space,
   Typography,
-  Form,
-  Switch,
   Input,
+  Tooltip,
   message,
 } from 'antd';
 import {
   PlayCircleOutlined,
-  OrderedListOutlined,
   PlusOutlined,
+  OrderedListOutlined,
 } from '@ant-design/icons';
+import { SettingSwitch } from '@/shared/components';
+import { useMoods } from '@/shared/modules/moods/hooks';
 import { usePlaylists } from '@/shared/modules/playlists/hooks';
+import type { PlaylistFilter } from '@/shared/modules/playlists/types';
 import { useTracks } from '@/shared/modules/tracks/hooks';
+import type { TrackFilter } from '@/shared/modules/tracks/types';
+import { TrackCopyrightClearanceStatus } from '@/shared/modules/tracks/types';
+import { isTrackPlaybackBlockedByCopyright } from '@/shared/modules/tracks/utils';
 import { useAddTracksToQueue, useAddPlaylistToQueue } from '../hooks';
 import { QueueInsertMode } from '../types';
+import { DRAWER_WIDTHS } from '@/config';
+import { createStyles } from 'antd-style';
+import { getErrorData } from '@/shared/utils/errorHandler';
+import {
+  OverrideMusicSourceSelector,
+  type OverrideSourceTab,
+} from './OverrideMusicSourceSelector';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -31,6 +44,78 @@ interface AddToQueueModalProps {
   onClose: () => void;
   onSuccess?: () => void;
 }
+
+type QueueRestrictionHint = {
+  kind: 'policy' | 'billing';
+  message: string;
+};
+
+const useStyle = createStyles(({ css, prefixCls }) => {
+  return {
+    modalGrid: css`
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+
+      @media (max-width: 960px) {
+        grid-template-columns: 1fr;
+      }
+    `,
+    selectorBlock: css`
+      border: 1px solid var(--ant-color-border-secondary);
+      border-radius: 12px;
+      background: var(--ant-color-bg-container);
+      padding: 10px;
+    `,
+    configPane: css`
+      position: sticky;
+      top: 0;
+
+      @media (max-width: 960px) {
+        position: static;
+      }
+    `,
+    sectionCard: css`
+      border: 1px solid var(--ant-color-border-secondary);
+      border-radius: 12px;
+      background: var(--ant-color-bg-container);
+      padding: 12px;
+    `,
+    statusStrip: css`
+      border: 1px solid var(--ant-color-border-secondary);
+      border-radius: 12px;
+      background: var(--ant-color-fill-tertiary);
+      padding: 10px 12px;
+    `,
+    queueModeRadio: css`
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      width: 100%;
+
+      .${prefixCls}-radio-button-wrapper {
+        width: 100%;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        border-radius: 10px;
+        margin-inline-start: 0;
+        padding-inline: 12px;
+      }
+
+      .${prefixCls}-radio-button-wrapper-checked {
+        .${prefixCls}-typography {
+          color: #fff !important;
+        }
+        .anticon {
+          color: #fff !important;
+        }
+      }
+    `,
+  };
+});
 
 const queueModeOptions = [
   {
@@ -53,6 +138,26 @@ const queueModeOptions = [
   },
 ];
 
+const defaultTrackFilter: TrackFilter = {
+  page: 1,
+  pageSize: 5,
+  sortBy: 'createdAt',
+  isAscending: false,
+  status: 1,
+  copyrightClearanceStatuses: [
+    TrackCopyrightClearanceStatus.Cleared,
+    TrackCopyrightClearanceStatus.NotApplicable,
+  ],
+};
+
+const defaultPlaylistFilter: PlaylistFilter = {
+  page: 1,
+  pageSize: 5,
+  sortBy: 'createdAt',
+  isAscending: false,
+  status: 1,
+};
+
 export const AddToQueueModal = ({
   open,
   spaceId,
@@ -60,33 +165,90 @@ export const AddToQueueModal = ({
   onClose,
   onSuccess,
 }: AddToQueueModalProps) => {
-  const [form] = Form.useForm();
-  const [activeTab, setActiveTab] = useState<'tracks' | 'playlist'>('tracks');
+  const { styles } = useStyle();
+  const [activeTab, setActiveTab] = useState<OverrideSourceTab>('tracks');
+  const [showTrackFilters, setShowTrackFilters] = useState(false);
+  const [showPlaylistFilters, setShowPlaylistFilters] = useState(false);
+  const [reason, setReason] = useState('');
+  const [mode, setMode] = useState<QueueInsertMode>(QueueInsertMode.AddToQueue);
+  const [isClearExistingQueue, setIsClearExistingQueue] = useState(false);
+  const [queueRestrictionHint, setQueueRestrictionHint] =
+    useState<QueueRestrictionHint | null>(null);
 
-  // Fetch data
-  const { data: playlistsData, isLoading: isLoadingPlaylists } = usePlaylists({
-    page: 1,
-    pageSize: 100,
-    status: 1,
+  const [trackFilter, setTrackFilter] =
+    useState<TrackFilter>(defaultTrackFilter);
+  const [playlistFilter, setPlaylistFilter] = useState<PlaylistFilter>(
+    defaultPlaylistFilter,
+  );
+
+  const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>();
+
+  const {
+    data: playlistsData,
+    isLoading: isLoadingPlaylists,
+    refetch: refetchPlaylists,
+  } = usePlaylists({
+    ...playlistFilter,
     storeId,
   });
 
-  const { data: tracksData, isLoading: isLoadingTracks } = useTracks({
-    page: 1,
-    pageSize: 100,
-    status: 1,
-  });
+  const {
+    data: tracksData,
+    isLoading: isLoadingTracks,
+    refetch: refetchTracks,
+  } = useTracks(trackFilter);
 
-  // Mutations
+  const selectableTracks = useMemo(
+    () =>
+      (tracksData?.items || []).filter(
+        (track) =>
+          !isTrackPlaybackBlockedByCopyright(track.copyrightClearanceStatus),
+      ),
+    [tracksData?.items],
+  );
+
+  const { data: moods = [] } = useMoods();
+
   const addTracks = useAddTracksToQueue();
   const addPlaylist = useAddPlaylistToQueue();
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
+  const moodOptions = useMemo(
+    () =>
+      moods.map((mood) => ({
+        label: mood.name,
+        value: mood.id,
+      })),
+    [moods],
+  );
 
+  const hasActiveTrackFilters =
+    trackFilter.search || trackFilter.moodId || trackFilter.genre;
+
+  const hasActivePlaylistFilters =
+    playlistFilter.search ||
+    playlistFilter.moodId ||
+    playlistFilter.isDefault !== undefined;
+
+  const resetState = () => {
+    setActiveTab('tracks');
+    setShowTrackFilters(false);
+    setShowPlaylistFilters(false);
+    setReason('');
+    setMode(QueueInsertMode.AddToQueue);
+    setIsClearExistingQueue(false);
+    setTrackFilter(defaultTrackFilter);
+    setPlaylistFilter(defaultPlaylistFilter);
+    setSelectedTrackIds([]);
+    setSelectedPlaylistId(undefined);
+    setQueueRestrictionHint(null);
+  };
+
+  const handleSubmit = async () => {
+    setQueueRestrictionHint(null);
+    try {
       if (activeTab === 'tracks') {
-        if (!values.trackIds || values.trackIds.length === 0) {
+        if (selectedTrackIds.length === 0) {
           message.warning('Please select at least one track');
           return;
         }
@@ -94,14 +256,14 @@ export const AddToQueueModal = ({
         await addTracks.mutateAsync({
           spaceId,
           data: {
-            trackIds: values.trackIds,
-            mode: values.mode || QueueInsertMode.AddToQueue,
-            isClearExistingQueue: values.isClearExistingQueue || false,
-            reason: values.reason || undefined,
+            trackIds: selectedTrackIds,
+            mode,
+            isClearExistingQueue,
+            reason: reason.trim() || undefined,
           },
         });
       } else {
-        if (!values.playlistId) {
+        if (!selectedPlaylistId) {
           message.warning('Please select a playlist');
           return;
         }
@@ -109,162 +271,230 @@ export const AddToQueueModal = ({
         await addPlaylist.mutateAsync({
           spaceId,
           data: {
-            playlistId: values.playlistId,
-            mode: values.mode || QueueInsertMode.AddToQueue,
-            isClearExistingQueue: values.isClearExistingQueue || false,
-            reason: values.reason || undefined,
+            playlistId: selectedPlaylistId,
+            mode,
+            isClearExistingQueue,
+            reason: reason.trim() || undefined,
           },
         });
       }
 
-      form.resetFields();
+      resetState();
       onSuccess?.();
       onClose();
     } catch (error) {
-      // Error handled by mutation hooks
-      console.error('Failed to add to queue:', error);
+      // Generic toast is handled by mutation hooks. Here we add contextual UI hint.
+      const errorData = getErrorData(error);
+      const isNoValidTracksByPolicy =
+        errorData?.errorCode === 'InvalidInput' &&
+        typeof errorData.message === 'string' &&
+        errorData.message.includes(
+          'No valid tracks found from the selected source',
+        );
+
+      if (isNoValidTracksByPolicy) {
+        setQueueRestrictionHint({
+          kind: 'policy',
+          message:
+            'These tracks are not in playlists allowed by the active brand/store policy for this space. Please choose tracks from allowed playlists or update the policy scope.',
+        });
+        return;
+      }
+
+      const isBillingBlocked =
+        errorData?.errorCode === 'BusinessRuleViolation' &&
+        typeof errorData.message === 'string' &&
+        errorData.message.toLowerCase().includes('top up');
+
+      if (isBillingBlocked) {
+        setQueueRestrictionHint({
+          kind: 'billing',
+          message:
+            'Wallet is blocked because token balance is negative from a previous period. Please top up tokens to continue playback.',
+        });
+      }
     }
   };
 
-  const handleCancel = () => {
-    form.resetFields();
+  const handleClose = () => {
+    resetState();
     onClose();
   };
 
-  const playlistOptions = (playlistsData?.items || []).map((playlist) => ({
-    label: playlist.name,
-    value: playlist.id,
-  }));
-
-  const trackOptions = (tracksData?.items || []).map((track) => ({
-    label: track.title,
-    value: track.id,
-  }));
+  const isPending = addTracks.isPending || addPlaylist.isPending;
 
   return (
     <Modal
       title='Add to Queue'
       open={open}
-      onOk={handleSubmit}
-      onCancel={handleCancel}
-      confirmLoading={addTracks.isPending || addPlaylist.isPending}
-      width={600}
-      okText='Add to Queue'
+      onCancel={handleClose}
+      width={DRAWER_WIDTHS.extraLarge}
+      destroyOnClose
+      centered
+      footer={
+        <Flex
+          justify='end'
+          gap='small'
+        >
+          <Button
+            size='large'
+            onClick={handleClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            size='large'
+            type='primary'
+            loading={isPending}
+            onClick={handleSubmit}
+          >
+            Add to Queue
+          </Button>
+        </Flex>
+      }
     >
-      <Form
-        form={form}
-        layout='vertical'
-        initialValues={{
-          mode: QueueInsertMode.AddToQueue,
-          isClearExistingQueue: false,
-        }}
-      >
-        <Tabs
-          activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as 'tracks' | 'playlist')}
-          items={[
-            {
-              key: 'tracks',
-              label: 'Tracks',
-              children: (
-                <Form.Item
-                  name='trackIds'
-                  label='Select Tracks'
-                  rules={[
-                    {
-                      required: activeTab === 'tracks',
-                      message: 'Please select at least one track',
-                    },
-                  ]}
-                >
-                  <Select
-                    mode='multiple'
-                    placeholder='Choose tracks'
-                    options={trackOptions}
-                    loading={isLoadingTracks}
-                    showSearch
-                    optionFilterProp='label'
-                    maxTagCount='responsive'
-                  />
-                </Form.Item>
-              ),
-            },
-            {
-              key: 'playlist',
-              label: 'Playlist',
-              children: (
-                <Form.Item
-                  name='playlistId'
-                  label='Select Playlist'
-                  rules={[
-                    {
-                      required: activeTab === 'playlist',
-                      message: 'Please select a playlist',
-                    },
-                  ]}
-                >
-                  <Select
-                    placeholder='Choose a playlist'
-                    options={playlistOptions}
-                    loading={isLoadingPlaylists}
-                    showSearch
-                    optionFilterProp='label'
-                  />
-                </Form.Item>
-              ),
-            },
-          ]}
-        />
-
-        <Form.Item
-          name='mode'
-          label='Queue Mode'
+      <div className={styles.modalGrid}>
+        <Space
+          direction='vertical'
+          size='middle'
+          style={{ width: '100%' }}
         >
-          <Radio.Group
-            options={queueModeOptions.map((option) => ({
-              label: (
-                <Space direction='vertical'>
-                  <Space>
-                    {option.icon}
-                    <Text strong>{option.label}</Text>
-                  </Space>
-                  <Text
-                    type='secondary'
-                    style={{ fontSize: 12 }}
-                  >
-                    {option.description}
-                  </Text>
-                </Space>
-              ),
-              value: option.value,
-            }))}
-            optionType='button'
-            buttonStyle='solid'
-          />
-        </Form.Item>
+          <div className={styles.selectorBlock}>
+            <OverrideMusicSourceSelector
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              enabledTabs={['tracks', 'playlist']}
+              track={{
+                filter: trackFilter,
+                setFilter: setTrackFilter,
+                showFilters: showTrackFilters,
+                setShowFilters: setShowTrackFilters,
+                hasActiveFilters: !!hasActiveTrackFilters,
+                data: selectableTracks,
+                total: tracksData?.totalItems || 0,
+                isLoading: isLoadingTracks,
+                refetch: refetchTracks,
+                selectedTrackIds,
+                setSelectedTrackIds,
+                defaultFilter: defaultTrackFilter,
+                onTableChange: (pagination, _filters, sorter) => {
+                  const currentSorter = Array.isArray(sorter)
+                    ? sorter[0]
+                    : sorter;
 
-        <Form.Item
-          name='isClearExistingQueue'
-          valuePropName='checked'
-        >
-          <Space>
-            <Switch />
-            <Text>Clear existing queue before adding</Text>
+                  setTrackFilter((prev) => ({
+                    ...prev,
+                    page: pagination.current || 1,
+                    pageSize: pagination.pageSize || 5,
+                    sortBy: currentSorter.field
+                      ? String(currentSorter.field)
+                      : 'createdAt',
+                    isAscending: currentSorter.order === 'ascend',
+                  }));
+                },
+              }}
+              playlist={{
+                filter: playlistFilter,
+                setFilter: setPlaylistFilter,
+                showFilters: showPlaylistFilters,
+                setShowFilters: setShowPlaylistFilters,
+                hasActiveFilters: !!hasActivePlaylistFilters,
+                data: playlistsData?.items || [],
+                total: playlistsData?.totalItems || 0,
+                isLoading: isLoadingPlaylists,
+                refetch: refetchPlaylists,
+                selectedPlaylistId,
+                setSelectedPlaylistId,
+                defaultFilter: defaultPlaylistFilter,
+                moodOptions,
+                onTableChange: (pagination, _filters, sorter) => {
+                  const currentSorter = Array.isArray(sorter)
+                    ? sorter[0]
+                    : sorter;
+
+                  setPlaylistFilter((prev) => ({
+                    ...prev,
+                    page: pagination.current || 1,
+                    pageSize: pagination.pageSize || 5,
+                    sortBy: currentSorter.field
+                      ? String(currentSorter.field)
+                      : 'createdAt',
+                    isAscending: currentSorter.order === 'ascend',
+                  }));
+                },
+              }}
+            />
+          </div>
+          {queueRestrictionHint && (
+            <Alert
+              type={
+                queueRestrictionHint.kind === 'billing' ? 'error' : 'warning'
+              }
+              showIcon
+              message={
+                queueRestrictionHint.kind === 'billing'
+                  ? 'Token billing restriction'
+                  : 'Queue policy restriction'
+              }
+              description={queueRestrictionHint.message}
+            />
+          )}
+        </Space>
+
+        <div className={styles.configPane}>
+          <Space
+            direction='vertical'
+            size='large'
+            className={styles.sectionCard}
+            style={{ width: '100%' }}
+          >
+            <div>
+              <Text strong>Queue Mode</Text>
+              <Radio.Group
+                className={styles.queueModeRadio}
+                style={{ marginTop: 10 }}
+                value={mode}
+                onChange={(e) => setMode(e.target.value)}
+                options={queueModeOptions.map((option) => ({
+                  label: (
+                    <Tooltip title={option.description}>
+                      <Space size={6}>
+                        {option.icon}
+                        <Text strong>{option.label}</Text>
+                      </Space>
+                    </Tooltip>
+                  ),
+                  value: option.value,
+                }))}
+                optionType='button'
+                buttonStyle='solid'
+              />
+            </div>
+
+            <div>
+              <SettingSwitch
+                label='Clear existing queue before adding'
+                description='Remove all current tracks from the queue before adding new ones'
+                value={isClearExistingQueue}
+                onChange={setIsClearExistingQueue}
+                className='mb-2! pt-0!'
+              />
+
+              <Text strong>Reason</Text>
+              <TextArea
+                size='large'
+                placeholder='Why are you adding this to the queue?'
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+                maxLength={500}
+                showCount
+                style={{ marginTop: 8 }}
+              />
+            </div>
           </Space>
-        </Form.Item>
-
-        <Form.Item
-          name='reason'
-          label='Reason (Optional)'
-        >
-          <TextArea
-            placeholder='Why are you adding this to the queue?'
-            rows={2}
-            maxLength={500}
-            showCount
-          />
-        </Form.Item>
-      </Form>
+        </div>
+      </div>
     </Modal>
   );
 };

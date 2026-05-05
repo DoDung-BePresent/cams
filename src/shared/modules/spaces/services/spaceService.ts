@@ -9,6 +9,7 @@ import type {
   CreateSpaceRequest,
   UpdateSpaceRequest,
   SpaceListItem,
+  SpaceFuzzyOverrideProfileRequest,
 } from '@/shared/modules/spaces/types';
 import type { PaginationResult, Result } from '@/shared/types';
 
@@ -22,6 +23,7 @@ const SPACE_ENDPOINTS = {
   update: (id: string) => `/api/spaces/${id}`,
   delete: (id: string) => `/api/spaces/${id}`,
   toggleStatus: (id: string) => `/api/spaces/${id}/toggle-status`,
+  fuzzyProfiles: (id: string) => `/api/spaces/${id}/fuzzy-profiles`,
 };
 
 /**
@@ -57,6 +59,7 @@ export const spaceService = {
     if (filter.storeId) params.append('storeId', filter.storeId); // For Brand role
     if (filter.createdFrom) params.append('createdFrom', filter.createdFrom);
     if (filter.createdTo) params.append('createdTo', filter.createdTo);
+    filter.spaceIds?.forEach((id) => params.append('spaceIds', id));
 
     return api.get<PaginationResult<SpaceListItem>>(
       `${SPACE_ENDPOINTS.list}?${params.toString()}`,
@@ -102,5 +105,15 @@ export const spaceService = {
    */
   toggleStatus: (id: string) => {
     return api.put<Result>(SPACE_ENDPOINTS.toggleStatus(id));
+  },
+
+  /**
+   * POST /api/spaces/{id}/fuzzy-profiles - Create & activate space fuzzy override profile
+   */
+  createFuzzyOverrideProfile: (
+    spaceId: string,
+    data: SpaceFuzzyOverrideProfileRequest,
+  ) => {
+    return api.post<Result>(SPACE_ENDPOINTS.fuzzyProfiles(spaceId), data);
   },
 };

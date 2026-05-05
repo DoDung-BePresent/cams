@@ -5,12 +5,7 @@ import { message } from 'antd';
 /**
  * Configs
  */
-import { saveTokens, clearTokens, getAccessToken } from '@/config';
-
-/**
- * Utils
- */
-import { isTokenExpired } from '@/shared/utils';
+import { saveTokens, clearTokens, getAccessToken, QUERY_KEYS } from '@/config';
 
 /**
  * Hooks
@@ -44,14 +39,7 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
   const [accessToken, setAccessToken] = useState<string | null>(() => {
-    const token = getAccessToken();
-    if (token && !isTokenExpired(token)) {
-      return token;
-    }
-    if (token) {
-      clearTokens();
-    }
-    return null;
+    return getAccessToken();
   });
 
   const { data: user, isLoading: isLoadingProfile } = useProfile(!!accessToken);
@@ -69,7 +57,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       saveTokens(token, payload.rememberMe);
       setAccessToken(token);
-      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.auth.profile,
+      });
     },
     onSuccess: () => {
       message.success('Login successful!');

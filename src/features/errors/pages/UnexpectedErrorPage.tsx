@@ -8,7 +8,7 @@ export const UnexpectedErrorPage = () => {
 
   return (
     <Flex
-      className='min-h-dvh'
+      className='min-h-dvh bg-[#2A171B]!'
       vertical
       align='center'
       justify='center'

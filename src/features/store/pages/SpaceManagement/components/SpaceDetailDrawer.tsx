@@ -145,6 +145,11 @@ export const SpaceDetailDrawer = ({
                 {space.description}
               </Descriptions.Item>
             )}
+            {space.ioTDeviceId && (
+              <Descriptions.Item label='IoT Device ID'>
+                <Tag color='geekblue'>{space.ioTDeviceId}</Tag>
+              </Descriptions.Item>
+            )}
           </Descriptions>
 
           {/* Playback State */}

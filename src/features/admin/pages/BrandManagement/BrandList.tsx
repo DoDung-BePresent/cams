@@ -90,7 +90,7 @@ export const BrandList = () => {
   const handleToggleStatus = (brandId: string) => {
     const brand = data?.items.find((b) => b.id === brandId);
 
-    AppModal.confirm({
+    AppModal.warning({
       title: `${brand?.status === 1 ? 'Deactivate' : 'Activate'} Brand`,
       content: (
         <p>

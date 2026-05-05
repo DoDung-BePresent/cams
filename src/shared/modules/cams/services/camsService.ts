@@ -1,15 +1,19 @@
 import { api } from '@/config';
 import type { Result } from '@/shared/types';
 import type {
+  ContextAnalysisResponse,
   SpaceStateResponse,
   OverridePlaylistRequest,
+  TriggerAnalysisRequest,
   PlaybackControlRequest,
   PairCodeResponse,
   PairDeviceInfoResponse,
   AddTracksToQueueRequest,
   AddPlaylistToQueueRequest,
   ReorderQueueRequest,
+  RemoveQueueItemsRequest,
   UpdateAudioStateRequest,
+  UpdateSchedulingStateRequest,
   SpaceQueueItemResponse,
 } from '../types';
 
@@ -18,8 +22,10 @@ import type {
  * ⚠️ NEW (2026-03-23): Added queue management endpoints
  */
 const CAMS_ENDPOINTS = {
+  triggerAnalysis: (spaceId: string) => `/api/cams/trigger-analysis/${spaceId}`,
   spaceState: (spaceId: string) => `/api/cams/spaces/${spaceId}/state`,
   overridePlaylist: (spaceId: string) => `/api/cams/spaces/${spaceId}/override`,
+  cancelOverride: (spaceId: string) => `/api/cams/spaces/${spaceId}/override`,
   playbackControl: (spaceId: string) => `/api/cams/spaces/${spaceId}/playback`,
   pairCode: (spaceId: string) => `/api/cams/spaces/${spaceId}/pair-code`,
   pairDevice: (spaceId: string) => `/api/cams/spaces/${spaceId}/pair-device`,
@@ -33,10 +39,11 @@ const CAMS_ENDPOINTS = {
     `/api/cams/spaces/${spaceId}/queue/reorder`,
   getQueue: (spaceId: string) => `/api/cams/spaces/${spaceId}/queue`,
   clearQueue: (spaceId: string) => `/api/cams/spaces/${spaceId}/queue/all`,
-  removeQueueItem: (spaceId: string, queueItemId: string) =>
-    `/api/cams/spaces/${spaceId}/queue/${queueItemId}`,
+  removeQueueItems: (spaceId: string) => `/api/cams/spaces/${spaceId}/queue`,
   updateAudioState: (spaceId: string) =>
     `/api/cams/spaces/${spaceId}/state/audio`,
+  updateSchedulingState: (spaceId: string) =>
+    `/api/cams/spaces/${spaceId}/state/scheduling`,
 } as const;
 
 /**
@@ -44,6 +51,16 @@ const CAMS_ENDPOINTS = {
  * Handles REST API calls for CAMS operations
  */
 export const camsService = {
+  /**
+   * Trigger one CAMS fuzzy analysis cycle manually (debug/verification)
+   * POST /api/cams/trigger-analysis/{spaceId}
+   */
+  triggerAnalysis: (spaceId: string, data: TriggerAnalysisRequest) =>
+    api.post<Result<ContextAnalysisResponse>>(
+      CAMS_ENDPOINTS.triggerAnalysis(spaceId),
+      data,
+    ),
+
   /**
    * Get space current state (§ 4.3)
    * GET /api/cams/spaces/{spaceId}/state
@@ -60,6 +77,13 @@ export const camsService = {
    */
   overridePlaylist: (spaceId: string, data: OverridePlaylistRequest) =>
     api.post<Result>(CAMS_ENDPOINTS.overridePlaylist(spaceId), data),
+
+  /**
+   * Cancel manual override for a space
+   * DELETE /api/cams/spaces/{spaceId}/override
+   */
+  cancelOverride: (spaceId: string) =>
+    api.delete<Result>(CAMS_ENDPOINTS.cancelOverride(spaceId)),
 
   /**
    * Control playback (§ 4.2)
@@ -141,12 +165,12 @@ export const camsService = {
     api.delete<Result>(CAMS_ENDPOINTS.clearQueue(spaceId)),
 
   /**
-   * Remove single queue item (NEW 2026-03-23)
-   * DELETE /api/cams/spaces/{spaceId}/queue/{queueItemId}
+   * Remove queue items (NEW 2026-03-23)
+   * DELETE /api/cams/spaces/{spaceId}/queue
    * Auth: BrandManager, StoreManager
    */
-  removeQueueItem: (spaceId: string, queueItemId: string) =>
-    api.delete<Result>(CAMS_ENDPOINTS.removeQueueItem(spaceId, queueItemId)),
+  removeQueueItems: (spaceId: string, data: RemoveQueueItemsRequest) =>
+    api.delete<Result>(CAMS_ENDPOINTS.removeQueueItems(spaceId), { data }),
 
   /**
    * Update audio state (volume/mute/queueEndBehavior) (NEW 2026-03-23)
@@ -155,4 +179,13 @@ export const camsService = {
    */
   updateAudioState: (spaceId: string, data: UpdateAudioStateRequest) =>
     api.patch<Result>(CAMS_ENDPOINTS.updateAudioState(spaceId), data),
+
+  /**
+   * Update runtime scheduling ownership (IsScheduling)
+   * PATCH /api/cams/spaces/{spaceId}/state/scheduling
+   */
+  updateSchedulingState: (
+    spaceId: string,
+    data: UpdateSchedulingStateRequest,
+  ) => api.patch<Result>(CAMS_ENDPOINTS.updateSchedulingState(spaceId), data),
 };
