@@ -46,6 +46,7 @@ import { SettingSwitch } from '@/shared/components';
 
 type CreateSpaceModalProps = {
   open: boolean;
+  storeId?: string;
   onClose: () => void;
   onSuccess?: () => void;
 };
@@ -57,6 +58,7 @@ type CreateSpaceFormValues = CreateSpaceRequest & {
 
 export const CreateSpaceModal = ({
   open,
+  storeId,
   onClose,
   onSuccess,
 }: CreateSpaceModalProps) => {
@@ -68,42 +70,45 @@ export const CreateSpaceModal = ({
   const handleSubmit = async (values: CreateSpaceFormValues) => {
     const { applyFuzzyAfterCreate, fuzzy, ...spaceValues } = values;
 
-    createSpace.mutate(spaceValues, {
-      onSuccess: async () => {
-        if (applyFuzzyAfterCreate && spaceValues.name?.trim()) {
-          const body = pickSpaceFuzzyOverrideBody(fuzzy);
-          try {
-            const listRes = await spaceService.getList({
-              search: spaceValues.name.trim(),
-              page: 1,
-              pageSize: 25,
-              sortBy: 'createdAt',
-              isAscending: false,
-            });
+    createSpace.mutate(
+      { ...spaceValues, storeId },
+      {
+        onSuccess: async () => {
+          if (applyFuzzyAfterCreate && spaceValues.name?.trim()) {
+            const body = pickSpaceFuzzyOverrideBody(fuzzy);
+            try {
+              const listRes = await spaceService.getList({
+                search: spaceValues.name.trim(),
+                page: 1,
+                pageSize: 25,
+                sortBy: 'createdAt',
+                isAscending: false,
+              });
 
-            const exact = listRes.data?.items?.find(
-              (s) => s.name.trim() === spaceValues.name.trim(),
-            );
+              const exact = listRes.data?.items?.find(
+                (s) => s.name.trim() === spaceValues.name.trim(),
+              );
 
-            if (exact) {
-              await spaceService.createFuzzyOverrideProfile(exact.id, body);
-              message.success('Space fuzzy profile created and activated.');
-            } else {
+              if (exact) {
+                await spaceService.createFuzzyOverrideProfile(exact.id, body);
+                message.success('Space fuzzy profile created and activated.');
+              } else {
+                message.warning(
+                  'Space was created; fuzzy override was not applied automatically. Use Edit space.',
+                );
+              }
+            } catch {
               message.warning(
-                'Space was created; fuzzy override was not applied automatically. Use Edit space.',
+                'Space was created but fuzzy override failed. Try Edit space.',
               );
             }
-          } catch {
-            message.warning(
-              'Space was created but fuzzy override failed. Try Edit space.',
-            );
           }
-        }
 
-        handleCancel();
-        onSuccess?.();
+          handleCancel();
+          onSuccess?.();
+        },
       },
-    });
+    );
   };
 
   const handleCancel = () => {
