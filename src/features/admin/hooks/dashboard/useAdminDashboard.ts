@@ -12,6 +12,6 @@ export const useAdminDashboard = (filter: AdminDashboardFilter = {}) => {
       return response.data;
     },
     staleTime: STALE_TIME.short,
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   });
 };

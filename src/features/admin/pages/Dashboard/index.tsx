@@ -1,7 +1,16 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { Col, Progress, Row, Skeleton, Table, Tag, Typography } from 'antd';
+import {
+  Col,
+  Progress,
+  Row,
+  Segmented,
+  Skeleton,
+  Table,
+  Tag,
+  Typography,
+} from 'antd';
 import {
   ApiOutlined,
   AppstoreOutlined,
@@ -20,6 +29,7 @@ import { useAuth } from '@/providers';
 import type {
   AdminBrandHealthItem,
   AdminDashboardTopTrackItem,
+  DashboardPeriod,
 } from '@/features/admin/types';
 
 const { Title, Text } = Typography;
@@ -215,7 +225,7 @@ const Panel = ({
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [period] = useState<1 | 2 | 3 | 4>(1);
+  const [period, setPeriod] = useState<DashboardPeriod>(1);
   const { data: result, isLoading } = useAdminDashboard({ period, top: 6 });
   const data = result?.data;
 
@@ -357,8 +367,20 @@ export const AdminDashboard = () => {
             gap: 8,
             flexWrap: 'wrap',
             justifyContent: 'flex-end',
+            alignItems: 'center',
           }}
         >
+          <Segmented
+            size='small'
+            value={period}
+            onChange={(value) => setPeriod(value as DashboardPeriod)}
+            options={[
+              { label: 'Today', value: 1 },
+              { label: 'Week', value: 2 },
+              { label: 'Month', value: 3 },
+              { label: 'Year', value: 4 },
+            ]}
+          />
           <Tag color='red'>Realtime</Tag>
           <Tag color='default'>Updated {data ? 'now' : '...'}</Tag>
         </div>
