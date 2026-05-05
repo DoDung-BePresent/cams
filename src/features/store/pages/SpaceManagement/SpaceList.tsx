@@ -53,8 +53,7 @@ import {
 import { useAuth } from '@/providers';
 import { useStoreContext, useStoreNavigate } from '@/features/store/hooks';
 import { storeService } from '@/features/brand/services';
-import { STALE_TIME } from '@/config';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 /**
  * Components
@@ -79,6 +78,7 @@ import {
   SPACE_TYPE_LABELS,
   SPACE_TYPE_COLORS,
 } from '@/features/store/constants';
+import { getLivePeopleForSpaces } from '@/features/brand/utils/livePeople';
 import type { ContextAnalysisResponse } from '@/shared/modules/cams/types';
 
 const { Text, Title } = Typography;
@@ -106,6 +106,9 @@ const C = {
   textMuted: '#b7adb0',
   textSubtle: '#857b80',
 };
+
+const LIVE_POLL_MS = 5000;
+const LIVE_PAGE_SIZE = 300;
 
 export const SpaceList = () => {
   const navigate = useStoreNavigate();
@@ -142,44 +145,38 @@ export const SpaceList = () => {
   const todayFromUtc = dayjs().startOf('day').toISOString();
   const todayToUtc = dayjs().endOf('day').toISOString();
 
-  // Fetch people count for each space
-  const peopleQueries = useQueries({
-    queries: spaces.map((space) => ({
-      queryKey: [
-        'store-space-management-people',
-        storeId,
-        space.id,
-        todayFromUtc,
-        todayToUtc,
-      ],
-      queryFn: async () => {
-        if (!storeId) return null;
-        const response = await storeService.getContextAggregate(storeId, {
-          spaceId: space.id,
-          fromUtc: todayFromUtc,
-          toUtc: todayToUtc,
-        });
-        const aggregate = response.data.data;
-        return {
-          spaceId: space.id,
-          people: Math.round(aggregate?.current.crowdDensity.avg ?? 0),
-          samples: aggregate?.current.samples ?? 0,
-        };
-      },
-      staleTime: STALE_TIME.short,
-      enabled: Boolean(storeId && space.id),
-    })),
+  const liveLogsQuery = useQuery({
+    queryKey: [
+      'store-space-management',
+      'live-people',
+      storeId,
+      todayFromUtc,
+      todayToUtc,
+    ],
+    queryFn: async () => {
+      if (!storeId) throw new Error('Store ID is required.');
+      const response = await storeService.getContextRawLogs(storeId, {
+        page: 1,
+        pageSize: LIVE_PAGE_SIZE,
+        fromUtc: todayFromUtc,
+        toUtc: todayToUtc,
+      });
+      return response.data.items ?? [];
+    },
+    enabled: Boolean(storeId),
+    staleTime: 0,
+    refetchInterval: LIVE_POLL_MS,
+    refetchIntervalInBackground: true,
   });
 
-  const peopleBySpace = useMemo(
-    () =>
-      new Map(
-        peopleQueries.flatMap((query) =>
-          query.data ? [[query.data.spaceId, query.data]] : [],
-        ),
-      ),
-    [peopleQueries],
-  );
+  const peopleBySpace = useMemo(() => {
+    return new Map(
+      getLivePeopleForSpaces(liveLogsQuery.data ?? [], spaces).map((sample) => [
+        sample.spaceId,
+        sample,
+      ]),
+    );
+  }, [liveLogsQuery.data, spaces]);
 
   const handleView = (id: string) => {
     setSelectedSpaceId(id);
@@ -338,7 +335,10 @@ export const SpaceList = () => {
           <div style={{ display: 'flex', gap: 12 }}>
             <Button
               icon={<ReloadOutlined />}
-              onClick={() => refetch()}
+              onClick={() => {
+                refetch();
+                liveLogsQuery.refetch();
+              }}
               style={{
                 background: C.surface,
                 border: `1px solid ${C.border}`,
@@ -747,6 +747,18 @@ export const SpaceList = () => {
                       ? `${people.people} people now`
                       : 'No people data'}
                   </div>
+                  {people?.measuredAtUtc && (
+                    <Text
+                      style={{
+                        display: 'block',
+                        marginTop: 8,
+                        color: C.textSubtle,
+                        fontSize: 11,
+                      }}
+                    >
+                      Updated {dayjs(people.measuredAtUtc).format('HH:mm:ss')}
+                    </Text>
+                  )}
                 </div>
 
                 {/* Primary Action Buttons */}
