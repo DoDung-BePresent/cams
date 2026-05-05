@@ -52,7 +52,7 @@ import { storeService } from '@/features/brand/services';
  * Utils
  */
 import { pickStoreFuzzyOverrideBody } from '@/features/brand/utils/storeFuzzyOverride';
-import { VIETNAM_CITIES, HCMC_DISTRICTS } from '@/shared/constants';
+import { VIETNAM_CITIES } from '@/shared/constants';
 import { STORE_FUZZY_OVERRIDE_LEVEL_OPTIONS } from '@/features/brand/constants/storeMusicPolicy';
 
 /**
@@ -285,7 +285,7 @@ export const CreateStoreDrawer = ({
             </Form.Item>
 
             <Row gutter={16}>
-              <Col span={12}>
+              <Col span={24}>
                 <Form.Item
                   label='City'
                   name='city'
@@ -294,20 +294,6 @@ export const CreateStoreDrawer = ({
                   <Select
                     placeholder='Select city'
                     options={VIETNAM_CITIES}
-                    showSearch
-                    optionFilterProp='label'
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label='District'
-                  name='district'
-                  rules={createStoreValidation.district}
-                >
-                  <Select
-                    placeholder='Select district'
-                    options={HCMC_DISTRICTS}
                     showSearch
                     optionFilterProp='label'
                   />
