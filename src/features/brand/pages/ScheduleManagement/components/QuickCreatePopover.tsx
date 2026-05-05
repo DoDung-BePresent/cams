@@ -170,7 +170,7 @@ export const QuickCreatePopover = ({
                 value={startTime}
                 onChange={setStartTime}
                 format='HH:mm'
-                minuteStep={15}
+                minuteStep={5}
                 style={{ width: '100%' }}
               />
             </Form.Item>
@@ -188,7 +188,7 @@ export const QuickCreatePopover = ({
                 value={endTime}
                 onChange={setEndTime}
                 format='HH:mm'
-                minuteStep={15}
+                minuteStep={5}
                 style={{ width: '100%' }}
               />
             </Form.Item>
