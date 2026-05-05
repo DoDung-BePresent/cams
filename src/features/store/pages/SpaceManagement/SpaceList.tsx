@@ -833,6 +833,7 @@ export const SpaceList = () => {
 
       <CreateSpaceModal
         open={createModalOpen}
+        storeId={storeId}
         onClose={() => setCreateModalOpen(false)}
         onSuccess={() => {
           setCreateModalOpen(false);

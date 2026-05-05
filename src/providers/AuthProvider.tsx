@@ -5,7 +5,7 @@ import { message } from 'antd';
 /**
  * Configs
  */
-import { saveTokens, clearTokens, getAccessToken } from '@/config';
+import { saveTokens, clearTokens, getAccessToken, QUERY_KEYS } from '@/config';
 
 /**
  * Hooks
@@ -57,7 +57,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       saveTokens(token, payload.rememberMe);
       setAccessToken(token);
-      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.auth.profile,
+      });
     },
     onSuccess: () => {
       message.success('Login successful!');
