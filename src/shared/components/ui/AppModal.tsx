@@ -39,6 +39,8 @@ const baseModalConfig: ModalFuncProps = {
       fontSize: 14,
       borderRadius: 4,
       width: '49%',
+      backgroundColor: 'transparent',
+      color: 'white',
     },
   },
   classNames: {
@@ -71,7 +73,7 @@ const appConfirm = (props: AppModalProps) => {
     ...baseModalConfig,
     ...props,
     icon: props.icon ?? (
-      <div className='mx-auto flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-red-100'>
+      <div className='mx-auto flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-red-100/10'>
         <DeleteFilled style={{ fontSize: 32, color: '#ff4d4f' }} />
       </div>
     ),
@@ -125,7 +127,7 @@ const appWarning = (props: AppModalProps) => {
     ...baseModalConfig,
     ...props,
     icon: props.icon ?? (
-      <div className='mx-auto flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-yellow-100'>
+      <div className='mx-auto flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-yellow-100/10'>
         <ExclamationCircleOutlined style={{ fontSize: 32, color: '#faad14' }} />
       </div>
     ),

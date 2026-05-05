@@ -204,10 +204,15 @@
     font-weight: 500;
   }
 
+  .ant-modal-confirm .ant-modal-container {
+    background-color: #141416 !important;
+  }
+
   .static-modal-body {
     [class*='ant-modal-'][class*='-body'] {
       display: flex;
       flex-direction: column;
+
       [class*='ant-modal-'][class*='-paragraph'] {
         margin-top: 20px;
         margin-inline: auto;
@@ -215,12 +220,13 @@
           font-size: 20px !important;
           display: block;
           margin-bottom: 8px;
+          color: #ffffff !important;
         }
 
         [class*='-content'] {
           text-wrap: pretty;
           font-size: 14px;
-          color: rgba(0, 0, 0, 0.45);
+          color: #ffffff !important;
           margin-bottom: 15px;
         }
       }
