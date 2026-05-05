@@ -38,7 +38,11 @@ import {
  */
 import { useDeleteStore, useStores } from '@/features/brand/hooks';
 import { storeService } from '@/features/brand/services';
-import { STALE_TIME } from '@/config';
+import { spaceService } from '@/shared/modules/spaces/services';
+import {
+  getLivePeopleForSpaces,
+  sumLivePeopleSamples,
+} from '@/features/brand/utils/livePeople';
 
 /**
  * Components
@@ -78,6 +82,9 @@ const C = {
   textSubtle: '#857b80',
 };
 
+const LIVE_POLL_MS = 5000;
+const LIVE_PAGE_SIZE = 300;
+
 export const StoreList = () => {
   const navigate = useNavigate();
   const [filter] = useState<StoreFilter>({
@@ -111,23 +118,52 @@ export const StoreList = () => {
     queries: stores.map((store) => ({
       queryKey: [
         'brand-store-management-people',
+        'live-logs',
         store.id,
         todayFromUtc,
         todayToUtc,
       ],
       queryFn: async () => {
-        const response = await storeService.getContextAggregate(store.id, {
-          fromUtc: todayFromUtc,
-          toUtc: todayToUtc,
-        });
-        const aggregate = response.data.data;
+        const [spacesResponse, logsResponse] = await Promise.all([
+          spaceService.getList({
+            page: 1,
+            pageSize: 200,
+            storeId: store.id,
+            status: EntityStatusEnum.Active,
+          }),
+          storeService.getContextRawLogs(store.id, {
+            page: 1,
+            pageSize: LIVE_PAGE_SIZE,
+            fromUtc: todayFromUtc,
+            toUtc: todayToUtc,
+          }),
+        ]);
+        const activeSpaces = spacesResponse.data.items ?? [];
+        const activeSpacePeople = getLivePeopleForSpaces(
+          logsResponse.data.items ?? [],
+          activeSpaces,
+        );
+        const reportingSamples = activeSpacePeople.filter(
+          (sample) => sample.samples > 0,
+        );
+
         return {
           storeId: store.id,
-          people: Math.round(aggregate?.current.crowdDensity.avg ?? 0),
-          samples: aggregate?.current.samples ?? 0,
+          people: sumLivePeopleSamples(activeSpacePeople),
+          samples: reportingSamples.length,
+          activeSpaces: activeSpaces.length,
+          lastUpdatedUtc:
+            reportingSamples
+              .flatMap((sample) =>
+                sample.measuredAtUtc ? [sample.measuredAtUtc] : [],
+              )
+              .sort((a, b) => dayjs(b).valueOf() - dayjs(a).valueOf())[0] ??
+            null,
         };
       },
-      staleTime: STALE_TIME.short,
+      staleTime: 0,
+      refetchInterval: LIVE_POLL_MS,
+      refetchIntervalInBackground: true,
       enabled: Boolean(store.id),
     })),
   });
@@ -251,7 +287,10 @@ export const StoreList = () => {
           <div style={{ display: 'flex', gap: 12 }}>
             <Button
               icon={<ReloadOutlined />}
-              onClick={() => refetch()}
+              onClick={() => {
+                refetch();
+                peopleQueries.forEach((query) => query.refetch());
+              }}
               style={{
                 background: C.surface,
                 border: `1px solid ${C.border}`,
@@ -517,6 +556,19 @@ export const StoreList = () => {
                           : 'No people data'}
                       </span>
                     </div>
+                    {people?.lastUpdatedUtc && (
+                      <Text
+                        style={{
+                          display: 'block',
+                          marginTop: 8,
+                          color: C.textSubtle,
+                          fontSize: 11,
+                        }}
+                      >
+                        Updated{' '}
+                        {dayjs(people.lastUpdatedUtc).format('HH:mm:ss')}
+                      </Text>
+                    )}
                   </div>
 
                   {/* Actions Area */}
