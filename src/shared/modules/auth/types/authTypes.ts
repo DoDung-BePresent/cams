@@ -15,6 +15,21 @@ export type ChangePasswordRequest = {
   confirmPassword: string;
 };
 
+export type ForgotPasswordRequest = {
+  email: string;
+};
+
+export type VerifyForgotPasswordOtpRequest = {
+  email: string;
+  otp: string;
+};
+
+export type ResetForgotPasswordRequest = {
+  email: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
 /**
  * Response Data Types (nested in Result<T>)
  */
@@ -42,12 +57,33 @@ export type RefreshTokenData = {
   // refreshToken is in HttpOnly cookie, not in response
 };
 
+export type ForgotPasswordOtpData = {
+  email: string;
+  expiresAtUtc: string;
+  expiresInSeconds: number;
+  resendAvailableAtUtc: string;
+  resendAfterSeconds: number;
+  remainingAttempts: number;
+  maxAttempts: number;
+};
+
+export type VerifyForgotPasswordOtpData = {
+  email: string;
+  resetSessionExpiresAtUtc: string;
+  resetSessionExpiresInSeconds: number;
+  remainingAttempts: number;
+  maxAttempts: number;
+};
+
 /**
  * Response Types (using common Result<T>)
  */
 export type LoginResponse = Result<LoginData>;
 export type ProfileResponse = Result<ProfileData>;
 export type RefreshTokenResponse = Result<RefreshTokenData>;
+export type ForgotPasswordOtpResponse = Result<ForgotPasswordOtpData>;
+export type VerifyForgotPasswordOtpResponse =
+  Result<VerifyForgotPasswordOtpData>;
 
 /**
  * Domain Types
