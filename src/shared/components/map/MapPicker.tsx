@@ -76,6 +76,16 @@ export const MapPicker = ({
     }
   }, [value]);
 
+  // Fix Leaflet map not rendering correctly inside modals
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.invalidateSize();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handlePositionChange = (pos: LatLngExpression) => {
     setPosition(pos);
     const [lat, lng] = pos as [number, number];
@@ -97,6 +107,7 @@ export const MapPicker = ({
   // Helper to extract city from Nominatim address, matching against VIETNAM_CITIES
   const extractCityFromAddress = (
     address: Record<string, string>,
+    displayName?: string,
   ): string | null => {
     // Nominatim returns various fields depending on the location type
     const possibleCityFields = [
@@ -117,6 +128,16 @@ export const MapPicker = ({
       const cleaned = cleanCityName(raw);
       if (cleaned && cityValues.includes(cleaned)) {
         return cleaned;
+      }
+    }
+
+    // Fallback: parse display_name comma-separated parts
+    if (displayName) {
+      const parts = displayName.split(',').map((p) => cleanCityName(p.trim()));
+      for (const part of parts) {
+        if (part && cityValues.includes(part)) {
+          return part;
+        }
       }
     }
 
@@ -142,7 +163,7 @@ export const MapPicker = ({
 
       // Extract and set city
       if (data.address) {
-        const city = extractCityFromAddress(data.address);
+        const city = extractCityFromAddress(data.address, data.display_name);
         onCityChange?.(city);
       }
     } catch (error) {
