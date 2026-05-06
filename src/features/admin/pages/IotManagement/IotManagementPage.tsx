@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -34,6 +34,7 @@ import {
   type BrandListItem,
 } from '@/features/admin/types';
 import {
+  useAdminIotRealtime,
   useAdminIotSpaces,
   useAdminIotSummary,
   useSendAdminIotCommand,
@@ -240,6 +241,7 @@ export const AdminIotManagementPage = () => {
       selectedStoreId,
     ],
   );
+  useAdminIotRealtime();
 
   const { data: summaryResult, isLoading: summaryLoading } =
     useAdminIotSummary();
@@ -440,7 +442,7 @@ export const AdminIotManagementPage = () => {
           reason: reason.trim() || undefined,
         },
       });
-      message.success('IoT command published.');
+      message.success('Command published. Waiting for device response.');
       setSelectedSpace(null);
     } catch {
       message.error('Failed to publish IoT command.');
@@ -865,7 +867,7 @@ export const AdminIotManagementPage = () => {
         breadcrumbs={breadcrumbs}
         seo={{
           description:
-            'Manage IoT devices, telemetry freshness, and system-admin commands',
+            'Manage IoT devices, telemetry freshness, command publishing, and device responses',
           keywords: 'iot, devices, telemetry, admin, cams',
         }}
       />
