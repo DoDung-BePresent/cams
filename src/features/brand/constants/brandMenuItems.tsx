@@ -22,15 +22,21 @@ export const BRAND_MENU_ITEMS: ItemType[] = [
     label: 'Dashboard',
   },
   {
+    key: 'tracks',
+    icon: <CustomerServiceOutlined />,
+    label: 'Tracks',
+  },
+  {
     key: 'playlists',
     icon: <UnorderedListOutlined />,
     label: 'Playlists',
   },
   {
-    key: 'tracks',
-    icon: <CustomerServiceOutlined />,
-    label: 'Tracks',
+    key: 'suno-ai',
+    icon: <ThunderboltOutlined />,
+    label: 'AI Music Generator',
   },
+
   {
     key: 'schedule',
     icon: <CalendarOutlined />,
@@ -51,11 +57,7 @@ export const BRAND_MENU_ITEMS: ItemType[] = [
     icon: <SettingOutlined />,
     label: 'Config',
   },
-  {
-    key: 'suno-ai',
-    icon: <ThunderboltOutlined />,
-    label: 'AI Music Generator',
-  },
+
   {
     key: 'tokens',
     icon: <WalletOutlined />,
