@@ -29,11 +29,11 @@ export type BaseResponse = {
   status: EntityStatusEnum;
 };
 
-export interface Result<T = any> {
+export interface Result<T = unknown> {
   isSuccess: boolean;
   message: string;
   data?: T;
-  errors?: Array<{ field: string; message: string }> | null;
+  errors?: Array<{ field: string; message: string }> | string[] | null;
   errorCode?: string | null;
 }
 
