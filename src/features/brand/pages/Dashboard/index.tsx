@@ -123,6 +123,7 @@ const hasDocumentUserActivation = () => {
 const EMPTY_LIVE_PLAYBACK_ITEMS: BrandLivePlaybackSpaceItem[] = [];
 const EMPTY_IOT_SPACE_HEALTH_ITEMS: BrandDashboardIotSpaceHealthItem[] = [];
 const DASHBOARD_KPI_CARD_HEIGHT = 140;
+const CONTEXT_POPUP_LOG_PAGE_SIZE = 300;
 
 type ContextDrilldownTarget = {
   scope: 'store' | 'space';
@@ -339,7 +340,7 @@ const getIotMeta = (status?: IotHealthStatusEnum) => {
     case IotHealthStatusEnum.NoDevice:
       return { label: 'No device', color: C.subtle, tag: 'default' as const };
     default:
-      return { label: 'Unknown', color: C.subtle, tag: 'default' as const };
+      return { label: 'Stale', color: C.orange, tag: 'warning' as const };
   }
 };
 
@@ -362,7 +363,7 @@ const getStoreHealthMeta = (
         : reason === BrandStoreHealthReasonEnum.IotStaleSpaceDetected
           ? 'IoT stale'
           : reason === BrandStoreHealthReasonEnum.IotUnknownSpaceDetected
-            ? 'IoT missing'
+            ? 'IoT stale'
             : reason === BrandStoreHealthReasonEnum.NoActivePlayback
               ? 'No active playback'
               : 'Operational';
@@ -373,9 +374,9 @@ const getStoreHealthMeta = (
       : reason === BrandStoreHealthReasonEnum.IotOfflineSpaceDetected
         ? 'At least one device reports offline'
         : reason === BrandStoreHealthReasonEnum.IotStaleSpaceDetected
-          ? 'Latest telemetry is older than 3 minutes'
+          ? 'Latest telemetry is older than 15 minutes'
           : reason === BrandStoreHealthReasonEnum.IotUnknownSpaceDetected
-            ? 'Telemetry is missing or unreadable'
+            ? 'Telemetry is missing or stale'
             : reason === BrandStoreHealthReasonEnum.NoActivePlayback
               ? 'Active spaces exist but none is playing'
               : 'No blocking issue detected';
@@ -391,6 +392,9 @@ const getTrackScopeLabel = (scope?: TrackScopeEnum) => {
 
 const getIotStatusFromSpaceState = (state?: SpaceStateDto | null) => {
   if (!state) return undefined;
+  if (typeof state.iotHealthStatus === 'number') {
+    return state.iotHealthStatus as IotHealthStatusEnum;
+  }
   if (state.isIotDeviceAssigned === false) return IotHealthStatusEnum.NoDevice;
   return state.isIotDeviceOffline
     ? IotHealthStatusEnum.Offline
@@ -606,7 +610,6 @@ const IotKpiCard = ({
   online,
   offline,
   stale,
-  unknown,
   trendText,
   trendTone = C.green,
   trendDirection = 'flat',
@@ -617,7 +620,6 @@ const IotKpiCard = ({
   online?: number | null;
   offline?: number | null;
   stale?: number | null;
-  unknown?: number | null;
   trendText?: string;
   trendTone?: string;
   trendDirection?: TrendDirection;
@@ -628,7 +630,6 @@ const IotKpiCard = ({
   const onlineCount = online ?? 0;
   const offlineCount = offline ?? 0;
   const staleCount = stale ?? 0;
-  const unknownCount = unknown ?? 0;
   const percent = total > 0 ? Math.round((onlineCount / total) * 100) : 0;
 
   return (
@@ -693,7 +694,6 @@ const IotKpiCard = ({
               { label: 'Online', value: onlineCount, color: C.green },
               { label: 'Offline', value: offlineCount, color: C.red },
               { label: 'Stale', value: staleCount, color: C.orange },
-              { label: 'Unknown', value: unknownCount, color: C.subtle },
             ].map((item) => (
               <span
                 key={item.label}
@@ -2577,9 +2577,7 @@ const StoreHealth = ({
                         ? `${row.iotOfflineSpaces} offline`
                         : row.iotStaleSpaces > 0
                           ? `${row.iotStaleSpaces} stale`
-                          : row.iotUnknownSpaces > 0
-                            ? `${row.iotUnknownSpaces} unknown`
-                            : `${formatAgo(row.lastPlaybackAtUtc)}`}
+                          : `${formatAgo(row.lastPlaybackAtUtc)}`}
                     </Text>
                   </div>
                   <Text
@@ -2981,11 +2979,13 @@ const ContextPopupMetric = ({
 const ContextMetricsPopup = ({
   target,
   aggregate,
+  peopleTotal,
   loading,
   onClose,
 }: {
   target: ContextDrilldownTarget | null;
   aggregate?: StoreContextAggregateResponse;
+  peopleTotal?: number | null;
   loading?: boolean;
   onClose: () => void;
 }) => {
@@ -3033,7 +3033,7 @@ const ContextMetricsPopup = ({
         >
           <ContextPopupMetric
             label='People'
-            value={formatNumber(current?.crowdDensity.avg)}
+            value={formatNumber(peopleTotal)}
             color={C.blue}
           />
           <ContextPopupMetric
@@ -3060,7 +3060,8 @@ const ContextBillingAi = ({
   loading?: boolean;
 }) => {
   const context = data?.contextIntelligence;
-  const averagePeopleCount = context?.averagePeopleCount ?? 0;
+  const totalPeopleCount =
+    context?.totalPeopleCount ?? context?.averagePeopleCount ?? 0;
   const averageNoiseDecibel = context?.averageNoiseDecibel ?? 0;
   const averageFuzzyConfidence = context?.averageFuzzyConfidence ?? 0;
   const confidencePercent =
@@ -3070,9 +3071,11 @@ const ContextBillingAi = ({
   const metricCards = [
     {
       label: 'People',
-      value: formatNumber(context?.averagePeopleCount),
+      value: formatNumber(
+        context?.totalPeopleCount ?? context?.averagePeopleCount,
+      ),
       color: C.blue,
-      percent: Math.min(100, (averagePeopleCount / 50) * 100),
+      percent: Math.min(100, (totalPeopleCount / 50) * 100),
       hint: formatDoubleTrendText(context?.peopleTrend),
       trendValues: [
         context?.peopleTrend.previousValue,
@@ -3138,7 +3141,7 @@ const ContextBillingAi = ({
                 }}
               >
                 <Text style={{ color: C.muted, fontSize: 11 }}>
-                  Brand average from latest telemetry
+                  People is the latest total across reporting spaces
                 </Text>
                 <Text style={{ color: C.subtle, fontSize: 11 }}>
                   {formatNumber(context?.storesWithTelemetry)}/
@@ -3361,6 +3364,61 @@ export const BrandDashboard = () => {
     enabled: Boolean(contextDrilldownTarget && contextQueryWindow),
     staleTime: STALE_TIME.short,
   });
+  const contextRawLogsQuery = useQuery({
+    queryKey: [
+      'brand-dashboard-context-logs',
+      contextDrilldownTarget?.storeId,
+      contextDrilldownTarget?.spaceId,
+      contextQueryWindow?.fromUtc,
+      contextQueryWindow?.toUtc,
+    ],
+    queryFn: async () => {
+      if (!contextDrilldownTarget || !contextQueryWindow) {
+        throw new Error('Missing context target.');
+      }
+
+      const response = await storeService.getContextRawLogs(
+        contextDrilldownTarget.storeId,
+        {
+          page: 1,
+          pageSize: CONTEXT_POPUP_LOG_PAGE_SIZE,
+          spaceId: contextDrilldownTarget.spaceId,
+          fromUtc: contextQueryWindow.fromUtc,
+          toUtc: contextQueryWindow.toUtc,
+        },
+      );
+
+      return response.data.items ?? [];
+    },
+    enabled: Boolean(contextDrilldownTarget && contextQueryWindow),
+    staleTime: 0,
+  });
+  const contextPopupPeopleTotal = useMemo(() => {
+    const items = contextRawLogsQuery.data ?? [];
+    if (items.length === 0) return null;
+
+    const latestLogBySpace = new Map<string, (typeof items)[number]>();
+    for (const item of items) {
+      const key = item.spaceId || item.spaceName;
+      if (!key) continue;
+
+      const existing = latestLogBySpace.get(key);
+      if (
+        !existing ||
+        dayjs(item.measuredAtUtc).valueOf() >
+          dayjs(existing.measuredAtUtc).valueOf()
+      ) {
+        latestLogBySpace.set(key, item);
+      }
+    }
+
+    const latestLogs = Array.from(latestLogBySpace.values()).filter(
+      (item) => item.crowdDensity != null,
+    );
+    if (latestLogs.length === 0) return null;
+
+    return latestLogs.reduce((sum, item) => sum + (item.crowdDensity ?? 0), 0);
+  }, [contextRawLogsQuery.data]);
   const dashboardPlaybackUnlockRef = useRef<(() => void) | null>(null);
   const handleInspectStoreContext = useCallback((row: BrandStoreHealthItem) => {
     setContextDrilldownTarget({
@@ -3605,7 +3663,6 @@ export const BrandDashboard = () => {
             online={overview?.iotOnlineSpaces}
             offline={overview?.iotOfflineSpaces}
             stale={overview?.iotStaleSpaces}
-            unknown={overview?.iotUnknownSpaces}
             trendText={`${iotOnlineShare}% online`}
             trendTone={iotOnlineShare > 0 ? C.green : C.subtle}
             trendDirection='flat'
@@ -3775,7 +3832,10 @@ export const BrandDashboard = () => {
       <ContextMetricsPopup
         target={contextDrilldownTarget}
         aggregate={contextAggregateQuery.data}
-        loading={contextAggregateQuery.isFetching}
+        peopleTotal={contextPopupPeopleTotal}
+        loading={
+          contextAggregateQuery.isFetching || contextRawLogsQuery.isFetching
+        }
         onClose={() => setContextDrilldownTarget(null)}
       />
     </div>

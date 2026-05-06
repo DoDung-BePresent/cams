@@ -16,7 +16,6 @@ import {
   ApiOutlined,
   BankOutlined,
   CheckCircleOutlined,
-  CloudServerOutlined,
   CloseCircleOutlined,
   DisconnectOutlined,
   EnvironmentOutlined,
@@ -87,11 +86,26 @@ const healthMeta: Record<
     icon: <WarningOutlined />,
   },
   [IotHealthStatus.Unknown]: {
-    label: 'Unknown',
-    color: 'default',
-    icon: <CloudServerOutlined />,
+    label: 'Stale',
+    color: 'gold',
+    icon: <WarningOutlined />,
   },
 };
+
+const healthFilterOptions = [
+  IotHealthStatus.NoDevice,
+  IotHealthStatus.Online,
+  IotHealthStatus.Offline,
+  IotHealthStatus.Stale,
+].map((value) => ({
+  value,
+  label: healthMeta[value].label,
+}));
+
+const getHealthMeta = (status?: IotHealthStatus | null) =>
+  status && healthMeta[status]
+    ? healthMeta[status]
+    : healthMeta[IotHealthStatus.Stale];
 
 const actionOptions = [
   { label: 'Get info', value: IotCommandAction.GetInfo },
@@ -374,7 +388,7 @@ export const AdminIotManagementPage = () => {
       dataIndex: 'healthStatus',
       width: 132,
       render: (value: IotHealthStatus) => {
-        const meta = healthMeta[value];
+        const meta = getHealthMeta(value);
         return (
           <Tag
             icon={meta.icon}
@@ -803,10 +817,7 @@ export const AdminIotManagementPage = () => {
               setHealthStatus(value);
               setPage(1);
             }}
-            options={Object.entries(healthMeta).map(([value, meta]) => ({
-              value: Number(value),
-              label: meta.label,
-            }))}
+            options={healthFilterOptions}
             style={{ width: 180 }}
           />
           <Button
@@ -893,7 +904,7 @@ export const AdminIotManagementPage = () => {
               closable
               onClose={() => setHealthStatus(undefined)}
             >
-              Health: {healthMeta[healthStatus].label}
+              Health: {getHealthMeta(healthStatus).label}
             </Tag>
           )}
           {search.trim() && (

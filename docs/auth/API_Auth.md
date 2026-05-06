@@ -430,6 +430,163 @@ Client lưu `deviceAccessToken` (Bearer) và `deviceRefreshToken` để gọi CA
 
 ---
 
+### 4.8 Forgot Password - Request OTP
+
+Luồng forgot password mới dùng OTP qua email và cache trạng thái verify ở backend. Client **không nhận, không lưu, không gửi reset token**. Sau khi OTP verify thành công, màn reset password chỉ cần gửi lại `email`, `newPassword`, `confirmPassword`.
+
+- **Method:** `POST`
+- **URL:** `{{baseUrl}}/api/auth/forgot-password`
+- **Auth:** Không cần đăng nhập
+- **Headers:** `Content-Type: application/json`
+
+**Body:**
+
+```json
+{
+  "email": "manager@example.com"
+}
+```
+
+**Response 200 (`Result`):**
+
+```json
+{
+  "isSuccess": true,
+  "message": "Password reset OTP sent successfully.",
+  "errors": null,
+  "errorCode": null
+}
+```
+
+**Frontend behavior:**
+
+- Nếu success, chuyển sang màn nhập OTP.
+- FE/Flutter chỉ cần giữ `email` trong local state của flow forgot password.
+- Không cần access token, refresh token, cookie, hay reset token.
+
+**Common errors:**
+
+| HTTP | `errorCode`                                | Ý nghĩa                                         |
+| ---- | ------------------------------------------ | ----------------------------------------------- |
+| 400  | `ValidationFailed` / `InvalidInput`        | Email rỗng hoặc sai format                      |
+| 404  | `NotFound`                                 | Email không thuộc user active trong hệ thống    |
+| 429  | `TooManyRequests`                          | Gửi lại OTP quá nhanh, chờ cooldown rồi thử lại |
+| 500  | `EmailSendFailed` / `ExternalServiceError` | Không gửi được email                            |
+
+---
+
+### 4.9 Forgot Password - Verify OTP
+
+Endpoint này xác thực OTP và đánh dấu email reset request là đã verified trong cache backend. Response **không trả token**.
+
+- **Method:** `POST`
+- **URL:** `{{baseUrl}}/api/auth/forgot-password/verify-otp`
+- **Auth:** Không cần đăng nhập
+- **Headers:** `Content-Type: application/json`
+
+**Body:**
+
+```json
+{
+  "email": "manager@example.com",
+  "otp": "123456"
+}
+```
+
+**Response 200 (`Result`):**
+
+```json
+{
+  "isSuccess": true,
+  "message": "OTP verified successfully.",
+  "errors": null,
+  "errorCode": null
+}
+```
+
+**Frontend behavior:**
+
+- Nếu success, chuyển sang màn nhập mật khẩu mới.
+- Tiếp tục giữ `email` trong state để gọi API reset password.
+- Không lưu OTP sau khi verify thành công.
+- Không gọi reset password nếu verify OTP fail.
+
+**Common errors:**
+
+| HTTP | `errorCode`        | Ý nghĩa                                                  |
+| ---- | ------------------ | -------------------------------------------------------- |
+| 400  | `ValidationFailed` | OTP sai, hết hạn, vượt số lần thử, hoặc chưa request OTP |
+| 400  | `ValidationFailed` | Email/OTP rỗng hoặc OTP sai format                       |
+
+---
+
+### 4.10 Forgot Password - Reset Password
+
+Chỉ gọi endpoint này sau khi `forgot-password/verify-otp` thành công. Backend kiểm tra cache theo email; nếu email chưa verified hoặc cache hết hạn thì reset sẽ bị từ chối.
+
+- **Method:** `POST`
+- **URL:** `{{baseUrl}}/api/auth/forgot-password/reset`
+- **Auth:** Không cần đăng nhập
+- **Headers:** `Content-Type: application/json`
+
+**Body:**
+
+```json
+{
+  "email": "manager@example.com",
+  "newPassword": "NewPass123",
+  "confirmPassword": "NewPass123"
+}
+```
+
+**Response 200 (`Result`):**
+
+```json
+{
+  "isSuccess": true,
+  "message": "Password reset successfully.",
+  "errors": null,
+  "errorCode": null
+}
+```
+
+**Frontend behavior:**
+
+- Nếu success, clear toàn bộ state forgot password (`email`, `otp`, form password) và đưa user về login.
+- Không gửi OTP ở bước này.
+- Không gửi reset token ở bước này.
+- Nên disable nút submit khi `newPassword !== confirmPassword` để giảm lỗi validation.
+
+**Common errors:**
+
+| HTTP | `errorCode`             | Ý nghĩa                                                          |
+| ---- | ----------------------- | ---------------------------------------------------------------- |
+| 400  | `ValidationFailed`      | Email chưa verify OTP, cache hết hạn, hoặc password không hợp lệ |
+| 404  | `NotFound`              | User không còn active / không tồn tại                            |
+| 422  | `BusinessRuleViolation` | Identity password policy không pass                              |
+
+**Recommended UI flow:**
+
+1. User nhập email.
+2. App gọi `POST /api/auth/forgot-password`.
+3. User nhập OTP nhận qua email.
+4. App gọi `POST /api/auth/forgot-password/verify-otp`.
+5. Verify success thì user nhập mật khẩu mới.
+6. App gọi `POST /api/auth/forgot-password/reset` với email + mật khẩu mới.
+7. Reset success thì quay về login.
+
+**Flutter note:**
+
+- Dùng một `ForgotPasswordState` trong Cubit/Bloc/Provider để giữ `email` qua 3 màn.
+- Không persist OTP/reset state vào SecureStorage; đây là flow ngắn hạn.
+- Khi app bị kill giữa flow, bắt user nhập email lại để request OTP mới.
+
+**React note:**
+
+- Có thể dùng route state hoặc component state cho `email`.
+- Nếu user refresh page ở bước OTP/reset, đưa về bước nhập email.
+- Không cần interceptor auth cho 3 endpoint này.
+
 ## 5. Postman Collection
 
 Import file **`Postman_Collection_Auth.json`** (cùng thư mục `docs/`) vào Postman. Collection có sẵn:

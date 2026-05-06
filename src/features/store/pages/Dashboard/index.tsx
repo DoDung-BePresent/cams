@@ -193,6 +193,53 @@ type PlaybackPollSlot = {
   isFetching: boolean;
 };
 
+enum IotHealthStatusEnum {
+  NoDevice = 1,
+  Online = 2,
+  Offline = 3,
+  Stale = 4,
+}
+
+type StoreDashboardIotStatus = 'Online' | 'Offline' | 'Stale' | 'Not paired';
+
+const getIotStatusFromSpaceState = (
+  state: SpaceStateResponse | null | undefined,
+): StoreDashboardIotStatus => {
+  switch (state?.iotHealthStatus) {
+    case IotHealthStatusEnum.NoDevice:
+      return 'Not paired';
+    case IotHealthStatusEnum.Online:
+      return 'Online';
+    case IotHealthStatusEnum.Offline:
+      return 'Offline';
+    case IotHealthStatusEnum.Stale:
+    case 5:
+      return 'Stale';
+    default:
+      if (state?.isIotDeviceAssigned === false) return 'Not paired';
+      if (state?.isIotDeviceOffline === true) return 'Offline';
+      if (state?.isIotDeviceOffline === false) return 'Online';
+      return 'Stale';
+  }
+};
+
+const renderIotStatusTag = (
+  status: StoreDashboardIotStatus,
+): React.ReactNode => {
+  switch (status) {
+    case 'Online':
+      return <Tag color='success'>IoT Online</Tag>;
+    case 'Offline':
+      return <Tag color='error'>IoT Offline</Tag>;
+    case 'Stale':
+      return <Tag color='warning'>IoT Stale</Tag>;
+    case 'Not paired':
+      return <Tag color='warning'>IoT Unassigned</Tag>;
+    default:
+      return <Tag color='warning'>IoT Stale</Tag>;
+  }
+};
+
 type SpaceHealthRow = {
   key: string;
   spaceName: string;
@@ -201,7 +248,7 @@ type SpaceHealthRow = {
   moodName: string | null;
   currentTrack: string | null;
   playbackStatus: 'Playing' | 'Paused' | 'Idle' | 'Loading';
-  iotStatus: 'Online' | 'Offline' | 'Not paired' | 'Unknown';
+  iotStatus: StoreDashboardIotStatus;
   lastUpdatedUtc: string | null;
 };
 
@@ -245,14 +292,7 @@ const NowPlayingBanner = ({
   const hasStream = Boolean(s?.hlsUrl);
   const trackTitle = s?.currentTrackName?.trim();
   const idle = !hasStream && !trackTitle;
-  const iotStatusTag =
-    s?.isIotDeviceAssigned === false ? (
-      <Tag color='warning'>IoT Unassigned</Tag>
-    ) : s?.isIotDeviceOffline == null ? null : s.isIotDeviceOffline ? (
-      <Tag color='error'>IoT Offline</Tag>
-    ) : (
-      <Tag color='success'>IoT Online</Tag>
-    );
+  const iotStatusTag = renderIotStatusTag(getIotStatusFromSpaceState(s));
 
   if (idle) {
     return (
@@ -1134,11 +1174,8 @@ export const StoreDashboard = () => {
   }).length;
   const attentionSpacesCount = playbackSlots.filter((slot) => {
     const state = slot.state;
-    return (
-      state?.isIotDeviceAssigned === false ||
-      state?.isIotDeviceOffline ||
-      state?.isPaused
-    );
+    const iotStatus = getIotStatusFromSpaceState(state);
+    return iotStatus !== 'Online' || state?.isPaused;
   }).length;
   const latestSamplesCount = liveLogsQuery.data?.items?.length ?? 0;
   const latestLogBySpaceId = useMemo(
@@ -1162,14 +1199,7 @@ export const StoreDashboard = () => {
           : state?.hlsUrl || state?.currentTrackName
             ? 'Playing'
             : 'Idle';
-      const iotStatus: SpaceHealthRow['iotStatus'] =
-        state?.isIotDeviceAssigned === false
-          ? 'Not paired'
-          : state?.isIotDeviceOffline === true
-            ? 'Offline'
-            : state?.isIotDeviceOffline === false
-              ? 'Online'
-              : 'Unknown';
+      const iotStatus = getIotStatusFromSpaceState(state);
 
       return {
         key: space.id,
@@ -1180,7 +1210,8 @@ export const StoreDashboard = () => {
         currentTrack: state?.currentTrackName ?? null,
         playbackStatus,
         iotStatus,
-        lastUpdatedUtc: latest?.measuredAtUtc ?? null,
+        lastUpdatedUtc:
+          latest?.measuredAtUtc ?? state?.lastTelemetryAtUtc ?? null,
       };
     });
   }, [latestLogBySpaceId, playbackStateBySpaceId, spaceId, spaces]);
@@ -1192,9 +1223,7 @@ export const StoreDashboard = () => {
   const iotOnlineCount = liveSpaceRows.filter(
     (row) => row.iotStatus === 'Online',
   ).length;
-  const iotKnownCount = liveSpaceRows.filter(
-    (row) => row.iotStatus !== 'Unknown',
-  ).length;
+  const iotKnownCount = liveSpaceRows.length;
   const liveSpaceColumns: ColumnsType<SpaceHealthRow> = [
     {
       title: 'Space',
@@ -1259,7 +1288,7 @@ export const StoreDashboard = () => {
             ? 'success'
             : value === 'Offline'
               ? 'error'
-              : value === 'Not paired'
+              : value === 'Stale' || value === 'Not paired'
                 ? 'warning'
                 : 'default';
         return <Tag color={color}>{value}</Tag>;
