@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { env } from './env';
+import { ErrorCodeEnum } from '@/shared/types';
 
 const ACCESS_TOKEN_KEY = 'access_token';
 let isRefreshing = false;
@@ -107,6 +108,16 @@ api.interceptors.response.use(
       originalRequest?.url?.includes('/auth/refresh-token');
 
     if (isAuthEndpoint) {
+      return Promise.reject(error);
+    }
+
+    // Skip refresh when 401 is due to invalid credentials (e.g. wrong current password)
+    const errorCode = (error.response?.data as Record<string, unknown>)
+      ?.errorCode;
+    if (
+      error.response?.status === 401 &&
+      errorCode === ErrorCodeEnum.InvalidCredentials
+    ) {
       return Promise.reject(error);
     }
 

@@ -388,6 +388,7 @@ export const EditStoreDrawer = ({
                           onAddressChange={handleAddressChange}
                           onCityChange={handleCityChange}
                           height={400}
+                          isOpen={open}
                         />
                       );
                     }}
