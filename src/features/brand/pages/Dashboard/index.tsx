@@ -1734,7 +1734,7 @@ const LivePlayback = ({
                   {active.spaceName} - {active.storeName}
                 </Text>
                 <Text style={{ color: C.subtle, fontSize: 11 }}>
-                  {SPACE_TYPE_LABELS[active.spaceType] ?? 'Space'} ·{' '}
+                  {SPACE_TYPE_LABELS[active.spaceType] ?? 'Space'} -{' '}
                   {active.storeAddress ?? 'No address'}
                 </Text>
               </div>
@@ -2808,7 +2808,7 @@ const TopTracks = ({
                 }}
               >
                 {track.moodName || 'No mood'}
-                {track.isAiGenerated ? ' · AI' : ''}
+                {track.isAiGenerated ? ' - AI' : ''}
               </Text>
             </div>
             <Text style={{ color: C.green, fontSize: 12, fontWeight: 900 }}>
@@ -3021,7 +3021,7 @@ const ContextMetricsPopup = ({
           </Text>
           <Text style={{ color: C.subtle, fontSize: 12 }}>
             {target?.scope === 'space'
-              ? `${target.storeName} · Space context`
+              ? `${target.storeName} - Space context`
               : 'Store context'}
           </Text>
         </div>
@@ -3202,7 +3202,7 @@ const ContextBillingAi = ({
                 <Text style={{ color: C.subtle, fontSize: 11 }}>
                   {formatNumber(context?.storesWithTelemetry)}/
                   {formatNumber(data?.overview.totalStores)} stores with
-                  telemetry · {formatNumber(context?.samples)} samples
+                  telemetry - {formatNumber(context?.samples)} samples
                 </Text>
               </div>
               <Row gutter={[8, 8]}>
