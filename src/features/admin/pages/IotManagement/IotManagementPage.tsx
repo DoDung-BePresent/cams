@@ -342,6 +342,15 @@ export const AdminIotManagementPage = () => {
 
   const columns = [
     {
+      title: 'No.',
+      width: 60,
+      render: (_: unknown, __: AdminIotSpaceListItem, index: number) => (
+        <Text style={{ color: C.muted }}>
+          {(page - 1) * pageSize + index + 1}
+        </Text>
+      ),
+    },
+    {
       title: 'Space / Device',
       dataIndex: 'spaceName',
       render: (_: string, row: AdminIotSpaceListItem) => (
@@ -568,6 +577,14 @@ export const AdminIotManagementPage = () => {
           size='middle'
           loading={brandsLoading}
           dataSource={brandsData?.items ?? []}
+          styles={{
+            pagination: {
+              root: {
+                paddingRight: 10,
+              },
+            },
+          }}
+          scroll={{ y: 300 }}
           pagination={{
             current: brandsData?.currentPage ?? brandPickerPage,
             pageSize: brandsData?.pageSize ?? brandPickerPageSize,
@@ -582,6 +599,15 @@ export const AdminIotManagementPage = () => {
           }}
           onRow={(record) => ({ onClick: () => selectBrand(record) })}
           columns={[
+            {
+              title: 'No.',
+              width: 60,
+              render: (_: unknown, __: BrandListItem, index: number) => (
+                <Text style={{ color: C.muted }}>
+                  {(brandPickerPage - 1) * brandPickerPageSize + index + 1}
+                </Text>
+              ),
+            },
             {
               title: 'Brand',
               dataIndex: 'name',
@@ -619,6 +645,14 @@ export const AdminIotManagementPage = () => {
           size='middle'
           loading={storesLoading}
           dataSource={storesData?.items ?? []}
+          styles={{
+            pagination: {
+              root: {
+                paddingRight: 10,
+              },
+            },
+          }}
+          scroll={{ y: 300 }}
           pagination={{
             current: storesData?.currentPage ?? storePickerPage,
             pageSize: storesData?.pageSize ?? storePickerPageSize,
@@ -633,6 +667,15 @@ export const AdminIotManagementPage = () => {
           }}
           onRow={(record) => ({ onClick: () => selectStore(record) })}
           columns={[
+            {
+              title: 'No.',
+              width: 60,
+              render: (_: unknown, __: StoreListItem, index: number) => (
+                <Text style={{ color: C.muted }}>
+                  {(storePickerPage - 1) * storePickerPageSize + index + 1}
+                </Text>
+              ),
+            },
             {
               title: 'Store',
               dataIndex: 'name',
@@ -670,6 +713,14 @@ export const AdminIotManagementPage = () => {
         size='middle'
         loading={spacesLoading}
         dataSource={spacesData?.items ?? []}
+        styles={{
+          pagination: {
+            root: {
+              paddingRight: 10,
+            },
+          },
+        }}
+        scroll={{ y: 300 }}
         pagination={{
           current: spacesData?.currentPage ?? spacePickerPage,
           pageSize: spacesData?.pageSize ?? spacePickerPageSize,
@@ -684,6 +735,15 @@ export const AdminIotManagementPage = () => {
         }}
         onRow={(record) => ({ onClick: () => selectSpace(record) })}
         columns={[
+          {
+            title: 'No.',
+            width: 60,
+            render: (_: unknown, __: SpaceListItem, index: number) => (
+              <Text style={{ color: C.muted }}>
+                {(spacePickerPage - 1) * spacePickerPageSize + index + 1}
+              </Text>
+            ),
+          },
           {
             title: 'Space',
             dataIndex: 'name',

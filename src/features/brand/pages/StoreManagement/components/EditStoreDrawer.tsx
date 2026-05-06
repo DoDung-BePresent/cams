@@ -202,6 +202,14 @@ export const EditStoreDrawer = ({
     });
   };
 
+  const handleCityChange = (city: string | null) => {
+    if (city) {
+      form.setFieldsValue({
+        city: city,
+      });
+    }
+  };
+
   const handleCreateFuzzyOverride = () => {
     if (!storeId) return;
     const fuzzy = form.getFieldValue('fuzzy') as
@@ -378,6 +386,7 @@ export const EditStoreDrawer = ({
                           value={lat && lng ? { lat, lng } : null}
                           onChange={handleMapLocationChange}
                           onAddressChange={handleAddressChange}
+                          onCityChange={handleCityChange}
                           height={400}
                         />
                       );

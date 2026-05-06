@@ -22,29 +22,34 @@ export const BRAND_MENU_ITEMS: ItemType[] = [
     label: 'Dashboard',
   },
   {
-    key: 'stores',
-    icon: <ShopOutlined />,
-    label: 'Store Management',
-  },
-  {
-    key: 'staff',
-    icon: <TeamOutlined />,
-    label: 'Staff Management',
+    key: 'playlists',
+    icon: <UnorderedListOutlined />,
+    label: 'Playlists',
   },
   {
     key: 'tracks',
     icon: <CustomerServiceOutlined />,
-    label: 'Track Management',
+    label: 'Tracks',
   },
   {
-    key: 'playlists',
-    icon: <UnorderedListOutlined />,
-    label: 'Playlist Management',
+    key: 'schedule',
+    icon: <CalendarOutlined />,
+    label: 'Schedule',
+  },
+  {
+    key: 'stores',
+    icon: <ShopOutlined />,
+    label: 'Stores',
+  },
+  {
+    key: 'staff',
+    icon: <TeamOutlined />,
+    label: 'Staffs',
   },
   {
     key: 'config-management',
     icon: <SettingOutlined />,
-    label: 'Config Management',
+    label: 'Config',
   },
   {
     key: 'suno-ai',
@@ -55,10 +60,5 @@ export const BRAND_MENU_ITEMS: ItemType[] = [
     key: 'tokens',
     icon: <WalletOutlined />,
     label: 'Tokens & top-up',
-  },
-  {
-    key: 'schedule',
-    icon: <CalendarOutlined />,
-    label: 'Schedule',
   },
 ];

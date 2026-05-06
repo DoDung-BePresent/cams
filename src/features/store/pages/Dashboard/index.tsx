@@ -43,6 +43,11 @@ import type {
   StoreContextRawLogItem,
   StoreContextTimeSeriesPoint,
 } from '@/features/brand/types';
+import {
+  buildLatestContextLogBySpace,
+  getLatestContextLogForSpace,
+  sumLivePeopleRows,
+} from '@/features/brand/utils/livePeople';
 import { billingService, storeService } from '@/features/brand/services';
 import { camsService } from '@/shared/modules/cams/services';
 import type { SpaceStateResponse } from '@/shared/modules/cams/types';
@@ -1136,21 +1141,10 @@ export const StoreDashboard = () => {
     );
   }).length;
   const latestSamplesCount = liveLogsQuery.data?.items?.length ?? 0;
-  const latestLogBySpaceId = useMemo(() => {
-    const map = new Map<string, StoreContextRawLogItem>();
-    for (const item of liveLogsQuery.data?.items ?? []) {
-      const key = item.spaceId || item.spaceName;
-      const existing = map.get(key);
-      if (
-        !existing ||
-        dayjs(item.measuredAtUtc).valueOf() >
-          dayjs(existing.measuredAtUtc).valueOf()
-      ) {
-        map.set(key, item);
-      }
-    }
-    return map;
-  }, [liveLogsQuery.data?.items]);
+  const latestLogBySpaceId = useMemo(
+    () => buildLatestContextLogBySpace(liveLogsQuery.data?.items ?? []),
+    [liveLogsQuery.data?.items],
+  );
 
   const liveSpaceRows: SpaceHealthRow[] = useMemo(() => {
     const sourceSpaces = (spaces ?? []).filter((space) =>
@@ -1158,8 +1152,7 @@ export const StoreDashboard = () => {
     );
 
     return sourceSpaces.map((space) => {
-      const latest =
-        latestLogBySpaceId.get(space.id) ?? latestLogBySpaceId.get(space.name);
+      const latest = getLatestContextLogForSpace(latestLogBySpaceId, space);
       const slot = playbackStateBySpaceId.get(space.id);
       const state = slot?.state;
       const playbackStatus: SpaceHealthRow['playbackStatus'] = slot?.isPending
@@ -1192,10 +1185,7 @@ export const StoreDashboard = () => {
     });
   }, [latestLogBySpaceId, playbackStateBySpaceId, spaceId, spaces]);
 
-  const totalPeopleNow = liveSpaceRows.reduce(
-    (sum, row) => sum + (row.peopleNow ?? 0),
-    0,
-  );
+  const totalPeopleNow = sumLivePeopleRows(liveSpaceRows);
   const spacesWithPeopleSamples = liveSpaceRows.filter(
     (row) => row.peopleNow != null,
   ).length;

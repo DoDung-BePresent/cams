@@ -172,6 +172,73 @@ export const ScheduleCalendar = ({
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderEventContent = (eventInfo: any) => {
+  // Calculate duration in minutes
+  const start = dayjs(eventInfo.event.start);
+  const end = dayjs(eventInfo.event.end);
+  const durationMinutes = end.diff(start, 'minute');
+
+  // For slots <= 15 minutes: horizontal layout with smaller font
+  if (durationMinutes <= 15) {
+    return (
+      <div style={{ padding: '2px 6px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            flexWrap: 'nowrap',
+            overflow: 'hidden',
+          }}
+        >
+          <span
+            style={{
+              fontWeight: 600,
+              fontSize: 10,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {eventInfo.event.title}
+          </span>
+          <span
+            style={{
+              fontSize: 9,
+              opacity: 0.9,
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            {eventInfo.timeText}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // For slots 16-45 minutes: title and time on same line (compact)
+  if (durationMinutes >= 16 && durationMinutes <= 45) {
+    return (
+      <div style={{ padding: '4px 8px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span style={{ fontWeight: 600, fontSize: 12 }}>
+            {eventInfo.event.title}
+          </span>
+          <span style={{ fontSize: 9, opacity: 0.9 }}>
+            {eventInfo.timeText}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // For slots > 45 minutes: vertical layout (more space available)
   return (
     <div style={{ padding: '4px 8px' }}>
       <div style={{ fontWeight: 600, fontSize: 13 }}>
