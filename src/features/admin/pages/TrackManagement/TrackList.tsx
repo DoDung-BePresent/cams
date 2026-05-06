@@ -43,7 +43,10 @@ import { useMoods } from '@/shared/modules/moods/hooks';
 
 import type { TrackFilter } from '@/shared/modules/tracks/types';
 import { TranscodeStatusEnum } from '@/shared/modules/tracks/types';
-import { COPYRIGHT_CLEARANCE_OPTIONS } from '@/shared/modules/tracks/constants';
+import {
+  COPYRIGHT_CLEARANCE_OPTIONS,
+  GENRE_OPTIONS,
+} from '@/shared/modules/tracks/constants';
 import type { TrackCopyrightClearanceStatus } from '@/shared/modules/tracks/types';
 
 const { Text, Title } = Typography;
@@ -158,6 +161,7 @@ export const TrackList = () => {
   const [allSearch, setAllSearch] = useState('');
   const [allMoodId, setAllMoodId] = useState<string | undefined>();
   const [allStatus, setAllStatus] = useState<number | undefined>();
+  const [allGenre, setAllGenre] = useState<string | undefined>();
   const [allCopyrightStatuses, setAllCopyrightStatuses] = useState<
     TrackCopyrightClearanceStatus[]
   >([]);
@@ -176,13 +180,15 @@ export const TrackList = () => {
       sortBy: 'createdAt',
       isAscending: false,
       search: allSearch || undefined,
+      artist: allSearch || undefined,
       moodId: allMoodId,
       status: allStatus,
+      genre: allGenre,
       copyrightClearanceStatuses: allCopyrightStatuses.length
         ? allCopyrightStatuses
         : undefined,
     }),
-    [allCopyrightStatuses, allMoodId, allPage, allSearch, allStatus],
+    [allCopyrightStatuses, allGenre, allMoodId, allPage, allSearch, allStatus],
   );
 
   const blockedFilter: TrackFilter = useMemo(
@@ -437,7 +443,7 @@ export const TrackList = () => {
           align='center'
         >
           <Input
-            placeholder='Search tracks...'
+            placeholder='Search by title or artist...'
             prefix={<SearchOutlined style={{ color: C.textSubtle }} />}
             value={isAll ? allSearch : blockedSearch}
             onChange={(e) => {
@@ -463,6 +469,17 @@ export const TrackList = () => {
           />
           {isAll ? (
             <>
+              <Select
+                placeholder='Genre'
+                options={GENRE_OPTIONS}
+                value={allGenre}
+                onChange={(v) => {
+                  setAllGenre(v);
+                  setAllPage(1);
+                }}
+                allowClear
+                style={{ width: 150 }}
+              />
               <Select
                 placeholder='Mood'
                 options={moodOptions}
@@ -529,12 +546,14 @@ export const TrackList = () => {
           {isAll &&
             (allSearch ||
               allMoodId ||
+              allGenre ||
               allStatus !== undefined ||
               allCopyrightStatuses.length > 0) && (
               <Button
                 onClick={() => {
                   setAllSearch('');
                   setAllMoodId(undefined);
+                  setAllGenre(undefined);
                   setAllStatus(undefined);
                   setAllCopyrightStatuses([]);
                   setAllPage(1);
@@ -710,6 +729,20 @@ export const TrackList = () => {
                         }}
                       >
                         SYSTEM
+                      </Tag>
+                    )}
+                    {track.genre && (
+                      <Tag
+                        style={{
+                          marginLeft: 6,
+                          fontSize: 9,
+                          padding: '0 4px',
+                          background: 'rgba(59,130,246,0.12)',
+                          color: '#60a5fa',
+                          border: '1px solid rgba(59,130,246,0.25)',
+                        }}
+                      >
+                        {track.genre}
                       </Tag>
                     )}
                   </Text>

@@ -18,11 +18,6 @@ export const STORE_MENU_ITEMS: ItemType[] = [
     label: 'Dashboard',
   },
   {
-    key: 'spaces',
-    icon: <ShopOutlined />,
-    label: 'Space Management',
-  },
-  {
     key: 'tracks',
     icon: <CustomerServiceOutlined />,
     label: 'Track Library',
@@ -30,8 +25,14 @@ export const STORE_MENU_ITEMS: ItemType[] = [
   {
     key: 'playlists',
     icon: <UnorderedListOutlined />,
-    label: 'Playlist Management',
+    label: 'Playlist Library',
   },
+  {
+    key: 'spaces',
+    icon: <ShopOutlined />,
+    label: 'Space Management',
+  },
+
   {
     key: 'config-management',
     icon: <SettingOutlined />,

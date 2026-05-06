@@ -128,6 +128,7 @@ export interface TrackFilter extends BasePaginationFilter {
   brandId?: string; // SystemAdmin only - BM/SM auto-scoped
   moodId?: string;
   genre?: string;
+  artist?: string;
   provider?: MusicProviderEnum;
   isAiGenerated?: boolean;
   copyrightClearanceStatuses?: TrackCopyrightClearanceStatus[];
