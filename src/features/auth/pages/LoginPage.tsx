@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
+import { Link } from 'react-router';
 
 /**
  * Components
@@ -80,6 +81,15 @@ export const LoginPage = () => {
               </p>
             </div>
             <LoginForm />
+            <p className='mt-6 text-center text-sm text-slate-500'>
+              Don&apos;t have an account?{' '}
+              <Link
+                to='/register'
+                className='font-medium text-slate-900 underline-offset-4 hover:underline'
+              >
+                Register your brand
+              </Link>
+            </p>
           </div>
         </div>
       </AuthWrapper>

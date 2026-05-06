@@ -16,6 +16,11 @@ const ForgotPasswordPage = Loadable(
   'ForgotPasswordPage',
 );
 
+const RegisterPage = Loadable(
+  () => import('@/features/auth/pages/RegisterPage'),
+  'RegisterPage',
+);
+
 export const AuthRoutes = {
   path: '/',
   children: [
@@ -32,6 +37,14 @@ export const AuthRoutes = {
       element: (
         <RedirectIfAuthenticated>
           <ForgotPasswordPage />
+        </RedirectIfAuthenticated>
+      ),
+    },
+    {
+      path: 'register',
+      element: (
+        <RedirectIfAuthenticated>
+          <RegisterPage />
         </RedirectIfAuthenticated>
       ),
     },
