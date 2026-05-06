@@ -1,4 +1,4 @@
-﻿import { useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { STALE_TIME } from '@/config';
 import { adminIotService } from '@/features/admin/services';
@@ -13,6 +13,5 @@ export const useAdminIotSpaces = (filter: AdminIotSpaceFilter = {}) => {
     },
     staleTime: STALE_TIME.short,
     placeholderData: (previousData) => previousData,
-    refetchInterval: 10_000,
   });
 };
