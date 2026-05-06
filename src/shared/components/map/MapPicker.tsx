@@ -1,5 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { useEffect, useState } from 'react';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+  useMap,
+} from 'react-leaflet';
 import { Input, Button, Space, Typography, message } from 'antd';
 
 /**
@@ -33,7 +39,44 @@ type MapPickerProps = {
   onAddressChange?: (address: string) => void;
   onCityChange?: (city: string | null) => void;
   height?: number;
+  isOpen?: boolean;
 };
+function MapController({ position }: { position: LatLngExpression | null }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 15);
+    }
+  }, [position, map]);
+
+  return null;
+}
+function ResizeMap({ isOpen }: { isOpen: boolean }) {
+  const map = useMap();
+
+  // Invalidate size multiple times to cover modal open animation
+  useEffect(() => {
+    if (!isOpen) return;
+    const delays = [100, 300, 500];
+    const timers = delays.map((ms) =>
+      setTimeout(() => map.invalidateSize(), ms),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [isOpen, map]);
+
+  // Also observe the map container for resize changes
+  useEffect(() => {
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+
+  return null;
+}
 
 // Component to handle map clicks
 function LocationMarker({
@@ -58,15 +101,13 @@ export const MapPicker = ({
   onAddressChange,
   onCityChange,
   height = 400,
+  isOpen = true,
 }: MapPickerProps) => {
   const [position, setPosition] = useState<LatLngExpression | null>(
     value ? [value.lat, value.lng] : null,
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mapRef = useRef<any>(null);
-
   // Default center: Ho Chi Minh City
   const defaultCenter: LatLngExpression = [10.8231, 106.6297];
 
@@ -75,16 +116,6 @@ export const MapPicker = ({
       setPosition([value.lat, value.lng]);
     }
   }, [value]);
-
-  // Fix Leaflet map not rendering correctly inside modals
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (mapRef.current) {
-        mapRef.current.invalidateSize();
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handlePositionChange = (pos: LatLngExpression) => {
     setPosition(pos);
@@ -194,11 +225,6 @@ export const MapPicker = ({
         const { lat, lon } = data[0];
         const newPos: LatLngExpression = [parseFloat(lat), parseFloat(lon)];
         handlePositionChange(newPos);
-
-        // Fly to location
-        if (mapRef.current) {
-          mapRef.current.flyTo(newPos, 15);
-        }
       } else {
         message.error('Location not found!');
       }
@@ -224,11 +250,6 @@ export const MapPicker = ({
           position.coords.longitude,
         ];
         handlePositionChange(newPos);
-
-        // Fly to location
-        if (mapRef.current) {
-          mapRef.current.flyTo(newPos, 15);
-        }
       },
       (error) => {
         message.error('Failed to get your location!');
@@ -268,8 +289,9 @@ export const MapPicker = ({
         center={position || defaultCenter}
         zoom={13}
         style={{ height, width: '100%', borderRadius: 8 }}
-        ref={mapRef}
       >
+        <ResizeMap isOpen={isOpen} />
+        <MapController position={position} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
