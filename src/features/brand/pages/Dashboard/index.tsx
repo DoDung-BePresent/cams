@@ -45,7 +45,6 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
 
-import { STALE_TIME } from '@/config';
 import {
   BrandDashboardPeriodEnum,
   BrandStoreHealthReasonEnum,
@@ -62,13 +61,17 @@ import {
   type BrandDashboardTopTrackItem,
   type BrandLivePlaybackQueueItem,
   type BrandLivePlaybackSpaceItem,
-  type StoreContextAggregateResponse,
 } from '@/features/brand/types';
 import { storeService } from '@/features/brand/services';
 import {
   useBrandDashboard,
   useBrandDashboardRealtime,
 } from '@/features/brand/hooks';
+import {
+  buildLatestContextLogBySpace,
+  getLivePeopleForSpaces,
+  sumLivePeopleSamples,
+} from '@/features/brand/utils/livePeople';
 import {
   usePlaybackControl,
   useSpaceState,
@@ -131,6 +134,16 @@ type ContextDrilldownTarget = {
   storeName: string;
   spaceId?: string;
   spaceName?: string;
+};
+
+type ContextPopupMetrics = {
+  peopleTotal: number | null;
+  averageNoiseDecibel: number | null;
+  averageFuzzyConfidence: number | null;
+  reportingSpaces: number;
+  onlineSpaces: number;
+  totalSpaces: number;
+  lastUpdatedUtc: string | null;
 };
 
 const C = {
@@ -2930,10 +2943,10 @@ const ContextMetricGauge = ({
 };
 
 const formatContextDecimal = (value?: number | null, suffix = '') =>
-  value == null ? `0${suffix}` : `${Math.round(value)}${suffix}`;
+  value == null ? '--' : `${Math.round(value)}${suffix}`;
 
 const formatConfidencePercent = (value?: number | null) => {
-  if (value == null) return '0%';
+  if (value == null) return '--';
   const percent = value <= 1 ? value * 100 : value;
   return `${Math.round(percent)}%`;
 };
@@ -2978,18 +2991,22 @@ const ContextPopupMetric = ({
 
 const ContextMetricsPopup = ({
   target,
-  aggregate,
-  peopleTotal,
+  metrics,
   loading,
   onClose,
 }: {
   target: ContextDrilldownTarget | null;
-  aggregate?: StoreContextAggregateResponse;
-  peopleTotal?: number | null;
+  metrics: ContextPopupMetrics;
   loading?: boolean;
   onClose: () => void;
 }) => {
-  const current = aggregate?.current;
+  const hasContextSample =
+    metrics.peopleTotal != null ||
+    metrics.averageNoiseDecibel != null ||
+    metrics.averageFuzzyConfidence != null;
+  const lastUpdateText = metrics.lastUpdatedUtc
+    ? `Last update ${dayjs(metrics.lastUpdatedUtc).format('HH:mm:ss')}`
+    : 'No telemetry update yet';
 
   return (
     <Modal
@@ -3024,28 +3041,69 @@ const ContextMetricsPopup = ({
           paragraph={{ rows: 4 }}
         />
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gap: 10,
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          }}
-        >
-          <ContextPopupMetric
-            label='People'
-            value={formatNumber(peopleTotal)}
-            color={C.blue}
-          />
-          <ContextPopupMetric
-            label='Noise'
-            value={formatContextDecimal(current?.noise.avg, ' dB')}
-            color={C.green}
-          />
-          <ContextPopupMetric
-            label='Confidence'
-            value={formatConfidencePercent(current?.fuzzyConfidence.avg)}
-            color={C.orange}
-          />
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div
+            style={{
+              alignItems: 'center',
+              display: 'flex',
+              gap: 8,
+              justifyContent: 'space-between',
+            }}
+          >
+            <Text style={{ color: C.subtle, fontSize: 12 }}>
+              {lastUpdateText}
+            </Text>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <Tag
+                color={metrics.reportingSpaces > 0 ? 'success' : 'warning'}
+                style={{ margin: 0 }}
+              >
+                {metrics.reportingSpaces}/{metrics.totalSpaces} reporting
+              </Tag>
+              <Tag
+                color={metrics.onlineSpaces > 0 ? 'success' : 'warning'}
+                style={{ margin: 0 }}
+              >
+                {metrics.onlineSpaces}/{metrics.totalSpaces} online
+              </Tag>
+            </div>
+          </div>
+
+          {!hasContextSample ? (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                <Text style={{ color: C.muted }}>
+                  No context sample in this window. Metrics appear when the
+                  store has telemetry logs, even if the device is now offline.
+                </Text>
+              }
+            />
+          ) : (
+            <div
+              style={{
+                display: 'grid',
+                gap: 10,
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              }}
+            >
+              <ContextPopupMetric
+                label='People'
+                value={formatNumber(metrics.peopleTotal)}
+                color={C.blue}
+              />
+              <ContextPopupMetric
+                label='Noise'
+                value={formatContextDecimal(metrics.averageNoiseDecibel, ' dB')}
+                color={C.green}
+              />
+              <ContextPopupMetric
+                label='Confidence'
+                value={formatConfidencePercent(metrics.averageFuzzyConfidence)}
+                color={C.orange}
+              />
+            </div>
+          )}
         </div>
       )}
     </Modal>
@@ -3060,8 +3118,7 @@ const ContextBillingAi = ({
   loading?: boolean;
 }) => {
   const context = data?.contextIntelligence;
-  const totalPeopleCount =
-    context?.totalPeopleCount ?? context?.averagePeopleCount ?? 0;
+  const averageTotalPeopleCount = context?.averageTotalPeopleCount ?? 0;
   const averageNoiseDecibel = context?.averageNoiseDecibel ?? 0;
   const averageFuzzyConfidence = context?.averageFuzzyConfidence ?? 0;
   const confidencePercent =
@@ -3071,11 +3128,9 @@ const ContextBillingAi = ({
   const metricCards = [
     {
       label: 'People',
-      value: formatNumber(
-        context?.totalPeopleCount ?? context?.averagePeopleCount,
-      ),
+      value: formatNumber(context?.averageTotalPeopleCount),
       color: C.blue,
-      percent: Math.min(100, (totalPeopleCount / 50) * 100),
+      percent: Math.min(100, (averageTotalPeopleCount / 50) * 100),
       hint: formatDoubleTrendText(context?.peopleTrend),
       trendValues: [
         context?.peopleTrend.previousValue,
@@ -3141,7 +3196,8 @@ const ContextBillingAi = ({
                 }}
               >
                 <Text style={{ color: C.muted, fontSize: 11 }}>
-                  People is the latest total across reporting spaces
+                  People is the average total across reporting spaces in this
+                  period
                 </Text>
                 <Text style={{ color: C.subtle, fontSize: 11 }}>
                   {formatNumber(context?.storesWithTelemetry)}/
@@ -3309,71 +3365,27 @@ export const BrandDashboard = () => {
   });
   const overview = data?.overview;
   const iotRows = data?.iotSpaceHealth ?? EMPTY_IOT_SPACE_HEALTH_ITEMS;
-  const dashboardFromUtc = data?.fromUtc;
-  const dashboardToUtc = data?.toUtc;
-  const dashboardPeriod = data?.period ?? period;
   const iotBySpace = useMemo(
     () => new Map(iotRows.map((row) => [row.spaceId, row])),
     [iotRows],
   );
-  const contextQueryWindow = useMemo(() => {
-    if (!dashboardFromUtc || !dashboardToUtc) return null;
-
-    const from = dayjs(dashboardFromUtc);
-    const to = dayjs(dashboardToUtc);
-    const durationMs = Math.max(to.diff(from), 1);
-
-    return {
-      fromUtc: dashboardFromUtc,
-      toUtc: dashboardToUtc,
-      compareFromUtc: from.subtract(durationMs, 'millisecond').toISOString(),
-      compareToUtc: dashboardFromUtc,
-      granularity:
-        dashboardPeriod === BrandDashboardPeriodEnum.Day
-          ? ('hour' as const)
-          : ('day' as const),
-    };
-  }, [dashboardFromUtc, dashboardPeriod, dashboardToUtc]);
-  const contextAggregateQuery = useQuery({
-    queryKey: [
-      'brand-dashboard-context-aggregate',
-      contextDrilldownTarget?.storeId,
-      contextDrilldownTarget?.spaceId,
-      contextQueryWindow?.fromUtc,
-      contextQueryWindow?.toUtc,
-      contextQueryWindow?.compareFromUtc,
-    ],
-    queryFn: async () => {
-      if (!contextDrilldownTarget || !contextQueryWindow) {
-        throw new Error('Missing context target.');
-      }
-
-      const response = await storeService.getContextAggregate(
-        contextDrilldownTarget.storeId,
-        {
-          spaceId: contextDrilldownTarget.spaceId,
-          fromUtc: contextQueryWindow.fromUtc,
-          toUtc: contextQueryWindow.toUtc,
-          compareFromUtc: contextQueryWindow.compareFromUtc,
-          compareToUtc: contextQueryWindow.compareToUtc,
-        },
-      );
-
-      return response.data.data;
-    },
-    enabled: Boolean(contextDrilldownTarget && contextQueryWindow),
-    staleTime: STALE_TIME.short,
-  });
+  const liveContextLogsWindow = useMemo(
+    () => ({
+      fromUtc: dayjs().startOf('day').toISOString(),
+      toUtc: dayjs().endOf('day').toISOString(),
+    }),
+    [],
+  );
   const contextRawLogsQuery = useQuery({
     queryKey: [
       'brand-dashboard-context-logs',
       contextDrilldownTarget?.storeId,
       contextDrilldownTarget?.spaceId,
-      contextQueryWindow?.fromUtc,
-      contextQueryWindow?.toUtc,
+      liveContextLogsWindow.fromUtc,
+      liveContextLogsWindow.toUtc,
     ],
     queryFn: async () => {
-      if (!contextDrilldownTarget || !contextQueryWindow) {
+      if (!contextDrilldownTarget) {
         throw new Error('Missing context target.');
       }
 
@@ -3383,42 +3395,126 @@ export const BrandDashboard = () => {
           page: 1,
           pageSize: CONTEXT_POPUP_LOG_PAGE_SIZE,
           spaceId: contextDrilldownTarget.spaceId,
-          fromUtc: contextQueryWindow.fromUtc,
-          toUtc: contextQueryWindow.toUtc,
+          fromUtc: liveContextLogsWindow.fromUtc,
+          toUtc: liveContextLogsWindow.toUtc,
         },
       );
 
       return response.data.items ?? [];
     },
-    enabled: Boolean(contextDrilldownTarget && contextQueryWindow),
+    enabled: Boolean(contextDrilldownTarget),
     staleTime: 0,
   });
-  const contextPopupPeopleTotal = useMemo(() => {
-    const items = contextRawLogsQuery.data ?? [];
-    if (items.length === 0) return null;
+  const contextPopupHealthRows = useMemo(() => {
+    if (!contextDrilldownTarget) return [];
 
-    const latestLogBySpace = new Map<string, (typeof items)[number]>();
-    for (const item of items) {
-      const key = item.spaceId || item.spaceName;
-      if (!key) continue;
-
-      const existing = latestLogBySpace.get(key);
-      if (
-        !existing ||
-        dayjs(item.measuredAtUtc).valueOf() >
-          dayjs(existing.measuredAtUtc).valueOf()
-      ) {
-        latestLogBySpace.set(key, item);
-      }
+    if (contextDrilldownTarget.scope === 'space') {
+      return iotRows.filter(
+        (row) => row.spaceId === contextDrilldownTarget.spaceId,
+      );
     }
 
-    const latestLogs = Array.from(latestLogBySpace.values()).filter(
-      (item) => item.crowdDensity != null,
+    return iotRows.filter(
+      (row) => row.storeId === contextDrilldownTarget.storeId,
     );
-    if (latestLogs.length === 0) return null;
+  }, [contextDrilldownTarget, iotRows]);
+  const contextPopupOnlineRows = useMemo(
+    () =>
+      contextPopupHealthRows.filter(
+        (row) => row.healthStatus === IotHealthStatusEnum.Online,
+      ),
+    [contextPopupHealthRows],
+  );
+  const contextPopupSpaces = useMemo(
+    () =>
+      contextPopupHealthRows.map((row) => ({
+        id: row.spaceId,
+        name: row.spaceName,
+      })),
+    [contextPopupHealthRows],
+  );
+  const contextPopupMetrics = useMemo<ContextPopupMetrics>(() => {
+    const items = contextRawLogsQuery.data ?? [];
+    const latestHealthUpdate =
+      contextPopupHealthRows
+        .flatMap((row) =>
+          row.lastTelemetryAtUtc ? [row.lastTelemetryAtUtc] : [],
+        )
+        .sort((a, b) => dayjs(b).valueOf() - dayjs(a).valueOf())[0] ?? null;
 
-    return latestLogs.reduce((sum, item) => sum + (item.crowdDensity ?? 0), 0);
-  }, [contextRawLogsQuery.data]);
+    const emptyMetrics = {
+      peopleTotal: null,
+      averageNoiseDecibel: null,
+      averageFuzzyConfidence: null,
+      reportingSpaces: 0,
+      onlineSpaces: contextPopupOnlineRows.length,
+      totalSpaces: contextPopupHealthRows.length,
+      lastUpdatedUtc: latestHealthUpdate,
+    };
+
+    if (items.length === 0 || contextPopupSpaces.length === 0) {
+      return emptyMetrics;
+    }
+
+    const livePeopleSamples = getLivePeopleForSpaces(items, contextPopupSpaces);
+    const reportingSamples = livePeopleSamples.filter(
+      (sample) => sample.samples > 0,
+    );
+    const latestLogBySpace = buildLatestContextLogBySpace(items);
+    const latestLogs = contextPopupSpaces
+      .flatMap((space) => {
+        const item =
+          latestLogBySpace.get(space.id) ?? latestLogBySpace.get(space.name);
+        return item ? [item] : [];
+      })
+      .filter(
+        (item) =>
+          item.crowdDensity != null ||
+          item.avgNoise != null ||
+          item.fuzzyConfidence != null,
+      );
+
+    if (reportingSamples.length === 0 && latestLogs.length === 0) {
+      return emptyMetrics;
+    }
+
+    const noiseValues = latestLogs.flatMap((item) =>
+      item.avgNoise == null ? [] : [item.avgNoise],
+    );
+    const confidenceValues = latestLogs.flatMap((item) =>
+      item.fuzzyConfidence == null ? [] : [item.fuzzyConfidence],
+    );
+    const latestLogUpdate =
+      latestLogs
+        .flatMap((item) => (item.measuredAtUtc ? [item.measuredAtUtc] : []))
+        .sort((a, b) => dayjs(b).valueOf() - dayjs(a).valueOf())[0] ?? null;
+
+    return {
+      peopleTotal:
+        reportingSamples.length > 0
+          ? sumLivePeopleSamples(reportingSamples)
+          : null,
+      averageNoiseDecibel:
+        noiseValues.length > 0
+          ? noiseValues.reduce((sum, value) => sum + value, 0) /
+            noiseValues.length
+          : null,
+      averageFuzzyConfidence:
+        confidenceValues.length > 0
+          ? confidenceValues.reduce((sum, value) => sum + value, 0) /
+            confidenceValues.length
+          : null,
+      reportingSpaces: latestLogs.length,
+      onlineSpaces: contextPopupOnlineRows.length,
+      totalSpaces: contextPopupHealthRows.length,
+      lastUpdatedUtc: latestLogUpdate ?? latestHealthUpdate,
+    };
+  }, [
+    contextPopupHealthRows,
+    contextPopupOnlineRows.length,
+    contextPopupSpaces,
+    contextRawLogsQuery.data,
+  ]);
   const dashboardPlaybackUnlockRef = useRef<(() => void) | null>(null);
   const handleInspectStoreContext = useCallback((row: BrandStoreHealthItem) => {
     setContextDrilldownTarget({
@@ -3831,11 +3927,8 @@ export const BrandDashboard = () => {
 
       <ContextMetricsPopup
         target={contextDrilldownTarget}
-        aggregate={contextAggregateQuery.data}
-        peopleTotal={contextPopupPeopleTotal}
-        loading={
-          contextAggregateQuery.isFetching || contextRawLogsQuery.isFetching
-        }
+        metrics={contextPopupMetrics}
+        loading={contextRawLogsQuery.isFetching}
         onClose={() => setContextDrilldownTarget(null)}
       />
     </div>

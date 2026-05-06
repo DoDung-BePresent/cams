@@ -38,14 +38,10 @@ export interface AdminIotSpaceFilter extends BasePaginationFilter {
 }
 
 export interface AdminIotSummary {
-  totalSpaces: number;
   assignedDevices: number;
   onlineDevices: number;
   offlineDevices: number;
   staleDevices: number;
-  noDeviceSpaces: number;
-  pendingCommands: number;
-  failedCommands24h: number;
   generatedAtUtc: string;
 }
 
@@ -92,8 +88,33 @@ export interface AdminIotCommandHistoryItem {
   timedOutAtUtc?: string | null;
 }
 
+export interface AdminIotDeviceInfo {
+  requestId?: string | null;
+  deviceId?: string | null;
+  action?: string | null;
+  status?: string | null;
+  message?: string | null;
+  mqttClientId?: string | null;
+  reason?: string | null;
+  wifiConnected?: boolean | null;
+  localIp?: string | null;
+  publicIpv4?: string | null;
+  macAddress?: string | null;
+  wifiSsid?: string | null;
+  cameraHost?: string | null;
+  cameraPort?: number | null;
+  selectedChannel?: number | null;
+  previewServerStarted?: boolean | null;
+  bleProvisioningActive?: boolean | null;
+  countingMode?: string | null;
+  disabled?: boolean | null;
+  reportedAtUtc?: string | null;
+  rawPayloadJson?: string | null;
+}
+
 export interface AdminIotSpaceDetail {
   space: AdminIotSpaceListItem;
+  deviceInfo?: AdminIotDeviceInfo | null;
   recentCommands: AdminIotCommandHistoryItem[];
 }
 

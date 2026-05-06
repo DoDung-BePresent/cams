@@ -14,6 +14,7 @@ import {
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { SorterResult } from 'antd/es/table/interface';
 import {
+  EyeOutlined,
   FireOutlined,
   InfoCircleOutlined,
   ReloadOutlined,
@@ -32,6 +33,7 @@ import {
   isTrackPlaybackBlockedByCopyright,
 } from '@/shared/modules/tracks/utils';
 import type { MoodListItem } from '@/shared/modules/moods/types';
+import { PlaylistDetailsModal } from '@/shared/modules/playlists/components';
 import type {
   PlaylistFilter,
   PlaylistListItem,
@@ -383,6 +385,7 @@ export const OverrideMusicSourceSelector = ({
 }: OverrideMusicSourceSelectorProps) => {
   const { styles } = useStyle();
   const [previewTrack, setPreviewTrack] = useState<TrackListItem>();
+  const [previewPlaylistId, setPreviewPlaylistId] = useState<string>();
   const allowedTabs = enabledTabs ?? ['tracks', 'playlist', 'mood'];
   const isPreviewTrackSelected = previewTrack
     ? track.selectedTrackIds.includes(previewTrack.id)
@@ -616,6 +619,24 @@ export const OverrideMusicSourceSelector = ({
         >
           {value} tracks
         </Tag>
+      ),
+    },
+    {
+      title: 'View',
+      key: 'view',
+      width: 84,
+      align: 'center',
+      render: (_, record) => (
+        <Button
+          type='text'
+          icon={<EyeOutlined />}
+          onClick={(event) => {
+            event.stopPropagation();
+            setPreviewPlaylistId(record.id);
+          }}
+        >
+          View
+        </Button>
       ),
     },
   ];
@@ -1110,6 +1131,13 @@ export const OverrideMusicSourceSelector = ({
               ]
             : []),
         ]}
+      />
+
+      <PlaylistDetailsModal
+        open={!!previewPlaylistId}
+        playlistId={previewPlaylistId}
+        onClose={() => setPreviewPlaylistId(undefined)}
+        readOnly
       />
 
       <Modal

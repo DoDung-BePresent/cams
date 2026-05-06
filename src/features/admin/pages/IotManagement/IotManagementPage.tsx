@@ -1,7 +1,8 @@
-﻿import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
+import dayjs from 'dayjs';
 import {
   Button,
   Input,
@@ -20,6 +21,7 @@ import {
   DisconnectOutlined,
   EnvironmentOutlined,
   HomeOutlined,
+  InfoCircleOutlined,
   ReloadOutlined,
   SearchOutlined,
   WarningOutlined,
@@ -33,12 +35,11 @@ import {
   type BrandListItem,
 } from '@/features/admin/types';
 import {
-  useAdminIotRealtime,
   useAdminIotSpaces,
   useAdminIotSummary,
   useSendAdminIotCommand,
 } from '@/features/admin/hooks';
-import { brandService } from '@/features/admin/services';
+import { adminIotService, brandService } from '@/features/admin/services';
 import { storeService } from '@/features/brand/services';
 import type { StoreListItem } from '@/features/brand/types';
 import { DataTable, PageHeader } from '@/shared/components';
@@ -93,7 +94,6 @@ const healthMeta: Record<
 };
 
 const healthFilterOptions = [
-  IotHealthStatus.NoDevice,
   IotHealthStatus.Online,
   IotHealthStatus.Offline,
   IotHealthStatus.Stale,
@@ -108,11 +108,9 @@ const getHealthMeta = (status?: IotHealthStatus | null) =>
     : healthMeta[IotHealthStatus.Stale];
 
 const actionOptions = [
-  { label: 'Get info', value: IotCommandAction.GetInfo },
   { label: 'Status', value: IotCommandAction.Status },
   { label: 'Restart', value: IotCommandAction.Restart },
   { label: 'Factory reset', value: IotCommandAction.FactoryReset },
-  { label: 'Stop BLE', value: IotCommandAction.StopBle },
   { label: 'Disable device', value: IotCommandAction.DisableDevice },
   { label: 'Enable device', value: IotCommandAction.EnableDevice },
 ];
@@ -121,6 +119,21 @@ const commandStatusLabel = (status?: IotCommandStatus | null) => {
   if (!status) return 'No command';
   return IotCommandStatus[status] ?? 'Unknown';
 };
+
+const commandActionLabel = (action?: IotCommandAction | null) => {
+  if (!action) return 'Unknown command';
+  return IotCommandAction[action] ?? 'Unknown command';
+};
+
+type DeviceInfoRow = [string, ReactNode];
+
+const toYesNo = (value?: boolean | null) => {
+  if (value == null) return null;
+  return value ? 'Yes' : 'No';
+};
+
+const formatDeviceTimestamp = (value?: string | null) =>
+  value ? dayjs(value).format('YYYY-MM-DD HH:mm:ss') : null;
 
 const formatAge = (seconds?: number | null) => {
   if (seconds == null) return 'No telemetry';
@@ -153,9 +166,10 @@ export const AdminIotManagementPage = () => {
   >();
   const [selectedSpace, setSelectedSpace] =
     useState<AdminIotSpaceListItem | null>(null);
-  const [selectedAction, setSelectedAction] = useState<IotCommandAction>(
-    IotCommandAction.Status,
-  );
+  const [detailSpaceId, setDetailSpaceId] = useState<string | null>(null);
+  const [selectedAction, setSelectedAction] = useState<
+    IotCommandAction | undefined
+  >();
   const [reason, setReason] = useState('');
   const [pickerScope, setPickerScope] = useState<PickerScope | null>(null);
   const [pickerSearch, setPickerSearch] = useState('');
@@ -255,8 +269,6 @@ export const AdminIotManagementPage = () => {
       selectedStoreId,
     ],
   );
-  useAdminIotRealtime();
-
   const { data: summaryResult, isLoading: summaryLoading } =
     useAdminIotSummary();
   const {
@@ -264,8 +276,44 @@ export const AdminIotManagementPage = () => {
     isLoading,
     refetch: refetchSpaces,
   } = useAdminIotSpaces(filter);
+  const { data: detailResult, isFetching: detailLoading } = useQuery({
+    queryKey: ['admin-iot-space-detail', detailSpaceId],
+    queryFn: async () => {
+      if (!detailSpaceId) throw new Error('Space ID is required.');
+      const response = await adminIotService.getSpaceDetail(detailSpaceId);
+      return response.data.data;
+    },
+    enabled: Boolean(detailSpaceId),
+    staleTime: 0,
+  });
   const sendCommand = useSendAdminIotCommand();
   const summary = summaryResult?.data;
+  const detail = detailResult ?? null;
+  const detailDeviceInfoRows = useMemo<DeviceInfoRow[]>(() => {
+    const info = detail?.deviceInfo;
+    if (!info) return [];
+
+    return [
+      ['Local IP', info.localIp],
+      ['Public IPv4', info.publicIpv4],
+      ['MAC address', info.macAddress],
+      ['Wi-Fi SSID', info.wifiSsid],
+      ['Camera host', info.cameraHost],
+      ['Camera port', info.cameraPort],
+      ['Selected channel', info.selectedChannel],
+      ['MQTT client', info.mqttClientId],
+      ['Wi-Fi connected', toYesNo(info.wifiConnected)],
+      ['Preview server', toYesNo(info.previewServerStarted)],
+      ['BLE provisioning', toYesNo(info.bleProvisioningActive)],
+      ['Disabled', toYesNo(info.disabled)],
+      ['Counting mode', info.countingMode],
+      ['Reason', info.reason],
+      ['Message', info.message],
+      ['Reported', formatDeviceTimestamp(info.reportedAtUtc)],
+    ].filter(
+      ([, value]) => value != null && `${value}`.trim() !== '',
+    ) as DeviceInfoRow[];
+  }, [detail?.deviceInfo]);
   const hasActiveFilters =
     search.trim() ||
     selectedBrandId ||
@@ -400,7 +448,7 @@ export const AdminIotManagementPage = () => {
       },
     },
     {
-      title: 'Telemetry',
+      title: 'Latest Telemetry',
       width: 180,
       render: (_: unknown, row: AdminIotSpaceListItem) => (
         <div>
@@ -410,6 +458,11 @@ export const AdminIotManagementPage = () => {
           <Text style={{ display: 'block', color: C.subtle, fontSize: 12 }}>
             {formatAge(row.telemetryAgeSeconds)}
           </Text>
+          {row.lastTelemetryAtUtc && (
+            <Text style={{ display: 'block', color: C.subtle, fontSize: 12 }}>
+              Updated {dayjs(row.lastTelemetryAtUtc).format('HH:mm:ss')}
+            </Text>
+          )}
         </div>
       ),
     },
@@ -429,33 +482,45 @@ export const AdminIotManagementPage = () => {
           </Tag>
           {row.latestCommandAtUtc && (
             <Text style={{ display: 'block', color: C.subtle, fontSize: 12 }}>
-              {new Date(row.latestCommandAtUtc).toLocaleString()}
+              {dayjs(row.latestCommandAtUtc).format('YYYY-MM-DD HH:mm:ss')}
             </Text>
           )}
         </div>
       ),
     },
     {
-      title: 'Command',
-      width: 122,
+      title: 'Actions',
+      width: 186,
       render: (_: unknown, row: AdminIotSpaceListItem) => (
-        <Button
-          icon={<ApiOutlined />}
-          disabled={!row.isAssigned}
-          onClick={() => {
-            setSelectedSpace(row);
-            setSelectedAction(IotCommandAction.Status);
-            setReason('');
-          }}
-        >
-          Send
-        </Button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <Button
+            icon={<InfoCircleOutlined />}
+            onClick={() => setDetailSpaceId(row.spaceId)}
+          >
+            View
+          </Button>
+          <Button
+            icon={<ApiOutlined />}
+            disabled={!row.isAssigned}
+            onClick={() => {
+              setSelectedSpace(row);
+              setSelectedAction(undefined);
+              setReason('');
+            }}
+          >
+            Send
+          </Button>
+        </div>
       ),
     },
   ];
 
   const confirmSend = async () => {
     if (!selectedSpace) return;
+    if (!selectedAction) {
+      message.warning('Select a command first.');
+      return;
+    }
 
     try {
       await sendCommand.mutateAsync({
@@ -946,18 +1011,16 @@ export const AdminIotManagementPage = () => {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
           gap: 10,
           marginBottom: 16,
         }}
       >
         {[
-          ['Total spaces', summary?.totalSpaces, C.blue],
           ['Assigned', summary?.assignedDevices, C.blue],
           ['Online', summary?.onlineDevices, C.green],
           ['Offline', summary?.offlineDevices, C.red],
           ['Stale', summary?.staleDevices, C.amber],
-          ['Pending', summary?.pendingCommands, C.amber],
         ].map(([label, value, color]) => (
           <div
             key={label as string}
@@ -1036,6 +1099,152 @@ export const AdminIotManagementPage = () => {
       </Modal>
 
       <Modal
+        open={!!detailSpaceId}
+        title={detail?.space?.spaceName ?? 'Device information'}
+        footer={null}
+        width={720}
+        destroyOnHidden
+        loading={detailLoading}
+        onCancel={() => setDetailSpaceId(null)}
+      >
+        {detail?.space ? (
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div
+              style={{
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                display: 'grid',
+                gap: 10,
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                padding: 14,
+              }}
+            >
+              {[
+                ['Device ID', detail.space.deviceId || 'No assigned device'],
+                ['Brand', detail.space.brandName],
+                ['Store', detail.space.storeName],
+                ['Space', detail.space.spaceName],
+                ['Health', getHealthMeta(detail.space.healthStatus).label],
+                [
+                  'Latest telemetry',
+                  detail.space.lastTelemetryAtUtc
+                    ? dayjs(detail.space.lastTelemetryAtUtc).format(
+                        'YYYY-MM-DD HH:mm:ss',
+                      )
+                    : 'No telemetry',
+                ],
+                [
+                  'People',
+                  detail.space.peopleCount == null
+                    ? '-'
+                    : `${detail.space.peopleCount}`,
+                ],
+                [
+                  'Noise',
+                  detail.space.noiseDecibel == null
+                    ? '-'
+                    : `${detail.space.noiseDecibel} dB`,
+                ],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <Text style={{ color: C.subtle, display: 'block' }}>
+                    {label}
+                  </Text>
+                  <Text style={{ color: C.text, fontWeight: 900 }}>
+                    {value}
+                  </Text>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <Text
+                style={{
+                  color: C.text,
+                  display: 'block',
+                  fontWeight: 900,
+                  marginBottom: 8,
+                }}
+              >
+                Device info
+              </Text>
+              {detailDeviceInfoRows.length > 0 ? (
+                <div
+                  style={{
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    display: 'grid',
+                    gap: 10,
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    padding: 14,
+                  }}
+                >
+                  {detailDeviceInfoRows.map(([label, value]) => (
+                    <div key={label}>
+                      <Text style={{ color: C.subtle, display: 'block' }}>
+                        {label}
+                      </Text>
+                      <Text style={{ color: C.text, fontWeight: 900 }}>
+                        {value}
+                      </Text>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Text style={{ color: C.muted }}>
+                  No device info payload has been reported yet.
+                </Text>
+              )}
+            </div>
+
+            <div>
+              <Text
+                style={{
+                  color: C.text,
+                  display: 'block',
+                  fontWeight: 900,
+                  marginBottom: 8,
+                }}
+              >
+                Recent commands
+              </Text>
+              <Table
+                size='small'
+                pagination={false}
+                rowKey='requestId'
+                dataSource={detail.recentCommands ?? []}
+                columns={[
+                  {
+                    title: 'Action',
+                    render: (_, row) => commandActionLabel(row.action),
+                  },
+                  {
+                    title: 'Status',
+                    render: (_, row) => commandStatusLabel(row.status),
+                  },
+                  {
+                    title: 'Requested',
+                    render: (_, row) =>
+                      row.requestedAtUtc
+                        ? dayjs(row.requestedAtUtc).format(
+                            'YYYY-MM-DD HH:mm:ss',
+                          )
+                        : '-',
+                  },
+                  {
+                    title: 'Message',
+                    dataIndex: 'message',
+                    ellipsis: true,
+                    render: (value) => value || '-',
+                  },
+                ]}
+              />
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
         open={!!selectedSpace}
         title={`Send command${selectedSpace ? ` to ${selectedSpace.spaceName}` : ''}`}
         okText='Publish command'
@@ -1049,6 +1258,7 @@ export const AdminIotManagementPage = () => {
           </Text>
           <Select
             value={selectedAction}
+            placeholder='Select command'
             options={actionOptions}
             onChange={setSelectedAction}
           />

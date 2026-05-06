@@ -12,6 +12,8 @@ export const useAdminIotSpaces = (filter: AdminIotSpaceFilter = {}) => {
       return response.data;
     },
     staleTime: STALE_TIME.short,
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: true,
     placeholderData: (previousData) => previousData,
   });
 };

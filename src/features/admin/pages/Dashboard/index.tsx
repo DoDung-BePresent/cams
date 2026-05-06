@@ -444,7 +444,7 @@ export const AdminDashboard = () => {
             label='IoT Health'
             value={`${iotPercent}%`}
             sub={`${formatNumber(data?.iotHealth.onlineDevices)} online / ${formatNumber(data?.iotHealth.assignedDevices)} assigned`}
-            trend={`${formatNumber(data?.iotHealth.pendingCommands)} pending commands`}
+            trend={`${formatNumber((data?.iotHealth.offlineDevices ?? 0) + (data?.iotHealth.staleDevices ?? 0))} devices need attention`}
             accent={C.amber}
             loading={isLoading}
           />
@@ -530,8 +530,11 @@ export const AdminDashboard = () => {
               trailColor='#333'
             />
             <Text style={{ color: C.muted, fontSize: 12 }}>
-              {formatNumber(data?.iotHealth.failedCommands24h)} command failures
-              in the last 24 hours.
+              {formatNumber(
+                (data?.iotHealth.offlineDevices ?? 0) +
+                  (data?.iotHealth.staleDevices ?? 0),
+              )}{' '}
+              offline or stale devices.
             </Text>
           </Panel>
         </Col>
