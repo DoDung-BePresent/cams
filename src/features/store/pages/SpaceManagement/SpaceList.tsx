@@ -756,7 +756,10 @@ export const SpaceList = () => {
                         fontSize: 11,
                       }}
                     >
-                      Updated {dayjs(people.measuredAtUtc).format('HH:mm:ss')}
+                      Updated{' '}
+                      {dayjs(people.measuredAtUtc).format(
+                        'YYYY-MM-DD HH:mm:ss',
+                      )}
                     </Text>
                   )}
                 </div>
