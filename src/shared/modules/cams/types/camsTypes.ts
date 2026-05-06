@@ -181,6 +181,10 @@ export interface SpaceStateDto {
   volumePercent: number; // NEW: 0-100
   isIotDeviceOffline?: boolean; // NEW: Latest telemetry reports device offline
   isIotDeviceAssigned?: boolean;
+  iotHealthStatus?: number | null;
+  iotHealthReason?: number | null;
+  lastTelemetryAtUtc?: string | null;
+  telemetryAgeSeconds?: number | null;
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array
@@ -360,6 +364,10 @@ export interface SpaceStateResponse {
   volumePercent: number; // NEW: 0-100
   isIotDeviceOffline?: boolean; // Latest telemetry reports device offline
   isIotDeviceAssigned?: boolean;
+  iotHealthStatus?: number | null;
+  iotHealthReason?: number | null;
+  lastTelemetryAtUtc?: string | null;
+  telemetryAgeSeconds?: number | null;
   isMuted: boolean; // NEW
   queueEndBehavior: QueueEndBehavior; // NEW
   spaceQueueItems: SpaceQueueItemDto[]; // NEW: Queue items array

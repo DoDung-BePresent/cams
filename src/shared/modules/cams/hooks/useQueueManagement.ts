@@ -47,6 +47,9 @@ export const useAddTracksToQueue = () => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.cams.queue(spaceId),
       });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.spaceState(spaceId),
+      });
       message.success('Tracks added to queue');
     },
     onError: (error) => {
@@ -76,6 +79,9 @@ export const useAddPlaylistToQueue = () => {
     onSuccess: (_, { spaceId }) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.cams.queue(spaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.cams.spaceState(spaceId),
       });
       message.success('Playlist added to queue');
     },

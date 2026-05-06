@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -16,7 +16,6 @@ import {
   ApiOutlined,
   BankOutlined,
   CheckCircleOutlined,
-  CloudServerOutlined,
   CloseCircleOutlined,
   DisconnectOutlined,
   EnvironmentOutlined,
@@ -34,6 +33,7 @@ import {
   type BrandListItem,
 } from '@/features/admin/types';
 import {
+  useAdminIotRealtime,
   useAdminIotSpaces,
   useAdminIotSummary,
   useSendAdminIotCommand,
@@ -86,11 +86,26 @@ const healthMeta: Record<
     icon: <WarningOutlined />,
   },
   [IotHealthStatus.Unknown]: {
-    label: 'Unknown',
-    color: 'default',
-    icon: <CloudServerOutlined />,
+    label: 'Stale',
+    color: 'gold',
+    icon: <WarningOutlined />,
   },
 };
+
+const healthFilterOptions = [
+  IotHealthStatus.NoDevice,
+  IotHealthStatus.Online,
+  IotHealthStatus.Offline,
+  IotHealthStatus.Stale,
+].map((value) => ({
+  value,
+  label: healthMeta[value].label,
+}));
+
+const getHealthMeta = (status?: IotHealthStatus | null) =>
+  status && healthMeta[status]
+    ? healthMeta[status]
+    : healthMeta[IotHealthStatus.Stale];
 
 const actionOptions = [
   { label: 'Get info', value: IotCommandAction.GetInfo },
@@ -240,6 +255,7 @@ export const AdminIotManagementPage = () => {
       selectedStoreId,
     ],
   );
+  useAdminIotRealtime();
 
   const { data: summaryResult, isLoading: summaryLoading } =
     useAdminIotSummary();
@@ -372,7 +388,7 @@ export const AdminIotManagementPage = () => {
       dataIndex: 'healthStatus',
       width: 132,
       render: (value: IotHealthStatus) => {
-        const meta = healthMeta[value];
+        const meta = getHealthMeta(value);
         return (
           <Tag
             icon={meta.icon}
@@ -449,7 +465,7 @@ export const AdminIotManagementPage = () => {
           reason: reason.trim() || undefined,
         },
       });
-      message.success('IoT command published.');
+      message.success('Command published. Waiting for device response.');
       setSelectedSpace(null);
     } catch {
       message.error('Failed to publish IoT command.');
@@ -801,10 +817,7 @@ export const AdminIotManagementPage = () => {
               setHealthStatus(value);
               setPage(1);
             }}
-            options={Object.entries(healthMeta).map(([value, meta]) => ({
-              value: Number(value),
-              label: meta.label,
-            }))}
+            options={healthFilterOptions}
             style={{ width: 180 }}
           />
           <Button
@@ -891,7 +904,7 @@ export const AdminIotManagementPage = () => {
               closable
               onClose={() => setHealthStatus(undefined)}
             >
-              Health: {healthMeta[healthStatus].label}
+              Health: {getHealthMeta(healthStatus).label}
             </Tag>
           )}
           {search.trim() && (
@@ -925,7 +938,7 @@ export const AdminIotManagementPage = () => {
         breadcrumbs={breadcrumbs}
         seo={{
           description:
-            'Manage IoT devices, telemetry freshness, and system-admin commands',
+            'Manage IoT devices, telemetry freshness, command publishing, and device responses',
           keywords: 'iot, devices, telemetry, admin, cams',
         }}
       />

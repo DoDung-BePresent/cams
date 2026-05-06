@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+﻿import { useQuery } from '@tanstack/react-query';
 
 import { STALE_TIME } from '@/config';
 import { adminIotService } from '@/features/admin/services';
@@ -11,6 +11,6 @@ export const useAdminIotSummary = () => {
       return response.data;
     },
     staleTime: STALE_TIME.short,
-    refetchInterval: 20_000,
+    refetchInterval: 10_000,
   });
 };

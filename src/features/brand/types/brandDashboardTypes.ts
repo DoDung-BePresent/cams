@@ -204,6 +204,7 @@ export type BrandDashboardIotSpaceHealthItem = {
 
 export type BrandContextIntelligenceSummary = {
   averagePeopleCount?: number | null;
+  totalPeopleCount?: number | null;
   averageNoiseDecibel?: number | null;
   averageFuzzyConfidence?: number | null;
   storesWithTelemetry: number;
