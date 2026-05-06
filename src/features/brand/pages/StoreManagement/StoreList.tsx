@@ -566,7 +566,9 @@ export const StoreList = () => {
                         }}
                       >
                         Updated{' '}
-                        {dayjs(people.lastUpdatedUtc).format('HH:mm:ss')}
+                        {dayjs(people.lastUpdatedUtc).format(
+                          'YYYY-MM-DD HH:mm:ss',
+                        )}
                       </Text>
                     )}
                   </div>

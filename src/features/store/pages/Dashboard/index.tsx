@@ -1247,7 +1247,7 @@ export const StoreDashboard = () => {
           <Typography.Text strong>{value}</Typography.Text>
           <Typography.Text style={{ color: '#857b80', fontSize: 12 }}>
             {row.lastUpdatedUtc
-              ? `Updated ${dayjs(row.lastUpdatedUtc).format('HH:mm:ss')}`
+              ? `Updated ${dayjs(row.lastUpdatedUtc).format('YYYY-MM-DD HH:mm:ss')}`
               : 'No sensor sample today'}
           </Typography.Text>
         </Space>
