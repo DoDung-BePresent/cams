@@ -2,14 +2,29 @@ import type { DefaultOptionType } from 'antd/es/select';
 
 // Vietnam Cities (common ones)
 export const VIETNAM_CITIES: DefaultOptionType[] = [
-  { label: 'Hà Nội', value: 'Hà Nội' },
-  { label: 'Hồ Chí Minh', value: 'Hồ Chí Minh' },
-  { label: 'Đà Nẵng', value: 'Đà Nẵng' },
+  { label: 'Tuyên Quang', value: 'Tuyên Quang' },
+  { label: 'Lào Cai', value: 'Lào Cai' },
+  { label: 'Thái Nguyên', value: 'Thái Nguyên' },
+  { label: 'Phú Thọ', value: 'Phú Thọ' },
+  { label: 'Bắc Ninh', value: 'Bắc Ninh' },
+  { label: 'Hưng Yên', value: 'Hưng Yên' },
   { label: 'Hải Phòng', value: 'Hải Phòng' },
+  { label: 'Ninh Bình', value: 'Ninh Bình' },
+  { label: 'Quảng Trị', value: 'Quảng Trị' },
+  { label: 'Đà Nẵng', value: 'Đà Nẵng' },
+  { label: 'Quảng Ngãi', value: 'Quảng Ngãi' },
+  { label: 'Gia Lai', value: 'Gia Lai' },
+  { label: 'Khánh Hòa', value: 'Khánh Hòa' },
+  { label: 'Lâm Đồng', value: 'Lâm Đồng' },
+  { label: 'Đắk Lắk', value: 'Đắk Lắk' },
+  { label: 'Hồ Chí Minh', value: 'Hồ Chí Minh' },
+  { label: 'Đồng Nai', value: 'Đồng Nai' },
+  { label: 'Tây Ninh', value: 'Tây Ninh' },
   { label: 'Cần Thơ', value: 'Cần Thơ' },
-  { label: 'Biên Hòa', value: 'Biên Hòa' },
-  { label: 'Nha Trang', value: 'Nha Trang' },
-  { label: 'Huế', value: 'Huế' },
+  { label: 'Vĩnh Long', value: 'Vĩnh Long' },
+  { label: 'Đồng Tháp', value: 'Đồng Tháp' },
+  { label: 'Cà Mau', value: 'Cà Mau' },
+  { label: 'An Giang', value: 'An Giang' },
 ] as const;
 
 // Ho Chi Minh Districts

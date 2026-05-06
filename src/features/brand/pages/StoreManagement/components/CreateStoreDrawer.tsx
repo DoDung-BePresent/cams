@@ -170,6 +170,14 @@ export const CreateStoreDrawer = ({
     });
   };
 
+  const handleCityChange = (city: string | null) => {
+    if (city) {
+      form.setFieldsValue({
+        city: city,
+      });
+    }
+  };
+
   return (
     <Modal
       closeIcon={null}
@@ -317,6 +325,7 @@ export const CreateStoreDrawer = ({
                       value={lat && lng ? { lat, lng } : null}
                       onChange={handleMapLocationChange}
                       onAddressChange={handleAddressChange}
+                      onCityChange={handleCityChange}
                       height={400}
                     />
                   );

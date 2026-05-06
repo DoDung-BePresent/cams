@@ -13,9 +13,12 @@ import { SearchOutlined, AimOutlined } from '@ant-design/icons';
 import type { LatLngExpression } from 'leaflet';
 import L from 'leaflet';
 
+import { VIETNAM_CITIES } from '@/shared/constants';
+
 const { Text } = Typography;
 
 // Fix Leaflet default marker icon in Vite/Webpack
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -28,6 +31,7 @@ type MapPickerProps = {
   value?: { lat: number; lng: number } | null;
   onChange?: (location: { lat: number; lng: number }) => void;
   onAddressChange?: (address: string) => void;
+  onCityChange?: (city: string | null) => void;
   height?: number;
 };
 
@@ -52,6 +56,7 @@ export const MapPicker = ({
   value,
   onChange,
   onAddressChange,
+  onCityChange,
   height = 400,
 }: MapPickerProps) => {
   const [position, setPosition] = useState<LatLngExpression | null>(
@@ -59,6 +64,7 @@ export const MapPicker = ({
   );
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
 
   // Default center: Ho Chi Minh City
@@ -79,6 +85,44 @@ export const MapPicker = ({
     reverseGeocode(lat, lng);
   };
 
+  // Helper to clean Vietnamese address prefixes
+  const cleanCityName = (raw: string): string =>
+    raw
+      .replace(/^Thành phố\s+/i, '')
+      .replace(/^Tỉnh\s+/i, '')
+      .replace(/^Thành Phố\s+/i, '')
+      .replace(/^TP\.?\s*/i, '')
+      .trim();
+
+  // Helper to extract city from Nominatim address, matching against VIETNAM_CITIES
+  const extractCityFromAddress = (
+    address: Record<string, string>,
+  ): string | null => {
+    // Nominatim returns various fields depending on the location type
+    const possibleCityFields = [
+      'city',
+      'town',
+      'county',
+      'state_district',
+      'state',
+      'province',
+    ];
+
+    const cityValues = VIETNAM_CITIES.map((c) => c.value as string);
+
+    // Only return a city that exists in the predefined VIETNAM_CITIES list
+    for (const field of possibleCityFields) {
+      const raw = address[field];
+      if (!raw) continue;
+      const cleaned = cleanCityName(raw);
+      if (cleaned && cityValues.includes(cleaned)) {
+        return cleaned;
+      }
+    }
+
+    return null;
+  };
+
   // Reverse geocoding using Nominatim (OpenStreetMap)
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
@@ -94,6 +138,12 @@ export const MapPicker = ({
 
       if (data.display_name) {
         onAddressChange?.(data.display_name);
+      }
+
+      // Extract and set city
+      if (data.address) {
+        const city = extractCityFromAddress(data.address);
+        onCityChange?.(city);
       }
     } catch (error) {
       console.error('Reverse geocoding failed:', error);
