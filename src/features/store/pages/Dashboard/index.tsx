@@ -1009,12 +1009,20 @@ export const StoreDashboard = () => {
         page: 1,
         pageSize: 200,
         status: EntityStatusEnum.Active,
+        storeId,
       });
       return response.data.items || [];
     },
     enabled: !!storeId,
     staleTime: STALE_TIME.medium,
   });
+
+  useEffect(() => {
+    if (!spaceId || !spaces) return;
+    if (!spaces.some((space) => space.id === spaceId)) {
+      setSpaceId(undefined);
+    }
+  }, [spaceId, spaces]);
 
   const liveLogsQuery = useQuery({
     queryKey: [

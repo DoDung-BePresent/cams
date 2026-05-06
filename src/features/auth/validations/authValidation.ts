@@ -32,3 +32,14 @@ export const changePasswordValidation = {
     }),
   ] as Rule[],
 };
+
+export const forgotPasswordValidation = {
+  email: loginValidation.email,
+  otp: [
+    { required: true, message: 'Please input the OTP code!' },
+    { len: 6, message: 'OTP must be exactly 6 digits!' },
+    { pattern: /^\d{6}$/, message: 'OTP must contain 6 digits!' },
+  ] as Rule[],
+  newPassword: changePasswordValidation.newPassword,
+  confirmPassword: changePasswordValidation.confirmPassword,
+};

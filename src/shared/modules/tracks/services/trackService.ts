@@ -121,6 +121,7 @@ export const trackService = {
     if (filter.brandId) params.append('brandId', filter.brandId); // SystemAdmin only
     if (filter.moodId) params.append('moodId', filter.moodId);
     if (filter.genre) params.append('genre', filter.genre);
+    if (filter.artist) params.append('artist', filter.artist);
     if (filter.provider !== undefined)
       params.append('provider', filter.provider.toString());
     if (filter.isAiGenerated !== undefined)
@@ -161,6 +162,7 @@ export const trackService = {
     if (filter.brandId) params.append('brandId', filter.brandId);
     if (filter.moodId) params.append('moodId', filter.moodId);
     if (filter.genre) params.append('genre', filter.genre);
+    if (filter.artist) params.append('artist', filter.artist);
     if (filter.provider !== undefined)
       params.append('provider', filter.provider.toString());
     if (filter.isAiGenerated !== undefined)
