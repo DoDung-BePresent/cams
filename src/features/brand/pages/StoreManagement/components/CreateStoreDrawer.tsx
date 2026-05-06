@@ -327,6 +327,7 @@ export const CreateStoreDrawer = ({
                       onAddressChange={handleAddressChange}
                       onCityChange={handleCityChange}
                       height={400}
+                      isOpen={open}
                     />
                   );
                 }}
