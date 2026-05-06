@@ -9,12 +9,15 @@ import {
   Typography,
   Spin,
   Collapse,
+  Modal,
 } from 'antd';
 import {
   ThunderboltOutlined,
   CopyOutlined,
   RightOutlined,
 } from '@ant-design/icons';
+import type { TablePaginationConfig } from 'antd';
+import type { SorterResult } from 'antd/es/table/interface';
 
 /**
  * Assets
@@ -33,7 +36,11 @@ import {
   useUpdateSunoConfig,
 } from '../hooks';
 import { useMoodOptions } from '@/shared/modules/moods/hooks';
-import { usePlaylistOptions } from '@/shared/modules/playlists/hooks';
+import { usePlaylists } from '@/shared/modules/playlists/hooks';
+import {
+  OverrideMusicSourceSelector,
+  type OverrideSourceTab,
+} from '@/shared/modules/cams/components/OverrideMusicSourceSelector';
 
 /**
  * Utils
@@ -48,6 +55,11 @@ import {
  */
 import { AiGenerationMode, type SunoGenerationCreateRequest } from '../types';
 import type { BrandProfileSunoMood } from '../utils/brandProfileSunoPrompt';
+import type {
+  PlaylistFilter,
+  PlaylistListItem,
+} from '@/shared/modules/playlists/types';
+import type { TrackFilter, TrackListItem } from '@/shared/modules/tracks/types';
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -137,7 +149,51 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const createGeneration = useCreateSunoGeneration();
   const updateConfig = useUpdateSunoConfig();
   const { options: moodOptions } = useMoodOptions();
-  const { data: playlistOptions } = usePlaylistOptions();
+
+  const defaultPlaylistFilter = useMemo<PlaylistFilter>(
+    () => ({
+      page: 1,
+      pageSize: 10,
+      status: 1,
+      includeShared: false,
+      sortBy: 'updatedAt',
+      isAscending: false,
+    }),
+    [],
+  );
+  const defaultTrackFilter = useMemo<TrackFilter>(
+    () => ({ page: 1, pageSize: 10, status: 1 }),
+    [],
+  );
+  const [playlistFilter, setPlaylistFilter] = useState<PlaylistFilter>(
+    defaultPlaylistFilter,
+  );
+  const [showPlaylistFilters, setShowPlaylistFilters] = useState(false);
+  const [playlistSelectorOpen, setPlaylistSelectorOpen] = useState(false);
+  const [playlistSelectorTab, setPlaylistSelectorTab] =
+    useState<OverrideSourceTab>('playlist');
+  const [selectedPlaylistId, setSelectedPlaylistId] = useState<
+    string | undefined
+  >();
+  const [trackFilter, setTrackFilter] =
+    useState<TrackFilter>(defaultTrackFilter);
+  const [showTrackFilters, setShowTrackFilters] = useState(false);
+  const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
+
+  const {
+    data: playlistData,
+    isLoading: isPlaylistLoading,
+    refetch: refetchPlaylists,
+  } = usePlaylists(playlistFilter);
+  const playlistItems = useMemo(
+    () => playlistData?.items ?? [],
+    [playlistData?.items],
+  );
+  const hasPlaylistFilters = Boolean(
+    playlistFilter.search ||
+    playlistFilter.moodId ||
+    playlistFilter.isDefault !== undefined,
+  );
 
   const hasProfile = hasBrandMusicProfileData(musicSnapshot ?? undefined);
 
@@ -166,6 +222,15 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
   const watchedGenre = Form.useWatch('genre', form);
   const watchedArtist = Form.useWatch('artist', form);
   const watchedVocalMode = Form.useWatch('vocalMode', form) ?? 'instrumental';
+  const watchedTargetPlaylistId = Form.useWatch('targetPlaylistId', form) as
+    | string
+    | undefined;
+  const effectiveSelectedPlaylistId =
+    selectedPlaylistId ?? watchedTargetPlaylistId;
+  const selectedPlaylist = useMemo(
+    () => playlistItems.find((x) => x.id === effectiveSelectedPlaylistId),
+    [playlistItems, effectiveSelectedPlaylistId],
+  );
 
   useEffect(() => {
     form.setFieldValue('profileMood', selectedVibe);
@@ -208,6 +273,45 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
     promptMaxLength,
   ]);
 
+  useEffect(() => {
+    form.setFieldValue('targetPlaylistId', selectedPlaylistId);
+  }, [form, selectedPlaylistId]);
+
+  const handlePlaylistTableChange = (
+    pagination: TablePaginationConfig,
+    _filters: Record<string, unknown>,
+    sorter: SorterResult<PlaylistListItem> | SorterResult<PlaylistListItem>[],
+  ) => {
+    const nextSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+    setPlaylistFilter((prev) => ({
+      ...prev,
+      page: pagination.current ?? prev.page,
+      pageSize: pagination.pageSize ?? prev.pageSize,
+      sortBy:
+        typeof nextSorter?.field === 'string' ? nextSorter.field : prev.sortBy,
+      isAscending: nextSorter?.order
+        ? nextSorter.order === 'ascend'
+        : prev.isAscending,
+    }));
+  };
+
+  const handleTrackTableChange = (
+    pagination: TablePaginationConfig,
+    _filters: Record<string, unknown>,
+    sorter: SorterResult<TrackListItem> | SorterResult<TrackListItem>[],
+  ) => {
+    const nextSorter = Array.isArray(sorter) ? sorter[0] : sorter;
+    setTrackFilter((prev) => ({
+      ...prev,
+      page: pagination.current ?? prev.page,
+      pageSize: pagination.pageSize ?? prev.pageSize,
+      sortBy:
+        typeof nextSorter?.field === 'string' ? nextSorter.field : prev.sortBy,
+      isAscending: nextSorter?.order
+        ? nextSorter.order === 'ascend'
+        : prev.isAscending,
+    }));
+  };
   useEffect(() => {
     if (config) {
       form.setFieldsValue({
@@ -286,6 +390,7 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
       vocalMode: 'instrumental',
       instrumental: true,
     });
+    setSelectedPlaylistId(config?.sunoDefaultPlaylistId ?? undefined);
     setSelectedVibe('focus');
     setPromptMode(
       hasBrandMusicProfileData(musicSnapshot ?? undefined)
@@ -750,21 +855,118 @@ export const SunoGenerationForm = ({ onSuccess }: SunoGenerationFormProps) => {
         {/* ── Playlist ─────────────────────────────────────────────────────── */}
         <Form.Item
           name='targetPlaylistId'
-          label={<span style={labelStyle}>Add to playlist (optional)</span>}
-          style={{ marginBottom: 8 }}
+          hidden
         >
-          <Select
-            placeholder='Pick a playlist — or leave empty'
-            options={playlistOptions}
-            allowClear
-            showSearch
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-            style={{ borderRadius: 8 }}
-          />
+          <input type='hidden' />
         </Form.Item>
 
+        <div style={{ marginBottom: 16 }}>
+          <Text style={{ ...labelStyle, display: 'block', marginBottom: 8 }}>
+            Add to playlist (optional)
+          </Text>
+          <div
+            style={{
+              ...inputStyle,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              padding: '12px 14px',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <Text style={{ color: C.text, fontWeight: 600 }}>
+                {selectedPlaylist?.name ??
+                  (effectiveSelectedPlaylistId
+                    ? 'Selected playlist'
+                    : 'No playlist selected')}
+              </Text>
+              <div style={{ color: C.textSubtle, fontSize: 12, marginTop: 2 }}>
+                Only brand-owned playlists are available for AI generated
+                tracks.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              {effectiveSelectedPlaylistId && (
+                <Button
+                  onClick={() => {
+                    setSelectedPlaylistId(undefined);
+                    form.setFieldValue('targetPlaylistId', undefined);
+                  }}
+                  style={{ borderRadius: 8 }}
+                >
+                  Clear
+                </Button>
+              )}
+              <Button
+                type='primary'
+                onClick={() => setPlaylistSelectorOpen(true)}
+                style={{ borderRadius: 8 }}
+              >
+                Choose playlist
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <Modal
+          title='Choose brand playlist'
+          open={playlistSelectorOpen}
+          width={980}
+          onCancel={() => setPlaylistSelectorOpen(false)}
+          footer={[
+            <Button
+              key='cancel'
+              onClick={() => setPlaylistSelectorOpen(false)}
+            >
+              Cancel
+            </Button>,
+            <Button
+              key='select'
+              type='primary'
+              onClick={() => setPlaylistSelectorOpen(false)}
+            >
+              Select playlist
+            </Button>,
+          ]}
+        >
+          <OverrideMusicSourceSelector
+            activeTab={playlistSelectorTab}
+            onTabChange={setPlaylistSelectorTab}
+            enabledTabs={['playlist']}
+            track={{
+              filter: trackFilter,
+              setFilter: setTrackFilter,
+              showFilters: showTrackFilters,
+              setShowFilters: setShowTrackFilters,
+              hasActiveFilters: false,
+              data: [],
+              total: 0,
+              isLoading: false,
+              refetch: () => undefined,
+              selectedTrackIds,
+              setSelectedTrackIds,
+              defaultFilter: defaultTrackFilter,
+              onTableChange: handleTrackTableChange,
+            }}
+            playlist={{
+              filter: playlistFilter,
+              setFilter: setPlaylistFilter,
+              showFilters: showPlaylistFilters,
+              setShowFilters: setShowPlaylistFilters,
+              hasActiveFilters: hasPlaylistFilters,
+              data: playlistItems,
+              total: playlistData?.totalItems ?? 0,
+              isLoading: isPlaylistLoading,
+              refetch: refetchPlaylists,
+              selectedPlaylistId: effectiveSelectedPlaylistId,
+              setSelectedPlaylistId,
+              defaultFilter: defaultPlaylistFilter,
+              moodOptions,
+              onTableChange: handlePlaylistTableChange,
+            }}
+          />
+        </Modal>
         <Form.Item
           name='autoAddToTargetPlaylist'
           hidden
