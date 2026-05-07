@@ -84,6 +84,8 @@ export const PairDeviceModal = ({
     refetch: refetchPairDeviceInfo,
   } = usePairDeviceInfo(spaceId || undefined, open && !!spaceId);
 
+  const hasPairedDevice = !!deviceInfo?.deviceSessionId;
+
   // Handle generate pair code
   const handleGeneratePairCode = useCallback(async () => {
     if (!spaceId) return;
@@ -135,6 +137,16 @@ export const PairDeviceModal = ({
       },
     });
   };
+
+  useEffect(() => {
+    if (!open || !spaceId || !pairCode || hasPairedDevice) return undefined;
+
+    const interval = window.setInterval(() => {
+      void refetchPairDeviceInfo();
+    }, 4000);
+
+    return () => window.clearInterval(interval);
+  }, [open, spaceId, pairCode, hasPairedDevice, refetchPairDeviceInfo]);
 
   // Update current time every second for countdown
   useEffect(() => {
@@ -192,9 +204,6 @@ export const PairDeviceModal = ({
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-
-  const hasPairedDevice = !!deviceInfo?.deviceSessionId;
-
   return (
     <AppModal
       title={
