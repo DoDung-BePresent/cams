@@ -477,22 +477,51 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
           }
 
           const latestState = stateRef.current;
+          const _canPlayAudible = canAttemptAudiblePlayback(audio);
+          console.log('🎯 MANIFEST_PARSED play() decision', {
+            hasState: !!latestState,
+            isPaused: latestState?.isPaused,
+            isPlayingRef: isPlayingRef.current,
+            canAttemptAudible: _canPlayAudible,
+            audio_paused: audio.paused,
+            audio_readyState: audio.readyState,
+            audio_currentTime: audio.currentTime,
+          });
           if (
             latestState &&
             !latestState.isPaused &&
             isPlayingRef.current &&
-            canAttemptAudiblePlayback(audio)
+            _canPlayAudible
           ) {
-            audio.play().catch((err) => {
-              if (isNotAllowedError(err)) {
-                waitingForUserActivationRef.current = true;
-                console.info(
-                  'Playback blocked until user interacts with the page',
+            console.log('▶️ MANIFEST_PARSED: calling audio.play()');
+            audio
+              .play()
+              .then(() =>
+                console.log('✅ MANIFEST_PARSED: audio.play() resolved'),
+              )
+              .catch((err) => {
+                if (isNotAllowedError(err)) {
+                  waitingForUserActivationRef.current = true;
+                  console.warn(
+                    '🚫 MANIFEST_PARSED: play() blocked (NotAllowedError)',
+                  );
+                  return;
+                }
+                console.error(
+                  '❌ MANIFEST_PARSED: audio.play() FAILED',
+                  err.name,
+                  err.message,
                 );
-                return;
-              }
-
-              console.error('âŒ Play failed after HLS reload:', err);
+              });
+          } else {
+            console.warn('⏸ MANIFEST_PARSED: play() SKIPPED', {
+              reason: !latestState
+                ? 'no state'
+                : latestState.isPaused
+                  ? 'state.isPaused=true'
+                  : !isPlayingRef.current
+                    ? 'isPlayingRef=false'
+                    : 'canAttemptAudible=false',
             });
           }
         });
@@ -694,6 +723,12 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
         pendingSeekRef.current = expectedPosition;
       }
 
+      console.log('🔍 sync effect play check', {
+        audio_paused: audio.paused,
+        isPlaying,
+        audio_duration: audio.duration,
+        audio_readyState: audio.readyState,
+      });
       if (audio.paused && isPlaying) {
         if (!canAttemptAudiblePlayback(audio)) {
           if (!waitingForUserActivationRef.current) {

@@ -7,7 +7,7 @@ import { Link } from 'react-router';
 import { Seo } from '@/shared/components';
 import { AuthWrapper, LoginForm } from '../components';
 
-import LogoImage from '@/assets/images/logo logai-Photoroom.png';
+import LogoImage from '@/assets/images/logai-logo-brand.png';
 
 export const LoginPage = () => {
   const formSectionRef = useRef<HTMLDivElement>(null);

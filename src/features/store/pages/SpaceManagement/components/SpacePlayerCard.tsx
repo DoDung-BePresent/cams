@@ -62,6 +62,7 @@ import type { SpaceListItem } from '@/shared/modules/spaces/types';
 import { AppModal, SettingSwitch } from '@/shared/components';
 import { showErrorMessage } from '@/shared/utils';
 import { fuzzyProfileService } from '@/features/store/services/fuzzyProfileService';
+import { storeHubService } from '@/shared/modules/cams/services';
 
 const { Text } = Typography;
 
@@ -150,7 +151,8 @@ export const SpacePlayerCard = ({
   const rawQueue = spaceState?.spaceQueueItems || [];
 
   const isPlaying = spaceState
-    ? !spaceState.isPaused && isSpacePlaying(spaceState)
+    ? !spaceState.isPaused &&
+      isSpacePlaying(spaceState, storeHubService.serverClockOffsetMs)
     : false;
 
   const manualOverrideRemainingSeconds = spaceState?.manualOverrideExpiresAtUtc
