@@ -9,6 +9,11 @@ import { Seo } from '@/shared/components';
 import { AuthWrapper, RegisterForm } from '../components';
 import type { RegisterFormValues } from '../components/RegisterForm';
 
+/**
+ * Services
+ */
+import { registerService } from '../services/registerService';
+
 import LogoImage from '@/assets/images/logo logai-Photoroom.png';
 
 export const RegisterPage = () => {
@@ -34,7 +39,10 @@ export const RegisterPage = () => {
     return () => observer.disconnect();
   }, []);
 
-  const handleSubmit = async (values: RegisterFormValues, logoFile: File) => {
+  const handleSubmit = async (
+    values: RegisterFormValues,
+    logoFile: File | undefined,
+  ) => {
     setIsLoading(true);
     try {
       const formData = new FormData();
@@ -48,7 +56,7 @@ export const RegisterPage = () => {
 
       // Brand fields
       formData.append('brandName', values.brandName);
-      formData.append('brandLogo', logoFile);
+      if (logoFile) formData.append('brandLogo', logoFile);
       if (values.industry) formData.append('industry', values.industry);
       if (values.contactEmail)
         formData.append('contactEmail', values.contactEmail);
@@ -66,11 +74,7 @@ export const RegisterPage = () => {
       if (values.billingAddress)
         formData.append('billingAddress', values.billingAddress);
 
-      // TODO: Replace with real API call when endpoint is available
-      // await registerService.submitInquiry(formData);
-
-      // Simulate API call for now
-      await new Promise<void>((resolve) => setTimeout(resolve, 1500));
+      await registerService.submitInquiry(formData);
 
       setIsSuccess(true);
       message.success('Registration request submitted successfully!');

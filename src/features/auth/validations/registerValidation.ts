@@ -31,12 +31,10 @@ export const registerValidation = {
   ] as Rule[],
 
   brandLogo: [
-    { required: true, message: 'Please upload your brand logo!' },
     {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       validator: (_: any, value: File) => {
-        if (!value)
-          return Promise.reject(new Error('Please upload your brand logo!'));
+        if (!value) return Promise.resolve();
 
         const allowedTypes = [
           'image/jpeg',
