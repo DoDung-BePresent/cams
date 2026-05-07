@@ -790,6 +790,38 @@ export const SpacePlayer = forwardRef<SpacePlayerHandle, SpacePlayerProps>(
       }, 150);
     }, [state, isPlaying, hlsUrl, hlsReloadKey]);
 
+    // Retry autoplay after first user interaction (handles browser autoplay block on page load)
+    useEffect(() => {
+      if (!isPlaying) return;
+
+      const handleUserInteraction = () => {
+        if (!waitingForUserActivationRef.current) return;
+        const audio = audioRef.current;
+        if (!audio || !audio.paused) return;
+
+        console.log('👆 User interaction detected — retrying blocked autoplay');
+        waitingForUserActivationRef.current = false;
+        audio.play().catch((err) => {
+          if (isNotAllowedError(err)) {
+            waitingForUserActivationRef.current = true;
+            console.warn('🚫 Autoplay retry still blocked');
+          } else {
+            console.error('❌ Autoplay retry failed:', err);
+          }
+        });
+      };
+
+      document.addEventListener('click', handleUserInteraction);
+      document.addEventListener('keydown', handleUserInteraction);
+      document.addEventListener('touchstart', handleUserInteraction);
+
+      return () => {
+        document.removeEventListener('click', handleUserInteraction);
+        document.removeEventListener('keydown', handleUserInteraction);
+        document.removeEventListener('touchstart', handleUserInteraction);
+      };
+    }, [isPlaying]);
+
     // Sync volume
     useEffect(() => {
       if (!audioRef.current) return;
