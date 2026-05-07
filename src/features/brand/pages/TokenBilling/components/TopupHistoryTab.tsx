@@ -74,6 +74,15 @@ export const TopupHistoryTab = ({ topupQuery }: TopupHistoryTabProps) => {
     [currentPage, pageSize],
   );
 
+  const filteredTopupHistory = useMemo(() => {
+    return (topupQuery.data ?? []).filter(
+      (record) =>
+        record.externalTransactionId !== null &&
+        record.externalTransactionId !== undefined &&
+        record.externalTransactionId !== '',
+    );
+  }, [topupQuery.data]);
+
   return (
     <div>
       <Alert
@@ -98,7 +107,7 @@ export const TopupHistoryTab = ({ topupQuery }: TopupHistoryTabProps) => {
       <DataTable<BillingTopUpHistoryView>
         rowKey={(row) => row.id}
         columns={columns}
-        dataSource={topupQuery.data ?? []}
+        dataSource={filteredTopupHistory}
         loading={topupQuery.isLoading}
         pagination={{
           current: currentPage,

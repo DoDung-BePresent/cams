@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'antd';
 import type { UploadFile } from 'antd';
+import { CheckCircleFilled, SendOutlined } from '@ant-design/icons';
 
 /**
  * Components
@@ -49,7 +50,7 @@ export type RegisterFormValues = {
   managerEmail: string;
   phoneNumber?: string;
   brandName: string;
-  brandLogo: File;
+  brandLogo?: File;
   industry?: string;
   contactEmail?: string;
   contactPhone?: string;
@@ -62,7 +63,10 @@ export type RegisterFormValues = {
 };
 
 type RegisterFormProps = {
-  onSubmit: (values: RegisterFormValues, logoFile: File) => Promise<void>;
+  onSubmit: (
+    values: RegisterFormValues,
+    logoFile: File | undefined,
+  ) => Promise<void>;
   isLoading: boolean;
   isSuccess: boolean;
 };
@@ -88,8 +92,7 @@ export const RegisterForm = ({
   };
 
   const handleFinish = async (values: RegisterFormValues) => {
-    if (!logoFile?.originFileObj) return;
-    await onSubmit(values, logoFile.originFileObj as File);
+    await onSubmit(values, logoFile?.originFileObj as File | undefined);
     form.resetFields();
     setLogoFile(null);
   };
@@ -97,8 +100,17 @@ export const RegisterForm = ({
   if (isSuccess) {
     return (
       <div className='flex flex-col items-center justify-center gap-6 py-8 text-center'>
-        <div className='flex h-20 w-20 items-center justify-center rounded-full bg-green-50'>
-          <span className='text-4xl'>✉️</span>
+        <div className='relative flex h-20 w-20 items-center justify-center'>
+          <div className='flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-red-500 to-rose-400 shadow-lg shadow-red-200'>
+            <SendOutlined
+              className='text-3xl text-white'
+              style={{ transform: 'rotate(-30deg)' }}
+            />
+          </div>
+          <CheckCircleFilled
+            className='absolute -right-1 -bottom-1 text-2xl text-red-500 drop-shadow-sm'
+            style={{ background: 'white', borderRadius: '50%' }}
+          />
         </div>
         <div>
           <Title
@@ -241,7 +253,7 @@ export const RegisterForm = ({
         <Form.Item
           label={
             <span className='text-sm font-medium text-slate-700'>
-              Brand Logo <span className='text-red-500'>*</span>
+              Brand Logo
             </span>
           }
           name='brandLogo'

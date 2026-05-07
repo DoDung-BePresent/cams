@@ -47,12 +47,20 @@ export const audioLevelToVolume = (level: number): number => {
  * Based on isPaused flag and time range (startedAtUtc, expectedEndAtUtc)
  *
  * ⚠️ IMPORTANT: isPaused takes priority over time-based calculation
+ *
+ * @param clockOffsetMs - Client-minus-server clock delta in ms (from storeHubService.serverClockOffsetMs).
+ *                        Pass this to correct for client/server clock skew so a freshly-started track
+ *                        is not incorrectly considered "not yet started" when the client clock lags behind.
+ *                        Convention matches getEffectiveSeekOffset: server_now = Date.now() - clockOffsetMs.
  */
-export const isSpacePlaying = (state: {
-  isPaused?: boolean;
-  startedAtUtc: string | null;
-  expectedEndAtUtc: string | null;
-}): boolean => {
+export const isSpacePlaying = (
+  state: {
+    isPaused?: boolean;
+    startedAtUtc: string | null;
+    expectedEndAtUtc: string | null;
+  },
+  clockOffsetMs = 0,
+): boolean => {
   // ✅ Priority 1: Check isPaused flag (from server state)
   if (state.isPaused === true) {
     return false;
@@ -63,7 +71,10 @@ export const isSpacePlaying = (state: {
     return false;
   }
 
-  const now = new Date();
+  // Adjust client time to server-equivalent time to eliminate clock skew.
+  // clockOffsetMs = client_ms - server_ms  (negative when client lags behind server)
+  // server_now = Date.now() - clockOffsetMs
+  const now = new Date(Date.now() - clockOffsetMs);
   const startedAt = new Date(state.startedAtUtc);
   const expectedEndAt = new Date(state.expectedEndAtUtc);
 

@@ -36,6 +36,7 @@ export const StickyPlayer = () => {
   } = usePlayerStore();
   const audioRef = useRef<HTMLAudioElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const hlsInitCountRef = useRef(0);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -47,10 +48,23 @@ export const StickyPlayer = () => {
   useEffect(() => {
     if (!currentTrack?.hlsUrl || !audioRef.current) return;
 
+    const runId = ++hlsInitCountRef.current;
     const audio = audioRef.current;
+    console.debug(`[StickyPlayer] HLS init effect #${runId} fired`, {
+      trackId: currentTrack.id,
+      title: currentTrack.title,
+      hlsUrl: currentTrack.hlsUrl,
+      isPlaying_closure: isPlaying,
+      audio_paused: audio.paused,
+      audio_src: audio.src,
+    });
+
     const timer = setTimeout(() => setIsLoading(true), 0);
 
     if (hlsRef.current) {
+      console.debug(
+        `[StickyPlayer] HLS init #${runId}: destroying previous HLS instance`,
+      );
       hlsRef.current.destroy();
     }
 
@@ -59,19 +73,71 @@ export const StickyPlayer = () => {
       hls.loadSource(currentTrack.hlsUrl);
       hls.attachMedia(audio);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        console.debug(`[StickyPlayer] MANIFEST_PARSED #${runId}`, {
+          isPlaying_closure: isPlaying,
+          audio_paused: audio.paused,
+          audio_readyState: audio.readyState,
+        });
         setIsLoading(false);
-        if (isPlaying) audio.play().catch(console.error);
+        if (isPlaying) {
+          console.debug(
+            `[StickyPlayer] MANIFEST_PARSED #${runId}: calling audio.play()`,
+          );
+          audio
+            .play()
+            .then(() =>
+              console.debug(
+                `[StickyPlayer] MANIFEST_PARSED #${runId}: audio.play() resolved OK`,
+              ),
+            )
+            .catch((err) =>
+              console.warn(
+                `[StickyPlayer] MANIFEST_PARSED #${runId}: audio.play() rejected`,
+                err,
+              ),
+            );
+        } else {
+          console.warn(
+            `[StickyPlayer] MANIFEST_PARSED #${runId}: isPlaying=false in closure -> NOT calling play()`,
+          );
+        }
+      });
+      hls.on(Hls.Events.ERROR, (_e, data) => {
+        if (data.fatal) {
+          console.error(`[StickyPlayer] HLS fatal error #${runId}`, data);
+        }
       });
       hlsRef.current = hls;
     } else if (audio.canPlayType('application/vnd.apple.mpegurl')) {
       audio.src = currentTrack.hlsUrl;
       audio.addEventListener('loadedmetadata', () => {
+        console.debug(`[StickyPlayer] loadedmetadata #${runId}`, {
+          isPlaying_closure: isPlaying,
+        });
         setIsLoading(false);
-        if (isPlaying) audio.play().catch(console.error);
+        if (isPlaying) {
+          audio
+            .play()
+            .then(() =>
+              console.debug(
+                `[StickyPlayer] loadedmetadata #${runId}: audio.play() resolved OK`,
+              ),
+            )
+            .catch((err) =>
+              console.warn(
+                `[StickyPlayer] loadedmetadata #${runId}: audio.play() rejected`,
+                err,
+              ),
+            );
+        }
       });
     }
 
     return () => {
+      console.debug(`[StickyPlayer] HLS init effect #${runId} CLEANUP`, {
+        reason: 'deps changed (currentTrack.hlsUrl or isPlaying)',
+        isPlaying_at_cleanup: isPlaying,
+      });
       clearTimeout(timer);
       if (hlsRef.current) hlsRef.current.destroy();
     };
@@ -80,12 +146,28 @@ export const StickyPlayer = () => {
   // Sync play/pause state
   useEffect(() => {
     if (!audioRef.current) return;
+    const audio = audioRef.current;
+    console.debug('[StickyPlayer] sync play/pause effect fired', {
+      isPlaying,
+      audio_paused: audio.paused,
+      audio_readyState: audio.readyState,
+      audio_src: audio.currentSrc,
+    });
     if (isPlaying) {
-      audioRef.current.play().catch(() => {
-        // May fail due to autoplay policy
-      });
+      audio
+        .play()
+        .then(() =>
+          console.debug('[StickyPlayer] sync effect: audio.play() resolved OK'),
+        )
+        .catch((err) =>
+          console.warn(
+            '[StickyPlayer] sync effect: audio.play() FAILED (likely autoplay or not ready)',
+            err,
+          ),
+        );
     } else {
-      audioRef.current.pause();
+      audio.pause();
+      console.debug('[StickyPlayer] sync effect: audio.pause() called');
     }
   }, [isPlaying]);
 
@@ -96,16 +178,52 @@ export const StickyPlayer = () => {
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     const handleDurationChange = () => setDuration(audio.duration);
-    const handleEnded = () => pauseTrack();
+    const handleEnded = () => {
+      console.debug('[StickyPlayer] audio ended event -> calling pauseTrack()');
+      pauseTrack();
+    };
+    const handlePlay = () =>
+      console.debug('[StickyPlayer] audio native PLAY event', {
+        currentTime: audio.currentTime,
+      });
+    const handlePause = () =>
+      console.debug('[StickyPlayer] audio native PAUSE event', {
+        currentTime: audio.currentTime,
+        ended: audio.ended,
+        stack: new Error().stack?.split('\n').slice(1, 3).join(' | '),
+      });
+    const handleWaiting = () =>
+      console.debug('[StickyPlayer] audio native WAITING event (buffering)');
+    const handleCanPlay = () =>
+      console.debug('[StickyPlayer] audio native CANPLAY event', {
+        readyState: audio.readyState,
+        paused: audio.paused,
+      });
+    const handleError = () =>
+      console.error('[StickyPlayer] audio native ERROR event', audio.error);
+    const handleStalled = () =>
+      console.warn('[StickyPlayer] audio native STALLED event');
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('durationchange', handleDurationChange);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('stalled', handleStalled);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('durationchange', handleDurationChange);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('canplay', handleCanPlay);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('stalled', handleStalled);
     };
   }, [pauseTrack]); // Added pauseTrack to dependencies
 
