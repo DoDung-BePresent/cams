@@ -460,7 +460,8 @@ export const AdminIotManagementPage = () => {
           </Text>
           {row.lastTelemetryAtUtc && (
             <Text style={{ display: 'block', color: C.subtle, fontSize: 12 }}>
-              Updated {dayjs(row.lastTelemetryAtUtc).format('HH:mm:ss')}
+              Updated{' '}
+              {dayjs(row.lastTelemetryAtUtc).format('YYYY-MM-DD HH:mm:ss')}
             </Text>
           )}
         </div>
