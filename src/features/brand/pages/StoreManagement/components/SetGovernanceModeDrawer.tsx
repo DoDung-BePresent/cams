@@ -196,14 +196,6 @@ export const SetGovernanceModeDrawer = ({
         </Radio.Group>
 
         {selectedMode === GovernanceModeEnum.StrictSync && (
-          <Alert
-            type='warning'
-            showIcon
-            message='Switching to Strict Sync will immediately enqueue a schedule-sync job for this store.'
-          />
-        )}
-
-        {selectedMode === GovernanceModeEnum.StrictSync && (
           <Space
             direction='vertical'
             size={4}
@@ -233,14 +225,6 @@ export const SetGovernanceModeDrawer = ({
               after sync.
             </Text>
           </Space>
-        )}
-
-        {selectedMode === GovernanceModeEnum.AIMode && (
-          <Alert
-            type='info'
-            showIcon
-            message='AI Mode allows bounded AI playback with temporary manager interventions.'
-          />
         )}
       </Space>
     </Modal>

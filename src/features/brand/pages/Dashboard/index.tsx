@@ -95,6 +95,7 @@ import {
 import {
   PlaybackCommand,
   QueueEndBehavior,
+  QueueItemSource,
   QueueItemStatus,
   type SpaceStateDto,
   type SpaceStateResponse,
@@ -109,6 +110,35 @@ const QUEUE_END_BEHAVIOR_LABELS: Record<number, string> = {
   [QueueEndBehavior.Stop]: 'Repeat off',
   [QueueEndBehavior.RepeatQueue]: 'Repeat all',
   [QueueEndBehavior.ReturnToSchedule]: 'Repeat one',
+};
+
+const QUEUE_ITEM_SOURCE_META: Record<
+  number,
+  { label: string; borderColor: string; background: string; color: string }
+> = {
+  [QueueItemSource.AI]: {
+    label: 'AI',
+    borderColor: 'rgba(34,197,94,.42)',
+    background: 'rgba(34,197,94,.13)',
+    color: '#86efac',
+  },
+  [QueueItemSource.Manager]: {
+    label: 'Manager',
+    borderColor: 'rgba(245,158,11,.42)',
+    background: 'rgba(245,158,11,.13)',
+    color: '#fbbf24',
+  },
+  [QueueItemSource.Scheduling]: {
+    label: 'Schedule',
+    borderColor: 'rgba(59,130,246,.42)',
+    background: 'rgba(59,130,246,.13)',
+    color: '#93c5fd',
+  },
+};
+
+const getQueueItemSourceMeta = (source?: number | null) => {
+  if (source == null) return null;
+  return QUEUE_ITEM_SOURCE_META[source] ?? null;
 };
 
 const hasDocumentUserActivation = () => {
@@ -2226,6 +2256,7 @@ const LivePlayback = ({
                     topTracks.find((track) => track.trackId === queue.trackId)
                       ?.artist ||
                     '--';
+                  const sourceMeta = getQueueItemSourceMeta(queue.source);
                   return (
                     <button
                       key={queue.queueItemId ?? `${active.spaceId}-${index}`}
@@ -2241,7 +2272,7 @@ const LivePlayback = ({
                       style={{
                         display: 'grid',
                         gridTemplateColumns:
-                          '74px minmax(0, 1fr) minmax(58px, .45fr)',
+                          '74px minmax(0, 1fr) minmax(72px, .34fr) minmax(58px, .38fr)',
                         gap: 8,
                         alignItems: 'center',
                         textAlign: 'left',
@@ -2276,6 +2307,26 @@ const LivePlayback = ({
                       >
                         {queue.trackName || 'Unknown track'}
                       </Text>
+                      <span
+                        style={{
+                          justifySelf: 'end',
+                          minWidth: 58,
+                          height: 20,
+                          padding: '2px 7px',
+                          borderRadius: 999,
+                          border: `1px solid ${sourceMeta?.borderColor ?? 'transparent'}`,
+                          background: sourceMeta?.background ?? 'transparent',
+                          color: sourceMeta?.color ?? 'transparent',
+                          fontSize: 9,
+                          fontWeight: 950,
+                          lineHeight: '14px',
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap',
+                        }}
+                        aria-hidden={!sourceMeta}
+                      >
+                        {sourceMeta?.label ?? 'Source'}
+                      </span>
                       <Text
                         ellipsis
                         style={{
