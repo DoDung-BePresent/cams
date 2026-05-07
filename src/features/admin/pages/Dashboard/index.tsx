@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import {
@@ -21,6 +21,8 @@ import {
   PlayCircleOutlined,
   RobotOutlined,
   ShopOutlined,
+  SoundOutlined,
+  UserOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
 
@@ -48,6 +50,43 @@ const C = {
   muted: '#b7adb0',
   subtle: '#857b80',
 };
+const QUICK_ACCESS_ITEMS = [
+  {
+    label: 'Brand Management',
+    description: 'Create brands, review status, and manage brand policies',
+    path: '/admin/brands',
+    icon: <ShopOutlined />,
+    accent: C.green,
+  },
+  {
+    label: 'Manager Accounts',
+    description: 'Create accounts and assign brand or store ownership',
+    path: '/admin/accounts',
+    icon: <UserOutlined />,
+    accent: C.blue,
+  },
+  {
+    label: 'Billing & Tokens',
+    description: 'Packages, wallets, token top-up, and lock status',
+    path: '/admin/billing-packages',
+    icon: <WalletOutlined />,
+    accent: C.green,
+  },
+  {
+    label: 'IoT Management',
+    description: 'Device health, telemetry freshness, and commands',
+    path: '/admin/iot',
+    icon: <CloudServerOutlined />,
+    accent: C.amber,
+  },
+  {
+    label: 'Track Library',
+    description: 'Global tracks, review status, and playback-ready assets',
+    path: '/admin/tracks',
+    icon: <SoundOutlined />,
+    accent: C.red,
+  },
+];
 
 const formatNumber = (value?: number | null) =>
   typeof value === 'number'
@@ -659,30 +698,88 @@ export const AdminDashboard = () => {
           </Panel>
         </Col>
       </Row>
-
       <div
-        onClick={() => navigate('/admin/iot')}
         style={{
           marginTop: 12,
           background: C.surface,
           border: `1px solid ${C.border}`,
           borderRadius: 8,
           padding: 16,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
         }}
       >
-        <DashboardOutlined style={{ color: C.amber, fontSize: 22 }} />
-        <div>
-          <Text style={{ color: C.text, fontWeight: 900 }}>
-            Open IoT Management
-          </Text>
-          <Text style={{ color: C.muted, display: 'block' }}>
-            Inspect every space device, send operational commands, and monitor
-            command acknowledgements.
-          </Text>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 12,
+          }}
+        >
+          <div>
+            <Text style={{ color: C.text, fontWeight: 950 }}>Quick Access</Text>
+            <Text style={{ color: C.muted, display: 'block', fontSize: 12 }}>
+              Open the admin areas used most often during daily operations.
+            </Text>
+          </div>
+          <DashboardOutlined style={{ color: C.amber, fontSize: 20 }} />
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 10,
+          }}
+        >
+          {QUICK_ACCESS_ITEMS.map((item) => (
+            <button
+              key={item.path}
+              type='button'
+              onClick={() => navigate(item.path)}
+              style={{
+                border: `1px solid ${C.border}`,
+                borderRadius: 8,
+                background: C.surface2,
+                padding: 12,
+                cursor: 'pointer',
+                display: 'grid',
+                gridTemplateColumns: '34px minmax(0, 1fr)',
+                gap: 10,
+                alignItems: 'center',
+                textAlign: 'left',
+              }}
+            >
+              <span
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 8,
+                  background: `${item.accent}18`,
+                  color: item.accent,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 17,
+                }}
+              >
+                {item.icon}
+              </span>
+              <span style={{ minWidth: 0 }}>
+                <Text
+                  ellipsis
+                  style={{ color: C.text, fontWeight: 900, display: 'block' }}
+                >
+                  {item.label}
+                </Text>
+                <Text
+                  ellipsis
+                  style={{ color: C.muted, display: 'block', fontSize: 11 }}
+                >
+                  {item.description}
+                </Text>
+              </span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
